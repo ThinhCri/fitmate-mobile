@@ -137,3 +137,21 @@ export async function __resetForTests(): Promise<void> {
   await storage.remove(KEY_USERS);
   await storage.remove(KEY_CURRENT_USER);
 }
+
+/**
+ * Update current user with partial fields (merges into existing user).
+ * RewardSimulation uses this to bump rewardPoints atomically.
+ */
+export async function updateCurrentUser(patch: Partial<User>): Promise<User | null> {
+  if (!currentEmailCache) {
+    currentEmailCache = await storage.get<string>(KEY_CURRENT_USER);
+    if (!currentEmailCache) return null;
+  }
+  const cache = await ensureCache();
+  const current = cache[currentEmailCache];
+  if (!current) return null;
+  const updated: User = { ...current, ...patch };
+  cache[currentEmailCache] = updated;
+  await storage.set(KEY_USERS, cache);
+  return JSON.parse(JSON.stringify(updated)) as User;
+}

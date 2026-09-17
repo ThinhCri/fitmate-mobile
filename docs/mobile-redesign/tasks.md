@@ -254,31 +254,31 @@
 
 ### MOB-107 — CreatePost
 - **Pham vi**: FP-008.
-- **Deliverables**: create-post.tsx.
+- **Deliverables**: create-post.tsx (content + image toggle + link field + tags + visibility + knowledge 15-char validation + reward warning toast).
 - **Tieu chi**: F-4.1.
-- **Trang thai**: DONE
-- **Commit**: `527d50d` (cung MOB-119..135)
+- **Trang thai**: SKELETON (code done; chua verify emulator).
+- **Commit**: `527d50d` (initial) + Batch 2
 
 ### MOB-108 — Feed + Reactions + Comments + Reward + Toxic
 - **Pham vi**: FP-009, FP-010, FP-012.
-- **Deliverables**: social.tsx feed tab + PostCard + reactions + comments.
+- **Deliverables**: social.tsx feed tab + PostCard + 5 seed posts + reaction toggle heart/flame/smile + comment expand + reward simulation (4s interval, cap 75, +10 quality, +1 moi 5 reactions) + ToastService.
 - **Tieu chi**: F-4.2.
-- **Trang thai**: SKELETON (1 post static, khong co reactions toggle / comments / reward simulation)
-- **Commit**: `6b01b24`
+- **Trang thai**: SKELETON (code done; chua verify emulator).
+- **Commit**: Batch 2
 
 ### MOB-109 — AI Companion
 - **Pham vi**: FP-011.
-- **Deliverables**: social.tsx AI tab + 5 canned replies.
+- **Deliverables**: social.tsx AI tab + chat list sidebar + create chat + edit title inline + delete confirm + 1200ms typing indicator + 7 canned replies + auto-title first 18 chars.
 - **Tieu chi**: F-4.3.
-- **Trang thai**: SKELETON (canned replies, chua co chat list/typing/edit title/delete)
-- **Commit**: `6b01b24`
+- **Trang thai**: SKELETON (code done; chua verify emulator).
+- **Commit**: Batch 2
 
 ### MOB-110 — Social feed main
 - **Pham vi**: FP-013, FP-037.
-- **Deliverables**: social.tsx 2-tab layout.
+- **Deliverables**: 5 seed posts + postsStore (cross-user persistence) + visibility filter (public/friends/private) + sort theo thoi gian.
 - **Tieu chi**: F-4.4.
-- **Trang thai**: DONE
-- **Commit**: `6b01b24`
+- **Trang thai**: SKELETON (code done; chua verify emulator).
+- **Commit**: Batch 2
 
 ### MOB-116 — ChuyenSauScreen
 - **Pham vi**: FP-027.

@@ -1,14 +1,14 @@
 /**
- * Toast — top-positioned, 3s hold, success/warning/error/info variants.
+ * Toast — top-positioned, 3s hold, success/warning/error/info/achievement variants.
  *
- * Phase UI: use ToastHost component at root + imperative API.
+ * Phase UI: use ToastHost component at root + imperative API (Toast.show).
  */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, View, Text } from 'react-native';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
 
-export type ToastTone = 'success' | 'warning' | 'error' | 'info';
+export type ToastTone = 'success' | 'warning' | 'error' | 'info' | 'achievement';
 
 export interface ToastProps {
   visible: boolean;
@@ -50,6 +50,7 @@ export function Toast({ visible, tone, message, onHide, durationMs = 3000 }: Toa
     case 'success': bgKey = 'surfaceContainerLowest'; fgKey = 'success'; borderKey = 'success'; break;
     case 'warning': bgKey = 'surfaceContainerLowest'; fgKey = 'warning'; borderKey = 'warning'; break;
     case 'error': bgKey = 'errorContainer'; fgKey = 'onErrorContainer'; borderKey = null; break;
+    case 'achievement': bgKey = 'achievementContainer'; fgKey = 'onAchievementContainer'; borderKey = 'achievement'; break;
     case 'info': bgKey = 'surfaceContainerLowest'; fgKey = 'info'; borderKey = 'info'; break;
   }
 
@@ -81,4 +82,51 @@ export function Toast({ visible, tone, message, onHide, durationMs = 3000 }: Toa
       </View>
     </Animated.View>
   );
+}
+
+// ============================================================
+// ToastHost + Toast.show imperative API
+// ============================================================
+
+interface ToastEntry {
+  id: string;
+  tone: ToastTone;
+  message: string;
+}
+
+let queue: ToastEntry[] = [];
+let listeners: Array<(entry: ToastEntry | null) => void> = [];
+
+export const ToastService = {
+  show(input: { message: string; tone?: ToastTone; durationMs?: number }) {
+    const entry: ToastEntry = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      tone: input.tone ?? 'info',
+      message: input.message,
+    };
+    queue.push(entry);
+    const dur = input.durationMs ?? 3000;
+    // Emit immediately and clear after duration.
+    const showAndSchedule = (cb: (entry: ToastEntry | null) => void) => {
+      cb(entry);
+      setTimeout(() => {
+        queue = queue.filter((e) => e.id !== entry.id);
+        cb(queue[0] ?? null);
+      }, dur);
+    };
+    listeners.forEach(showAndSchedule);
+  },
+};
+
+export function ToastHost() {
+  const [current, setCurrent] = useState<ToastEntry | null>(null);
+  useEffect(() => {
+    const cb = (entry: ToastEntry | null) => setCurrent(entry);
+    listeners.push(cb);
+    return () => {
+      listeners = listeners.filter((l) => l !== cb);
+    };
+  }, []);
+  if (!current) return null;
+  return <Toast visible tone={current.tone} message={current.message} onHide={() => setCurrent(null)} />;
 }

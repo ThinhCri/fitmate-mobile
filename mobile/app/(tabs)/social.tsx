@@ -1,18 +1,25 @@
 /**
  * SocialScreen (FP-008..013, FP-037, MOB-107..110).
  * Segmented: AI Companion | Cong dong.
- * Phase 2: 2 tab skeleton.
+ * - AI tab (FP-011): chat list sidebar + 1200ms typing + canned reply + title edit + delete.
+ * - Feed tab (FP-009/010/013/037): 5 seed posts + new posts, reaction toggle (heart/flame/smile),
+ *   comment expand, reward simulation warning toast (FP-010).
  */
-import { useState } from 'react';
-import { ScrollView, View, Text, Pressable, TextInput } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView, View, Text, Pressable, TextInput, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Bot, Users, Heart, Flame, Smile, Plus, MessageCircle } from 'lucide-react-native';
+import { router } from 'expo-router';
+import {
+  Bot, Users, Heart, Flame, Smile, Plus, MessageCircle, Send,
+  ChevronLeft, Plus as PlusIcon, Trash2, Check,
+} from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
 import * as mockUserService from '@/services/mockUserService';
-import type { ChatMessage } from '@/types';
-import { Card, Chip, Avatar, Button, Input } from '@/components/ui';
+import { addComment, getAllPostsSync, subscribe as subscribePosts, toggleReaction } from '@/services/postsStore';
+import type { ChatMessage, Post, Reaction } from '@/types';
+import { Card, Chip, Avatar, Button, Input, Empty } from '@/components/ui';
 
 type Segment = 'ai' | 'feed';
 
@@ -22,46 +29,216 @@ const AI_REPLIES = [
   'Calorie hôm nay của bạn đang thiếu ~300 kcal. Ăn thêm một bữa phụ nhé!',
   'Streak 7 ngày rồi, cố lên! Duy trì là chìa khoá.',
   'Bạn có thể thử thêm bài tập plank để cải thiện core.',
+  'Đừng quên uống đủ 2L nước mỗi ngày nhé.',
+  'Ngủ đủ 7-8 tiếng giúp phục hồi cơ bắp tốt hơn.',
 ];
+
+const TYPING_DELAY_MS = 1200;
+
+function PostCard({ post, onUpdate, onComment }: { post: Post; onUpdate: () => void; onComment: (postId: string) => void }) {
+  const theme = useTheme();
+  const { user } = useAuth();
+  if (!user) return null;
+  const counts = useMemo(() => {
+    const c = { heart: 0, flame: 0, smile: 0 };
+    post.reactions.forEach((r) => {
+      c[r.type] = (c[r.type] || 0) + 1;
+    });
+    return c;
+  }, [post.reactions]);
+
+  const myReaction = (type: Reaction['type']) =>
+    post.reactions.find((r) => r.userEmail === user.email && r.type === type);
+
+  return (
+    <Card variant="default">
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Avatar name={post.authorEmail.split('@')[0]} size={40} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 13, fontWeight: '700' }}>
+            {post.authorEmail.split('@')[0]}
+          </Text>
+          <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11 }}>
+            {new Date(post.timestamp).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+            {post.isKnowledge && '  •  Kiến thức'}
+          </Text>
+        </View>
+      </View>
+      <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, marginTop: 8, lineHeight: 20 }}>
+        {post.content}
+      </Text>
+      {post.image && (
+        <View style={{ height: 160, borderRadius: 8, backgroundColor: resolveColor(theme, 'surfaceContainerLow'), marginTop: 8 }} />
+      )}
+      {post.link && (
+        <Text style={{ color: resolveColor(theme, 'info'), fontSize: 12, marginTop: 8 }}>{post.link}</Text>
+      )}
+      <View style={{ flexDirection: 'row', gap: 16, marginTop: 12 }}>
+        {(['heart', 'flame', 'smile'] as const).map((type) => {
+          const Icon = type === 'heart' ? Heart : type === 'flame' ? Flame : Smile;
+          const colorKey = type === 'heart' ? 'error' : type === 'flame' ? 'secondary' : 'warning';
+          const isActive = !!myReaction(type);
+          return (
+            <Pressable
+              key={type}
+              onPress={async () => {
+                await toggleReaction(post.id, user.email, type);
+                onUpdate();
+              }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+            >
+              <Icon color={isActive ? resolveColor(theme, colorKey) : resolveColor(theme, 'outline')} size={16} fill={isActive ? resolveColor(theme, colorKey) : 'transparent'} />
+              <Text style={{ color: isActive ? resolveColor(theme, colorKey) : resolveColor(theme, 'onSurfaceVariant'), fontSize: 11, fontWeight: '600' }}>{counts[type]}</Text>
+            </Pressable>
+          );
+        })}
+        <View style={{ flex: 1 }} />
+        <Pressable onPress={() => onComment(post.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <MessageCircle color={resolveColor(theme, 'outline')} size={16} />
+          <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11, fontWeight: '600' }}>{post.comments.length}</Text>
+        </Pressable>
+      </View>
+    </Card>
+  );
+}
 
 export default function SocialScreen() {
   const { user, refresh } = useAuth();
   const theme = useTheme();
   const [segment, setSegment] = useState<Segment>('ai');
+
+  // Feed state
+  const [posts, setPosts] = useState<Post[]>(() => getAllPostsSync());
+  const [refreshing, setRefreshing] = useState(false);
+  const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
+  const [commentDraft, setCommentDraft] = useState('');
+
+  // AI state
   const [aiDraft, setAiDraft] = useState('');
-  const [replyIdx, setReplyIdx] = useState(0);
+  const [aiTyping, setAiTyping] = useState(false);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
+  const [showChatList, setShowChatList] = useState(true);
+  const replyIdxRef = useRef(0);
+  const scrollRef = useRef<ScrollView | null>(null);
+
+  const refreshPosts = useCallback(() => {
+    setPosts([...getAllPostsSync()].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+  }, []);
+
+  useEffect(() => {
+    const unsub = subscribePosts(() => refreshPosts());
+    return unsub;
+  }, [refreshPosts]);
+
+  const visiblePosts = useMemo(() => {
+    if (!user) return [];
+    return posts.filter((p) => {
+      if (p.visibility === 'public') return true;
+      if (p.visibility === 'friends') return user.friendsList.includes(p.authorEmail);
+      if (p.visibility === 'private') return p.authorEmail === user.email;
+      return true;
+    });
+  }, [posts, user]);
 
   if (!user) return null;
 
-  const aiMessages: ChatMessage[] = user.aiChats[0]?.messages ?? [];
+  const aiChats = user.aiChats;
+  const currentChat = aiChats.find((c) => c.id === selectedChatId) ?? aiChats[0];
+
+  // ---------------- AI handlers ----------------
+  const createChat = async () => {
+    const newChat = {
+      id: `chat-${Date.now()}`,
+      title: 'Hội thoại mới',
+      messages: [],
+    };
+    const updatedChats = [...aiChats, newChat];
+    await mockUserService.saveUser({ ...user, aiChats: updatedChats });
+    await refresh();
+    setSelectedChatId(newChat.id);
+    setShowChatList(false);
+  };
+
+  const deleteChat = async (id: string) => {
+    Alert.alert('Xóa hội thoại', 'Bạn có chắc muốn xóa hội thoại này?', [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Xóa',
+        style: 'destructive',
+        onPress: async () => {
+          const updated = aiChats.filter((c) => c.id !== id);
+          await mockUserService.saveUser({ ...user, aiChats: updated });
+          await refresh();
+          if (selectedChatId === id) setSelectedChatId(null);
+        },
+      },
+    ]);
+  };
+
+  const saveTitle = async () => {
+    if (!currentChat) return;
+    const updated = aiChats.map((c) => (c.id === currentChat.id ? { ...c, title: titleDraft.trim() || c.title } : c));
+    await mockUserService.saveUser({ ...user, aiChats: updated });
+    await refresh();
+    setEditingTitle(false);
+  };
 
   const sendAi = async () => {
-    if (!aiDraft.trim()) return;
+    if (!aiDraft.trim() || !currentChat) return;
     const userMsg: ChatMessage = {
       id: `ai-${Date.now()}`,
       text: aiDraft.trim(),
       sender: 'user',
       timestamp: new Date().toISOString(),
     };
-    const reply = AI_REPLIES[replyIdx % AI_REPLIES.length];
-    const aiMsg: ChatMessage = {
-      id: `ai-r-${Date.now()}`,
-      text: reply,
-      sender: 'ai',
-      timestamp: new Date(Date.now() + 100).toISOString(),
-    };
-    const updatedChats = [...user.aiChats];
-    if (!updatedChats[0]) {
-      updatedChats.push({ id: 'chat-default', title: 'Buddy — AI Companion', messages: [] });
-    }
-    updatedChats[0] = {
-      ...updatedChats[0],
-      messages: [...updatedChats[0].messages, userMsg, aiMsg],
-    };
-    await mockUserService.saveUser({ ...user, aiChats: updatedChats });
+    const replyText = AI_REPLIES[replyIdxRef.current % AI_REPLIES.length];
+    replyIdxRef.current += 1;
+    // Append user msg immediately
+    const updatedChats1 = aiChats.map((c) =>
+      c.id === currentChat.id ? { ...c, messages: [...c.messages, userMsg] } : c
+    );
+    await mockUserService.saveUser({ ...user, aiChats: updatedChats1 });
     await refresh();
+
+    // Auto-set title from first 18 chars if title is default
+    if (currentChat.title === 'Hội thoại mới' || currentChat.title === 'Buddy — AI Companion') {
+      const autoTitle = userMsg.text.slice(0, 18);
+      const updatedChatsTitle = aiChats.map((c) =>
+        c.id === currentChat.id ? { ...c, title: autoTitle, messages: [...c.messages, userMsg] } : c
+      );
+      await mockUserService.saveUser({ ...user, aiChats: updatedChatsTitle });
+      await refresh();
+    }
+
     setAiDraft('');
-    setReplyIdx((i) => i + 1);
+    setAiTyping(true);
+
+    setTimeout(async () => {
+      const aiMsg: ChatMessage = {
+        id: `ai-r-${Date.now()}`,
+        text: replyText,
+        sender: 'ai',
+        timestamp: new Date().toISOString(),
+      };
+      const updatedChats2 = aiChats.map((c) =>
+        c.id === currentChat.id ? { ...c, messages: [...c.messages, userMsg, aiMsg] } : c
+      );
+      await mockUserService.saveUser({ ...user, aiChats: updatedChats2 });
+      await refresh();
+      setAiTyping(false);
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    }, TYPING_DELAY_MS);
+  };
+
+  // ---------------- Feed handlers ----------------
+  const submitComment = async () => {
+    if (!commentDraft.trim() || !commentingPostId) return;
+    await addComment(commentingPostId, user.email, commentDraft.trim());
+    refreshPosts();
+    setCommentDraft('');
+    setCommentingPostId(null);
   };
 
   return (
@@ -69,83 +246,161 @@ export default function SocialScreen() {
       <View style={{ padding: 16, gap: 12 }}>
         <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 24, fontWeight: '800' }}>Cộng đồng</Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Chip label="AI Companion" selected={segment === 'ai'} onPress={() => setSegment('ai')} iconLeft={<Bot size={14} color={resolveColor(theme, 'onPrimaryContainer')} />} />
-          <Chip label="Cộng đồng" selected={segment === 'feed'} onPress={() => setSegment('feed')} iconLeft={<Users size={14} color={resolveColor(theme, 'onPrimaryContainer')} />} />
+          <Chip label="AI Companion" selected={segment === 'ai'} onPress={() => setSegment('ai')} iconLeft={<Bot size={14} color={resolveColor(theme, segment === 'ai' ? 'onPrimaryContainer' : 'onSurface')} />} />
+          <Chip label="Cộng đồng" selected={segment === 'feed'} onPress={() => setSegment('feed')} iconLeft={<Users size={14} color={resolveColor(theme, segment === 'feed' ? 'onPrimaryContainer' : 'onSurface')} />} />
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}>
-        {segment === 'ai' && (
-          <>
-            <Card variant="flat">
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Avatar name="Buddy" size={40} tone="primary" />
-                <View>
-                  <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '700' }}>Buddy</Text>
-                  <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11 }}>AI Companion</Text>
-                </View>
-              </View>
-            </Card>
-            {aiMessages.length === 0 && (
-              <Card variant="default">
-                <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 14 }}>
-                  Hãy nói chuyện với Buddy để được hỗ trợ về tập luyện, dinh dưỡng, hoặc streak.
-                </Text>
-              </Card>
-            )}
-            {aiMessages.map((m) => (
-              <View
-                key={m.id}
-                style={{
-                  alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '80%',
-                  padding: 12,
-                  borderRadius: 16,
-                  backgroundColor: m.sender === 'user' ? resolveColor(theme, 'primaryContainer') : resolveColor(theme, 'surfaceContainerLowest'),
-                  borderWidth: m.sender === 'user' ? 0 : 1,
-                  borderColor: resolveColor(theme, 'outlineVariant'),
-                }}
-              >
-                <Text style={{ color: m.sender === 'user' ? resolveColor(theme, 'onPrimaryContainer') : resolveColor(theme, 'onSurface'), fontSize: 14 }}>
-                  {m.text}
-                </Text>
-              </View>
-            ))}
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-              <View style={{ flex: 1 }}>
-                <Input label="" value={aiDraft} onChangeText={setAiDraft} placeholder="Hỏi Buddy..." />
-              </View>
-              <Button label="Gửi" variant="primary" onPress={sendAi} />
+      {segment === 'ai' && (
+        <View style={{ flex: 1, flexDirection: 'row' }}>
+          {/* Chat list */}
+          {showChatList ? (
+            <View style={{ flex: 1, padding: 16, gap: 8 }}>
+              <Button label="Hội thoại mới" variant="primary" fullWidth iconLeft={<PlusIcon size={14} color={resolveColor(theme, 'onPrimary')} />} onPress={createChat} />
+              {aiChats.length === 0 ? (
+                <Card variant="default">
+                  <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 13, textAlign: 'center' }}>
+                    Chưa có hội thoại nào.
+                  </Text>
+                </Card>
+              ) : (
+                aiChats.map((chat) => (
+                  <Pressable key={chat.id} onPress={() => { setSelectedChatId(chat.id); setShowChatList(false); }}>
+                    <Card variant={selectedChatId === chat.id ? 'highlighted' : 'flat'}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Bot color={resolveColor(theme, 'primary')} size={18} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 13, fontWeight: '700' }} numberOfLines={1}>
+                            {chat.title}
+                          </Text>
+                          <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11 }} numberOfLines={1}>
+                            {chat.messages[chat.messages.length - 1]?.text ?? 'Chưa có tin nhắn'}
+                          </Text>
+                        </View>
+                        <Pressable onPress={() => deleteChat(chat.id)} hitSlop={8}>
+                          <Trash2 color={resolveColor(theme, 'error')} size={14} />
+                        </Pressable>
+                      </View>
+                    </Card>
+                  </Pressable>
+                ))
+              )}
             </View>
-          </>
-        )}
-
-        {segment === 'feed' && (
-          <>
-            <Button label="Tạo bài viết" variant="primary" fullWidth iconLeft={<Plus size={16} color={resolveColor(theme, 'onPrimary')} />} onPress={() => router.push('/(modals)/create-post')} />
-            <Card variant="default">
-              <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '700' }}>Mai Xuân Tú</Text>
-              <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, marginTop: 4 }}>
-                Mẹo tập Calisthenics cho người mới: bắt đầu với 3 hiệp push-up mỗi ngày, tăng dần reps.
-              </Text>
-              <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
-                <Pressable onPress={() => { /* TODO phase 3 */ }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Heart color={resolveColor(theme, 'error')} size={16} />
-                  <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11 }}>2</Text>
+          ) : (
+            <View style={{ flex: 1 }}>
+              {/* Chat header */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, gap: 8, borderBottomWidth: 1, borderBottomColor: resolveColor(theme, 'outlineVariant') }}>
+                <Pressable onPress={() => setShowChatList(true)} hitSlop={8}>
+                  <ChevronLeft color={resolveColor(theme, 'onSurface')} size={20} />
                 </Pressable>
-                <Pressable onPress={() => { /* TODO phase 3 */ }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Flame color={resolveColor(theme, 'secondary')} size={16} />
-                  <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11 }}>1</Text>
-                </Pressable>
-                <Pressable onPress={() => { /* TODO phase 3 */ }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <MessageCircle color={resolveColor(theme, 'onSurfaceVariant')} size={16} />
-                  <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11 }}>0</Text>
-                </Pressable>
+                <Avatar name="Buddy" size={28} tone="primary" />
+                {editingTitle ? (
+                  <View style={{ flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                    <TextInput
+                      style={{ flex: 1, color: resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '700', borderBottomWidth: 1, borderBottomColor: resolveColor(theme, 'primary'), paddingVertical: 2 }}
+                      value={titleDraft}
+                      onChangeText={setTitleDraft}
+                      autoFocus
+                    />
+                    <Pressable onPress={saveTitle} hitSlop={8}>
+                      <Check color={resolveColor(theme, 'primary')} size={18} />
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Pressable style={{ flex: 1 }} onPress={() => { setTitleDraft(currentChat?.title ?? ''); setEditingTitle(true); }}>
+                    <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '700' }} numberOfLines={1}>
+                      {currentChat?.title ?? 'Buddy — AI Companion'}
+                    </Text>
+                    <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11 }}>AI Companion • Nhấn để sửa</Text>
+                  </Pressable>
+                )}
               </View>
+              <ScrollView
+                ref={scrollRef as any}
+                contentContainerStyle={{ padding: 12, gap: 8 }}
+                onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
+              >
+                {(currentChat?.messages ?? []).map((m) => (
+                  <View
+                    key={m.id}
+                    style={{
+                      alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
+                      maxWidth: '80%',
+                      padding: 10,
+                      borderRadius: 14,
+                      backgroundColor: m.sender === 'user' ? resolveColor(theme, 'primaryContainer') : resolveColor(theme, 'surfaceContainerLowest'),
+                    }}
+                  >
+                    <Text style={{ color: m.sender === 'user' ? resolveColor(theme, 'onPrimaryContainer') : resolveColor(theme, 'onSurface'), fontSize: 13 }}>
+                      {m.text}
+                    </Text>
+                  </View>
+                ))}
+                {aiTyping && (
+                  <View style={{ alignSelf: 'flex-start', padding: 10, borderRadius: 14, backgroundColor: resolveColor(theme, 'surfaceContainerLowest') }}>
+                    <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 12, fontStyle: 'italic' }}>
+                      Buddy đang gõ...
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
+              <View style={{ flexDirection: 'row', gap: 6, padding: 12, borderTopWidth: 1, borderTopColor: resolveColor(theme, 'outlineVariant') }}>
+                <View style={{ flex: 1 }}>
+                  <Input label="" value={aiDraft} onChangeText={setAiDraft} placeholder="Hỏi Buddy..." />
+                </View>
+                <Button label="Gửi" variant="primary" onPress={sendAi} iconLeft={<Send size={14} color={resolveColor(theme, 'onPrimary')} />} />
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
+      {segment === 'feed' && (
+        <>
+          <ScrollView
+            contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { refreshPosts(); setRefreshing(false); }} />}
+          >
+            <Button
+              label="Tạo bài viết"
+              variant="primary"
+              fullWidth
+              iconLeft={<Plus size={16} color={resolveColor(theme, 'onPrimary')} />}
+              onPress={() => router.push('/(modals)/create-post')}
+            />
+            <Card variant="flat">
+              <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11, textAlign: 'center' }}>
+                ⚠️ Điểm thưởng từ bài viết kiến thức là mô phỏng, không phải điểm thật.
+              </Text>
             </Card>
-          </>
-        )}
-      </ScrollView>
+            {visiblePosts.length === 0 ? (
+              <Empty icon={<Users color={resolveColor(theme, 'onSurfaceVariant')} size={48} />} title="Chưa có bài viết" description="Hãy là người đầu tiên chia sẻ." />
+            ) : (
+              visiblePosts.map((post) => (
+                <View key={post.id} style={{ gap: 8 }}>
+                  <PostCard post={post} onUpdate={refreshPosts} onComment={(id) => setCommentingPostId(id)} />
+                  {commentingPostId === post.id && (
+                    <Card variant="flat">
+                      {post.comments.map((c) => (
+                        <View key={c.id} style={{ paddingVertical: 6 }}>
+                          <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 12, fontWeight: '700' }}>{c.authorEmail.split('@')[0]}</Text>
+                          <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 12 }}>{c.text}</Text>
+                        </View>
+                      ))}
+                      <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+                        <View style={{ flex: 1 }}>
+                          <Input label="" value={commentDraft} onChangeText={setCommentDraft} placeholder="Viết bình luận..." />
+                        </View>
+                        <Button label="Gửi" variant="primary" size="sm" onPress={submitComment} />
+                      </View>
+                    </Card>
+                  )}
+                </View>
+              ))
+            )}
+          </ScrollView>
+        </>
+      )}
     </SafeAreaView>
   );
 }
