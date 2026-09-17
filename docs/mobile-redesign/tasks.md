@@ -83,8 +83,10 @@
   - `screen-specs.md` wireframe comment khong con "gradient" (thay bang "tint" + token M3).
 - **Kiem tra da chay**: doc file, grep "dark theme", "dark navy", "Calm Modern" → khong con hieu luc.
 - **Kiem tra chua chay**: emulator thuc te (sau Phase 1).
-- **Trang thai**: IN_PROGRESS
-- **Commit MOB-015** (phan AGENTS.md + current-app-audit.md): se cap nhat sau khi commit xong.
+- **Commit**:
+  - MOB-015 (AGENTS.md, current-app-audit.md): `d08f9fb docs(plan): rework design direction independent from web [MOB-015]`.
+  - MOB-016 (11 file con lai): `235792d docs(design): switch default theme to Soft Energy light [MOB-016]`.
+- **Trang thai**: DONE
 
 ---
 

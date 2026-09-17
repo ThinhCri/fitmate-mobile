@@ -7,15 +7,18 @@
 ## Branch & checkpoint Git
 
 - Branch: `main`.
-- Working tree: chua co commit MOB-016 (thay doi hien tai dang staged).
-- Commit gan day truoc phien nay: `49b53f3 docs(tasks): record MOB-000 planning complete [MOB-000]`.
-- Commit MOB-015 (sua design direction lan 1, dark) **chua commit** o thoi diem handoff cu, da duoc noi dung update vao MOB-015 status trong tasks.md (override boi MOB-016).
+- Working tree: clean sau commit.
+- Commit gan nhat:
+  - `235792d docs(design): switch default theme to Soft Energy light [MOB-016]` (11 file, +961 / -354).
+  - `d08f9fb docs(plan): rework design direction independent from web [MOB-015]` (2 file, +26 / -4).
+  - `49b53f3 docs(tasks): record MOB-000 planning complete [MOB-000]` (MOB-000 goc).
+- Branch ahead of origin/main: 5 commits. Chua push (theo rule).
 
 ## Trang thai task
 
 - **MOB-000**: DONE (planning).
 - **MOB-015**: DONE trong tasks.md nhung bi MOB-016 override (user doi y kien → chot light theme).
-- **MOB-016**: IN_PROGRESS (sua light theme Soft Energy). Phien nay update docs.
+- **MOB-016**: DONE (sua light theme Soft Energy, override Calm Modern cua MOB-015).
 - **MOB-001..MOB-303**: TODO (chua implement mobile code).
 
 ## Thay doi chua commit trong phien nay
