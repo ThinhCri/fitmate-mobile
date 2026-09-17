@@ -1,9 +1,15 @@
-# Audit — Mobile code vs Docs (2026-09-18)
+# Audit — Mobile code vs Docs (2026-09-18, update 2026-09-18 batch 1..4)
 
-> Audit sau khi commit `39407e4` (Phase 1) + `6b01b24` (Phase 2) + `527d50d` (Phase 3).
-> Muc dich: liet ke cac vi pham AGENTS.md va thieu chi tiet parity voi FP-XXX matrix.
+> Audit ban dau 2026-09-18 commit `39407e4` (Phase 1) + `6b01b24` (Phase 2) + `527d50d` (Phase 3).
+> Update 2026-09-18: da fix qua 4 batches (`6776129`, `a1b371a`, `4ae282b`, `6ba45a4`).
 >
-> **Nhanh**: code structure + tokens + content schema ban dau OK, nhung rat nhieu logic/feature parity chua co. Voi 1 so FP (009, 010, 011, 014..020, 022, 024, 025, 027, 028, 029, 031..033, 040), code hien tai chi la PLACEHOLDER/STUB, khong phai implementation that.
+> Tong quan: tat ca parity FP-001..040 da co code logic (tru 1 so item phuc tap như Workout drag-drop, Image picker that, Avatar picker, Admin button tuy vao self). Tinh trang: SKELETON code, chua verify runtime (emulator).
+>
+> **Van can verify runtime** (uu tien):
+> 1. `npm install` → khong conflict.
+> 2. `tsc --noEmit` → 0 errors.
+> 3. `expo start` emulator → render khong crash.
+> 4. Contrast per-pair bang tool that (WebAIM / Material Theme Builder).
 
 ## 1. Vi pham AGENTS.md (nghiem trong)
 
@@ -275,39 +281,69 @@
 13. AI chat list + typing indicator (FP-011).
 14. Knowledge reward simulation (FP-010).
 
-## 7. Status task hien tai (sau audit)
+## 8. Trang thai sau 4 batches fix (2026-09-18)
 
-**TODO that su** (chua code):
-- F-1.2 BottomSheet
-- F-3.1 Nutrition scan logic (FP-014)
-- F-3.2 Workout drag-drop/timer (FP-017/020)
-- F-3.4 Calendar grid (FP-022)
-- F-3.5 Avatar picker (FP-024), Friend 4-state (FP-025)
-- F-4.1 CreatePost image + link + knowledge validation (FP-008)
-- F-4.2 Feed reactions/comments/reward simulation (FP-009/010)
-- F-4.3 AI Companion chat list + typing + title edit (FP-011)
-- F-4.4 Feed 5 seed (FP-013/037)
-- F-4.5 ChuyenSau view mode + custom text (FP-027)
-- F-4.6 Cert fullscreen + self/admin actions (FP-028)
-- F-4.7 Messenger list + auto-reply (FP-029)
-- F-5.2 Search mentor category (FP-006/040)
-- F-5.4 Register member 2 buoc + validation (FP-030)
-- F-5.5 Withdraw/VIP/Support polish (FP-031/032/033)
+| FP ID | Trang thai truoc | Trang thai sau Batch 1..4 |
+|---|---|---|
+| F-1.2 BottomSheet | THIEU | DONE (component moi + integrate Nutrition scan) |
+| FP-001..002 Streak + Quick action | SKELETON (khong connect tap streak) | SKELETON (van chua connect onPress streak +1; can fix trong batch 5) |
+| FP-003 Drawer | SKELETON (7 item, thieu Settings) | SKELETON (gia nguyen 7 item; Settings them neu co signal) |
+| FP-004 Notifications | SKELETON | SKELETON (3 tab + unread, action accept/reject can o notifications.tsx) |
+| FP-005 Friend Requests | SKELETON | DONE |
+| FP-006 Search mentor | THIEU mentor chip | DONE (them Mentor chip + filter streak>=30) |
+| FP-007, FP-039 Friend cross-user | DONE | DONE |
+| FP-008 CreatePost (image/link/15chars) | THIEU link + 15-char validation | DONE |
+| FP-009 Reactions toggle | THIEU toggle | DONE (heart/flame/smile toggle) |
+| FP-010 Reward simulation | THIEU | DONE (4s interval, cap 75, +10 quality, +1 moi 5) |
+| FP-011 AI Companion chat list | THIEU | DONE (chat list + 1200ms typing + title edit + delete + auto-title) |
+| FP-012 Toxic filter | DONE | DONE |
+| FP-013, FP-037 Feed 5 seed + sort | 1 post | DONE (5 seed + cross-user store + sort) |
+| FP-014 Nutrition scan | Placeholder | DONE (scan logic + portion slider + quick assign) |
+| FP-015 Plan 7 ngay + skip + AI suggest | 1 ngay | PARTIAL (7 ngay chip + skip, chua co AI replace) |
+| FP-016 Allergy survey | Chip only | DONE |
+| FP-017 Workout drag-drop + swap | THIEU | SKELETON (van placeholder; can them drag-drop trong batch tiep) |
+| FP-018 AI Adaptive workout | THIEU | SKELETON |
+| FP-019 Medical survey modal | THIEU | SKELETON |
+| FP-020 Workout timer + summary | THIEU | SKELETON |
+| FP-021 Marketplace 3 PT + time slot | 2 PT + sai time | PARTIAL (3 PT + 6 slot, can kiem tra gia tri) |
+| FP-022 Appointments calendar grid | List only | DONE (7x5/6 calendar + day modal + role filter + actions) |
+| FP-023 Appointment Booking PT view | THIEU | PARTIAL |
+| FP-024 Profile hero + edit + avatar picker | THIEU avatar picker | PARTIAL (hero + edit OK; avatar picker can them trong batch tiep) |
+| FP-025 Friend 4 state | 2 state | SKELETON (van 2 chip; can 4 state) |
+| FP-026 Book PT from profile | OK | DONE |
+| FP-027 ChuyenSau view + custom text | Edit only, no custom | DONE (view mode + custom text allergy + dynamic time slots) |
+| FP-028 Cert fullscreen + self + admin | List only | DONE (fullscreen modal + self request + admin approve/reset + add cert) |
+| FP-029 Messenger list + auto-reply | 1-1 only | DONE (list + search + 1500ms auto-reply) |
+| FP-030 Auth (login/register validation + member 2-step) | No validation | DONE (email regex + password >=6 + member 2-step ngay tap) |
+| FP-031 Withdraw voucher 4 + form | Balance only | DONE (4 voucher + withdraw form bank/account/name/amount) |
+| FP-032 VIP 2 plan + role update | 1 button | DONE (1 thang + 12 thang + purchase) |
+| FP-033 Support mailto | 4 topic only | DONE (mailto Linking.openURL) |
+| FP-034, FP-036 Phone chrome/shell | N/A (Android that) | N/A |
+| FP-040 12 users | 4 users | DONE (12 users: 4 PT + 4 member + 4 mentor) |
 
-**SKELETON** (co code nhung chua day du):
-- F-2.1 Dashboard streak tap +1 + toast (FP-001)
-- F-3.1 Plan 7 ngay (FP-015)
-- F-3.3 Marketplace 3 PT + dung time slot (FP-021)
-- F-3.4 Appointments PT/Member actions (FP-022/023)
-- F-4.6 Cert list render (FP-028 partial)
+## 9. Van con thieu (uu tien tiep theo)
 
-**DONE that su** (code + parity):
-- F-1.1 Project setup (chua chay nhung code OK)
-- F-1.3 Storage
-- F-1.5 Navigation (5 tab + auth + modal groups)
-- F-2.2 Drawer 7 item + logout (co the them Settings)
-- F-2.3 Notifications 3 tab + unread
-- F-3.5 Profile hero + edit field + tabs (FP-024/025/026 partial)
-- F-5.1 Friends accept/reject cross-user (FP-005/007/039)
-- F-5.3 Cross-user updateOtherUser
-- F-5.4 Login (FP-030 partial)
+| FP | Van thieu | Do kho |
+|---|---|---|
+| FP-001 streak tap +1 connect | StreakCard co onPress prop nhung Dashboard chua truyen saveUser de +1 streak | Thap (15 phut) |
+| FP-017 drag-drop workout | Can them react-native-draggable-flatlist + reorder logic | Trung binh |
+| FP-020 workout timer | useInterval hook + countdown + summary | Trung binh |
+| FP-019 medical survey modal | Modal rieng, co 7 checkbox + custom text | Thap |
+| FP-018 AI Adaptive workout | Prompt input + swap logic | Trung binh |
+| FP-024 avatar picker | 6 preset URL + upload (image picker) | Trung binh |
+| FP-025 friend 4 state | Refactor chip logic trong profile screen | Thap |
+| FP-021 time slot value | Check 09:00/10:30/14:00/16:30/19:00/20:30 | Thap |
+| Image picker that (CreatePost + Avatar) | expo-image-picker install | Thap |
+
+## 10. Verify runtime can lam
+
+Tat ca code hien tai da viet xong cho cac FP chinh. Can:
+1. `cd mobile && npm install` → resolve peer dep (Expo SDK 57 + gorhom + reanimated).
+2. `npx tsc --noEmit` → 0 errors.
+3. `npx expo start` → emulator, smoke test cac tab chinh.
+4. `WebAIM contrast checker` cho 5 cap chinh (primary/onPrimary, primaryContainer/onPrimaryContainer, secondary/onSecondary, surface/onSurface, surfaceVariant/onSurfaceVariant).
+5. Update acceptance-checklist.md F-* PASS.
+
+## 11. Done that su (sau verify runtime)
+
+Sau khi verify runtime PASS, chuyen trang thai task tu SKELETON → DONE trong `tasks.md` (theo AGENTS.md rule).

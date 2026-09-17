@@ -23,7 +23,7 @@
   - `c7b4158 docs(handoff): record planning commit hash [MOB-000]` (cap nhat handoff voi hash that).
   - `49b53f3 docs(tasks): record MOB-000 planning complete [MOB-000]` (cap nhat tasks status).
   - Chua push theo rule.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 
 ---
 
@@ -51,7 +51,7 @@
   - Type family chi Inter (display + body + label).
 - **Kiem tra da chay**: doc file, grep verify khong con cum tu cu.
 - **Kiem tra chua chay**: emulator thuc te (sau Phase 1).
-- **Trang thai**: DONE (sau khi user chinh sua lan 2, se thay the noi dung boi MOB-016)
+- **Trang thai**: SKELETON (code done, chua verify runtime) (sau khi user chinh sua lan 2, se thay the noi dung boi MOB-016)
 
 ---
 
@@ -86,7 +86,7 @@
 - **Commit**:
   - MOB-015 (AGENTS.md, current-app-audit.md): `d08f9fb docs(plan): rework design direction independent from web [MOB-015]`.
   - MOB-016 (11 file con lai): `235792d docs(design): switch default theme to Soft Energy light [MOB-016]`.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Lu y tiep theo**: MOB-016b lam ro vai tro sienna/violet (xem DEC-020) + bo sung content parity checklist 3 manh Dashboard / Profile HV / Profile PT.
 
 ---
@@ -116,7 +116,7 @@
 - **Kiem tra chua chay**: 
   - Re-verify contrast bang tool that (WebAIM / Material Theme Builder) khi implement.
   - Emulator that de xem visual depth 5-tier (can than surfaceContainer vs surfaceContainerHigh khi pressed).
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `5919d1f docs(design): refine semantic roles + content parity [MOB-016b]`.
 
 ---
@@ -147,7 +147,7 @@
 - **Deliverables**: `mobile/package.json`, `mobile/app.json`, `mobile/tsconfig.json`, folder structure theo `android-migration-plan.md`.
 - **Tieu chi nghiem thu**: xem `acceptance-checklist.md` F-1.1.
 - **Cach kiem tra**: `npm run type-check`, `npm run lint`, `npm run android` mo emulator.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `39407e4 feat(mobile): phase 1 foundation + 5 tab skeleton [MOB-001..005]`
 
 ### MOB-002 — Tokens & base components
@@ -164,7 +164,7 @@
 - **Deliverables**: storage.ts + secureStorage.ts + AuthContext.tsx.
 - **Parity IDs**: helpers cho moi service.
 - **Tieu chi**: F-1.3.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `39407e4` (cung MOB-001..005)
 
 ### MOB-004 — Mock services skeleton
@@ -172,7 +172,7 @@
 - **Deliverables**: mockUserService.ts, AuthContext.tsx, types/domain.ts, mocks/fixtures.ts, utils/.
 - **Parity IDs**: (foundation).
 - **Tieu chi**: F-1.4.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `39407e4` (cung MOB-001..005)
 
 ### MOB-005 — Navigation root
@@ -180,7 +180,7 @@
 - **Deliverables**: app/_layout.tsx, app/index.tsx, app/(tabs)/_layout.tsx + 5 tab screens skeleton.
 - **Parity IDs**: (foundation).
 - **Tieu chi**: F-1.5.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `39407e4` (cung MOB-001..005)
 
 ---
@@ -192,21 +192,21 @@
 - **Deliverables**: dashboard.tsx + DashboardHeader/StreakCard/CalorieRing/QuickActionGrid.
 - **Dependencies**: MOB-002, MOB-005.
 - **Tieu chi**: F-2.1.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24` (cung MOB-101..118)
 
 ### MOB-102 — Drawer panel
 - **Pham vi**: FP-003.
 - **Deliverables**: drawer.tsx (8 items + logout).
 - **Tieu chi**: F-2.2.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ### MOB-103 — NotificationsScreen
 - **Pham vi**: FP-004.
 - **Deliverables**: notifications.tsx (3-segment + unread dot).
 - **Tieu chi**: F-2.3.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ---
@@ -224,14 +224,14 @@
 - **Pham vi**: FP-017, FP-018, FP-019, FP-020.
 - **Deliverables**: workout.tsx (day ribbon + workout card list + start CTA).
 - **Tieu chi**: F-3.2.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ### MOB-113 — Marketplace + BookingSheet
 - **Pham vi**: FP-021.
 - **Deliverables**: marketplace.tsx + booking/[email].tsx.
 - **Tieu chi**: F-3.3.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ### MOB-114 — Appointments + Day detail
@@ -245,7 +245,7 @@
 - **Pham vi**: FP-024, FP-025, FP-026.
 - **Deliverables**: profile/[email].tsx + edit-profile/[email].tsx + friends.tsx + search.tsx.
 - **Tieu chi**: F-3.5.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ---
@@ -284,21 +284,21 @@
 - **Pham vi**: FP-027.
 - **Deliverables**: chuyen-sau.tsx.
 - **Tieu chi**: F-4.5.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ### MOB-117 — PTCertificatesScreen
 - **Pham vi**: FP-028.
 - **Deliverables**: certificates/[email].tsx.
 - **Tieu chi**: F-4.6.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ### MOB-118 — Messenger
 - **Pham vi**: FP-029.
 - **Deliverables**: chat/[email].tsx.
 - **Tieu chi**: F-4.7.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ---
@@ -309,35 +309,35 @@
 - **Pham vi**: FP-005.
 - **Deliverables**: friends.tsx (3-segment received/friends/sent).
 - **Tieu chi**: F-5.1.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ### MOB-105 — UserSearchScreen
 - **Pham vi**: FP-006.
 - **Deliverables**: search.tsx.
 - **Tieu chi**: F-5.2.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ### MOB-106 — FriendService cross-user
 - **Pham vi**: FP-007, FP-039.
 - **Deliverables**: mockUserService.updateOtherUser() cross-user sync trong chat + friends.
 - **Tieu chi**: F-5.3.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ### MOB-119 — Auth (login + register)
 - **Pham vi**: FP-030.
 - **Deliverables**: (auth)/login.tsx + register.tsx.
 - **Tieu chi**: F-5.4.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `527d50d`
 
 ### MOB-120 — Reward + VIP + Support
 - **Pham vi**: FP-031, FP-032, FP-033.
 - **Deliverables**: withdraw.tsx + vip.tsx + support.tsx.
 - **Tieu chi**: F-5.5.
-- **Trang thai**: DONE
+- **Trang thai**: SKELETON (code done, chua verify runtime)
 - **Commit**: `6b01b24`
 
 ---

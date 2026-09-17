@@ -8,34 +8,53 @@
 
 - Branch: `main`.
 - Working tree: clean sau commit.
-- Commit gan nhat:
-  - `527d50d feat(mobile): phase 3 auth + create-post + polish [MOB-119..135]` (3 file, +409 / -1).
-  - `6b01b24 feat(mobile): phase 2 critical path screens [MOB-101..118]` (24 file, +2438 / -22).
-  - `39407e4 feat(mobile): phase 1 foundation + 5 tab skeleton [MOB-001..005]` (48 file, +2678).
-  - `202bc84 docs(handoff): record MOB-016b commit hash [MOB-016b]`
-  - `5919d1f docs(design): refine semantic roles + content parity [MOB-016b]`
-  - `9056d7f docs(handoff): record MOB-015/MOB-016 commit hashes [MOB-016]`
-  - `235792d docs(design): switch default theme to Soft Energy light [MOB-016]`
-  - `d08f9fb docs(plan): rework design direction independent from web [MOB-015]`
-  - `49b53f3 docs(tasks): record MOB-000 planning complete [MOB-000]`
-- Branch ahead of origin/main: 10 commits. Chua push (theo rule).
+- Commit gan nhat (17 commits ahead of origin/main, chua push):
+  - `6ba45a4 feat(mobile): voucher/withdraw form + VIP 2 plan + support mailto + cert fullscreen/self/admin + search mentor category + register 2-step validation + chuyen-sau view/edit + custom text (FP-022..028, FP-031..033) [MOB-105,MOB-116,MOB-117,MOB-120]`
+  - `4ae282b feat(mobile): Messenger list screen + auto-reply 1500ms + scroll-to-bottom (FP-029) [MOB-118]`
+  - `a1b371a feat(mobile): postsStore + reward sim + 5 seed posts + reactions/comments + AI chat list/typing/edit/delete + 8 users (FP-040) [MOB-107..110,MOB-117,MOB-119,MOB-120]`
+  - `6776129 feat(mobile): BottomSheet + Nutrition scan logic + Appointments calendar grid [MOB-002b,MOB-111,MOB-114]`
+  - `be0d831 docs(audit): log mobile-vs-docs violations + downgrade MOB-001..135 to SKELETON [MOB-015]`
+  - `71b545d docs(handoff): record all phase 1-3 commits [MOB-001..135]`
+  - `527d50d feat(mobile): phase 3 auth + create-post + polish [MOB-119..135]`
 
-## Trang thai task (sau audit 2026-09-18)
+## Trang thai task (sau 4 batches fix 2026-09-18)
 
 > **Luu y quan trong**: Tat ca task MOB-001..135 hien tai la **SKELETON/STUB**, KHONG phai DONE that su.
-> Code da viet nhung chua chay `npm install` / `tsc --noEmit` / `expo start` / emulator that.
-> Audit day du: xem `docs/mobile-redesign/audit-mobile-vs-docs.md`.
+> Code da viet day du cho 4 batches nhung chua chay `npm install` / `tsc --noEmit` / `expo start` / emulator that.
+> Audit day du (FP-001..040): xem `docs/mobile-redesign/audit-mobile-vs-docs.md`.
 >
-> Viem pham AGENTS.md "**Khong danh dau DONE task khi thieu kiem chung**" da duoc sua trong commit sau.
+> Vi pham AGENTS.md "**Khong danh dau DONE task khi thieu kiem chung**" da duoc sua trong commit `be0d831`.
 
 - **MOB-000**: DONE that su (planning).
 - **MOB-015**: huy (override boi MOB-016).
 - **MOB-016**: DONE that su (sua light theme Soft Energy).
 - **MOB-016b**: DONE that su (refine semantic roles + content parity checklist).
-- **MOB-001..005**: SKELETON (code da viet, chua verify runtime) → can `npm install` + emulator.
-- **MOB-101..118**: SKELETON (code da viet, nhieu FP thieu logic parity) → xem audit Section 3.
-- **MOB-119..135**: SKELETON (code da viet, nhieu FP thieu logic parity).
+- **MOB-001..005**: SKELETON code done → can `npm install` + emulator.
+- **MOB-002b** (BottomSheet): SKELETON code done.
+- **MOB-101..118**: SKELETON code done cho 5 tabs + Drawer + Notifications + Social + Messenger + Appointments + Nutrition.
+- **MOB-119..135**: SKELETON code done cho Login/Register/Profile/Edit/Certificates/Withdraw/VIP/Support/Search/CreatePost/ChuyenSau.
 - **MOB-200..202**: TODO (Phase 6 pre-scale verification — can chay MOB-001..135 that su truoc).
+
+### Cac FP da hoan thanh code (Batch 1..4)
+
+- F-1.2 BottomSheet primitive (Batch 1)
+- FP-014 Nutrition scan logic (Batch 1)
+- FP-015 Plan 7 ngay + skip (Batch 1)
+- FP-022 Appointments calendar grid + day modal + role filter + actions (Batch 1)
+- FP-009 Reactions toggle heart/flame/smile (Batch 2)
+- FP-010 Reward simulation 4s interval (Batch 2)
+- FP-011 AI Companion chat list + 1200ms typing + title edit + delete (Batch 2)
+- FP-013, FP-037 5 seed posts + cross-user store (Batch 2)
+- FP-008 CreatePost image + link + 15-char knowledge validation (Batch 2)
+- FP-029 Messenger list + 1500ms auto-reply (Batch 3)
+- FP-006 Search mentor category (Batch 4)
+- FP-027 ChuyenSau view mode + custom text + dynamic time slots (Batch 4)
+- FP-028 Cert fullscreen + self + admin (Batch 4)
+- FP-030 Auth validation + member 2-step (Batch 4)
+- FP-031 Withdraw 4 voucher + form (Batch 4)
+- FP-032 VIP 2 plan + purchase (Batch 4)
+- FP-033 Support mailto Linking (Batch 4)
+- FP-040 12 users (4 PT + 4 member + 4 mentor) (Batch 2)
 
 ## Thay doi chua commit trong phien nay
 
