@@ -15,14 +15,76 @@
   - Doc 4 file cua web de lay data shape, props, modal, validation.
 - **Con thieu**: 
   - `.cursor/rules/*.mdc` chua tao (plan mode chan). Noi dung da san trong `docs/mobile-redesign/cursor-rules-content.md`.
-  - Web khong chay thu cong trong phien nay (khong co emulator browser).
+  - Web khong chay thu truc tiep trong phien nay (khong co emulator browser).
 - **Kiem tra da chay**: `git status` (clean truoc va sau), `git log --oneline -20`, doc file truc tiep.
 - **Kiem tra chua chay**: `npm run dev` web, `npm run android` mobile, screenshot emulator.
 - **Commit**:
   - `484afe8 docs(plan): inventory Android UI migration [MOB-000]` (14 file, +3127 dong).
   - `c7b4158 docs(handoff): record planning commit hash [MOB-000]` (cap nhat handoff voi hash that).
+  - `49b53f3 docs(tasks): record MOB-000 planning complete [MOB-000]` (cap nhat tasks status).
   - Chua push theo rule.
 - **Trang thai**: DONE
+
+---
+
+## MOB-015 — Sua design direction: bo ke thua theme web, thiet ke moi doc lap
+
+- **Boi canh**: User yeu cau ngay 2026-09-17 (lan 1) sua lai: web chi baseline content, KHONG baseline visual. Quyet dinh DEC-002 (Glow Sport, giong web) bi huy. Them DEC-015 (Calm Modern, doc lap).
+- **Pham vi**: 
+  - Sua `decisions.md`: them DEC-015 (Calm Modern), DEC-016 (Expo Router), DEC-017 (avatar doc lap), DEC-018 (UI tieng Viet); huy DEC-002 va DEC-010; sua DEC-004/007/012/013 de phan biet content vs visual baseline.
+  - Sua `AGENTS.md`: ghi ro baseline ngon ngu web (content only, khong visual).
+  - Sua `README.md`, `current-app-audit.md`: phan biet content vs visual baseline.
+  - Sua `design-system.md`: tokens moi (Calm Modern), M3 color roles, Inter font, spacing/radius/elevation theo M3.
+  - Sua `design-research.md`: ghi ro nguon da truy cap (reactnative.dev, docs.expo.dev/router, docs.expo.dev/develop/user-interface/store-data, myfitnesspal.com, freeletics.com/en), ghi ro nguon khong truy cap duoc (Material 3 site timeout/404, Google Play, Mobbin can dang nhap).
+  - Sua `screen-specs.md`: disclaimer navigation de xuat (co the thay doi neu co ly do), ASCII wireframe chi minh hoa layout relative.
+  - Sua `android-migration-plan.md`: cap nhat stack (Expo Router), tokens doc lap.
+  - Sua `acceptance-checklist.md`: bo cum tu "giong web", de xuat navigation moi.
+  - Sua `cursor-rules-content.md`: `mobile-design-system.mdc` tokens Calm Modern + Inter font; `android-implementation.mdc` Expo Router.
+- **Parity IDs**: khong anh huong parity content; them luu y.
+- **Dependencies**: khong co (truoc Phase 1 implementation).
+- **Tieu chi nghiem thu**:
+  - Khong con cum tu "giong web", "Glow Sport", "brand consistency" lien quan den visual, "Outfit".
+  - `decisions.md` co DEC-015 (Calm Modern), DEC-016 (Expo Router), DEC-017, DEC-018.
+  - `design-research.md` co link that + ngay truy cap.
+  - `design-system.md` co bang mau semantic theo M3 roles, hex value moi (khong copy `src/index.css`).
+  - Token names su dung M3 convention (surface, onSurface, primary, onPrimary, primaryContainer, secondary, tertiary, onTertiary, error, onError, outline, outlineVariant, success, warning, info).
+  - Type family chi Inter (display + body + label).
+- **Kiem tra da chay**: doc file, grep verify khong con cum tu cu.
+- **Kiem tra chua chay**: emulator thuc te (sau Phase 1).
+- **Trang thai**: DONE (sau khi user chinh sua lan 2, se thay the noi dung boi MOB-016)
+
+---
+
+## MOB-016 — Chuyen design direction sang light theme (Soft Energy, thay the Calm Modern)
+
+- **Boi canh**: User yeu cau ngay 2026-09-17 (lan 2): light theme la mac dinh, thay the Calm Modern (dark) cua MOB-015. Khong can trien khai 2 theme. User chi chot huong nen sang, chua chot mau thuong hieu → AI tu nghien cuu, de xuat, chon.
+- **Pham vi**:
+  - Huy DEC-015 (Calm Modern, dark).
+  - Them DEC-019 (Soft Energy, light-only).
+  - `decisions.md`: cap nhat noi dung DEC-015 (huy), them DEC-019 (bang mau, ly do chon, nguon nghien cứu that).
+  - `design-system.md`: viet lai tokens chi light-only (Soft Energy). Bang mau M3 color roles, 3-tier depth. Bo cot "dark value" vi khong co dark theme trong phase nay. Contrast ghi per-pair, khong claim toan app AAA.
+  - `design-research.md`: them pattern tu Strava, Hevy, Cronometer, Nike NTC, Fitbit (light-first apps) — URL + ngay 2026-09-17. Section 3 them DEC-019.
+  - `screen-specs.md`: sua wireframe comment "hero gradient green/blue" thanh "hero tint (primaryContainer/tertiaryContainer M3 token, light theme Soft Energy)". Sua disclaimer ASCII theo DEC-019.
+  - `acceptance-checklist.md`: dong "Dark theme native applied" sua thanh "Light theme applied theo DEC-019; verify contrast key pairs (per-pair)".
+  - `cursor-rules-content.md`: `mobile-design-system.mdc` cap nhat Visual direction → Soft Energy (light theme only). Token usage them token M3 container moi.
+  - `tasks.md`: them MOB-016 IN_PROGRESS.
+  - `handoff.md`: cap nhat ghi nhan design chot = Soft Energy.
+  - `android-migration-plan.md`: section 3.5 Theme tokens cap nhat theo DEC-019.
+  - `feature-parity-matrix.md`: FP-001 sua "glow xanh/cam" thanh "token success/warning, light theme Soft Energy".
+  - `README.md`: dong mo dau them ghi chu "theme mac dinh: light (Soft Energy, xem DEC-019)".
+- **Parity IDs**: khong anh huong parity content; chi thay doi visual token va wireframe comment.
+- **Dependencies**: MOB-015 (override).
+- **Tieu chi nghiem thu**:
+  - Khong con dong noi "dark theme mac dinh" hay "dark navy + mint" con hieu luc trong docs.
+  - `decisions.md` co DEC-019 (Soft Energy) voi bang mau hex cu the, ly do chon 6 tieu chi.
+  - `design-system.md` chi co light values (khong cot dark value).
+  - `cursor-rules-content.md` Visual direction noi "light theme only".
+  - `acceptance-checklist.md` dong "Dark theme native applied" da doi thanh light.
+  - `screen-specs.md` wireframe comment khong con "gradient" (thay bang "tint" + token M3).
+- **Kiem tra da chay**: doc file, grep "dark theme", "dark navy", "Calm Modern" → khong con hieu luc.
+- **Kiem tra chua chay**: emulator thuc te (sau Phase 1).
+- **Trang thai**: IN_PROGRESS
+- **Commit MOB-015** (phan AGENTS.md + current-app-audit.md): se cap nhat sau khi commit xong.
 
 ---
 
@@ -189,7 +251,7 @@
 ## Phase 6 — Pre-scale verification
 
 ### MOB-200 — Android UX verification
-- **Pham vi**: hardware back, font scale, touch target, scroll, image, dark theme.
+- **Pham vi**: hardware back, font scale, touch target, scroll, image, light theme per DEC-019, accessibility.
 - **Tieu chi**: F-6.1.
 - **Trang thai**: TODO
 

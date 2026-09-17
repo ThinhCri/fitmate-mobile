@@ -1,6 +1,8 @@
 # Android Migration Plan — Cong nghe, cau truc, giai doan
 
-> Quyet dinh ky thuat cho migration tu web (React + Vite) sang Android (React Native + Expo + TypeScript). Khoa thanh mot luong de som verify tren Android emulator, sau do nhan rong.
+> Quyet dinh ky thuat cho migration tu web (React + Vite) sang Android (React Native + Expo + TypeScript + Expo Router, xem DEC-016). Khoa thanh mot luong de som verify tren Android emulator, sau do nhan rong.
+>
+> **Luu y**: tokens/theme cuoi cung lay theo DEC-019 (Soft Energy, light-only). Trong file nay chi tom tat de xuat ky thuat, khong phai spec design. Phase nay KHONG build dark theme.
 
 ## 1. Quyet dinh cong nghe (co ly do tu code)
 
@@ -44,7 +46,7 @@
 ### 3.1 Vi tri folder mobile
 
 - **De xuat**: tao subfolder `mobile/` o root repo (ngang `src/`).
-- **Ly do**: giu web lam baseline reference. Khi migration xong co the tach ra repo rieng.
+- **Ly do**: web la **baseline content/nghiep vu** (xem DEC-004, `current-app-audit.md`) — de tham chieu fields/validation/role behavior. Khi migration xong co the tach ra repo rieng. Visual, tokens, layout → **doc lap hoan toan** (xem DEC-015).
 - **Schema**:
   ```
   FitmateAI_FE/
@@ -69,10 +71,15 @@
 
 ### 3.2 Navigation
 
-- `@react-navigation/native` + `@react-navigation/native-stack` + `@react-navigation/bottom-tabs`.
-- RootStack: AuthStack (Login/Register) + MainStack (BottomTabs + overlays).
-- BottomTabs: 5 tab (Dashboard, Nutrition, Workout, Social, Marketplace).
-- Native Stack de dang ky screen overlay (Profile, Appointments, ChuyenSau, ...).
+- **Expo Router** (xem DEC-016, `docs.expo.dev/router/introduction/`).
+- File-based routing trong `mobile/app/`:
+  - `app/_layout.tsx` → RootStack (RootStackProvider, ThemeProvider).
+  - `app/(auth)/` → Login, Register.
+  - `app/(tabs)/_layout.tsx` → BottomTabs (5 tab: Dashboard, Nutrition, Workout, Social, Marketplace).
+  - `app/(tabs)/dashboard.tsx`, `nutrition.tsx`, ...
+  - `app/(modals)/` → Profile, EditProfile, Appointments, ...
+- Native Stack duoc build-in (qua React Native Screens).
+- Bottom sheet (`@gorhom/bottom-sheet`) ben trong tung screen / modal theo nhu cau.
 
 ### 3.3 State management
 
@@ -87,9 +94,12 @@
 
 ### 3.5 Theme
 
-- `theme/tokens.ts` exports tat ca tokens (xem `design-system.md`).
+- `theme/tokens.ts` exports tokens theo DEC-019 (Soft Energy, **light-only**).
 - `theme/ThemeProvider.tsx` cung cap `useTheme()` hook.
-- `theme/components/` wrapper components: `<Card variant="highlight-green">`, `<Button variant="primary">`, `<Input>`, `<Chip>`, `<BottomSheet>`.
+- KHONG import CSS var tu `src/index.css` (web). Tokens doc lap hoan toan (xem DEC-004, DEC-015, DEC-019).
+- Token names theo M3 convention (surface, surfaceContainerLowest, surfaceContainerLow, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest, primary, secondary, tertiary, error, onXxx, xxxContainer, ...).
+- Component wrapper: `<Card>`, `<Button>`, `<Input>`, `<Chip>`, `<BottomSheet>`, etc. su dung tokens tu theme; khong hardcode mau.
+- Phase nay KHONG build dark theme. Neu user yeu cau dark sau, token names mapping M3 Token Studio de them dark variant ma khong phai sua component.
 
 ### 3.6 Folder features
 

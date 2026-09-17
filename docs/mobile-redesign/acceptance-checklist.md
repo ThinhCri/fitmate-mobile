@@ -143,7 +143,7 @@
 - [ ] Toast "Day la simulation, khong phai diem that" hien khi bat dau post knowledge.
 
 ### F-4.3 AI Companion (MOB-109)
-- [ ] Sidebar drawer list chats (giong web).
+- [ ] Sidebar/drawer hoac chat list screen hien thi cac cuoc chat (theo design moi, xem `screen-specs.md` — co the la drawer hoac screen rieng).
 - [ ] Tao chat → greeting + ve chat list.
 - [ ] Title auto set = first 18 chars cua message.
 - [ ] Edit title inline → save.
@@ -222,7 +222,8 @@
 - [ ] Keyboard hien thi khi focus input.
 - [ ] Scroll list dai khong jitter.
 - [ ] Image load placeholder + error fallback.
-- [ ] Dark theme native applied.
+- [ ] Light theme applied theo DEC-019 (Soft Energy, light-only).
+- [ ] Verify contrast key pairs bang tool (per-pair), khong claim app-wide AAA.
 - [ ] Tablet rotation neu can (basic responsiveness).
 
 ### F-6.2 Parity PASS (MOB-201)

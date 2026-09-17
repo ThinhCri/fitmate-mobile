@@ -86,29 +86,35 @@ This rule enforces the visual direction, tokens, and component rules for FitMate
 
 ## Visual direction (mandatory)
 
-- Theme: Glow Sport (dark charcoal background, neon green primary, orange warning, gold reward). See DEC-002 in docs/mobile-redesign/decisions.md.
+- Theme: **Soft Energy** — light theme only, page bg `#FAFAF7` off-white warm, primary `#0F766E` deep teal, secondary `#7C2D12` warm sienna, tertiary `#9333EA` violet (achievement, gamification), error `#B91C1C`. See **DEC-019** in docs/mobile-redesign/decisions.md (replaced DEC-015 in 2026-09-17).
+- Visual direction was deliberately redesigned to be **independent from the web frontend**. Do not copy theme tokens, CSS variables, or class names from web `src/index.css`.
 - Dynamic color (Material You): disabled. The brand color must stay consistent across devices.
-- Dark theme is the default and only theme for this stage. Do not build a light theme yet.
+- **Light theme only** for this phase. Do NOT build a dark theme. Token names follow M3 convention so a dark variant can be added later without rewriting the tokens.
+- Type family: **Inter** only (display + body + label). Outfit / Plus Jakarta Sans and similar display fonts were removed to reduce bundle size and ensure Vietnamese glyph coverage.
+- **Contrast**: do not claim "AAA toàn app". Verify per-pair with a real tool (WebAIM contrast checker / Material Theme Builder) and record the actual ratio. Token values in `design-system.md` Section 2 are illustrative; the implemented values may shift slightly to satisfy contrast goals.
 
 ## Token usage
 
-- Use only the semantic tokens defined in design-system.md (background, surface, text, border, accent, danger, success).
+- Use only the semantic tokens defined in design-system.md (surface, surfaceContainerLowest, surfaceContainerLow, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest, onSurface, onSurfaceVariant, onSurfaceDisabled, primary, onPrimary, primaryContainer, onPrimaryContainer, secondary, onSecondary, secondaryContainer, onSecondaryContainer, tertiary, onTertiary, tertiaryContainer, onTertiaryContainer, error, onError, errorContainer, onErrorContainer, success, warning, info, outline, outlineVariant). Material 3 color role names.
 - Do not hardcode hex colors inline. If a new color is needed, propose a token in design-system.md first and document the rationale.
-- Use the typography scale tokens (display.*, title.*, body.*, label.*). Vietnamese font support must be guaranteed (bundle Outfit + Inter, or fallback to system with Inter-equivalent fallback).
-- Spacing must use the spacing scale (xxs to 5xl). Do not introduce ad-hoc spacing values.
+- Use the typography scale tokens (display.*, headline.*, title.*, body.*, label.*). Vietnamese font support is guaranteed by Inter (Rasmus Andersson) with system fallback chain.
+- Spacing must use the spacing scale (xxs to 6xl). Do not introduce ad-hoc spacing values.
 - Radius must use the radius scale (xs to full).
 - Touch targets must be at least 48x48dp.
 
 ## Component rules
 
-- Button: variants primary (main action), secondary, orange (destructive/warning). All buttons must support loading, disabled, and icon props.
-- Input: use Input primitive. Validation messages live below the input, never in a tooltip. Error state uses red border plus helper text (do not rely on color alone).
-- Chip / Filter: Material 3-style FilterChip for category filters. Selected state uses primary bg plus dark text.
-- Card: variants default, highlight-green, highlight-orange, glass. Avoid nested cards (card inside card). Flatten.
-- Avatar: sizes 32, 40, 56, 80, 100. Default 56. Initials fallback when no URL or image load fails.
+- Button: variants primary (main action — filled deep teal `#0F766E`), secondary (filled surfaceContainerLow + outlineVariant 1dp), tertiary (text only), destructive (filled error). All buttons must support loading, disabled, and icon props.
+- Input: use Input primitive. Validation messages live below the input, never in a tooltip. Error state uses error border plus helper text (do not rely on color alone). Always-float label pattern (Material outlined).
+- Chip / Filter: Material 3-style FilterChip for category filters. Selected state uses primaryContainer bg + onPrimaryContainer text.
+- Card: variants default (bg surfaceContainerLowest + outlineVariant 1dp border), highlighted (stroke primary 1dp + bg surfaceContainerLowest), flat (no border, slight bg shift). Avoid nested cards. Flatten.
+- Avatar: sizes 32, 40, 56, 80, 100. Default 56. Initials fallback when no URL or image load fails. Avatar scheme placeholder must NOT reuse Unsplash URLs from web (see DEC-017) — use DiceBear / Boring Avatars / generated initials with role-tinted background.
 - Bottom Sheet: use for all flows that are not full-screen forms (booking, replace meal, allergy, medical). Include a drag handle. Snap points medium (40%) plus full (90%).
-- Toast: top-positioned, slide-in 200ms, hold 3s, slide-out 200ms. Variants success, warning, error.
+- Toast: top-positioned, slide-in 200ms, hold 3s, slide-out 200ms. Variants success, warning, error, info.
 - Modal: full-screen only when the content genuinely needs the full screen (CreatePost, Register). Always provide a Close button. Hardware back must also close.
+- Tabs (bottom): Material 3 NavigationBar. Active indicator pill bg primaryContainer + icon + label.
+- Progress: linear (LinearProgressIndicator) for protein/carb/fat; ring (SVG Arc with animated stroke) for calorie dashboard. Animate 250ms ease-out. Light theme: no glow halo — animate color tone / scale only.
+- Backdrop dim: light theme uses 35% opacity black for modal and bottom sheet (lighter than dark theme).
 
 ## Iconography
 
@@ -134,7 +140,8 @@ This rule enforces the visual direction, tokens, and component rules for FitMate
 - Tap: scale to 95-97% for 150ms.
 - Modal entry: slide-up plus fade 250ms.
 - Bottom sheet: spring damping 20, stiffness 180.
-- Streak card glow: 3s loop.
+- Streak badge: subtle 3s pulse when active (scale + tone change, not a glow halo — light theme does not glow).
+- Reaction pop: heart/flame/smile scale 1 → 1.3 → 1 (200ms).
 
 ## Things you must NOT do
 
@@ -169,13 +176,13 @@ globs:
 
 This rule constrains how the FitMate Android app is implemented with React Native, Expo, and TypeScript.
 
-## Tech baseline (locked by DEC-001, DEC-010)
+## Tech baseline (locked by DEC-001, DEC-016)
 
 - Stack: React Native + Expo + TypeScript. Do not introduce Flutter, Kotlin, Swift, Capacitor, or Ionic.
-- Navigation: @react-navigation/native + @react-navigation/native-stack + @react-navigation/bottom-tabs.
+- Navigation: **Expo Router** (file-based, native-stack built-in). See DEC-016.
 - Sheets: @gorhom/bottom-sheet.
 - Icons: lucide-react-native. Stroke width 2.
-- Storage: @react-native-async-storage/async-storage wrapped by a StorageAdapter interface.
+- Storage: @react-native-async-storage/async-storage wrapped by a StorageAdapter interface; expo-secure-store for the (mock) auth token.
 - Gestures/Animation: react-native-reanimated + react-native-gesture-handler.
 - SVG/Vector: react-native-svg (for ring progress, icons).
 - Date/Time: @react-native-community/datetimepicker (native).
@@ -184,14 +191,17 @@ This rule constrains how the FitMate Android app is implemented with React Nativ
 
 ## Project layout
 
-- All mobile code lives under mobile/. The web folder (src/) is the baseline and must not be modified.
-- mobile/src/theme/ for tokens and ThemeProvider.
-- mobile/src/components/ui/ for primitives (Button, Card, Chip, Input, Avatar, Toast, BottomSheet).
-- mobile/src/features/<feature>/ for screens grouped by domain.
-- mobile/src/services/ for service interfaces and adapters (mock and real).
-- mobile/src/mocks/ for fixtures (default users, posts, certificates).
-- mobile/src/utils/ for pure helpers (BMI calculator, calorie math, time formatters, toxic filter).
-- mobile/src/navigation/ for navigators and linking config.
+- All mobile code lives under `mobile/`. The web folder (`src/`) is **content baseline only** (fields, validation, role behavior) and must not be modified.
+- **Do not** import web modules from `src/` into `mobile/`. The two codebases are separate.
+- **Do not** copy theme tokens, CSS class names, or component styles from web into mobile (DEC-004, DEC-015).
+- `mobile/app/` for Expo Router file-based routes (RootStackProvider at `app/_layout.tsx`).
+- `mobile/src/theme/` for tokens (`tokens.ts`) and `ThemeProvider.tsx`.
+- `mobile/src/components/ui/` for primitives (Button, Card, Chip, Input, Avatar, Toast, BottomSheet).
+- `mobile/src/features/<feature>/` for screens grouped by domain.
+- `mobile/src/services/` for service interfaces and adapters (mock and real).
+- `mobile/src/mocks/` for fixtures (default users, posts, certificates). Avatar placeholders must NOT be Unsplash URLs from web (DEC-017).
+- `mobile/src/utils/` for pure helpers (BMI calculator, calorie math, time formatters, toxic filter).
+- `mobile/src/navigation/` for any cross-cutting navigation helpers (deep-link mapping, linking config).
 
 ## TypeScript
 

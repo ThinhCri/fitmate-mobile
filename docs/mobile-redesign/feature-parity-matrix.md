@@ -21,7 +21,7 @@
 - **Hanh dong**: tap streak → +1 + toast; tap calo ring → trang nutrition
 - **Nguon du lieu**: state trong `App.jsx` (`streak`, `caloriesConsumed`, `caloriesBurned`, `workoutState`)
 - **Vi tri moi**: top of Dashboard, sticky-ish
-- **Thay doi trinh bay**: doi ring sang Material progress indicator; glow xanh khi dat target, cam khi under
+- **Thay doi trinh bay**: doi ring sang Material progress indicator (xem `design-system.md` Section 11 Progress); hien thi thanh vien/duoi muc theo token success/warning (xem DEC-019 Soft Energy light theme); nhan manh dang ring cho streak de giu signature pattern.
 - **Kiem chung**: bang tay thay `streak` qua state dev; visual qua screenshot.
 - **Task lien quan**: MOB-101
 - **Trang thai**: TODO

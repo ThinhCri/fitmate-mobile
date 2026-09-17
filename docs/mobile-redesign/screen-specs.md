@@ -1,8 +1,10 @@
 # Screen Specs — Navigation & Wireframes
 
 > Dac ta tung man hinh + sitemap. Moi screen lien ket parity ID (FP-XXX) trong `feature-parity-matrix.md` va task ID (MOB-XXX) trong `tasks.md`.
+>
+> **Luu y quan trong**: Navigation o day (5 tab bottom, drawer, push stack) la **mot trong cac cau truc kha thi** dua tren content audit. AI trien khai co the de xuat cau truc khac (vd: drawer + tabs bottom + stack inline, hoac bottom navigation 5 tab + present sheet cho profile) neu co ly do — quan trong la **khong mat parity fields/actions/roles** (xem `feature-parity-matrix.md`). Quyet dinh thay doi navigation va layout phai ghi trong `decisions.md`.
 
-## 1. Navigation map (tong quan)
+## 1. Navigation map (tong quan, de xuat)
 
 ```
 AuthStack (khi chua auth)
@@ -129,14 +131,14 @@ Moi man hinh co:
 - **Muc dich**: tong quan ngay.
 - **Sections theo thu tu**:
   1. Header: avatar + ten + streak chip.
-  2. Streak card (ca glow cam neu < target, mat ne hoan thanh).
+  2. Streak card (token warning neu < target, token success neu hoan thanh, theo design system).
   3. Calorie ring (consumed/burned/target).
   4. Quick action grid 2x2: Quet mon / Lich tap / Dat lich PT / Chuyen sau.
   5. Drawer access (neu khong phai fab).
 - **Components**: streak-card, progress-ring (size 140dp), card-primary (4 card).
 - **Actions**: tap streak → +1 (co confirm), tap ring → nutrition, tap action → tab tuong ung, drawer icon → drawer, bell → notifications, reward → withdraw.
 - **States**: loading (skeleton 1 frame), empty (streak=0 → "Bắt đầu streak!" CTA).
-- **Thay doi**: ring su dung Material 3 progress indicator voi custom glow; bo notch emulator.
+- **Thay doi**: ring su dung Material 3 progress indicator (xem `design-system.md` Section 11 Progress) — token semantic, khong copy web neon green glow; bo notch emulator.
 
 ### 3.4 NutritionScreen (FP-014, FP-015, FP-016, MOB-111)
 
@@ -172,13 +174,13 @@ Moi man hinh co:
 ### 3.7 MarketplaceScreen (FP-021, MOB-113)
 
 - **Sections**: search bar (optional mock), filter chip (PT / Moi nhat / Gia tang/giam), list PT cards.
-- **Card**: cover gradient + avatar + ten + rating + exp + spec tags + verify badge + CTA "Dat lich".
+- **Card**: cover tint (primaryContainer/tertiaryContainer M3 token, light theme Soft Energy) + avatar + ten + rating + exp + spec tags + verify badge + CTA "Dat lich".
 - **Action**: tap info → ProfileScreen, tap CTA → BookingSheet (date + 6 time slot).
 
 ### 3.8 ProfileScreen (FP-024..026, MOB-115)
 
 - **Sections**:
-  1. Cover gradient + avatar + ten + verify badge (neu PT) + 2 quick actions (Dat lich / Nhan tin).
+  1. Cover tint (primaryContainer neu member, tertiaryContainer neu PT verified) + avatar + ten + verify badge (neu PT) + 2 quick actions (Dat lich / Nhan tin).
   2. Friend status chip row (Kết bạn / Đã gửi / Bạn bè / Hủy kết bạn).
   3. Tab: Thong tin | Bai viet | Reviews (chi PT).
   4. Thong tin: chieu cao/can nang/SĐT/ngay sinh/giới tinh; member co them benh nen/di ung/ngay tap/khung gio; PT co them chuyen mon/exp/price/chung chi/ngay hop.
@@ -246,6 +248,8 @@ Moi man hinh co:
 
 ## 4. Wireframe (ASCII sketch) cho Dashboard, Profile HV, Profile PT
 
+> Wireframe ASCII chi minh hoa **bo cuc va relative position**, khong binding visual theme. Mau sac, icon, font chi de phan biet khu vuc — implementation that theo `design-system.md` (Soft Energy, light theme only, xem DEC-019).
+
 ### 4.1 Dashboard (ASCII)
 
 ```
@@ -253,7 +257,7 @@ Moi man hinh co:
 | ☰   [avatar] Hùng (Bạn)   🔔 3 | <- header (chevron/bell)
 +--------------------------------+
 |  ╭──────────────────────────╮  |
-|  │  STREAK CARD              │ | <- streak (orange glow if active)
+|  │  STREAK CARD              │ | <- streak (warning if under, success if met)
 |  │  🔥 7 ngày                │ |
 |  │  "Bạn đang trên chuỗi!"   │ |
 |  ╰──────────────────────────╯  |
@@ -278,7 +282,7 @@ Moi man hinh co:
 | ←    Hùng (Bạn)           ✏️  | <- header back/edit
 +--------------------------------+
 |     ╭────╮                      |
-|     │ AV │     Hùng (Bạn)       | <- hero gradient green
+|     │ AV │     Hùng (Bạn)       | <- hero tint (primaryContainer M3 token, light theme Soft Energy)
 |     ╰────╯     @Hội viên        |
 |              [Hồ sơ chuyên sâu] |
 +--------------------------------+
@@ -307,7 +311,7 @@ Moi man hinh co:
 | ←    Mai Xuân Tú           ✉️ | <- verified on profile
 +--------------------------------+
 |     ╭────╮                      |
-|     │ AV │   Mai Xuân Tú       | <- hero gradient blue
+|     │ AV │   Mai Xuân Tú       | <- hero tint (tertiaryContainer M3 token, light theme Soft Energy)
 |     ╰────╯   ⭐ 4.9             |
 |             HLV Calisthenics    |
 |             3 năm kinh nghiệm  |
