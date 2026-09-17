@@ -21,3 +21,5 @@ export { ProgressBar } from './ProgressBar';
 export type { ProgressBarProps } from './ProgressBar';
 export { Toast } from './Toast';
 export type { ToastProps, ToastTone } from './Toast';
+export { BottomSheet } from './BottomSheet';
+export type { BottomSheetProps, BottomSheetRef } from './BottomSheet';

@@ -156,8 +156,8 @@
 - **Parity IDs**: theme co su dung trong moi module.
 - **Deliverables**: tokens.ts, ThemeProvider.tsx, semantic.ts, types.ts + 11 primitive components.
 - **Tieu chi**: F-1.2.
-- **Trang thai**: DONE
-- **Commit**: `39407e4` (cung MOB-001..005)
+- **Trang thai**: SKELETON (theme tokens + 10 primitives done; BottomSheet component added trong Batch 1; chua verify emulator).
+- **Commit**: `39407e4` (cung MOB-001..005) + Batch 1
 
 ### MOB-003 — Storage wrapper
 - **Muc tieu**: AsyncStorage adapter + helper.
@@ -215,10 +215,10 @@
 
 ### MOB-111 — NutritionScreen (scan + plan + allergy)
 - **Pham vi**: FP-014, FP-015, FP-016.
-- **Deliverables**: nutrition.tsx (Scan + Plan segments, macro bars).
+- **Deliverables**: nutrition.tsx (Scan + Plan segments, macro bars, BottomSheet portion slider, quick assign sang/trua/toi, 7 ngay chip week).
 - **Tieu chi**: F-3.1.
-- **Trang thai**: DONE
-- **Commit**: `6b01b24`
+- **Trang thai**: SKELETON (Scan + Plan tabs code done; Allergy chip 7 done; chua verify emulator; BottomSheet integration test chua chay).
+- **Commit**: `6b01b24` (initial) + pending Batch 1
 
 ### MOB-112 — WorkoutScreen (plan + session + medical)
 - **Pham vi**: FP-017, FP-018, FP-019, FP-020.
@@ -236,10 +236,10 @@
 
 ### MOB-114 — Appointments + Day detail
 - **Pham vi**: FP-022, FP-023.
-- **Deliverables**: appointments.tsx.
+- **Deliverables**: appointments.tsx (calendar grid 7x5/6 + day detail modal + role filter PT/Member + action buttons xac nhan/tu choi/hoan thanh/tre/xoa).
 - **Tieu chi**: F-3.4.
-- **Trang thai**: DONE
-- **Commit**: `6b01b24`
+- **Trang thai**: SKELETON (Calendar grid + day modal code done; role filter done; PT/Member actions done; chua verify emulator).
+- **Commit**: `6b01b24` (initial) + pending Batch 1
 
 ### MOB-115 — Profile + Edit + Friend UI + Book
 - **Pham vi**: FP-024, FP-025, FP-026.
