@@ -143,6 +143,7 @@ export const DEFAULT_USERS: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
 
   'pt@fitmate.vn': {
@@ -206,6 +207,7 @@ export const DEFAULT_USERS: Record<string, User> = {
         timestamp: new Date(Date.now() - 5 * 86400000).toISOString(),
       },
     ],
+    workoutHistory: [],
   },
 
   // Demo: 2nd PT (chua verify) de test mau verified vs unverified.
@@ -261,6 +263,7 @@ export const DEFAULT_USERS: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
 
   // Demo: HV thu 3 (Lan Anh) — gui friend request cho user.
@@ -306,6 +309,7 @@ export const DEFAULT_USERS: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
 
   // Demo: HV thu 4 (Minh) — da ket ban voi user.
@@ -351,6 +355,7 @@ export const DEFAULT_USERS: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
 };
 
@@ -505,6 +510,7 @@ const additionalUsers: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
   'khanh@fitmate.vn': {
     email: 'khanh@fitmate.vn',
@@ -524,6 +530,7 @@ const additionalUsers: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
   'thao@fitmate.vn': {
     email: 'thao@fitmate.vn',
@@ -543,6 +550,7 @@ const additionalUsers: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
   'duc@fitmate.vn': {
     email: 'duc@fitmate.vn',
@@ -562,6 +570,7 @@ const additionalUsers: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
   // Mentor = member already accumulated enough experience to mentor others.
   'thuhang@fitmate.vn': {
@@ -582,6 +591,7 @@ const additionalUsers: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
   'van@fitmate.vn': {
     email: 'van@fitmate.vn',
@@ -601,6 +611,7 @@ const additionalUsers: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
   'huyen@fitmate.vn': {
     email: 'huyen@fitmate.vn',
@@ -620,6 +631,7 @@ const additionalUsers: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
   'son@fitmate.vn': {
     email: 'son@fitmate.vn',
@@ -639,6 +651,7 @@ const additionalUsers: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
 };
 
@@ -662,6 +675,7 @@ const additionalPts: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
   'pttan@fitmate.vn': {
     email: 'pttan@fitmate.vn',
@@ -681,6 +695,7 @@ const additionalPts: Record<string, User> = {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   },
 };
 

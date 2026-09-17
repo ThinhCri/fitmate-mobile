@@ -1,0 +1,94 @@
+---
+description: Mobile design system rules for FitMate Android UI (React Native + Expo). Apply when touching mobile theme, components, screens, or visual tokens. Read design-system.md before changing visuals.
+globs:
+  - mobile/**
+  - docs/mobile-redesign/design-system.md
+  - docs/mobile-redesign/design-research.md
+  - docs/mobile-redesign/screen-specs.md
+---
+
+# Rule: Mobile Design System
+
+This rule enforces the visual direction, tokens, and component rules for FitMate Android. The full token list lives in docs/mobile-redesign/design-system.md.
+
+## Visual direction (mandatory)
+
+- Theme: **Soft Energy** — light theme only, page bg `#FAFAF7` off-white warm, primary `#0F766E` deep teal, secondary `#7C2D12` warm sienna, tertiary `#9333EA` violet (achievement, gamification), error `#B91C1C`. See **DEC-019** in docs/mobile-redesign/decisions.md (replaced DEC-015 in 2026-09-17).
+- Visual direction was deliberately redesigned to be **independent from the web frontend**. Do not copy theme tokens, CSS variables, or class names from web `src/index.css`.
+- Dynamic color (Material You): disabled. The brand color must stay consistent across devices.
+- **Light theme only** for this phase. Do NOT build a dark theme. Token names follow M3 convention so a dark variant can be added later without rewriting the tokens.
+- Type family: **Inter** only (display + body + label). Outfit / Plus Jakarta Sans and similar display fonts were removed to reduce bundle size and ensure Vietnamese glyph coverage.
+- **Contrast**: do not claim "AAA toàn app". Verify per-pair with a real tool (WebAIM contrast checker / Material Theme Builder) and record the actual ratio. Token values in `design-system.md` Section 2 are illustrative; the implemented values may shift slightly to satisfy contrast goals.
+
+## Token usage
+
+- Use only the semantic tokens defined in design-system.md (surface, surfaceContainerLowest, surfaceContainerLow, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest, onSurface, onSurfaceVariant, onSurfaceDisabled, primary, onPrimary, primaryContainer, onPrimaryContainer, secondary, onSecondary, secondaryContainer, onSecondaryContainer, tertiary, onTertiary, tertiaryContainer, onTertiaryContainer, error, onError, errorContainer, onErrorContainer, success, warning, info, outline, outlineVariant, scrim). Material 3 color role names.
+- Do not hardcode hex colors inline. If a new color is needed, propose a token in design-system.md first and document the rationale.
+- Use the typography scale tokens (display.*, headline.*, title.*, body.*, label.*). Vietnamese font support is guaranteed by Inter (Rasmus Andersson) with system fallback chain.
+- Spacing must use the spacing scale (xxs to 6xl). Do not introduce ad-hoc spacing values.
+- Radius must use the radius scale (xs to full).
+- Touch targets must be at least 48x48dp.
+
+### Vai tro mau nhan (theo DEC-020)
+
+- **Primary teal `#0F766E`**: duy nhat cho CTA chinh, focus ring, selected state, link, nav indicator pill bg. KHONG thay the bang secondary/tertiary.
+- **Secondary sienna `#7C2D12`**: chi streak warm accent (FP-005 streak badge, macro bar carb/fat, spec chip). KHONG lam CTA cạnh tranh, link, nav indicator.
+- **Tertiary violet `#9333EA`**: chi achievement / PT verified hero / verify badge. CHI xuat hien khi co nhu cau thuc te. Phase UI hien tai CHI xuat hien tren Profile PT verified hero + verify badge + PT role chip. KHONG xuat hien mac dinh tren moi man.
+- **Outline / outlineVariant**: border subtle 1dp. Outline (`#5C5750`) cho hairline/input border focus. outlineVariant (`#858078`) cho card subtle border 1dp.
+- **Disabled state**: chi dung `onSurfaceDisabled #8E939B` cho placeholder + caption (AA-large/UI). Button disabled label phai giam opacity thay vi doi mau qua nhe (giam `onSurface` xuong 38% opacity).
+
+## Component rules
+
+- Button: variants primary (main action — filled deep teal `#0F766E`), secondary (filled surfaceContainerLow + outlineVariant 1dp), tertiary (text only), destructive (filled error). All buttons must support loading, disabled, and icon props.
+- Input: use Input primitive. Validation messages live below the input, never in a tooltip. Error state uses error border plus helper text (do not rely on color alone). Always-float label pattern (Material outlined).
+- Chip / Filter: Material 3-style FilterChip for category filters. Selected state uses primaryContainer bg + onPrimaryContainer text.
+- Card: variants default (bg surfaceContainerLowest + outlineVariant 1dp border), highlighted (stroke primary 1dp + bg surfaceContainerLowest), flat (no border, slight bg shift). Avoid nested cards. Flatten.
+- Avatar: sizes 32, 40, 56, 80, 100. Default 56. Initials fallback when no URL or image load fails. Avatar scheme placeholder must NOT reuse Unsplash URLs from web (see DEC-017) — use DiceBear / Boring Avatars / generated initials with role-tinted background.
+- Bottom Sheet: use for all flows that are not full-screen forms (booking, replace meal, allergy, medical). Include a drag handle. Snap points medium (40%) plus full (90%).
+- Toast: top-positioned, slide-in 200ms, hold 3s, slide-out 200ms. Variants success, warning, error, info, achievement.
+- Modal: full-screen only when the content genuinely needs the full screen (CreatePost, Register). Always provide a Close button. Hardware back must also close.
+- Tabs (bottom): Material 3 NavigationBar. Active indicator pill bg primaryContainer + icon + label.
+- Progress: linear (LinearProgressIndicator) for protein/carb/fat; ring (SVG Arc with animated stroke) for calorie dashboard. Animate 250ms ease-out. Light theme: no glow halo — animate color tone / scale only.
+- Backdrop dim: light theme uses 35% opacity black for modal and bottom sheet (lighter than dark theme).
+
+## Iconography
+
+- Library: lucide-react-native. Stroke width 2 by default.
+- Sizes: 16 inline, 20 list, 24 button, 28 FAB.
+- Color: inherit text or use accent tokens.
+
+## Loading, empty, error
+
+- Loading: Skeleton for cards/posts, Spinner for full screen, inline spinner inside buttons when action takes more than 300ms.
+- Empty: icon 64dp plus title plus subtitle plus optional CTA. Use the same iconography across screens for consistency.
+- Error: icon plus title plus message plus Retry button. Retry must trigger the same action without restarting the whole flow.
+
+## Accessibility
+
+- Every icon-only button needs an accessibilityLabel.
+- Every image needs an accessibilityRole image plus a descriptive label.
+- Color is never the only signal (status pills always carry text).
+- Verify contrast: text primary on bg-dark >= 15:1; secondary >= 7:1.
+
+## Motion
+
+- Tap: scale to 95-97% for 150ms.
+- Modal entry: slide-up plus fade 250ms.
+- Bottom sheet: spring damping 20, stiffness 180.
+- Streak badge: subtle 3s pulse when active (scale + tone change, not a glow halo — light theme does not glow).
+- Reaction pop: heart/flame/smile scale 1 → 1.3 → 1 (200ms).
+
+## Things you must NOT do
+
+- Do not use gradients on body text.
+- Do not nest shadows (shadow on top of shadow).
+- Do not stack glass cards inside glass cards.
+- Do not use color as the only status indicator.
+- Do not introduce a new theme variant in this stage.
+- Do not introduce a new component library that overlaps with an existing one (pick one for tabs, one for sheets, one for modals).
+
+## When uncertain
+
+- Read docs/mobile-redesign/design-system.md first.
+- If the spec is missing, propose the smallest extension that fits the existing scale.
+- Record any visual decision in docs/mobile-redesign/decisions.md and link it from this rule.

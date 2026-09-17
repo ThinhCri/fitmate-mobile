@@ -1,0 +1,99 @@
+---
+description: Android + React Native + Expo implementation rules for FitMate. Apply when writing mobile code, configuring native packages, or running Android builds.
+globs:
+  - mobile/**
+  - docs/mobile-redesign/android-migration-plan.md
+  - docs/mobile-redesign/integration-boundaries.md
+---
+
+# Rule: Android Implementation
+
+This rule constrains how the FitMate Android app is implemented with React Native, Expo, and TypeScript.
+
+## Tech baseline (locked by DEC-001, DEC-016)
+
+- Stack: React Native + Expo + TypeScript. Do not introduce Flutter, Kotlin, Swift, Capacitor, or Ionic.
+- Navigation: **Expo Router** (file-based, native-stack built-in). See DEC-016.
+- Sheets: @gorhom/bottom-sheet.
+- Icons: lucide-react-native. Stroke width 2.
+- Storage: @react-native-async-storage/async-storage wrapped by a StorageAdapter interface; expo-secure-store for the (mock) auth token.
+- Gestures/Animation: react-native-reanimated + react-native-gesture-handler.
+- SVG/Vector: react-native-svg (for ring progress, icons).
+- Date/Time: @react-native-community/datetimepicker (native).
+- Toast: react-native-toast-message.
+- Image picker: expo-image-picker.
+
+## Project layout
+
+- All mobile code lives under `mobile/`. The web folder (`src/`) is **content baseline only** (fields, validation, role behavior) and must not be modified.
+- **Do not** import web modules from `src/` into `mobile/`. The two codebases are separate.
+- **Do not** copy theme tokens, CSS class names, or component styles from web into mobile (DEC-004, DEC-015).
+- `mobile/app/` for Expo Router file-based routes (RootStackProvider at `app/_layout.tsx`).
+- `mobile/src/theme/` for tokens (`tokens.ts`) and `ThemeProvider.tsx`.
+- `mobile/src/components/ui/` for primitives (Button, Card, Chip, Input, Avatar, Toast, BottomSheet).
+- `mobile/src/features/<feature>/` for screens grouped by domain.
+- `mobile/src/services/` for service interfaces and adapters (mock and real).
+- `mobile/src/mocks/` for fixtures (default users, posts, certificates). Avatar placeholders must NOT be Unsplash URLs from web (DEC-017).
+- `mobile/src/utils/` for pure helpers (BMI calculator, calorie math, time formatters, toxic filter).
+- `mobile/src/navigation/` for any cross-cutting navigation helpers (deep-link mapping, linking config).
+
+## TypeScript
+
+- Strict mode on (tsconfig strict: true).
+- Every screen exports its props type and reuses the service types.
+- No `any` unless absolutely necessary; if used, add a comment explaining why.
+
+## Service pattern (see integration-boundaries.md)
+
+- Define a service interface per domain (AuthService, UserService, FriendService, ...).
+- Implement a MockAdapter that uses AsyncStorage + local fixtures + cross-user localDb.
+- UI consumes only the interface via dependency injection or context.
+- RealApiAdapter comes later — do not pre-design abstractions beyond what is needed.
+
+## Mocking rules
+
+- All data must come from fixtures in mobile/src/mocks/. Hardcoded fixtures are OK in this phase.
+- Determinism: do not inject random delays/errors in flows shown to the user. Mocked AI responses must be reproducible.
+- AI vision (Nutrition scan) returns one of the predefined mock dishes after a 1500ms delay — never more than 3s.
+- AI chat returns one of the canned replies after a 1200ms delay.
+- Knowledge-post reward simulation runs every 4s on the same logic as web (App.jsx lines 1018-1070).
+
+## No production API calls
+
+- Do not fetch localhost:8080 or any external service in this phase.
+- All endpoints documented in integration-boundaries.md are MOCKED locally. Real endpoints are out of scope.
+
+## Permissions
+
+- Image picker (camera/library): request on demand; if user denies, show fallback to pick from library or skip.
+- Push notifications: not implemented. Do not request POST_NOTIFICATIONS.
+- Storage permission: not needed (AsyncStorage is app-sandboxed).
+
+## Android-specific behavior
+
+- Safe area: use react-native-safe-area-context on every screen.
+- Status bar: dark icons on dark background. Configure globally in app/_layout.
+- Hardware back: handled by native-stack + bottom-tabs automatically. For sheets, use the sheet library hook.
+- Font scaling: must work up to 1.5x without clipping. Verify in MOB-200.
+- Min touch target: 48x48dp. Verify in MOB-200.
+
+## Anti-patterns
+
+- Do not use inline styles for tokens. Always reference the theme.
+- Do not read AsyncStorage directly from a component. Always go through a service or storage helper.
+- Do not place business logic in screens. Extract to utils or services.
+- Do not import web modules from src/ into mobile/. The two codebases are separate.
+
+## Verification before declaring a task DONE
+
+- Type-check passes (npm run type-check).
+- Lint passes (npm run lint).
+- Acceptance criteria in docs/mobile-redesign/acceptance-checklist.md for the relevant phase PASS.
+- Visual regression: at least one screenshot on Android emulator.
+- Task is updated in docs/mobile-redesign/tasks.md (status, commit link, notes).
+- Local commit created per delivery-workflow.mdc.
+
+## Release
+
+- Out of scope for this phase: do not run EAS production build, do not upload to Google Play, do not register a Play Console account.
+- Release prep lives in Phase 7 (MOB-300..303) and is not started until explicitly requested.

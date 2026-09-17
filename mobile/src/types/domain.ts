@@ -9,6 +9,16 @@
 export type Gender = 'Nam' | 'Nữ' | 'Khác';
 export type CertificateStatus = 'verified' | 'pending' | 'unverified';
 
+export interface Exercise {
+  id: string;
+  name: string;
+  sets: number;
+  reps: number;
+  rest: number; // seconds
+  calories: number;
+  notes?: string;
+}
+
 export interface Certificate {
   id: string;
   name: string;
@@ -67,6 +77,20 @@ export interface User {
   conversations: Record<string, ChatMessage[]>;
   posts: Post[];
   reviews: Review[];
+  // FP-018 workout tracking
+  workoutHistory: WorkoutSession[];
+  // FP-019 medical survey
+  medicalConditions?: string[];
+  medicalNotes?: string;
+}
+
+export interface WorkoutSession {
+  id: string;
+  date: string; // ISO date (YYYY-MM-DD)
+  day: string; // 'T2'..'CN'
+  durationMin: number;
+  caloriesBurned: number;
+  exercises: number;
 }
 
 export interface Appointment {

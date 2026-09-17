@@ -1,0 +1,48 @@
+---
+description: Preserve FitMate content, fields, actions, and existing flows when migrating the web frontend to Android. Never silently drop or hide content for visual cleanup. Apply to docs and mobile work.
+globs:
+  - mobile/**
+  - docs/mobile-redesign/**
+  - src/**
+---
+
+# Rule: Preserve FitMate Content
+
+This rule applies whenever you touch code, docs, UI, or migrations for the FitMate Android project. Read docs/mobile-redesign/feature-parity-matrix.md (parity IDs FP-XXX) and docs/mobile-redesign/current-app-audit.md (inventory of the web frontend).
+
+## Hard requirements (must not be violated)
+
+1. Do not drop a field, screen, action, or role that exists in the web frontend during the Android migration.
+2. Do not replace an actual field or content with a placeholder, lorem ipsum, or TBD.
+3. Do not merge distinct business concepts (e.g. member vs PT, notifications vs friend requests) into one block just to fit a tighter layout.
+4. Do not silently change calculations, validation, or display conditions. If you find a discrepancy, log it in docs/mobile-redesign/tasks.md with the pre-existing-bug tag and consult docs/mobile-redesign/decisions.md before changing it.
+5. Preserve Vietnamese content, meaning, and units of measurement (cm, kg, kcal, Thứ 2, etc.).
+6. Do not turn a working action into a decorative button. If a button shipped in web, it must do something meaningful in Android.
+7. Do not present mocked functionality as production. Knowledge-post reward simulation, AI vision, AI chat are not real services — surface that fact in UI copy.
+8. Do not hide important information behind obscure menu paths or collapsed sections without leaving an obvious entry point.
+
+## Allowed (design flexibility)
+
+- Change colors, icons, fonts, spacing, and component shapes (consistent with docs/mobile-redesign/design-system.md).
+- Group fields differently; reorder sections; combine cards if the meaning is preserved.
+- Replace modals with dedicated screens or bottom sheets when justified.
+- Use tabs, accordions, or progressive disclosure only if every required field/control is reachable in two or fewer taps from the screen primary entry point.
+- Add loading, retry, toast feedback, and accessibility labels that augment (not replace) the original behavior.
+
+## Out of scope features
+
+- Never self-implement new business features the user did not ask for. Record ideas in docs/mobile-redesign/tasks.md under Backlog (out-of-scope) instead.
+
+## Encountering a bug from the web
+
+1. Note it in docs/mobile-redesign/tasks.md with the tag pre-existing-bug plus the source file:line evidence.
+2. Decide explicitly whether to fix in the Android port via docs/mobile-redesign/decisions.md.
+3. Do not change silently. If unsure, leave the original behavior and add a comment in the Android code referencing the audit note.
+
+## Sources of truth
+
+- docs/mobile-redesign/feature-parity-matrix.md for what must exist.
+- docs/mobile-redesign/current-app-audit.md for what the web actually has today (line numbers).
+- docs/mobile-redesign/decisions.md for the most recent ruling on boundary cases.
+
+If you find yourself wanting to skip a field or action because it clutters the layout, stop. Either fix the layout or surface the question back to the user via the AskQuestion tool with concrete options.

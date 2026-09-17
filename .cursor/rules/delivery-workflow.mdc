@@ -1,0 +1,74 @@
+---
+description: Delivery workflow for FitMate Android UI migration. Apply to every task that touches mobile code or docs. Read handoff.md and tasks.md before starting.
+globs:
+  - mobile/**
+  - docs/mobile-redesign/**
+---
+
+# Rule: Delivery Workflow
+
+This rule defines how AI agents pick up, execute, and hand off FitMate Android migration tasks.
+
+## Before any change
+
+1. Read AGENTS.md (project root).
+2. Read docs/mobile-redesign/handoff.md to know the current state.
+3. Read docs/mobile-redesign/tasks.md and find the next TODO or IN_PROGRESS task (lowest MOB-XXX ID that matches the requested phase).
+4. Read docs/mobile-redesign/decisions.md for the latest rulings.
+5. For the chosen task, read the parity IDs in docs/mobile-redesign/feature-parity-matrix.md and acceptance criteria in docs/mobile-redesign/acceptance-checklist.md.
+6. Run git status and git log --oneline -10. If working tree has unexpected changes, ask the user before proceeding.
+
+## Status transitions
+
+- TODO -> IN_PROGRESS: when you actually start the task. Update docs/mobile-redesign/tasks.md first.
+- IN_PROGRESS -> DONE: only after every acceptance case for the task PASSES. Do not mark DONE on partial completion.
+- IN_PROGRESS -> BLOCKED: when an unresolvable issue blocks progress. Record blocker in tasks.md (cause, attempts, next step).
+- DONE -> (re-open) -> IN_PROGRESS: when a regression is found later.
+
+## Commit cycle
+
+After every meaningful chunk of work:
+
+1. Run git status. Confirm the changes are only yours.
+2. Run git diff and review the scope (no unintended files).
+3. Update task status, parity matrix entries, and any spec touched.
+4. Stage only the files you intended (git add <path1> <path2>). Never use git add . mechanically.
+5. Commit with a Conventional Commits message that includes the task ID:
+   - docs(plan): <description> [MOB-XXX]
+   - feat(<scope>): <description> [MOB-XXX]
+   - fix(<scope>): <description> [MOB-XXX]
+   - chore(<scope>): <description> [MOB-XXX]
+6. Run git log -1 to confirm the commit exists and the tree is clean.
+7. Do NOT include the commit hash inside the commit message itself (avoid loops). Reference the task ID instead. Hashes can be added to docs in the NEXT commit.
+8. Do NOT push, merge, amend, rebase, reset --hard, or rewrite history.
+
+## Commit hygiene
+
+- One purpose per commit. If a chunk contains unrelated changes, split it or use multiple commits.
+- Never commit secrets, API keys, or personal data. Demo auth must use user@fitmate.vn / pt@fitmate.vn only.
+- Never commit pre-existing untracked changes from another AI or the user without explicit confirmation.
+- Never commit empty changes.
+- If a hook or pre-commit check fails, fix the issue. Do not bypass.
+
+## Forbidden git operations
+
+- git push (any remote).
+- git merge (any branch).
+- git rebase (interactive or otherwise).
+- git reset --hard or git reset --soft with intent to rewrite.
+- git commit --amend of a previous commit.
+- git filter-branch, git filter-repo.
+- Force push equivalents.
+
+If the user explicitly asks for any of the above, confirm the intent before doing it.
+
+## Handoff at end of session
+
+- Update docs/mobile-redesign/handoff.md with:
+  - Current objective.
+  - Git branch and last commit hash.
+  - Tasks completed / in-progress / blocked.
+  - Uncommitted changes (and origin if known).
+  - Verification commands that PASSED and those that did NOT run.
+  - Next concrete step (MOB-XXX, file, action).
+  - Any constraints the next AI must respect.

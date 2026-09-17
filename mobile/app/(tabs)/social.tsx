@@ -10,15 +10,16 @@ import { ScrollView, View, Text, Pressable, TextInput, Alert, RefreshControl } f
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
-  Bot, Users, Heart, Flame, Smile, Plus, MessageCircle, Send,
+  Bot, Users, Plus, Send,
   ChevronLeft, Plus as PlusIcon, Trash2, Check,
 } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
 import * as mockUserService from '@/services/mockUserService';
-import { addComment, getAllPostsSync, subscribe as subscribePosts, toggleReaction } from '@/services/postsStore';
-import type { ChatMessage, Post, Reaction } from '@/types';
+import { getAllPostsSync, subscribe as subscribePosts } from '@/services/postsStore';
+import { PostCard, CommentSection } from '@/features/social';
+import type { ChatMessage, Post } from '@/types';
 import { Card, Chip, Avatar, Button, Input, Empty } from '@/components/ui';
 
 type Segment = 'ai' | 'feed';
@@ -35,73 +36,6 @@ const AI_REPLIES = [
 
 const TYPING_DELAY_MS = 1200;
 
-function PostCard({ post, onUpdate, onComment }: { post: Post; onUpdate: () => void; onComment: (postId: string) => void }) {
-  const theme = useTheme();
-  const { user } = useAuth();
-  if (!user) return null;
-  const counts = useMemo(() => {
-    const c = { heart: 0, flame: 0, smile: 0 };
-    post.reactions.forEach((r) => {
-      c[r.type] = (c[r.type] || 0) + 1;
-    });
-    return c;
-  }, [post.reactions]);
-
-  const myReaction = (type: Reaction['type']) =>
-    post.reactions.find((r) => r.userEmail === user.email && r.type === type);
-
-  return (
-    <Card variant="default">
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Avatar name={post.authorEmail.split('@')[0]} size={40} />
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 13, fontWeight: '700' }}>
-            {post.authorEmail.split('@')[0]}
-          </Text>
-          <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11 }}>
-            {new Date(post.timestamp).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-            {post.isKnowledge && '  •  Kiến thức'}
-          </Text>
-        </View>
-      </View>
-      <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, marginTop: 8, lineHeight: 20 }}>
-        {post.content}
-      </Text>
-      {post.image && (
-        <View style={{ height: 160, borderRadius: 8, backgroundColor: resolveColor(theme, 'surfaceContainerLow'), marginTop: 8 }} />
-      )}
-      {post.link && (
-        <Text style={{ color: resolveColor(theme, 'info'), fontSize: 12, marginTop: 8 }}>{post.link}</Text>
-      )}
-      <View style={{ flexDirection: 'row', gap: 16, marginTop: 12 }}>
-        {(['heart', 'flame', 'smile'] as const).map((type) => {
-          const Icon = type === 'heart' ? Heart : type === 'flame' ? Flame : Smile;
-          const colorKey = type === 'heart' ? 'error' : type === 'flame' ? 'secondary' : 'warning';
-          const isActive = !!myReaction(type);
-          return (
-            <Pressable
-              key={type}
-              onPress={async () => {
-                await toggleReaction(post.id, user.email, type);
-                onUpdate();
-              }}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-            >
-              <Icon color={isActive ? resolveColor(theme, colorKey) : resolveColor(theme, 'outline')} size={16} fill={isActive ? resolveColor(theme, colorKey) : 'transparent'} />
-              <Text style={{ color: isActive ? resolveColor(theme, colorKey) : resolveColor(theme, 'onSurfaceVariant'), fontSize: 11, fontWeight: '600' }}>{counts[type]}</Text>
-            </Pressable>
-          );
-        })}
-        <View style={{ flex: 1 }} />
-        <Pressable onPress={() => onComment(post.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <MessageCircle color={resolveColor(theme, 'outline')} size={16} />
-          <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11, fontWeight: '600' }}>{post.comments.length}</Text>
-        </Pressable>
-      </View>
-    </Card>
-  );
-}
-
 export default function SocialScreen() {
   const { user, refresh } = useAuth();
   const theme = useTheme();
@@ -111,7 +45,6 @@ export default function SocialScreen() {
   const [posts, setPosts] = useState<Post[]>(() => getAllPostsSync());
   const [refreshing, setRefreshing] = useState(false);
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
-  const [commentDraft, setCommentDraft] = useState('');
 
   // AI state
   const [aiDraft, setAiDraft] = useState('');
@@ -232,14 +165,7 @@ export default function SocialScreen() {
     }, TYPING_DELAY_MS);
   };
 
-  // ---------------- Feed handlers ----------------
-  const submitComment = async () => {
-    if (!commentDraft.trim() || !commentingPostId) return;
-    await addComment(commentingPostId, user.email, commentDraft.trim());
-    refreshPosts();
-    setCommentDraft('');
-    setCommentingPostId(null);
-  };
+  // ---------------- Feed handlers (now delegated to CommentSection) ----------------
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top']}>
@@ -378,22 +304,17 @@ export default function SocialScreen() {
             ) : (
               visiblePosts.map((post) => (
                 <View key={post.id} style={{ gap: 8 }}>
-                  <PostCard post={post} onUpdate={refreshPosts} onComment={(id) => setCommentingPostId(id)} />
+                  <PostCard
+                    post={post}
+                    onReactionChange={refreshPosts}
+                    onCommentPress={(id) => setCommentingPostId(commentingPostId === id ? null : id)}
+                  />
                   {commentingPostId === post.id && (
-                    <Card variant="flat">
-                      {post.comments.map((c) => (
-                        <View key={c.id} style={{ paddingVertical: 6 }}>
-                          <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 12, fontWeight: '700' }}>{c.authorEmail.split('@')[0]}</Text>
-                          <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 12 }}>{c.text}</Text>
-                        </View>
-                      ))}
-                      <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
-                        <View style={{ flex: 1 }}>
-                          <Input label="" value={commentDraft} onChangeText={setCommentDraft} placeholder="Viết bình luận..." />
-                        </View>
-                        <Button label="Gửi" variant="primary" size="sm" onPress={submitComment} />
-                      </View>
-                    </Card>
+                    <CommentSection
+                      postId={post.id}
+                      comments={post.comments}
+                      onCommentAdded={refreshPosts}
+                    />
                   )}
                 </View>
               ))
