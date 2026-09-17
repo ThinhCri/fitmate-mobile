@@ -117,7 +117,7 @@
   - Re-verify contrast bang tool that (WebAIM / Material Theme Builder) khi implement.
   - Emulator that de xem visual depth 5-tier (can than surfaceContainer vs surfaceContainerHigh khi pressed).
 - **Trang thai**: DONE
-- **Commit**: se ghi sau khi commit xong.
+- **Commit**: `5919d1f docs(design): refine semantic roles + content parity [MOB-016b]`.
 
 ---
 
