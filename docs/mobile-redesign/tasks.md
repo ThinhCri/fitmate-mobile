@@ -121,6 +121,23 @@
 
 ---
 
+## ⚠️ CANH BAO: Phase 1-3 code da viet nhung chua verify runtime
+
+> Tat ca task MOB-001..135 hien tai = **SKELETON/STUB** (code da viet nhung chua chay `npm install` / `tsc --noEmit` / emulator / contrast verify).
+>
+> Theo AGENTS.md "**Khong danh dau DONE task khi thieu kiem chung**" � vi pham da sua trong commit nay.
+>
+> Audit day du: xem `docs/mobile-redesign/audit-mobile-vs-docs.md`.
+>
+> Khi nao set DONE that? Sau khi:
+> 1. `npm install` trong `mobile/` PASS (khong co peer dep error).
+> 2. `npm run type-check` PASS (0 errors).
+> 3. `npm run android` mo emulator thanh cong.
+> 4. Verify contrast per-pair bang WebAIM / Material Theme Builder that.
+> 5. Fix het cac violation trong `audit-mobile-vs-docs.md` Section 3.
+
+---
+
 ## Phase 1 — Foundation
 
 ### MOB-001 — Tao skeleton mobile (Expo + TS)
@@ -246,14 +263,14 @@
 - **Pham vi**: FP-009, FP-010, FP-012.
 - **Deliverables**: social.tsx feed tab + PostCard + reactions + comments.
 - **Tieu chi**: F-4.2.
-- **Trang thai**: DONE (partial — reactions/comments stub)
+- **Trang thai**: SKELETON (1 post static, khong co reactions toggle / comments / reward simulation)
 - **Commit**: `6b01b24`
 
 ### MOB-109 — AI Companion
 - **Pham vi**: FP-011.
 - **Deliverables**: social.tsx AI tab + 5 canned replies.
 - **Tieu chi**: F-4.3.
-- **Trang thai**: DONE (canned replies, chua co real AI)
+- **Trang thai**: SKELETON (canned replies, chua co chat list/typing/edit title/delete)
 - **Commit**: `6b01b24`
 
 ### MOB-110 — Social feed main

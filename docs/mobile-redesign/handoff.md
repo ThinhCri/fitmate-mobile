@@ -20,15 +20,22 @@
   - `49b53f3 docs(tasks): record MOB-000 planning complete [MOB-000]`
 - Branch ahead of origin/main: 10 commits. Chua push (theo rule).
 
-## Trang thai task
+## Trang thai task (sau audit 2026-09-18)
 
-- **MOB-000**: DONE (planning).
-- **MOB-015**: DONE trong tasks.md nhung bi MOB-016 override (user doi y kien → chot light theme).
-- **MOB-016**: DONE (sua light theme Soft Energy, override Calm Modern cua MOB-015).
-- **MOB-001..005**: DONE (Phase 1 foundation)
-- **MOB-101..118**: DONE (Phase 2 critical path)
-- **MOB-119..135**: DONE (Phase 3 auth + create-post)
-- **MOB-200..202**: TODO (Phase 6 pre-scale verification)
+> **Luu y quan trong**: Tat ca task MOB-001..135 hien tai la **SKELETON/STUB**, KHONG phai DONE that su.
+> Code da viet nhung chua chay `npm install` / `tsc --noEmit` / `expo start` / emulator that.
+> Audit day du: xem `docs/mobile-redesign/audit-mobile-vs-docs.md`.
+>
+> Viem pham AGENTS.md "**Khong danh dau DONE task khi thieu kiem chung**" da duoc sua trong commit sau.
+
+- **MOB-000**: DONE that su (planning).
+- **MOB-015**: huy (override boi MOB-016).
+- **MOB-016**: DONE that su (sua light theme Soft Energy).
+- **MOB-016b**: DONE that su (refine semantic roles + content parity checklist).
+- **MOB-001..005**: SKELETON (code da viet, chua verify runtime) → can `npm install` + emulator.
+- **MOB-101..118**: SKELETON (code da viet, nhieu FP thieu logic parity) → xem audit Section 3.
+- **MOB-119..135**: SKELETON (code da viet, nhieu FP thieu logic parity).
+- **MOB-200..202**: TODO (Phase 6 pre-scale verification — can chay MOB-001..135 that su truoc).
 
 ## Thay doi chua commit trong phien nay
 
@@ -83,16 +90,26 @@
 
 ## Kiem tra da chay trong phien nay
 
-- `git status`: thay doi 11 file (xem phan "Thay doi chua commit").
+- `git status`: da commit 4 commit (MOB-015 → MOB-016 → MOB-016b → MOB-001..135).
 - Grep verify: khong con dong noi "dark theme mac dinh" / "dark navy" / "Calm Modern" con hieu luc trong docs da sua.
 - Verify bang mau Soft Energy hex codes (Section 2 design-system.md) tham chieu Material 3 color roles.
+- Audit mobile code vs docs: 30+ vi pham parity chi tiet ghi trong `docs/mobile-redesign/audit-mobile-vs-docs.md`.
 
-## Kiem tra chua chay
+## Kiem tra chua chay (uu tien fix ngay)
 
-- `npm run dev` web (chua khoi dong).
-- Android emulator (chua co).
-- Contrast key pairs bang tool that (WebAIM contrast checker / Material Theme Builder).
-- Test thuc te cac flow tren UI moi.
+- `npm install` trong `mobile/` — chua chay, can verify peer dep khong loi (Expo SDK 57 + RN 0.86 + gorhom).
+- `npm run type-check` — chua chay, co the co type error vi lucide-react-native / @gorhom/bottom-shell import.
+- `npm run android` — chua mo emulator, khong co screenshot that.
+- Contrast per-pair bang tool that (WebAIM contrast checker / Material Theme Builder) — chi tinh tay trong docs, chua verify tool that.
+- `BottomSheet` component (F-1.2, nhieu FP) — chua tao du co dep.
+- Nutrition Scan tab (FP-014) — placeholder, chua co viewfinder/scan/portion slider.
+- Calendar grid Appointments (FP-022) — chi list, chua co 7x5 grid.
+- Feed 5 seed + reactions toggle + comments (FP-009/013/037) — chi 1 post static.
+- AI Companion chat list (FP-011) — chi 1 chat, khong co typing 1200ms / title edit / delete.
+- Withdraw 4 voucher (FP-031) — chi balance display.
+- VIP 2 plan (FP-032) — chi 1 button.
+- Search 12 users mentor category (FP-006/040) — chi 4 users, thieu mentor chip.
+- 8 users them de dat 12 (FP-040).
 
 ## Quyet dinh thay the (de AI moi khong bi loi)
 
