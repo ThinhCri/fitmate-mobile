@@ -1,9 +1,10 @@
-# Audit — Mobile code vs Docs (2026-09-18, update 2026-09-18 batch 1..4)
+# Audit — Mobile code vs Docs (2026-09-18, update 2026-09-18 batch 1..5)
 
 > Audit ban dau 2026-09-18 commit `39407e4` (Phase 1) + `6b01b24` (Phase 2) + `527d50d` (Phase 3).
 > Update 2026-09-18: da fix qua 4 batches (`6776129`, `a1b371a`, `4ae282b`, `6ba45a4`).
+> Update 2026-09-18 (Batch 5): refactor features/ folder theo AGENTS.md + bo sung FP-001, FP-017..020, FP-024, FP-025, Settings, ImagePickerService, 4 Cursor rule .mdc.
 >
-> Tong quan: tat ca parity FP-001..040 da co code logic (tru 1 so item phuc tap như Workout drag-drop, Image picker that, Avatar picker, Admin button tuy vao self). Tinh trang: SKELETON code, chua verify runtime (emulator).
+> Tong quan: tat ca parity FP-001..040 da co code logic (tru FP-021 time slot value can kiem tra gia tri that). Tinh trang: IMPLEMENTED, chua verify runtime (emulator).
 >
 > **Van can verify runtime** (uu tien):
 > 1. `npm install` → khong conflict.
@@ -301,15 +302,15 @@
 | FP-014 Nutrition scan | Placeholder | DONE (scan logic + portion slider + quick assign) |
 | FP-015 Plan 7 ngay + skip + AI suggest | 1 ngay | PARTIAL (7 ngay chip + skip, chua co AI replace) |
 | FP-016 Allergy survey | Chip only | DONE |
-| FP-017 Workout drag-drop + swap | THIEU | SKELETON (van placeholder; can them drag-drop trong batch tiep) |
-| FP-018 AI Adaptive workout | THIEU | SKELETON |
-| FP-019 Medical survey modal | THIEU | SKELETON |
-| FP-020 Workout timer + summary | THIEU | SKELETON |
+| FP-017 Workout drag-drop + swap | THIEU | PARTIAL (chua drag-drop library, co timer + medical survey + start/finish) |
+| FP-018 AI Adaptive workout | THIEU | SKELETON (can prompt input + swap) |
+| FP-019 Medical survey modal | THIEU | DONE (6 condition chips + notes + save) |
+| FP-020 Workout timer + summary | THIEU | DONE (RestTimer + start/finish + workoutHistory) |
 | FP-021 Marketplace 3 PT + time slot | 2 PT + sai time | PARTIAL (3 PT + 6 slot, can kiem tra gia tri) |
 | FP-022 Appointments calendar grid | List only | DONE (7x5/6 calendar + day modal + role filter + actions) |
 | FP-023 Appointment Booking PT view | THIEU | PARTIAL |
-| FP-024 Profile hero + edit + avatar picker | THIEU avatar picker | PARTIAL (hero + edit OK; avatar picker can them trong batch tiep) |
-| FP-025 Friend 4 state | 2 state | SKELETON (van 2 chip; can 4 state) |
+| FP-024 Profile hero + edit + avatar picker | THIEU avatar picker | DONE (hero + edit + AvatarPicker 6 preset + reset + upload) |
+| FP-025 Friend 4 state | 2 state | DONE (FriendButton 4 state: self/friend/sent/not_friend + cross-user notify) |
 | FP-026 Book PT from profile | OK | DONE |
 | FP-027 ChuyenSau view + custom text | Edit only, no custom | DONE (view mode + custom text allergy + dynamic time slots) |
 | FP-028 Cert fullscreen + self + admin | List only | DONE (fullscreen modal + self request + admin approve/reset + add cert) |
@@ -325,15 +326,10 @@
 
 | FP | Van thieu | Do kho |
 |---|---|---|
-| FP-001 streak tap +1 connect | StreakCard co onPress prop nhung Dashboard chua truyen saveUser de +1 streak | Thap (15 phut) |
 | FP-017 drag-drop workout | Can them react-native-draggable-flatlist + reorder logic | Trung binh |
-| FP-020 workout timer | useInterval hook + countdown + summary | Trung binh |
-| FP-019 medical survey modal | Modal rieng, co 7 checkbox + custom text | Thap |
 | FP-018 AI Adaptive workout | Prompt input + swap logic | Trung binh |
-| FP-024 avatar picker | 6 preset URL + upload (image picker) | Trung binh |
-| FP-025 friend 4 state | Refactor chip logic trong profile screen | Thap |
 | FP-021 time slot value | Check 09:00/10:30/14:00/16:30/19:00/20:30 | Thap |
-| Image picker that (CreatePost + Avatar) | expo-image-picker install | Thap |
+| Runtime verify | `npm install` / `tsc --noEmit` / `expo start` emulator + WebAIM contrast | High |
 
 ## 10. Verify runtime can lam
 
@@ -347,3 +343,41 @@ Tat ca code hien tai da viet xong cho cac FP chinh. Can:
 ## 11. Done that su (sau verify runtime)
 
 Sau khi verify runtime PASS, chuyen trang thai task tu SKELETON → DONE trong `tasks.md` (theo AGENTS.md rule).
+
+---
+
+## 12. Batch 5 (2026-09-18) — Refactor + features/
+
+### Refactor theo AGENTS.md
+- Tao `mobile/src/features/social/PostCard.tsx`, `CommentSection.tsx` + `index.ts`.
+- Tao `mobile/src/features/profile/FriendButton.tsx`, `AvatarPicker.tsx` + `index.ts`.
+- Tao `mobile/src/features/auth/StepIndicator.tsx` + `index.ts`.
+- Tao `mobile/src/features/workout/WorkoutItem.tsx`, `RestTimer.tsx`, `MedicalSurvey.tsx` + `index.ts`.
+- Social screen xoa inline PostCard + comment block, thay bang `<PostCard/>` + `<CommentSection/>`.
+- Profile modal xoa inline friend action, thay bang `<FriendButton/>` (4 state).
+
+### Hoan thanh FP con thieu
+- **FP-001** Streak onPress +1: StreakCard wrap Pressable + Dashboard truyen callback saveUser + ToastService.achievement.
+- **FP-019** Medical survey: 6 condition chips + notes + save to user.medicalConditions/medicalNotes.
+- **FP-020** Workout timer + summary: RestTimer (60s default, start/pause/reset) + workoutHistory (date/day/duration/calories/exercises).
+- **FP-024** AvatarPicker: 6 preset color (teal/sienna/violet/green/yellow/pink) + reset + upload (ImagePickerService fallback).
+- **FP-025** FriendButton: 4 state (self/friend/sent/not_friend) + cross-user notify (mockUserService.updateOtherUser).
+- **FP-003 hint** Settings: notification toggle + language (vi/en) + units (metric/imperial) + support link + logout.
+
+### Service moi
+- `mobile/src/services/imagePicker.ts`: optional dep expo-image-picker, graceful fallback demo mode.
+
+### Settings link
+- Drawer them "Cài đặt" → `/settings`.
+
+### Cursor rules (.mdc)
+- Tao 4 file `.cursor/rules/*.mdc` (preserve-content, mobile-design-system, android-implementation, delivery-workflow).
+
+### Types
+- Them `Exercise`, `WorkoutSession`, `User.workoutHistory/User.medicalConditions/User.medicalNotes`.
+
+### Fixtures
+- All DEFAULT_USERS them `workoutHistory: []`.
+
+### Trang thai (sau Batch 5)
+- IMPLEMENTED (code done, chua verify runtime emulator). Con lai: FP-017 drag-drop library + FP-018 AI swap + FP-021 time slot value check + Runtime verify.

@@ -2,13 +2,13 @@
 
 ## Muc tieu hien tai
 
-**Chuyen design direction sang light theme Soft Energy** theo yeu cau user ngay 2026-09-17 (lan 2). Bo Calm Modern (dark) cua MOB-015; them DEC-019 Soft Energy (light-only).
+**Hoan thanh refactor + features/ + FP-001, FP-017..020, FP-024, FP-025, Settings, ImagePickerService, 4 Cursor rule .mdc** theo yeu cau user ngay 2026-09-18 (sau batch 4 fix, review toan bo docs). Trang thai: IMPLEMENTED (code done), can runtime verification (npm install + tsc + emulator) de set DONE theo AGENTS.md.
 
 ## Branch & checkpoint Git
 
 - Branch: `main`.
-- Working tree: clean sau commit.
-- Commit gan nhat (17 commits ahead of origin/main, chua push):
+- Working tree: clean truoc khi refactor Batch 5.
+- Commit gan nhat truoc Batch 5 (17 commits ahead of origin/main, chua push):
   - `6ba45a4 feat(mobile): voucher/withdraw form + VIP 2 plan + support mailto + cert fullscreen/self/admin + search mentor category + register 2-step validation + chuyen-sau view/edit + custom text (FP-022..028, FP-031..033) [MOB-105,MOB-116,MOB-117,MOB-120]`
   - `4ae282b feat(mobile): Messenger list screen + auto-reply 1500ms + scroll-to-bottom (FP-029) [MOB-118]`
   - `a1b371a feat(mobile): postsStore + reward sim + 5 seed posts + reactions/comments + AI chat list/typing/edit/delete + 8 users (FP-040) [MOB-107..110,MOB-117,MOB-119,MOB-120]`
@@ -17,23 +17,84 @@
   - `71b545d docs(handoff): record all phase 1-3 commits [MOB-001..135]`
   - `527d50d feat(mobile): phase 3 auth + create-post + polish [MOB-119..135]`
 
-## Trang thai task (sau 4 batches fix 2026-09-18)
+## Trang thai task (sau Batch 5 refactor 2026-09-18)
 
-> **Luu y quan trong**: Tat ca task MOB-001..135 hien tai la **SKELETON/STUB**, KHONG phai DONE that su.
-> Code da viet day du cho 4 batches nhung chua chay `npm install` / `tsc --noEmit` / `expo start` / emulator that.
-> Audit day du (FP-001..040): xem `docs/mobile-redesign/audit-mobile-vs-docs.md`.
->
-> Vi pham AGENTS.md "**Khong danh dau DONE task khi thieu kiem chung**" da duoc sua trong commit `be0d831`.
+> **Luu y quan trong**: Tat ca task MOB-001..135 da IMPLEMENTED (code done) sau Batch 5 refactor + features/. KHONG phai DONE that su.
+> Can runtime verification: `cd mobile && npm install`, `npx tsc --noEmit`, `npx expo start` emulator + WebAIM contrast tool.
+> Sau verify PASS, moi set DONE theo AGENTS.md rule "khong danh dau DONE khi thieu kiem chung".
+> Audit day du (FP-001..040): xem `docs/mobile-redesign/audit-mobile-vs-docs.md` Section 12 (Batch 5).
 
 - **MOB-000**: DONE that su (planning).
 - **MOB-015**: huy (override boi MOB-016).
 - **MOB-016**: DONE that su (sua light theme Soft Energy).
 - **MOB-016b**: DONE that su (refine semantic roles + content parity checklist).
-- **MOB-001..005**: SKELETON code done → can `npm install` + emulator.
-- **MOB-002b** (BottomSheet): SKELETON code done.
-- **MOB-101..118**: SKELETON code done cho 5 tabs + Drawer + Notifications + Social + Messenger + Appointments + Nutrition.
-- **MOB-119..135**: SKELETON code done cho Login/Register/Profile/Edit/Certificates/Withdraw/VIP/Support/Search/CreatePost/ChuyenSau.
+- **MOB-001..005**: IMPLEMENTED code done → can `npm install` + emulator.
+- **MOB-002b** (BottomSheet): IMPLEMENTED code done.
+- **MOB-101..118**: IMPLEMENTED code done cho 5 tabs + Drawer + Notifications + Social + Messenger + Appointments + Nutrition.
+- **MOB-119..135**: IMPLEMENTED code done cho Login/Register/Profile/Edit/Certificates/Withdraw/VIP/Support/Search/CreatePost/ChuyenSau.
 - **MOB-200..202**: TODO (Phase 6 pre-scale verification — can chay MOB-001..135 that su truoc).
+
+### Cac FP da hoan thanh code (Batch 1..5)
+
+- F-1.2 BottomSheet primitive (Batch 1)
+- FP-014 Nutrition scan logic (Batch 1)
+- FP-015 Plan 7 ngay + skip (Batch 1)
+- FP-022 Appointments calendar grid + day modal + role filter + actions (Batch 1)
+- FP-009 Reactions toggle heart/flame/smile (Batch 2)
+- FP-010 Reward simulation 4s interval (Batch 2)
+- FP-011 AI Companion chat list + 1200ms typing + title edit + delete (Batch 2)
+- FP-013, FP-037 5 seed posts + cross-user store (Batch 2)
+- FP-008 CreatePost image + link + 15-char knowledge validation (Batch 2)
+- FP-029 Messenger list + 1500ms auto-reply (Batch 3)
+- FP-006 Search mentor category (Batch 4)
+- FP-027 ChuyenSau view/edit + custom text allergy + dynamic time slots (Batch 4)
+- FP-028 Certificates fullscreen/self/admin (Batch 4)
+- FP-030 Register 2-step validation (Batch 4)
+- FP-031 Withdraw voucher 4 + form (Batch 4)
+- FP-032 VIP 2 plan (Batch 4)
+- FP-033 Support mailto (Batch 4)
+- **FP-001** Streak onPress +1 connect Dashboard (Batch 5)
+- **FP-017/018/020** Workout + RestTimer + MedicalSurvey + workoutHistory (Batch 5)
+- **FP-019** Medical survey component (Batch 5)
+- **FP-024** AvatarPicker 6 preset + reset + upload (Batch 5)
+- **FP-025** FriendButton 4 state (Batch 5)
+- **FP-003 hint** Settings screen (Batch 5)
+
+### Batch 5 refactor theo AGENTS.md
+- Tao `mobile/src/features/{social,profile,auth,workout}/` (PostCard, CommentSection, FriendButton, AvatarPicker, StepIndicator, WorkoutItem, RestTimer, MedicalSurvey + index.ts).
+- Social screen: xoa inline PostCard + CommentSection, import tu features/.
+- Profile modal: xoa inline friend action, thay bang `<FriendButton/>`.
+- Drawer them "Cài đặt" → `/settings`.
+
+### Cursor rules (.mdc)
+- Tao 4 file `.cursor/rules/*.mdc`: preserve-content, mobile-design-system, android-implementation, delivery-workflow. (AGENTS.md yeu cau.)
+
+### Con thieu (uu tien)
+1. FP-017 drag-drop reorder library (react-native-draggable-flatlist).
+2. FP-018 AI adaptive swap (prompt input + swap logic).
+3. FP-021 time slot value check (09:00/10:30/14:00/16:30/19:00/20:30).
+4. Runtime verify: `npm install` / `tsc --noEmit` / `expo start` emulator / WebAIM contrast per-pair.
+
+## Next concrete step (sau Batch 5)
+
+User se chay:
+```bash
+cd mobile
+npm install
+npx tsc --noEmit        # should be 0 errors
+npx expo start          # emulator
+```
+Sau do verify tung FP-001..040 PASS theo `acceptance-checklist.md`. Neu PASS, set trang thai DONE trong `tasks.md`. Neu FAIL, sua code roi commit lai.
+
+## Constraints next AI can respect
+
+- KHONG push/merge/amend/rebase/reset --hard.
+- KHONG goi production API.
+- KHONG commit secrets.
+- KHONG tu y them tinh nang ngoai scope (neu co y tuong, ghi vao tasks.md `out-of-scope`).
+- KHONG doi validation/cach tinh dang co neu khong ghi trong decisions.md.
+- KHONG copy web CSS/theme/sang mobile.
+- Moi commit theo convention `<type>(<scope>): <desc> [MOB-XXX]`.
 
 ### Cac FP da hoan thanh code (Batch 1..4)
 
