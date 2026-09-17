@@ -122,7 +122,7 @@ export default function SocialScreen() {
 
         {segment === 'feed' && (
           <>
-            <Button label="Tạo bài viết" variant="primary" fullWidth iconLeft={<Plus size={16} color={resolveColor(theme, 'onPrimary')} />} onPress={() => { /* TODO phase 3 */ }} />
+            <Button label="Tạo bài viết" variant="primary" fullWidth iconLeft={<Plus size={16} color={resolveColor(theme, 'onPrimary')} />} onPress={() => router.push('/(modals)/create-post')} />
             <Card variant="default">
               <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '700' }}>Mai Xuân Tú</Text>
               <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, marginTop: 4 }}>
