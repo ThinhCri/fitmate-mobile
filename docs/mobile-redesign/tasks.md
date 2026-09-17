@@ -4,6 +4,28 @@
 
 ---
 
+## MOB-000 — Planning (khoi tao docs + rules)
+
+- **Muc tieu/pham vi**: audit codebase web, viet parity matrix, design system, screen specs, tech decision, mock adapter spec, acceptance checklist, AGENTS.md, source content cho 4 Cursor rule.
+- **Dependencies**: khong co.
+- **Da lam**: 
+  - Doc truc tiep `src/App.jsx`, 15 file components, `index.css`, `App.css`, `package.json`, `vite.config.js`, `eslint.config.js`, `.gitignore`, `fitmate_figma_prompt.txt`.
+  - Xac minh baseline Git: branch `main`, working tree clean truoc khi tao file.
+  - Xac minh `git config user.name` = VoTanThinh, `user.email` = votanthinhcri28@gmail.com.
+  - Doc 4 file cua web de lay data shape, props, modal, validation.
+- **Con thieu**: 
+  - `.cursor/rules/*.mdc` chua tao (plan mode chan). Noi dung da san trong `docs/mobile-redesign/cursor-rules-content.md`.
+  - Web khong chay thu cong trong phien nay (khong co emulator browser).
+- **Kiem tra da chay**: `git status` (clean truoc va sau), `git log --oneline -20`, doc file truc tiep.
+- **Kiem tra chua chay**: `npm run dev` web, `npm run android` mobile, screenshot emulator.
+- **Commit**:
+  - `484afe8 docs(plan): inventory Android UI migration [MOB-000]` (14 file, +3127 dong).
+  - `c7b4158 docs(handoff): record planning commit hash [MOB-000]` (cap nhat handoff voi hash that).
+  - Chua push theo rule.
+- **Trang thai**: DONE
+
+---
+
 ## Phase 1 — Foundation
 
 ### MOB-001 — Tao skeleton mobile (Expo + TS)
