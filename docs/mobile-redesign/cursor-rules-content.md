@@ -95,12 +95,20 @@ This rule enforces the visual direction, tokens, and component rules for FitMate
 
 ## Token usage
 
-- Use only the semantic tokens defined in design-system.md (surface, surfaceContainerLowest, surfaceContainerLow, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest, onSurface, onSurfaceVariant, onSurfaceDisabled, primary, onPrimary, primaryContainer, onPrimaryContainer, secondary, onSecondary, secondaryContainer, onSecondaryContainer, tertiary, onTertiary, tertiaryContainer, onTertiaryContainer, error, onError, errorContainer, onErrorContainer, success, warning, info, outline, outlineVariant). Material 3 color role names.
+- Use only the semantic tokens defined in design-system.md (surface, surfaceContainerLowest, surfaceContainerLow, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest, onSurface, onSurfaceVariant, onSurfaceDisabled, primary, onPrimary, primaryContainer, onPrimaryContainer, secondary, onSecondary, secondaryContainer, onSecondaryContainer, tertiary, onTertiary, tertiaryContainer, onTertiaryContainer, error, onError, errorContainer, onErrorContainer, success, warning, info, outline, outlineVariant, scrim). Material 3 color role names.
 - Do not hardcode hex colors inline. If a new color is needed, propose a token in design-system.md first and document the rationale.
 - Use the typography scale tokens (display.*, headline.*, title.*, body.*, label.*). Vietnamese font support is guaranteed by Inter (Rasmus Andersson) with system fallback chain.
 - Spacing must use the spacing scale (xxs to 6xl). Do not introduce ad-hoc spacing values.
 - Radius must use the radius scale (xs to full).
 - Touch targets must be at least 48x48dp.
+
+### Vai tro mau nhan (theo DEC-020)
+
+- **Primary teal `#0F766E`**: duy nhat cho CTA chinh, focus ring, selected state, link, nav indicator pill bg. KHONG thay the bang secondary/tertiary.
+- **Secondary sienna `#7C2D12`**: chi streak warm accent (FP-005 streak badge, macro bar carb/fat, spec chip). KHONG lam CTA cạnh tranh, link, nav indicator.
+- **Tertiary violet `#9333EA`**: chi achievement / PT verified hero / verify badge. CHI xuat hien khi co nhu cau thuc te. Phase UI hien tai CHI xuat hien tren Profile PT verified hero + verify badge + PT role chip. KHONG xuat hien mac dinh tren moi man.
+- **Outline / outlineVariant**: border subtle 1dp. Outline (`#5C5750`) cho hairline/input border focus. outlineVariant (`#858078`) cho card subtle border 1dp.
+- **Disabled state**: chi dung `onSurfaceDisabled #8E939B` cho placeholder + caption (AA-large/UI). Button disabled label phai giam opacity thay vi doi mau qua nhe (giam `onSurface` xuong 38% opacity).
 
 ## Component rules
 

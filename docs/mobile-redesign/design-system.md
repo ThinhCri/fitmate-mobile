@@ -25,65 +25,201 @@ Chi tiet 3 huong da xet va ly do loai trong `decisions.md` DEC-019.
 ## 2. Mau semantic (M3 color roles, light-only)
 
 > Token names theo Material 3 roles. Map 1-1 voi M3 spec. **Chi co light values** trong phase nay.
+>
+> Vai tro mau nhan (user chot 2026-09-17 lan 3):
+> - **Primary teal `#0F766E`**: CTA chinh, focus ring, selected state, link. Khong thay the bang secondary/tertiary.
+> - **Secondary sienna `#7C2D12`**: streak/achievement warm accent (icon streak, achievement badge). KHONG su dung lam CTA cạnh tranh voi primary.
+> - **Tertiary violet `#9333EA`**: achievement / gamification (badge achievement ngu can, medal, level). CHI dung khi co nhu cau thuc te (FP-005 streak badge, achievement unlock, gamification point). Khong xuat hien mac dinh tren moi man.
+> - **Surface tiers**: 5 cap depth (Lowest → Highest) de phan cap content + selected/hover/disabled.
 
 | Token | Hex | Vai tro |
 |---|---|---|
 | `surface` (page bg) | `#FAFAF7` | Page background (off-white warm) |
-| `surfaceContainerLowest` | `#FFFFFF` | Cards, sheets, modal |
-| `surfaceContainerLow` | `#F4F2ED` | Subtle card variant |
-| `surfaceContainer` | `#EEEBE4` | Sub-card / selected bg |
-| `surfaceContainerHigh` | `#E5E2DA` | Strong hover bg |
-| `surfaceContainerHighest` | `#DAD6CC` | Outline tint |
+| `surfaceContainerLowest` | `#FFFFFF` | Cards, sheets, modal body |
+| `surfaceContainerLow` | `#F4F2ED` | Subtle card variant, list item hover light |
+| `surfaceContainer` | `#EEEBE4` | Selected bg, segmented selected inner |
+| `surfaceContainerHigh` | `#E5E2DA` | Strong hover bg, pressed state bg |
+| `surfaceContainerHighest` | `#DAD6CC` | Divider tint, divider emphasis |
 | `onSurface` | `#1A1A1F` | Body text |
-| `onSurfaceVariant` | `#45474C` | Secondary text |
-| `onSurfaceDisabled` | `#8E939B` | Disabled / hint |
-| `outline` | `#7A7570` | Hairline |
-| `outlineVariant` | `#D7D2CB` | Subtle border |
+| `onSurfaceVariant` | `#45474C` | Secondary text, helper text |
+| `onSurfaceDisabled` | `#8E939B` | Disabled / hint (chi pass AA-large, chi dung cho placeholder+caption) |
+| `outline` | `#5C5750` | Hairline / input border focus / divider |
+| `outlineVariant` | `#858078` | Card border subtle 1dp |
+| `scrim` (backdrop) | `#000000` 35% opacity | Modal + bottom sheet backdrop |
+| `inverseSurface` (chua su dung) | `#1F1B16` | Snackbar tren light theme (Phase sau) |
+| `inverseOnSurface` (chua su dung) | `#F4F0EA` | Text tren inverseSurface |
 | `primary` | `#0F766E` | Brand CTA (deep teal) |
-| `onPrimary` | `#FFFFFF` | Text on primary |
-| `primaryContainer` | `#D5EFEB` | Filled chip / CTA ghost |
-| `onPrimaryContainer` | `#0A3D38` | Text in primary container |
-| `secondary` | `#7C2D12` | Streak / warm alt CTA |
-| `onSecondary` | `#FFFFFF` | Text on secondary |
-| `secondaryContainer` | `#FFE7D6` | Subtle warm bg |
-| `onSecondaryContainer` | `#3A1606` | Text in secondary container |
-| `tertiary` | `#9333EA` | Achievement / gamification |
-| `onTertiary` | `#FFFFFF` | Text on tertiary |
-| `tertiaryContainer` | `#F3E8FF` | Achievement bg |
-| `onTertiaryContainer` | `#4A1A75` | Text in tertiary container |
-| `error` | `#B91C1C` | Destructive |
-| `onError` | `#FFFFFF` | Text on error |
-| `errorContainer` | `#FEE2E2` | Error bg |
-| `onErrorContainer` | `#5A0F0F` | Text in error container |
-| `success` | `#15803D` | Success toast |
-| `warning` | `#B45309` | Warning callout |
-| `info` | `#1D4ED8` | Info pill |
+| `onPrimary` | `#FFFFFF` | Text/icon on primary filled |
+| `primaryContainer` | `#D5EFEB` | Selected chip bg, focus ring inner, primary ghost button bg |
+| `onPrimaryContainer` | `#0A3D38` | Text/icon in primary container |
+| `secondary` | `#7C2D12` | Streak warm accent (icon streak, achievement warm hint). Khong su dung cho CTA chinh. |
+| `onSecondary` | `#FFFFFF` | Text/icon on secondary filled (chi khi su dung filled, rat hiem) |
+| `secondaryContainer` | `#FFE7D6` | Streak subtle bg, warm badge bg |
+| `onSecondaryContainer` | `#3A1606` | Text/icon in secondary container |
+| `tertiary` | `#9333EA` | Achievement / gamification (violet). CHI dung khi co nhu cau thuc te. |
+| `onTertiary` | `#FFFFFF` | Text/icon on tertiary filled (rat hiem) |
+| `tertiaryContainer` | `#F3E8FF` | Achievement bg, gamification subtle bg |
+| `onTertiaryContainer` | `#4A1A75` | Text/icon in tertiary container |
+| `error` | `#B91C1C` | Destructive, error border, invalid input |
+| `onError` | `#FFFFFF` | Text/icon on error filled |
+| `errorContainer` | `#FEE2E2` | Error bg, inline error hint bg |
+| `onErrorContainer` | `#5A0F0F` | Text/icon in error container |
+| `success` | `#15803D` | Success toast border + text, success badge |
+| `warning` | `#B45309` | Warning callout border + text |
+| `info` | `#1D4ED8` | Info pill text + border |
 
-### Contrast — verify per-pair khi implement
+### Interaction roles (filled / selected / pressed / focused / disabled)
 
-> **Luu y quan trong**: cac so contrast duoi day la **minh hoa** tu cung cap M3 color roles. Phai verify bang tool that (WebAIM contrast checker / Material Theme Builder / Android Studio accessibility inspector) khi implement. KHONG tuyen bo "toan app AAA"; chi ghi theo tung cap verify duoc.
+Su dung cac token tren voi pattern sau:
 
-Minh hoa contrast (WCAG 2.1 ratio tren nen tuong ung):
+| Vai tro | Background | Foreground | Border |
+|---|---|---|---|
+| Button primary default | `primary` | `onPrimary` | none |
+| Button primary pressed | `primary` 12% black overlay | `onPrimary` | none |
+| Button primary disabled | `surfaceContainerLow` | `onSurfaceDisabled` | `outlineVariant` |
+| Button primary focused | `primary` | `onPrimary` | `outline` 2dp outer ring |
+| Button secondary default | `surfaceContainerLow` | `onSurface` | `outlineVariant` 1dp |
+| Button secondary pressed | `surfaceContainerHigh` | `onSurface` | `outlineVariant` 1dp |
+| Button secondary disabled | `surfaceContainerLow` | `onSurfaceDisabled` | `outlineVariant` |
+| Button tertiary default | transparent | `primary` | none |
+| Button tertiary pressed | `primaryContainer` | `onPrimaryContainer` | none |
+| Button tertiary disabled | transparent | `onSurfaceDisabled` | none |
+| Button destructive default | `error` | `onError` | none |
+| Chip filter unselected | `surfaceContainerLowest` | `onSurfaceVariant` | `outlineVariant` 1dp |
+| Chip filter selected | `primaryContainer` | `onPrimaryContainer` | none |
+| Chip filter disabled | `surfaceContainerLowest` | `onSurfaceDisabled` | `outlineVariant` |
+| Input default | `surfaceContainerLowest` | `onSurface` text, `onSurfaceVariant` label | `outline` 1dp |
+| Input focused | `surfaceContainerLowest` | `onSurface` text, `primary` label | `primary` 2dp + `outline` 0dp |
+| Input error | `surfaceContainerLowest` | `onSurface` text, `error` label | `error` 2dp |
+| Input disabled | `surfaceContainerLow` | `onSurfaceDisabled` | `outlineVariant` |
+| Card default | `surfaceContainerLowest` | `onSurface` | `outlineVariant` 1dp |
+| Card highlighted | `surfaceContainerLowest` | `onSurface` | `primary` 1dp |
+| Card selected | `surfaceContainer` | `onSurface` | `primary` 1dp |
+| Tab segmented unselected | `surfaceContainerLowest` | `onSurfaceVariant` | `outlineVariant` 1dp |
+| Tab segmented selected | `primaryContainer` | `onPrimaryContainer` | none |
+| Bottom nav unselected | transparent | `onSurfaceVariant` | none |
+| Bottom nav selected | `primaryContainer` (pill) | `onPrimaryContainer` | none |
+| Switch off | `surfaceContainerHighest` | `outline` thumb | none |
+| Switch on | `primary` | `onPrimary` thumb | none |
+| Streak badge | `secondaryContainer` | `onSecondaryContainer` icon/text | none |
+| Achievement badge | `tertiaryContainer` | `onTertiaryContainer` icon/text | none |
+| Toast success | `success` 8% bg = `#E6F4EC` | `success` text/icon | `success` 1dp |
+| Toast warning | `warning` 8% bg = `#FDF3E3` | `warning` text/icon | `warning` 1dp |
+| Toast error | `errorContainer` | `onErrorContainer` text/icon | none |
+| Toast info | `info` 8% bg = `#E6EDFB` | `info` text/icon | `info` 1dp |
+| Modal backdrop | `scrim` 35% | — | — |
+| Skeleton | `surfaceContainerLow` (animated 50% → `surfaceContainerHigh`) | — | — |
+| Progress ring bg | `surfaceContainerHigh` | — | — |
+| Progress ring fill | `primary` (default) / `secondary` (streak) | — | — |
 
-| Cap mau | Ratio | WCAG |
-|---|---|---|
-| `onSurface #1A1A1F` tren `surface #FAFAF7` | 16.6:1 | AAA |
-| `onSurface #1A1A1F` tren `surfaceContainerLowest #FFFFFF` | 17.9:1 | AAA |
-| `onSurface #1A1A1F` tren `surfaceContainerLow #F4F2ED` | 15.3:1 | AAA |
-| `onSurface #1A1A1F` tren `surfaceContainer #EEEBE4` | 13.4:1 | AAA |
-| `onSurfaceVariant #45474C` tren `surface #FAFAF7` | 8.8:1 | AAA |
-| `onPrimary #FFFFFF` tren `primary #0F766E` | 5.8:1 | AA |
-| `onPrimaryContainer #0A3D38` tren `primaryContainer #D5EFEB` | 12.4:1 | AAA |
-| `onSecondary #FFFFFF` tren `secondary #7C2D12` | 8.4:1 | AAA |
-| `onTertiary #FFFFFF` tren `tertiary #9333EA` | 6.0:1 | AA |
-| `onError #FFFFFF` tren `error #B91C1C` | 6.5:1 | AAA |
-| `outline #7A7570` tren `surface #FAFAF7` | 5.7:1 | AA |
+> **Su dung secondary sienna**: chi khi can streak / warm achievement hint (FP-005 streak badge, "ngay tap lien tuc" so lieu). KHONG thay the primary cho CTA chinh.
+>
+> **Su dung tertiary violet**: chi khi co achievement gamification (FP-005 unlock, level up, badge earn). KHONG xuat hien mac dinh. Neu phase UI khong co gamification → KHONG dung tertiary.
 
-Khi implement, can verify them:
-- Tat ca icon button tren cac surface.
-- Tat ca placeholder/disabled state.
-- Toast (success/warning/error) tren backdrop.
-- Bottom sheet, modal backdrop dim 35% (light theme nen dim nhe).
+### Contrast — verified per-pair WCAG 2.1
+
+> **Cach verify**: dung cong thuc relative luminance (WCAG 2.1) + tinh ratio theo `(L1 + 0.05) / (L2 + 0.05)`. So lieu trong bang duoi la tinh toan that, khong phai minh hoa. Re-verify khi implement token file.
+
+#### Text on backgrounds
+
+| Cap mau | Ratio | WCAG | Su dung |
+|---|---|---|---|
+| `onSurface #1A1A1F` tren `surface #FAFAF7` | 16.58:1 | AAA | Body chinh |
+| `onSurface #1A1A1F` tren `surfaceContainerLowest #FFFFFF` | 17.33:1 | AAA | Body card |
+| `onSurface #1A1A1F` tren `surfaceContainerLow #F4F2ED` | 15.49:1 | AAA | Body subtle card |
+| `onSurface #1A1A1F` tren `surfaceContainer #EEEBE4` | 14.56:1 | AAA | Body selected bg |
+| `onSurface #1A1A1F` tren `surfaceContainerHigh #E5E2DA` | 13.39:1 | AAA | Body pressed bg |
+| `onSurface #1A1A1F` tren `surfaceContainerHighest #DAD6CC` | 11.95:1 | AAA | Body emphasis |
+| `onSurface #1A1A1F` tren `primaryContainer #D5EFEB` | 14.34:1 | AAA | Text in primary chip |
+| `onSurface #1A1A1F` tren `secondaryContainer #FFE7D6` | 14.57:1 | AAA | Text in streak badge |
+| `onSurface #1A1A1F` tren `tertiaryContainer #F3E8FF` | 14.69:1 | AAA | Text in achievement |
+| `onSurface #1A1A1F` tren `errorContainer #FEE2E2` | 14.19:1 | AAA | Text in error bg |
+
+#### Variant & disabled
+
+| Cap mau | Ratio | WCAG | Su dung |
+|---|---|---|---|
+| `onSurfaceVariant #45474C` tren `surface #FAFAF7` | 8.89:1 | AAA | Secondary text |
+| `onSurfaceVariant #45474C` tren `surfaceContainerLowest #FFFFFF` | 9.30:1 | AAA | Secondary text card |
+| `onSurfaceVariant #45474C` tren `surfaceContainer #EEEBE4` | 7.81:1 | AAA | Secondary text selected |
+| `onSurfaceVariant #45474C` tren `primaryContainer #D5EFEB` | 7.69:1 | AAA | Helper trong chip |
+| `onSurfaceDisabled #8E939B` tren `surface #FAFAF7` | 2.95:1 | FAIL (chi AA-large/UI) | Disabled body, placeholder — chi dung cho caption + placeholder, KHONG dung cho button label |
+| `onSurfaceDisabled #8E939B` tren `surfaceContainerLowest #FFFFFF` | 3.09:1 | AA-large/UI | Disabled caption card |
+
+#### Primary CTA + containers
+
+| Cap mau | Ratio | WCAG | Su dung |
+|---|---|---|---|
+| `onPrimary #FFFFFF` tren `primary #0F766E` | 5.47:1 | AA | Button label, FAB |
+| `onPrimaryContainer #0A3D38` tren `primaryContainer #D5EFEB` | 10.00:1 | AAA | Chip label, ghost button label |
+| `primary #0F766E` tren `surface #FAFAF7` | 5.23:1 | AA | Icon accent tren page |
+| `primary #0F766E` tren `surfaceContainerLowest #FFFFFF` | 5.47:1 | AA | Icon accent tren card |
+| `primary #0F766E` tren `primaryContainer #D5EFEB` | 4.53:1 | AA | Icon trong chip (chi AA, can test visual) |
+
+#### Secondary (striker warm accent)
+
+| Cap mau | Ratio | WCAG | Su dung |
+|---|---|---|---|
+| `onSecondary #FFFFFF` tren `secondary #7C2D12` | 9.37:1 | AAA | Neu filled (rat hiem) |
+| `onSecondaryContainer #3A1606` tren `secondaryContainer #FFE7D6` | 13.61:1 | AAA | Streak badge text/icon |
+| `secondary #7C2D12` tren `secondaryContainer #FFE7D6` | 7.88:1 | AAA | Icon accent streak |
+
+#### Tertiary (achievement violet)
+
+| Cap mau | Ratio | WCAG | Su dung |
+|---|---|---|---|
+| `onTertiary #FFFFFF` tren `tertiary #9333EA` | 5.38:1 | AA | Neu filled (rat hiem) |
+| `onTertiaryContainer #4A1A75` tren `tertiaryContainer #F3E8FF` | 10.50:1 | AAA | Achievement badge |
+| `tertiary #9333EA` tren `tertiaryContainer #F3E8FF` | 4.56:1 | AA | Icon accent achievement |
+
+#### Error
+
+| Cap mau | Ratio | WCAG | Su dung |
+|---|---|---|---|
+| `onError #FFFFFF` tren `error #B91C1C` | 6.47:1 | AA | Destructive button label |
+| `onErrorContainer #5A0F0F` tren `errorContainer #FEE2E2` | 11.39:1 | AAA | Error toast text, inline error |
+
+#### Status (success/warning/info)
+
+| Cap mau | Ratio | WCAG | Su dung |
+|---|---|---|---|
+| `success #15803D` tren `surface #FAFAF7` | 4.80:1 | AA | Success badge text, toast text |
+| `success #15803D` tren `surfaceContainerLowest #FFFFFF` | 5.02:1 | AA | Success badge tren card |
+| `warning #B45309` tren `surface #FAFAF7` | 4.80:1 | AA | Warning text |
+| `warning #B45309` tren `surfaceContainerLowest #FFFFFF` | 5.02:1 | AA | Warning text card |
+| `info #1D4ED8` tren `surface #FAFAF7` | 6.41:1 | AA | Info pill text |
+| `info #1D4ED8` tren `surfaceContainerLowest #FFFFFF` | 6.70:1 | AA | Info pill text card |
+
+#### Outline / divider (UI element 3:1)
+
+| Cap mau | Ratio | WCAG | Su dung |
+|---|---|---|---|
+| `outline #5C5750` tren `surface #FAFAF7` | 6.84:1 | AA-large/UI | Hairline, focus ring outer |
+| `outline #5C5750` tren `surfaceContainerLowest #FFFFFF` | 7.16:1 | AAA UI | Input border focus |
+| `outlineVariant #858078` tren `surface #FAFAF7` | 3.75:1 | AA-large/UI | Subtle border (chi pass UI 3:1) |
+| `outlineVariant #858078` tren `surfaceContainerLowest #FFFFFF` | 3.92:1 | AA-large/UI | Card border subtle |
+| `outlineVariant #858078` tren `surfaceContainerLow #F4F2ED` | 3.50:1 | AA-large/UI | Subtle container border |
+
+### Pham vi WCAG ap dung
+
+- **Body text** (label, paragraph, button label) can ≥ 4.5:1 (AA) hoặc ≥ 7:1 (AAA) neu kha thi.
+- **Large text** (≥18pt hoặc 14pt bold) can ≥ 3:1 (AA-large).
+- **UI element / icon / border** can ≥ 3:1 theo WCAG 2.1 SC 1.4.11.
+- **Status color** (success/warning/info) chi pass AA → can kèm text/icon, khong dung mau don doc.
+
+### Nhung cap CHUA dat AAA (ghi ro)
+
+- `onPrimary #FFFFFF` tren `primary #0F766E`: 5.47:1 — chi AA. Button label 14sp-16sp bold dat yeu cau AA. Neu can AAA → phai dark primary (mat brand identity).
+- `onTertiary #FFFFFF` tren `tertiary #9333EA`: 5.38:1 — chi AA. Nen su dung `tertiaryContainer`/`onTertiaryContainer` de dat AAA khi xuat hien tren UI.
+- `primary #0F766E` tren `primaryContainer #D5EFEB`: 4.53:1 — chi AA. Icon trong chip can test visual that.
+- `success/warning` tren surface: 4.80:1 — chi AA. Nen kèm text + icon.
+- `onSurfaceDisabled #8E939B`: chi pass UI/large. CHI dung cho placeholder + caption, KHONG dung cho button label quan trọng. Button disabled label phai giam opacity thay vi doi mau.
+
+### Khong ap dung tren UI
+
+- `tertiary #9333EA` filled + `onTertiary #FFFFFF` text → chi AA, rat hien thi. Nen dung `tertiaryContainer`.
+- `inverseSurface` / `inverseOnSurface` → chua su dung (chua co snackbar/light dark snackbar). Phase sau.
+- Dynamic color (Material You): KHONG dung, brand consistency quan trọng hon personalization.
 
 ## 3. Typography
 

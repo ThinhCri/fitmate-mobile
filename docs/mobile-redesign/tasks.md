@@ -87,6 +87,37 @@
   - MOB-015 (AGENTS.md, current-app-audit.md): `d08f9fb docs(plan): rework design direction independent from web [MOB-015]`.
   - MOB-016 (11 file con lai): `235792d docs(design): switch default theme to Soft Energy light [MOB-016]`.
 - **Trang thai**: DONE
+- **Lu y tiep theo**: MOB-016b lam ro vai tro sienna/violet (xem DEC-020) + bo sung content parity checklist 3 manh Dashboard / Profile HV / Profile PT.
+
+---
+
+## MOB-016b — Lam ro semantic roles + content parity checklist 3 manh
+
+- **Boi canh**: User yeu cau ngay 2026-09-17 (lan 3): sienna tiet che cho streak/warm accent (khong lam CTA cạnh tranh), violet chi achievement khi co nhu cau that. Can verify contrast per-pair bang cong thuc that, khong claim toan app AAA. Bo sung content parity list day du cho 3 manh (Dashboard / Profile HV / Profile PT) de dam bao khong mat field khi trien khai.
+- **Pham vi**:
+  - `decisions.md`: them DEC-020 (vai tro sienna/violet), lam ro DEC-019 (token values verified).
+  - `design-system.md`: Section 2 viet lai tokens (outline `#5C5750`, outlineVariant `#858078`), them 5-tier depth, them Interaction roles table (button/chip/input/card/tab/nav/switch/badge/toast), them Contrast verified per-pair WCAG 2.1 (chia theo text/disabled/primary/secondary/tertiary/error/status/outline), ghi ro nhung cap CHUA dat AAA.
+  - `screen-specs.md`: them Section 5 Content parity checklist cho Dashboard / Profile HV / Profile PT (day du field theo `current-app-audit.md` Section 7). Wireframe ASCII giu nguyen.
+  - `cursor-rules-content.md`: them vai tro mau nhan (primary thong tri, sienna streak warm accent, violet chi PT verified).
+  - `tasks.md`: them MOB-016b DONE.
+  - `handoff.md`: cap nhat commit hash MOB-016b, ghi nhan design final.
+- **Parity IDs**: khong anh huong parity content; chi bo sung checklist de verify khi implement.
+- **Dependencies**: MOB-016.
+- **Tieu chi nghiem thu**:
+  - Token values da verify contrast bang cong thuc WCAG 2.1 (recorded that ratio).
+  - outline/outlineVariant phan biet ro (outline AAA UI, outlineVariant chi pass 3:1 UI).
+  - Interaction roles table day du cho cac thanh phan pho bien.
+  - `decisions.md` DEC-020 lam ro secondary tiet che + tertiary chi PT verified / achievement.
+  - `screen-specs.md` Section 5 co content parity table 3 manh voi source field + UI + token dung.
+  - Khong con dong noi "AAA toan app" — chi per-pair.
+- **Kiem tra da chay**: 
+  - Compute relative luminance + ratio cho 36 cap (text on bg, variant, primary, secondary, tertiary, error, status, outline) → ghi that ratio vao `design-system.md` Section 2.
+  - outline/outlineVariant da darken (#5C5750 / #858078) de pass 3:1 UI element rule tren surfaceContainerLowest.
+- **Kiem tra chua chay**: 
+  - Re-verify contrast bang tool that (WebAIM / Material Theme Builder) khi implement.
+  - Emulator that de xem visual depth 5-tier (can than surfaceContainer vs surfaceContainerHigh khi pressed).
+- **Trang thai**: DONE
+- **Commit**: se ghi sau khi commit xong.
 
 ---
 

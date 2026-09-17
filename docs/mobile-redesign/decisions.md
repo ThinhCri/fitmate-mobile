@@ -396,49 +396,115 @@
 
 **Ly do (theo tieu chi user)**:
 1. **Sang, gon, than thien, ca tinh fitness**: off-white warm `#FAFAF7` mem hon pure white (user yeu cau khong trang phang); deep teal `#0F766E` gợi suc khoe/can bang (Cronometer-style tinh te), khong generic enterprise dashboard.
-2. **Doc tot so lieu + form dai**: onSurface `#1A1A1F` dat 16.6:1 tren page bg → text ro ret, khong chói khi doc profile/coach intake forms.
-3. **Phan cap ro**: 3 tier depth (page bg `#FAFAF7` → card `#FFFFFF` → container `#F4F2ED`/`#EEEBE4`) tao information hierarchy ro ret.
-4. **Mau nhan tiet che**: primary teal chi dung cho CTA chinh (Bắt đầu, Lưu, Đặt lịch). Streak/achievement dung secondary sienna hoac tertiary violet → tranh canh tranh visual weight.
+2. **Doc tot so lieu + form dai**: `onSurface #1A1A1F` dat 16.58:1 tren page bg (verified WCAG 2.1) → text ro ret, khong chói khi doc profile/coach intake forms.
+3. **Phan cap ro**: 5 tier depth (`surface` → `surfaceContainerLowest` → `surfaceContainerLow` → `surfaceContainer` → `surfaceContainerHigh` → `surfaceContainerHighest`) cho the de xep information hierarchy + selected/pressed/hover states.
+4. **Mau nhan tiet che, primary thong tri**: primary teal duy nhat dung cho CTA chinh (Bắt đầu, Lưu, Đặt lịch) + focus ring + selected. Sienna/violet tiet che, khong canh tranh visual weight voi primary (xem DEC-020).
 5. **Khong trang phang**: warm tone + multi-tier container + 1dp outlineVariant border tao depth ma khong shadow nang.
 6. **Khong dashboard quan tri**: giu warm + boi mau nhan teal/sienna/violet → tap the thao/suc khoe (Cronometer, Nike, Strava deu theo huong nay).
 
-**Bang mau chi tiet (M3 color roles, light-only)**:
+**Bang mau chi tiet (M3 color roles, light-only)** — token values da verify:
 
-| Token | Hex | Vai tro |
-|---|---|---|
-| `surface` (page bg) | `#FAFAF7` | Page background (off-white warm) |
-| `surfaceContainerLowest` | `#FFFFFF` | Cards, sheets, modal |
-| `surfaceContainerLow` | `#F4F2ED` | Subtle card variant |
-| `surfaceContainer` | `#EEEBE4` | Sub-card / selected bg |
-| `surfaceContainerHigh` | `#E5E2DA` | Strong hover bg |
-| `surfaceContainerHighest` | `#DAD6CC` | Outline tint |
-| `onSurface` | `#1A1A1F` | Body text |
-| `onSurfaceVariant` | `#45474C` | Secondary text |
-| `onSurfaceDisabled` | `#8E939B` | Disabled hint |
-| `outline` | `#7A7570` | Hairline |
-| `outlineVariant` | `#D7D2CB` | Subtle border |
-| `primary` | `#0F766E` | Brand CTA (deep teal) |
-| `onPrimary` | `#FFFFFF` | Text on primary |
-| `primaryContainer` | `#D5EFEB` | Filled chip / CTA ghost |
-| `onPrimaryContainer` | `#0A3D38` | Text in primary container |
-| `secondary` | `#7C2D12` | Streak / warm alt CTA |
-| `onSecondary` | `#FFFFFF` | Text on secondary |
-| `tertiary` | `#9333EA` | Achievement / gamification |
-| `onTertiary` | `#FFFFFF` | Text on tertiary |
-| `tertiaryContainer` | `#F3E8FF` | Achievement bg |
-| `error` | `#B91C1C` | Destructive |
-| `onError` | `#FFFFFF` | Text on error |
-| `errorContainer` | `#FEE2E2` | Error bg |
-| `success` | `#15803D` | Success toast |
-| `warning` | `#B45309` | Warning callout |
-| `info` | `#1D4ED8` | Info pill |
+| Token | Hex | Vai tro | Contrast verify |
+|---|---|---|---|
+| `surface` (page bg) | `#FAFAF7` | Page background (off-white warm) | — |
+| `surfaceContainerLowest` | `#FFFFFF` | Cards, sheets, modal body | — |
+| `surfaceContainerLow` | `#F4F2ED` | Subtle card variant, list item hover | — |
+| `surfaceContainer` | `#EEEBE4` | Selected bg | — |
+| `surfaceContainerHigh` | `#E5E2DA` | Strong hover bg, pressed bg | — |
+| `surfaceContainerHighest` | `#DAD6CC` | Divider emphasis | — |
+| `onSurface` | `#1A1A1F` | Body text | AAA (16.58:1 tren surface) |
+| `onSurfaceVariant` | `#45474C` | Secondary text | AAA (8.89:1) |
+| `onSurfaceDisabled` | `#8E939B` | Disabled / hint | CHI AA-large/UI (2.95:1) — chi dung cho placeholder + caption, KHONG button label |
+| `outline` | `#5C5750` | Hairline / focus ring | AAA UI (7.16:1 tren card) |
+| `outlineVariant` | `#858078` | Card border subtle 1dp | AA-large/UI (3.75-3.92:1) |
+| `primary` | `#0F766E` | Brand CTA (deep teal) | AA text (5.47:1 vs white) |
+| `onPrimary` | `#FFFFFF` | Text on primary | — |
+| `primaryContainer` | `#D5EFEB` | Selected chip, focus ring inner | — |
+| `onPrimaryContainer` | `#0A3D38` | Text in primary container | AAA (10.00:1) |
+| `secondary` | `#7C2D12` | Streak warm accent (tiết chế) | AAA vs white (9.37:1) |
+| `onSecondary` | `#FFFFFF` | Text on secondary | — |
+| `secondaryContainer` | `#FFE7D6` | Streak badge bg | — |
+| `onSecondaryContainer` | `#3A1606` | Text in secondary container | AAA (13.61:1) |
+| `tertiary` | `#9333EA` | Achievement / gamification (CHỉ khi cần) | AA (5.38:1) |
+| `onTertiary` | `#FFFFFF` | Text on tertiary | — |
+| `tertiaryContainer` | `#F3E8FF` | Achievement bg | — |
+| `onTertiaryContainer` | `#4A1A75` | Text in tertiary container | AAA (10.50:1) |
+| `error` | `#B91C1C` | Destructive | AA (6.47:1) |
+| `onError` | `#FFFFFF` | Text on error | — |
+| `errorContainer` | `#FEE2E2` | Error bg | — |
+| `onErrorContainer` | `#5A0F0F` | Text in error container | AAA (11.39:1) |
+| `success` | `#15803D` | Success toast border + text | AA (5.02:1 vs card) |
+| `warning` | `#B45309` | Warning callout | AA (5.02:1 vs card) |
+| `info` | `#1D4ED8` | Info pill | AA (6.70:1 vs card) |
 
-**Luu y quan trong ve contrast**: cac so contrast (AAA) ghi trong `design-system.md` chi la **minh hoa** tu cung cap M3 color roles. Phai verify bang tool (WebAIM contrast checker / Material Theme Builder) khi implement. KHONG tuyen bo "toan app AAA" — chi ghi theo tung cap verify duoc.
+**Luu y quan trong ve contrast**: cac so contrast tren trong bang la **verified bang cong thuc WCAG 2.1 relative luminance** trong planning phase. So lieu that se verify lai khi implement (WebAIM contrast checker / Material Theme Builder / Android Studio accessibility inspector). KHONG tuyen bo "toan app AAA" — chi ghi theo tung cap verify duoc (xem `design-system.md` Section 2 de biet day du per-pair).
 
 **He qua**:
 - File `mobile/src/theme/tokens.ts` chi khai bao light theme, KHONG co dark mode toggle.
 - Token names van theo M3 convention de co the them dark variant sau neu user yeu cau (mapping M3 Token Studio).
 - Inter font giu (DEC-015 nguyen nhan typography); spacing/radius/elevation M3 idiomatic.
+- Vai tro mau nhan sienna/violet → xem DEC-020.
 - Web tokens trong `src/index.css` giu nguyen, khong lien ket (xem DEC-004).
 
 **Quyet dinh bi thay the**: DEC-015 (Calm Modern, dark).
+
+---
+
+## DEC-020 — Vai tro mau nhan secondary (sienna) va tertiary (violet)
+
+**Ngay**: 2026-09-17. **Lam ro DEC-019**.
+
+**Boi canh**:
+- User yeu cau ngay 2026-09-17 (lan 3): primary teal giu vai tro CTA chinh va selected. Sienna dung tiet che cho streak/diem nhan am. Violet chi cho achievement khi co nhu cau thuc te.
+- Trong phase UI, cac pattern can biet ro: secondary co phai CTA cạnh tranh voi primary khong? tertiary co xuat hien mac dinh khong?
+
+**Quyet dinh**:
+
+### Secondary sienna `#7C2D12`
+
+- **Vai tro chinh**: streak warm accent (FP-005 streak badge, "ngay tap lien tuc", achievement warm hint).
+- **Vai tro phu**: macro bar Carb/Fat (warm color vs Protein primary).
+- **KHONG dung**:
+  - Lam CTA cạnh tranh voi primary (neu co secondary button filled → su dung `secondaryContainer` bg thay, khong phai `secondary` filled).
+  - Lam link color (link dung `primary`).
+  - Lam nav indicator (nav indicator dung `primaryContainer`).
+- **Pattern hợp lệ**:
+  - Icon streak badge: `secondary` icon tren `secondaryContainer` bg.
+  - Macro bar carb: `secondary` fill tren track `surfaceContainerHigh`.
+  - Spec chip PT: `secondaryContainer` bg + `onSecondaryContainer` text.
+
+### Tertiary violet `#9333EA`
+
+- **Vai tro chinh**: achievement / gamification (FP-005 unlock, medal, level up, badge earn, VIP tier neu co).
+- **Vai tro phu**: PT verified hero tint (Profile PT verified → `tertiaryContainer` bg hero).
+- **CHI xuat hien khi**:
+  - User vua unlock achievement.
+  - Profile PT da verify (verified badge + hero).
+  - VIP tier neu phase sau co gamification.
+  - Medal/badge earn tren SocialScreen.
+- **KHONG dung**:
+  - Mac dinh tren moi man (chi xuat hien o vi tri co nhu cau that).
+  - Lam nav indicator, link, button default.
+  - Phase UI hien tai khong co gamification → tertiary CHI xuat hien tren PT verified hero + verify badge. KHONG xuat hien o cho khac.
+- **Pattern hợp lệ**:
+  - Profile PT verified hero: `tertiaryContainer` bg top 25% screen.
+  - PT role chip: `tertiaryContainer` bg + `onTertiaryContainer` text.
+  - Verify badge icon: `tertiary` icon tren `tertiaryContainer` bg.
+
+### Vai tro mau nhan khong dung
+
+- **Khong co "quaternary"** trong phase UI. Neu can mau thu 4 → khai bao token moi trong `design-system.md` voi ly do cu the.
+- **Khong co neutral-on-neutral** accent. Neu can phan biet noi bat content → su dung `onSurface` vs `onSurfaceVariant`.
+- **Khong hardcode hex inline**. Token names moi can ghi trong `design-system.md` truoc.
+
+**Ly do**:
+- Primary thong tri → giam cognitive load, giong pattern light-first app thuc te (Strava, Hevy, Cronometer deu chi 1 brand color).
+- Sienna/violet tiet che → khong canh tranh visual weight voi CTA chinh → nguoi dung tap primary de hanh dong quan trong.
+- PT verified mau rieng → phan biet role nhanh (HV vs PT verified vs PT pending vs PT unverified).
+
+**He qua**:
+- Token names M3 (`secondary`, `tertiary`) giu nguyen nhu spec — chi lam ro usage constraint.
+- `design-system.md` Section 2 ghi ro "Su dung secondary sienna" va "Su dung tertiary violet" voi pattern cho phep.
+- `screen-specs.md` Section 5.1-5.3 content parity checklist chi ra token dung cho moi block.
+- Neu phase sau them gamification → DEC-020 cap nhat de cho phep tertiary xuat hien o vi tri cu the (streak unlock, badge earn, level up).
+- Neu phase sau them dark theme → token values secondary/tertiary se khai bao rieng cho dark variant.

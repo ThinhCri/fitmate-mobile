@@ -336,7 +336,117 @@ Moi man hinh co:
 
 ---
 
-## 5. Cross-cutting man hinh / Modal / Sheet
+## 5. Content parity checklist (Dashboard, Profile HV, Profile PT)
+
+> Day du field theo `current-app-audit.md` Section 7. Phai xuat hien tren UI mobile va khong mat content.
+
+### 5.1 Dashboard (FP-001, FP-002, FP-035)
+
+| Truong/Block | Source | Bieu thi tren UI | Token dung |
+|---|---|---|---|
+| Avatar | `usersDb[me].avatar` | Avatar component 56dp header | `surfaceContainerLowest` bg, `outline` border |
+| Ten user | `usersDb[me].name` | Header title `headline.medium` | `onSurface` |
+| Streak number | `streak` | Counter `display.large` 800 weight | `onSurface` text, `secondary` icon streak (secondaryContainer icon-bg neu hover) |
+| Streak label "ngay lien tuc" | derived | `body.medium` | `onSurfaceVariant` |
+| Streak warning | streak < target (7) | Card warning | `warning` border 1dp, `warning` text |
+| Streak success | streak >= target | Card success | `success` border 1dp, `success` text |
+| Tap streak | +1 confirm | Action sheet "Xac nhan +1?" | primary button |
+| Calories consumed | `caloriesConsumed` | Ring center `display.medium` | `onSurface` |
+| Calories target | derived (BMR + goal) | Ring caption `body.small` | `onSurfaceVariant` |
+| Calories burned | `caloriesBurned` | Below ring caption | `onSurfaceVariant` |
+| Calories % | derived | Ring fill (progress ring SVG) | `primary` fill, `surfaceContainerHigh` track |
+| Protein bar | derived macro | LinearProgressIndicator 8dp height | `primary` fill |
+| Carb bar | derived macro | LinearProgressIndicator | `secondary` fill (warm accent) |
+| Fat bar | derived macro | LinearProgressIndicator | `tertiary` fill (chi khi co gamification) — neu khong co gamification thi`surfaceContainerHigh` placeholder |
+| Quick action: Quet mon | tap → Nutrition tab Scan | Card 2x2 grid icon + label | `surfaceContainerLowest` + `outlineVariant` |
+| Quick action: Lich tap | tap → Workout tab | Card | same |
+| Quick action: Dat lich PT | tap → Marketplace tab | Card | same |
+| Quick action: Chuyen sau | tap → ChuyenSau | Card | same |
+| Notification count | `notifications.length` | Bell badge | `error` bg + `onError` text |
+| Drawer access | icon hamburger | header left | `onSurfaceVariant` |
+| Reward button | `rewardPoints` > 0 | Reward icon header right | `success` icon tint |
+| VIP button | (sheet) | Diamond icon | `tertiaryContainer` bg + `tertiary` icon (chi khi co gamification VIP); neu khong co → skip |
+| Support button | (sheet) | Help icon | `onSurfaceVariant` icon |
+| Streak tap state | empty streak=0 | Card empty "Bắt đầu streak!" CTA | primary button |
+
+**Action map**: `streak → confirmSheet(+1)`; `ring → nutrition tab`; `quick action → corresponding tab`; `bell → notifications modal`; `reward → withdraw sheet`; `diamond → vip sheet`; `help → support sheet`; `hamburger → drawer`; `avatar → profile self`.
+
+### 5.2 Profile Hoi vien (FP-024..026 self view)
+
+| Truong/Block | Source | Bieu thi tren UI | Token dung |
+|---|---|---|---|
+| Hero bg | member | tint top 25% screen | `primaryContainer` |
+| Avatar | `avatar` | 100dp center hero | `surfaceContainerLowest` border 3dp `primary` |
+| Ten | `name` | `headline.large` | `onSurface` |
+| Role chip | `isPt === false` | Chip "Hoi vien" | `primaryContainer` bg, `onPrimaryContainer` text |
+| Edit button | `isSelf` | IconButton pencil top-right | `onSurfaceVariant` icon |
+| Edit profile button | self | Filled button "Sua ho so" hero | `primary` bg, `onPrimary` text |
+| Friend status chip row | `friendsList.includes(viewerEmail)` | Row chip | unselected: `outlineVariant` border + `onSurfaceVariant` text; selected: `primaryContainer` bg + `onPrimaryContainer` text |
+| Muc tieu block | `bio` / `goal` | Card section "Muc tieu" | `surfaceContainerLowest` + `outlineVariant` |
+| Goal text | `bio` or `goal` | `body.large` | `onSurface` |
+| Height | `height` | Label + value row | `onSurfaceVariant` label, `onSurface` value |
+| Weight | `weight` | Row | same |
+| Phone | `phone` | Row | same |
+| Birthday | `birthday` | Row | same |
+| Gender | `gender` | Row | same |
+| Email | `email` | Row | `onSurfaceVariant` label, `onSurface` value |
+| Suc khoe block | `isPt === false` | Card section "Suc khoe (member only)" | same |
+| Benh nen | `medicalCondition` | Row "Benh nen: ..." or "Khong co" | `onSurfaceVariant` / `onSurface` |
+| Di ung | `allergies[]` | Row "Di ung: ..." | same |
+| Ngay tap | `trainingDays[]` | Row "Ngay tap: T2, T4, T6" | same |
+| Khung gio | `trainingTime` string | Row "Khung gio: 18:00 - 20:00" | same |
+| Cap nhat chuyen sau button | self member | Outlined button | `secondaryContainer` bg, `onSecondaryContainer` text, `outlineVariant` border |
+| Bai viet block | `usersDb[me].posts[]` or `conversations` derived | Card section "Bai viet (n)" + list | `surfaceContainerLowest` |
+| Post card | id/title/content/time/reactions/comments | Card list row | same |
+| Streak (in profile) | `streak` | Streak badge chip | `secondaryContainer` bg, `onSecondaryContainer` text + `secondary` icon |
+| Reward points (in profile) | `rewardPoints` | Badge chip | `success` bg-tint, `success` text |
+
+**Action map**: `pencil → edit modal/sheet`; `Sua ho so → EditProfileScreen`; `Cap nhat chuyen sau → ChuyenSauScreen`; `post card → PostDetailScreen`; `friend chip → friend request sheet`.
+
+### 5.3 Profile PT (FP-024..026 other view, FP-021..023)
+
+| Truong/Block | Source | Bieu thi tren UI | Token dung |
+|---|---|---|---|
+| Hero bg | PT verified | tint top 25% screen | `tertiaryContainer` (verified) |
+| Avatar | `avatar` | 100dp center hero | `surfaceContainerLowest` border 3dp `tertiary` |
+| Ten | `name` | `headline.large` | `onSurface` |
+| Verify badge | `isVerified` | IconBadge "Verified" | `tertiaryContainer` bg, `onTertiaryContainer` text + `tertiary` icon |
+| Role chip | `isPt === true` | Chip "HLV" | `tertiaryContainer` bg, `onTertiaryContainer` text |
+| Rating | derived from reviews | Row ⭐ 4.9 (n reviews) | `warning` icon, `onSurface` text |
+| Spec | `spec[]` (max 4) | Row chip group "Chuyen mon" | `secondaryContainer` bg, `onSecondaryContainer` text |
+| Exp | `exp` | Row "3 nam kinh nghiem" | `onSurfaceVariant` label, `onSurface` value |
+| Price | `price` | Row "300.000đ/buoi" | same |
+| Training days | `trainingDays[]` | Row "Ngay day: T2-T7" | same |
+| Available hours | `trainingTime` / `trainingTimes` | Row "Gio trong: 08:00 - 21:00" | same |
+| Dat lich CTA | view other | Primary button hero | `primary` bg, `onPrimary` text |
+| Nhan tin CTA | view other | Secondary button hero | `secondaryContainer` bg + `outlineVariant` border, `onSecondaryContainer` text |
+| Ket ban CTA | view other + not friend | Outlined button | `surfaceContainerLowest` bg + `outlineVariant` border, `onSurface` text |
+| Huy ket ban | already friend | Outlined button | same |
+| Chuyen mon block | `spec[]` | Card section "Chuyen mon" | `surfaceContainerLowest` + `outlineVariant` |
+| Spec chip | `spec[i]` | Filter chip (display only) | `secondaryContainer` bg, `onSecondaryContainer` text |
+| Gia block | `price` | Row | `onSurfaceVariant` label, `onSurface` value |
+| Ngay day block | `trainingDays[]` | Row | same |
+| Gio trong block | `trainingTime` / `trainingTimes[]` | Row | same |
+| Chung chi block | `certificates[]` | Card section "Chung chi (n)" + [Xem] button → PTCertificatesScreen | `surfaceContainerLowest` + `outlineVariant` |
+| Cert status pill | `certificateStatus` | Top of cert screen | `success` (verified) / `warning` (pending) / `error` (unverified) |
+| Reviews block | derived from `appointments` + comments | Card section "Reviews (n)" | `surfaceContainerLowest` + `outlineVariant` |
+| Review item | rating + comment + time + author | List row | `warning` icon star, `onSurface` text |
+| Bai viet block | PT posts | Card section "Bai viet (n)" | same |
+| Post card | post fields | Card list row | same |
+
+**Action map**: `Dat lich → BookingSheet(date + 6 slot)`; `Nhan tin → MessengerScreen`; `Ket ban → friend request sheet`; `[Xem] chung chi → PTCertificatesScreen`; `post → PostDetailScreen`.
+
+### 5.4 Thong tin chung cho ca HV va PT (neu xem other)
+
+| Truong | Source | UI |
+|---|---|---|
+| Email | `email` | Row (hidden neu `!isSelf`?) — hien thi theo privacy mac dinh cua web |
+| Goal/Muc tieu | `bio` / `goal` | Card section |
+| Friend status | `friendsList` | Chip row |
+
+---
+
+## 6. Cross-cutting man hinh / Modal / Sheet
 
 Cac modal/sheet sau xuat hien trong nhieu man hinh. Spec giong nhau:
 
@@ -347,7 +457,7 @@ Cac modal/sheet sau xuat hien trong nhieu man hinh. Spec giong nhau:
 
 ---
 
-## 6. Back stack & Android back
+## 7. Back stack & Android back
 
 - Tab change KHONG pop stack; chi swap.
 - Modal sheet co nut X rieng → close modal truoc khi back app co the pop.
@@ -356,7 +466,7 @@ Cac modal/sheet sau xuat hien trong nhieu man hinh. Spec giong nhau:
 
 ---
 
-## 7. Modal dismissal & unsaved changes
+## 8. Modal dismissal & unsaved changes
 
 - EditProfile: hien dialog "Ban co muon luu khong?" neu co thay doi chua luu.
 - AllergySurvey / MedicalSurvey: dialog neu co thay doi.
@@ -364,7 +474,7 @@ Cac modal/sheet sau xuat hien trong nhieu man hinh. Spec giong nhau:
 
 ---
 
-## 8. Han che cua phien nay
+## 9. Han che cua phien nay
 
 - Trang thai spec: **DESIGN PHASE**. Can ve lai khi implement de dam bao nhat quan.
 - Wireframe chi o ASCII; AI trien khai se dung React Native + tokens thuc te.
