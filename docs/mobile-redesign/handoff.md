@@ -9,20 +9,26 @@
 - Branch: `main`.
 - Working tree: clean sau commit.
 - Commit gan nhat:
-  - `5919d1f docs(design): refine semantic roles + content parity [MOB-016b]` (5 file, +444 / -93).
-  - `9056d7f docs(handoff): record MOB-015/MOB-016 commit hashes [MOB-016]` (2 file, +11 / -6).
-  - `235792d docs(design): switch default theme to Soft Energy light [MOB-016]` (11 file, +961 / -354).
-  - `d08f9fb docs(plan): rework design direction independent from web [MOB-015]` (2 file, +26 / -4).
-  - `49b53f3 docs(tasks): record MOB-000 planning complete [MOB-000]` (MOB-000 goc).
-- Branch ahead of origin/main: 7 commits. Chua push (theo rule).
+  - `527d50d feat(mobile): phase 3 auth + create-post + polish [MOB-119..135]` (3 file, +409 / -1).
+  - `6b01b24 feat(mobile): phase 2 critical path screens [MOB-101..118]` (24 file, +2438 / -22).
+  - `39407e4 feat(mobile): phase 1 foundation + 5 tab skeleton [MOB-001..005]` (48 file, +2678).
+  - `202bc84 docs(handoff): record MOB-016b commit hash [MOB-016b]`
+  - `5919d1f docs(design): refine semantic roles + content parity [MOB-016b]`
+  - `9056d7f docs(handoff): record MOB-015/MOB-016 commit hashes [MOB-016]`
+  - `235792d docs(design): switch default theme to Soft Energy light [MOB-016]`
+  - `d08f9fb docs(plan): rework design direction independent from web [MOB-015]`
+  - `49b53f3 docs(tasks): record MOB-000 planning complete [MOB-000]`
+- Branch ahead of origin/main: 10 commits. Chua push (theo rule).
 
 ## Trang thai task
 
 - **MOB-000**: DONE (planning).
 - **MOB-015**: DONE trong tasks.md nhung bi MOB-016 override (user doi y kien → chot light theme).
 - **MOB-016**: DONE (sua light theme Soft Energy, override Calm Modern cua MOB-015).
-- **MOB-016b**: DONE (semantic roles + content parity checklist 3 manh).
-- **MOB-001..MOB-303**: TODO (chua implement mobile code).
+- **MOB-001..005**: DONE (Phase 1 foundation)
+- **MOB-101..118**: DONE (Phase 2 critical path)
+- **MOB-119..135**: DONE (Phase 3 auth + create-post)
+- **MOB-200..202**: TODO (Phase 6 pre-scale verification)
 
 ## Thay doi chua commit trong phien nay
 

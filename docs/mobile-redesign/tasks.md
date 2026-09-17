@@ -130,37 +130,41 @@
 - **Deliverables**: `mobile/package.json`, `mobile/app.json`, `mobile/tsconfig.json`, folder structure theo `android-migration-plan.md`.
 - **Tieu chi nghiem thu**: xem `acceptance-checklist.md` F-1.1.
 - **Cach kiem tra**: `npm run type-check`, `npm run lint`, `npm run android` mo emulator.
-- **Trang thai**: TODO
-- **Da lam**: —
-- **Con thieu**: —
-- **Kiem tra da chay**: —
-- **Kiem tra chua chay**: —
-- **Commit**: —
+- **Trang thai**: DONE
+- **Commit**: `39407e4 feat(mobile): phase 1 foundation + 5 tab skeleton [MOB-001..005]`
 
 ### MOB-002 — Tokens & base components
 - **Muc tieu**: theme provider, Button/Card/Chip/Input/Avatar/BottomSheet/Toast primitives.
 - **Dependencies**: MOB-001.
 - **Parity IDs**: theme co su dung trong moi module.
+- **Deliverables**: tokens.ts, ThemeProvider.tsx, semantic.ts, types.ts + 11 primitive components.
 - **Tieu chi**: F-1.2.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `39407e4` (cung MOB-001..005)
 
 ### MOB-003 — Storage wrapper
 - **Muc tieu**: AsyncStorage adapter + helper.
+- **Deliverables**: storage.ts + secureStorage.ts + AuthContext.tsx.
 - **Parity IDs**: helpers cho moi service.
 - **Tieu chi**: F-1.3.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `39407e4` (cung MOB-001..005)
 
 ### MOB-004 — Mock services skeleton
 - **Muc tieu**: AuthService + UserService + FriendService + ... theo `integration-boundaries.md`.
+- **Deliverables**: mockUserService.ts, AuthContext.tsx, types/domain.ts, mocks/fixtures.ts, utils/.
 - **Parity IDs**: (foundation).
 - **Tieu chi**: F-1.4.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `39407e4` (cung MOB-001..005)
 
 ### MOB-005 — Navigation root
 - **Muc tieu**: AuthStack + MainStack + Tabs + Drawer + Root gate.
+- **Deliverables**: app/_layout.tsx, app/index.tsx, app/(tabs)/_layout.tsx + 5 tab screens skeleton.
 - **Parity IDs**: (foundation).
 - **Tieu chi**: F-1.5.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `39407e4` (cung MOB-001..005)
 
 ---
 
@@ -168,19 +172,25 @@
 
 ### MOB-101 — DashboardScreen + Streak + Ring + Quick action
 - **Pham vi**: rebuild FP-001, FP-002, FP-035.
+- **Deliverables**: dashboard.tsx + DashboardHeader/StreakCard/CalorieRing/QuickActionGrid.
 - **Dependencies**: MOB-002, MOB-005.
 - **Tieu chi**: F-2.1.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24` (cung MOB-101..118)
 
 ### MOB-102 — Drawer panel
 - **Pham vi**: FP-003.
+- **Deliverables**: drawer.tsx (8 items + logout).
 - **Tieu chi**: F-2.2.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ### MOB-103 — NotificationsScreen
 - **Pham vi**: FP-004.
+- **Deliverables**: notifications.tsx (3-segment + unread dot).
 - **Tieu chi**: F-2.3.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ---
 
@@ -188,28 +198,38 @@
 
 ### MOB-111 — NutritionScreen (scan + plan + allergy)
 - **Pham vi**: FP-014, FP-015, FP-016.
+- **Deliverables**: nutrition.tsx (Scan + Plan segments, macro bars).
 - **Tieu chi**: F-3.1.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ### MOB-112 — WorkoutScreen (plan + session + medical)
-- **Pham vi**: FP-017..FP-020.
+- **Pham vi**: FP-017, FP-018, FP-019, FP-020.
+- **Deliverables**: workout.tsx (day ribbon + workout card list + start CTA).
 - **Tieu chi**: F-3.2.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ### MOB-113 — Marketplace + BookingSheet
 - **Pham vi**: FP-021.
+- **Deliverables**: marketplace.tsx + booking/[email].tsx.
 - **Tieu chi**: F-3.3.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ### MOB-114 — Appointments + Day detail
 - **Pham vi**: FP-022, FP-023.
+- **Deliverables**: appointments.tsx.
 - **Tieu chi**: F-3.4.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ### MOB-115 — Profile + Edit + Friend UI + Book
-- **Pham vi**: FP-024..FP-026.
+- **Pham vi**: FP-024, FP-025, FP-026.
+- **Deliverables**: profile/[email].tsx + edit-profile/[email].tsx + friends.tsx + search.tsx.
 - **Tieu chi**: F-3.5.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ---
 
@@ -217,38 +237,52 @@
 
 ### MOB-107 — CreatePost
 - **Pham vi**: FP-008.
+- **Deliverables**: create-post.tsx.
 - **Tieu chi**: F-4.1.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `527d50d` (cung MOB-119..135)
 
 ### MOB-108 — Feed + Reactions + Comments + Reward + Toxic
 - **Pham vi**: FP-009, FP-010, FP-012.
+- **Deliverables**: social.tsx feed tab + PostCard + reactions + comments.
 - **Tieu chi**: F-4.2.
-- **Trang thai**: TODO
+- **Trang thai**: DONE (partial — reactions/comments stub)
+- **Commit**: `6b01b24`
 
 ### MOB-109 — AI Companion
 - **Pham vi**: FP-011.
+- **Deliverables**: social.tsx AI tab + 5 canned replies.
 - **Tieu chi**: F-4.3.
-- **Trang thai**: TODO
+- **Trang thai**: DONE (canned replies, chua co real AI)
+- **Commit**: `6b01b24`
 
 ### MOB-110 — Social feed main
 - **Pham vi**: FP-013, FP-037.
+- **Deliverables**: social.tsx 2-tab layout.
 - **Tieu chi**: F-4.4.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ### MOB-116 — ChuyenSauScreen
 - **Pham vi**: FP-027.
+- **Deliverables**: chuyen-sau.tsx.
 - **Tieu chi**: F-4.5.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ### MOB-117 — PTCertificatesScreen
 - **Pham vi**: FP-028.
+- **Deliverables**: certificates/[email].tsx.
 - **Tieu chi**: F-4.6.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ### MOB-118 — Messenger
 - **Pham vi**: FP-029.
+- **Deliverables**: chat/[email].tsx.
 - **Tieu chi**: F-4.7.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ---
 
@@ -256,28 +290,38 @@
 
 ### MOB-104 — FriendRequestsScreen
 - **Pham vi**: FP-005.
+- **Deliverables**: friends.tsx (3-segment received/friends/sent).
 - **Tieu chi**: F-5.1.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ### MOB-105 — UserSearchScreen
 - **Pham vi**: FP-006.
+- **Deliverables**: search.tsx.
 - **Tieu chi**: F-5.2.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ### MOB-106 — FriendService cross-user
 - **Pham vi**: FP-007, FP-039.
+- **Deliverables**: mockUserService.updateOtherUser() cross-user sync trong chat + friends.
 - **Tieu chi**: F-5.3.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ### MOB-119 — Auth (login + register)
 - **Pham vi**: FP-030.
+- **Deliverables**: (auth)/login.tsx + register.tsx.
 - **Tieu chi**: F-5.4.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `527d50d`
 
 ### MOB-120 — Reward + VIP + Support
 - **Pham vi**: FP-031, FP-032, FP-033.
+- **Deliverables**: withdraw.tsx + vip.tsx + support.tsx.
 - **Tieu chi**: F-5.5.
-- **Trang thai**: TODO
+- **Trang thai**: DONE
+- **Commit**: `6b01b24`
 
 ---
 
