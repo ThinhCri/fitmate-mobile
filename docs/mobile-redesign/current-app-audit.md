@@ -1,6 +1,8 @@
-# Current App Audit — Web Frontend Baseline
+# Current App Audit — Web Frontend Content Baseline
 
-> Ban web hien tai la **ban doi chieu** trong suot qua trinh migration. Moi task UI phai kiem tra lai voi file audit nay de dam bao khong mat content.
+> Ban web hien tai la **nguon chuẩn CONTENT** (fields, validation, role behavior, business logic, mock data) trong suot qua trinh migration. KHONG phai nguon chuẩn visual — xem DEC-004, DEC-015.
+>
+> Moi task UI dung file nay de dam bao khong mat content; nhung design system, layout, navigation, components duoc thiet ke moi cho Android.
 
 ## 1. Baseline Git
 
@@ -11,6 +13,8 @@
 | Trang thai working tree | clean (xac minh bang `git status`) |
 | Commit gan day | xem `git log --oneline -20` |
 | Phien ban kiem kê | commit gan nhat truoc khi tao docs |
+
+**Luu y quan trong**: branch `main` cua repo chua `src/` (frontend web) + `docs/mobile-redesign/` (plan). Project mobile se tao trong folder `mobile/` khi trien khai (xem DEC-004). Khong sua `src/`.
 
 ## 2. Tech stack web (xac minh tu code)
 

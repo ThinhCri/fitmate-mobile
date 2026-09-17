@@ -2,7 +2,21 @@
 
 > Huong dan cho moi AI (Cursor Agent, Claude, ChatGPT, ...) khi lam viec tren repo nay.
 
-Repo nay chua mot frontend web React + Vite dang duoc chuyen giao thanh **ung dung Android** (React Native + Expo + TypeScript). Frontend web hien tai la **ban doi chieu** (source of truth) cho den khi migration hoan tat. KHONG sua web thanh app; hai phan song song.
+Repo nay chua mot frontend web React + Vite dang chuyen giao thanh **ung dung Android** (React Native + Expo + TypeScript + Expo Router).
+
+## Baseline ngon ngu: web KHONG phai baseline visual
+
+Frontend web hien tai chi la nguon chuẩn cho **kiem ke noi dung va chuc nang**:
+- Truong du lieu, validation, role (member/PT).
+- Hanh dong, ket qua thao tac, y nghia nghiep vu.
+- Mock data dang co (default users, posts, certificates).
+
+Frontend web KHONG phai nguon chuẩn cho **theme, layout, navigation, components hay copy visual**. Do do:
+- Khong lay theme/mau/icon/font/layout/component cua web de thiet ke Android.
+- Khong copy CSS class names (`glass-card`, `btn-primary`, ...).
+- Neu mot quyet dinh thiet ke giong web → phai co ly do doc lap (e.g., "token X dat WCAG AAA"), khong phai "web dang lam vay".
+
+Xem [docs/mobile-redesign/decisions.md](docs/mobile-redesign/decisions.md) DEC-004, DEC-015, DEC-017 de biet ly do.
 
 ## Truoc khi sua code, BAT BUOC doc theo thu tu
 
@@ -19,13 +33,15 @@ Repo nay chua mot frontend web React + Vite dang duoc chuyen giao thanh **ung du
 
 ## Nguyen tac khong duoc phep vi pham
 
-- **Khong tu xoa** code frontend web hien tai. Web la ban doi chieu.
+- **Khong tu xoa** code frontend web hien tai. Code web duoc giu nguyen de tham chieu content.
+- **Khong copy token / CSS / component style tu web sang mobile**. Mobile tokens doc lap theo DEC-015.
 - **Khong tu y them tinh nang nghiep vu moi** (out of scope). Neu thay co y tuong, ghi vao tasks voi tag `out-of-scope` roi dung lai.
 - **Khong goi API production** hoac dich vu tra phi. Toan bo luong demo phai dung mock fixture va local state.
 - **Khong push / merge / amend / reset --hard**. Chi commit local.
 - **Khong commit secrets** (token that, email that, ...). Trong demo auth chi dung `user@fitmate.vn` va `pt@fitmate.vn` voi password `123456` (mock).
 - **Khong tu thay** validation/cach tinh dang co neu khong co ly do ro rang va duoc ghi trong `decisions.md`.
 - **Khong danh dau DONE** task khi thieu kiem chung. Xem `acceptance-checklist.md` cho tieu chi.
+- **Khong viet commit dua tren placeholder gia su that user**.
 
 ## Cach trao doi voi user
 
@@ -40,6 +56,7 @@ Repo nay chua mot frontend web React + Vite dang duoc chuyen giao thanh **ung du
 - Parity ID: `FP-XXX` (X la so, co 3 chu so). Xem `feature-parity-matrix.md`.
 - Component React Native: PascalCase, `.tsx`. Folder: lowercase-kebab.
 - File lien quan nhau: dat cung folder `src/features/<feature>/`.
+- Theme tokens: ten semantic (khong hardcode hex), dat trong `mobile/src/theme/`.
 
 ## Commit
 
@@ -47,6 +64,7 @@ Repo nay chua mot frontend web React + Vite dang duoc chuyen giao thanh **ung du
 - Message: `<type>(<scope>): <mo ta ngan> [MOB-XXX]`
 - Khong commit thay doi cua AI khac neu khong xac dinh duoc.
 - Khong commit file rong.
+- Khong viet commit dua tren placeholder gia su that user.
 
 ## Lien he nhanh
 
