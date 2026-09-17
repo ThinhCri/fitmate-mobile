@@ -27,7 +27,8 @@ export default function SearchScreen() {
       const all = await mockUserService.getAllUsers();
       let list = Object.values(all).filter((u) => u.email !== viewer?.email);
       if (category === 'pt') list = list.filter((u) => u.profile.isPt);
-      else if (category === 'member') list = list.filter((u) => !u.profile.isPt);
+      else if (category === 'member') list = list.filter((u) => !u.profile.isPt && u.streak < 30);
+      else if (category === 'mentor') list = list.filter((u) => !u.profile.isPt && u.streak >= 30);
       if (query.trim()) {
         const q = query.toLowerCase();
         list = list.filter(
@@ -52,10 +53,11 @@ export default function SearchScreen() {
       </View>
       <View style={{ paddingHorizontal: 12, gap: 8 }}>
         <Input label="Tìm theo tên, bio, chuyên môn" value={query} onChangeText={setQuery} placeholder="Nhập từ khoá..." />
-        <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
           <Chip label="Tất cả" selected={category === 'all'} onPress={() => setCategory('all')} />
           <Chip label="PT" selected={category === 'pt'} onPress={() => setCategory('pt')} />
           <Chip label="Hội viên" selected={category === 'member'} onPress={() => setCategory('member')} />
+          <Chip label="Mentor" selected={category === 'mentor'} onPress={() => setCategory('mentor')} />
         </View>
       </View>
       <ScrollView contentContainerStyle={{ padding: 12, gap: 8 }}>

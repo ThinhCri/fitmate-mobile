@@ -1,23 +1,32 @@
 /**
- * PTCertificatesScreen (MOB-117, FP-028) — list + status pill.
- * Phase 2 skeleton: list cert + status, tap to view fullscreen.
+ * PTCertificatesScreen (MOB-117, FP-028).
+ * List + status pill + tap image -> fullscreen modal + self actions
+ * (request verification, add cert) + admin simulate (Duyet / Reset).
  */
 import { useEffect, useState } from 'react';
-import { ScrollView, View, Text, Pressable } from 'react-native';
+import { ScrollView, View, Text, Pressable, Modal, TextInput, Image, Alert } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, BadgeCheck, Clock, X } from 'lucide-react-native';
+import { ArrowLeft, BadgeCheck, Clock, X, Plus, ShieldCheck, RefreshCw } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
 import * as mockUserService from '@/services/mockUserService';
+import { useAuth } from '@/services/AuthContext';
 import type { User, Certificate } from '@/types';
-import { Card, Badge, Button } from '@/components/ui';
+import { Card, Badge, Button, Input, Chip } from '@/components/ui';
+import { ToastService } from '@/components/ui/Toast';
 import { formatDate } from '@/utils/format';
 
 export default function PTCertificatesScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
+  const { user: viewer, refresh } = useAuth();
   const theme = useTheme();
   const [profile, setProfile] = useState<User | null>(null);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [addingCert, setAddingCert] = useState(false);
+  const [certForm, setCertForm] = useState({ name: '', organization: '', code: '', type: 'Personal Training', issueDate: new Date().toISOString().slice(0, 10) });
+
+  const isSelf = viewer?.email === email;
 
   useEffect(() => {
     (async () => {
@@ -38,6 +47,65 @@ export default function PTCertificatesScreen() {
       : profile.profile.certificateStatus === 'pending' ? 'Đang duyệt'
         : 'Chưa duyệt';
 
+  const requestVerification = async () => {
+    await mockUserService.updateOtherUser(profile.email, (u) => ({
+      ...u,
+      profile: { ...u.profile, certificateStatus: 'pending' },
+    }));
+    const updated = await mockUserService.getUserByEmail(profile.email);
+    if (updated) setProfile(updated);
+    ToastService.show({ message: 'Đã gửi yêu cầu xét duyệt chứng chỉ!', tone: 'info' });
+  };
+
+  const adminApprove = async () => {
+    await mockUserService.updateOtherUser(profile.email, (u) => ({
+      ...u,
+      profile: { ...u.profile, certificateStatus: 'verified', isVerified: true },
+    }));
+    const updated = await mockUserService.getUserByEmail(profile.email);
+    if (updated) setProfile(updated);
+    ToastService.show({ message: 'Admin: Đã duyệt chứng chỉ (simulation).', tone: 'success' });
+  };
+
+  const adminReset = async () => {
+    await mockUserService.updateOtherUser(profile.email, (u) => ({
+      ...u,
+      profile: { ...u.profile, certificateStatus: 'unverified', isVerified: false },
+    }));
+    const updated = await mockUserService.getUserByEmail(profile.email);
+    if (updated) setProfile(updated);
+    ToastService.show({ message: 'Admin: Đã reset (simulation).', tone: 'warning' });
+  };
+
+  const saveNewCert = async () => {
+    if (!certForm.name.trim() || !certForm.organization.trim()) {
+      Alert.alert('Thiếu thông tin', 'Vui lòng điền tên chứng chỉ và tổ chức.');
+      return;
+    }
+    const newCert: Certificate = {
+      id: `cert-${Date.now()}`,
+      name: certForm.name.trim(),
+      organization: certForm.organization.trim(),
+      code: certForm.code.trim() || 'N/A',
+      type: certForm.type,
+      issueDate: certForm.issueDate,
+      image: null,
+    };
+    await mockUserService.updateOtherUser(profile.email, (u) => ({
+      ...u,
+      profile: {
+        ...u.profile,
+        certificates: [...u.profile.certificates, newCert],
+        certificateStatus: 'pending',
+      },
+    }));
+    const updated = await mockUserService.getUserByEmail(profile.email);
+    if (updated) setProfile(updated);
+    setAddingCert(false);
+    setCertForm({ name: '', organization: '', code: '', type: 'Personal Training', issueDate: new Date().toISOString().slice(0, 10) });
+    ToastService.show({ message: 'Đã thêm chứng chỉ. Trạng thái: Đang duyệt.', tone: 'success' });
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -45,11 +113,29 @@ export default function PTCertificatesScreen() {
         <Pressable accessibilityRole="button" onPress={() => router.back()} hitSlop={12}>
           <ArrowLeft color={resolveColor(theme, 'onSurface')} size={24} />
         </Pressable>
-        <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 18, fontWeight: '700' }}>Chứng chỉ</Text>
+        <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 18, fontWeight: '700', flex: 1 }}>Chứng chỉ</Text>
       </View>
-      <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+      <View style={{ paddingHorizontal: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Badge text={statusText} tone={statusTone} />
+        {isSelf && profile.profile.certificateStatus === 'unverified' && (
+          <Button label="Yêu cầu xét duyệt" variant="primary" size="sm" onPress={requestVerification} iconLeft={<ShieldCheck size={12} color={resolveColor(theme, 'onPrimary')} />} />
+        )}
+        {isSelf && (
+          <Button label="+ Thêm chứng chỉ" variant="secondary" size="sm" onPress={() => setAddingCert(true)} iconLeft={<Plus size={12} color={resolveColor(theme, 'onSecondaryContainer')} />} />
+        )}
       </View>
+
+      {/* Admin simulate panel (visible if self and has certs) */}
+      {isSelf && profile.profile.certificates.length > 0 && (
+        <Card variant="flat">
+          <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11, fontWeight: '700' }}>ADMIN SIMULATE (demo)</Text>
+          <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+            <Button label="Duyệt" variant="primary" size="sm" onPress={adminApprove} />
+            <Button label="Reset" variant="ghost" size="sm" onPress={adminReset} iconLeft={<RefreshCw size={12} color={resolveColor(theme, 'onSurface')} />} />
+          </View>
+        </Card>
+      )}
+
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         {profile.profile.certificates.length === 0 ? (
           <Card variant="default">
@@ -59,29 +145,67 @@ export default function PTCertificatesScreen() {
           </Card>
         ) : (
           profile.profile.certificates.map((c: Certificate) => (
-            <Card key={c.id} variant="default">
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-                {statusTone === 'success' ? (
-                  <BadgeCheck color={resolveColor(theme, 'success')} size={20} />
-                ) : statusTone === 'warning' ? (
-                  <Clock color={resolveColor(theme, 'warning')} size={20} />
-                ) : (
-                  <X color={resolveColor(theme, 'error')} size={20} />
-                )}
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '700' }}>{c.name}</Text>
-                  <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 12, marginTop: 2 }}>
-                    {c.organization} • {formatDate(c.issueDate)}
-                  </Text>
-                  <Text style={{ color: resolveColor(theme, 'onSurfaceDisabled'), fontSize: 11, marginTop: 2 }}>
-                    Mã: {c.code}
-                  </Text>
+            <Pressable key={c.id} onPress={() => c.image && setFullscreenImage(c.image)}>
+              <Card variant="default">
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+                  {statusTone === 'success' ? (
+                    <BadgeCheck color={resolveColor(theme, 'success')} size={20} />
+                  ) : statusTone === 'warning' ? (
+                    <Clock color={resolveColor(theme, 'warning')} size={20} />
+                  ) : (
+                    <X color={resolveColor(theme, 'error')} size={20} />
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '700' }}>{c.name}</Text>
+                    <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 12, marginTop: 2 }}>
+                      {c.organization} • {formatDate(c.issueDate)}
+                    </Text>
+                    <Text style={{ color: resolveColor(theme, 'onSurfaceDisabled'), fontSize: 11, marginTop: 2 }}>
+                      Mã: {c.code} • Loại: {c.type}
+                    </Text>
+                    {c.image && (
+                      <View style={{ marginTop: 8, height: 100, borderRadius: 8, backgroundColor: resolveColor(theme, 'surfaceContainerLow'), alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11 }}>(ảnh chứng chỉ)</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
-              </View>
-            </Card>
+              </Card>
+            </Pressable>
           ))
         )}
       </ScrollView>
+
+      {/* Fullscreen image modal */}
+      <Modal visible={fullscreenImage !== null} transparent animationType="fade" onRequestClose={() => setFullscreenImage(null)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)' }} onPress={() => setFullscreenImage(null)}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            {fullscreenImage && (
+              <Image source={{ uri: fullscreenImage }} style={{ width: '90%', height: '80%' }} resizeMode="contain" />
+            )}
+            <Pressable onPress={() => setFullscreenImage(null)} style={{ position: 'absolute', top: 40, right: 20 }}>
+              <X color="#fff" size={28} />
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* Add cert modal */}
+      <Modal visible={addingCert} transparent animationType="slide" onRequestClose={() => setAddingCert(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' }}>
+          <View style={{ backgroundColor: resolveColor(theme, 'surface'), borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 12 }}>
+            <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 18, fontWeight: '700' }}>Thêm chứng chỉ</Text>
+            <Input label="Tên chứng chỉ" value={certForm.name} onChangeText={(v) => setCertForm({ ...certForm, name: v })} placeholder="VD: NASM CPT" />
+            <Input label="Tổ chức cấp" value={certForm.organization} onChangeText={(v) => setCertForm({ ...certForm, organization: v })} placeholder="VD: NASM" />
+            <Input label="Mã chứng chỉ" value={certForm.code} onChangeText={(v) => setCertForm({ ...certForm, code: v })} placeholder="VD: NASM-12345" />
+            <Input label="Loại" value={certForm.type} onChangeText={(v) => setCertForm({ ...certForm, type: v })} placeholder="VD: Personal Training" />
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Button label="Hủy" variant="ghost" fullWidth onPress={() => setAddingCert(false)} />
+              <Button label="Lưu" variant="primary" fullWidth onPress={saveNewCert} />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

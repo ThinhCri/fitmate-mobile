@@ -3,7 +3,7 @@
  * Email + password. Mock auth chi chap nhan 4 default users (xem fixtures.ts).
  */
 import { useState } from 'react';
-import { ScrollView, View, Text, Pressable } from 'react-native';
+import { ScrollView, View, Text, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/services/AuthContext';
@@ -16,7 +16,10 @@ const DEMO_USERS = [
   { email: 'pt@fitmate.vn', label: 'PT (Mai Xuân Tú, verified)' },
   { email: 'ptlong@fitmate.vn', label: 'PT (Trần Minh Long, pending)' },
   { email: 'minh@fitmate.vn', label: 'Hội viên (Minh)' },
+  { email: 'thuhang@fitmate.vn', label: 'Mentor (Thu Hằng)' },
+  { email: 'son@fitmate.vn', label: 'Mentor (Sơn)' },
 ];
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginScreen() {
   const { login, error, clearError } = useAuth();
@@ -26,6 +29,14 @@ export default function LoginScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const onLogin = async () => {
+    if (!EMAIL_REGEX.test(email.trim())) {
+      Alert.alert('Email không hợp lệ', 'Vui lòng nhập email đúng định dạng.');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Mật khẩu quá ngắn', 'Mật khẩu phải có ít nhất 6 ký tự.');
+      return;
+    }
     setSubmitting(true);
     try {
       await login(email.trim(), password);
