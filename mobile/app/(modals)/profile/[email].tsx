@@ -7,13 +7,14 @@ import { useEffect, useState } from 'react';
 import { ScrollView, View, Text, Pressable } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Pencil, Calendar, MessageCircle, UserPlus, UserMinus, Star, BadgeCheck } from 'lucide-react-native';
+import { ArrowLeft, Pencil, Calendar, MessageCircle, Star, BadgeCheck } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
 import * as mockUserService from '@/services/mockUserService';
 import type { User } from '@/types';
 import { Avatar, Button, Card, Chip, Badge } from '@/components/ui';
+import { FriendButton } from '@/features/profile';
 import { formatVnd, formatDate, formatStreak } from '@/utils/format';
 
 export default function ProfileModal() {
@@ -91,12 +92,10 @@ export default function ProfileModal() {
           {/* Quick actions row */}
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
             {isSelf ? (
-              <Button
-                label="Sửa hồ sơ"
-                variant="primary"
-                size="md"
-                iconLeft={<Pencil color={resolveColor(theme, 'onPrimary')} size={16} />}
-                onPress={() => router.push(`/(modals)/edit-profile/${profile.email}`)}
+              <FriendButton
+                targetEmail={profile.email}
+                isSelf={true}
+                onEditSelf={() => router.push(`/(modals)/edit-profile/${profile.email}`)}
               />
             ) : (
               <>
@@ -114,15 +113,7 @@ export default function ProfileModal() {
                   iconLeft={<MessageCircle color={resolveColor(theme, 'onSurface')} size={16} />}
                   onPress={() => router.push(`/(modals)/chat/${profile.email}`)}
                 />
-                <Button
-                  label={isFriend ? 'Hủy kết bạn' : 'Kết bạn'}
-                  variant="secondary"
-                  size="md"
-                  iconLeft={isFriend ? <UserMinus color={resolveColor(theme, 'onSurface')} size={16} /> : <UserPlus color={resolveColor(theme, 'onSurface')} size={16} />}
-                  onPress={() => {
-                    /* TODO MOB-115 phase 3: friend request sheet */
-                  }}
-                />
+                <FriendButton targetEmail={profile.email} />
               </>
             )}
           </View>

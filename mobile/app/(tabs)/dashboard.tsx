@@ -14,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/services/AuthContext';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
+import { mockUserService } from '@/services/mockUserService';
+import { ToastService } from '@/components/ui/Toast';
 import { defaultMacroTargets, calculateBmr, calculateTdee, ageFromBirthday } from '@/utils/bmi';
 import { StreakCard } from '@/features/dashboard/StreakCard';
 import { CalorieRing } from '@/features/dashboard/CalorieRing';
@@ -88,7 +90,15 @@ export default function DashboardScreen() {
         />
 
         <View style={{ padding: 16, gap: 16 }}>
-          <StreakCard streak={user.streak} target={7} />
+          <StreakCard
+            streak={user.streak}
+            target={7}
+            onPress={async () => {
+              await mockUserService.saveUser({ ...user, streak: user.streak + 1 });
+              await refresh();
+              ToastService.show({ message: `Tuyệt vời! Streak = ${user.streak + 1} ngày.`, tone: 'achievement' });
+            }}
+          />
 
           <CalorieRing
             consumed={user.caloriesConsumed}

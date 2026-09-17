@@ -1,8 +1,9 @@
 /**
  * StreakCard — daily streak indicator.
  * 7-day target. Warning neu streak < 7, success neu >= 7.
+ * Tap to +1 streak (FP-001 acceptance).
  */
-import { View, Text } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { Flame } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
@@ -33,36 +34,40 @@ export function StreakCard({ streak, target = 7, onPress }: StreakCardProps) {
   }
 
   return (
-    <Card
-      variant="default"
-      style={{ borderColor, borderWidth: 1 }}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Streak ${streak} ngày, nhấn để +1`}
+      onPress={onPress}
+      disabled={!onPress}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <View
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            backgroundColor: resolveColor(theme, 'secondaryContainer'),
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Flame color={resolveColor(theme, 'secondary')} size={24} />
+      <Card variant="default" style={{ borderColor, borderWidth: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: resolveColor(theme, 'secondaryContainer'),
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Flame color={resolveColor(theme, 'secondary')} size={24} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 18, fontWeight: '700' }}>
+              {streak === 0 ? 'Bắt đầu streak!' : `${streak} ngày liên tục`}
+            </Text>
+            <Text style={{ color: textColor, fontSize: 12, marginTop: 2 }}>
+              {streak === 0
+                ? 'Tập hôm nay để khởi động chuỗi'
+                : met
+                  ? `Hoàn thành mục tiêu ${target} ngày! Nhấn để tiếp tục`
+                  : `Còn ${target - streak} ngày nữa tới mục tiêu. Nhấn để +1`}
+            </Text>
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 18, fontWeight: '700' }}>
-            {streak === 0 ? 'Bắt đầu streak!' : `${streak} ngày liên tục`}
-          </Text>
-          <Text style={{ color: textColor, fontSize: 12, marginTop: 2 }}>
-            {streak === 0
-              ? 'Tập hôm nay để khởi động chuỗi'
-              : met
-                ? `Hoàn thành mục tiêu ${target} ngày!`
-                : `Còn ${target - streak} ngày nữa tới mục tiêu`}
-          </Text>
-        </View>
-      </View>
-    </Card>
+      </Card>
+    </Pressable>
   );
 }

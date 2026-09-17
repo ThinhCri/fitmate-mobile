@@ -20,6 +20,8 @@ export interface CalorieRingProps {
 export function CalorieRing({ consumed, burned, target, protein, carbs, fat }: CalorieRingProps) {
   const theme = useTheme();
   const pct = target > 0 ? consumed / target : 0;
+  const overTarget = consumed > target;
+  const ringTone: 'primary' | 'secondary' | 'warning' | 'success' = overTarget ? 'warning' : 'primary';
 
   return (
     <Card variant="default">
@@ -28,14 +30,14 @@ export function CalorieRing({ consumed, burned, target, protein, carbs, fat }: C
         <ProgressRing
           size={160}
           stroke={14}
-          progress={pct}
+          progress={Math.min(1, pct)}
           label={`${Math.round(consumed)}`}
           subLabel={`/ ${target} kcal`}
-          tone="primary"
+          tone={ringTone}
         />
       </View>
       <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 12, textAlign: 'center' }}>
-        Đã đốt {burned} kcal
+        {overTarget ? `Vượt mục tiêu ${Math.round(consumed - target)} kcal` : `Đã đốt ${burned} kcal`}
       </Text>
       <View style={{ gap: 10, marginTop: 12 }}>
         <ProgressBar

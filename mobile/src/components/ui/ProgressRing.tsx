@@ -16,8 +16,8 @@ export interface ProgressRingProps {
   label?: string;
   /** Sub-label under main label */
   subLabel?: string;
-  /** tone of fill (primary | secondary | tertiary) */
-  tone?: 'primary' | 'secondary' | 'tertiary';
+  /** tone of fill (primary | secondary | tertiary | warning | success) */
+  tone?: 'primary' | 'secondary' | 'tertiary' | 'warning' | 'success';
 }
 
 export function ProgressRing({
@@ -34,7 +34,16 @@ export function ProgressRing({
   const clamped = Math.max(0, Math.min(1, progress));
   const dashOffset = circumference * (1 - clamped);
 
-  const fillKey = tone === 'secondary' ? 'secondary' : tone === 'tertiary' ? 'tertiary' : 'primary';
+  const fillKey: 'primary' | 'secondary' | 'tertiary' | 'warning' | 'success' =
+    tone === 'secondary'
+      ? 'secondary'
+      : tone === 'tertiary'
+        ? 'tertiary'
+        : tone === 'warning'
+          ? 'warning'
+          : tone === 'success'
+            ? 'success'
+            : 'primary';
 
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>

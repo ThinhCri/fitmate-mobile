@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   User, Search, Users, MessageCircle, CalendarClock, Gem, HelpCircle, LogOut,
+  Settings as SettingsIcon,
 } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
 import { useTheme } from '@/theme';
@@ -60,6 +61,7 @@ export default function DrawerModal() {
       {menuItem(<CalendarClock color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Lịch hẹn', () => { close(); router.push('/(modals)/appointments'); })}
       {menuItem(<Gem color={resolveColor(theme, 'tertiary')} size={20} />, 'VIP', () => { close(); router.push('/(modals)/vip'); })}
       {menuItem(<HelpCircle color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Hỗ trợ', () => { close(); router.push('/(modals)/support'); })}
+      {menuItem(<SettingsIcon color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Cài đặt', () => { close(); router.push('/(modals)/settings'); })}
 
       <View style={{ flex: 1 }} />
 
