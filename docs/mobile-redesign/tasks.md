@@ -490,5 +490,101 @@ Moi muc khi phat sinh them vao day voi tag phu hop:
 4. **De xuat ngoai pham vi**: ghi vao Backlog tren.
 5. **Tich hop backend tuong lai**: them task MOB-4XX.
 
+---
+
+## MOB-407 — Sua Bottom Navigation safe area — Android gesture bar overlaps icons
+
+- **Boi canh** (2026-09-18): User bao gesture bar Android de len icon/label cua bottom nav.
+- **Pham vi**: Sua `mobile/app/(tabs)/_layout.tsx`.
+  - Bo `height: 64, paddingBottom: 8` co dinh.
+  - Dung `useSafeAreaInsets()` de lay bottom inset thuc te.
+  - `tabBarHeight = 48 + Math.max(insets.bottom, 12)`.
+  - `tabBarHideOnKeyboard: true` an tab bar khi ban phim mo.
+  - State `ready` tranh flicker khi insets chua tinh.
+- **Trang thai**: DONE (da commit `0db5895`)
+
+---
+
+## MOB-408 — PT Revenue model + fee/refund calculations + tests
+
+- **Boi canh** (2026-09-18): Yeu cau trien khai PT Revenue (Doanh thu) theo spec chi tiet.
+- **Pham vi**:
+  - `mobile/src/features/pt-revenue/revenueCalculations.ts`: types `BookingForPT`, `RefundEvent`, `RevenueKPI`, `RevenueHistoryItem`, `RevenueChartPoint`.
+  - Phí 10% = `FEE_RATE_BPS = 1000`. `calcFeeAndPT(amount)`: fee = round(amount × 0.10), pt = amount - fee.
+  - Hoàn tiền: điều chỉnh âm vào thu nhập tại completedAt (không phải ngày booking).
+  - Nhiều lần hoàn: tính phí còn lại từ số tiền còn lại sau mỗi lần hoàn.
+  - `computeRevenueKPI`, `computeRevenueChart`, `computeRevenueHistory` theo `RevenuePeriod` + Asia timezone.
+  - `canAccessRevenue(user)` — kiem tra `user.profile.isPt === true`.
+  - `mobile/src/features/pt-revenue/__tests__/revenueCalculations.test.ts`: 33 test, tat ca PASS.
+- **Chinh sach**:
+  - Hoàn tháng sau không sửa lịch sử tháng trước.
+  - Refund pending/failed không làm phát sinh điều chỉnh.
+  - `dateKeyFromISO()`: timezone Asia/Ho_Chi_Minh (UTC+7).
+- **Trang thai**: DONE (da commit `76fff41`)
+
+---
+
+## MOB-409 — Man hinh tong quan Doanh thu PT (KPI + chart + history)
+
+- **Boi canh** (2026-09-18): Trien khai man hinh revenue chinh.
+- **Pham vi**:
+  - Route: `/(modals)/revenue`.
+  - Header: title + "Du lieu mau" + ten PT.
+  - Bo loc: Thang nay / Thang truoc / 3 thang gan day / Tuy chon.
+  - The KPI chinh: Thu nhap trong ky (sau phi 10% + dieu chinh hoan tien).
+  - 4 Sub-metrics: Gia tri dich vu hoan thanh, Phi nen tang, Dieu chinh hoan tien, Buoi hoan thanh. Flexwrap responsive.
+  - Khu vuc "Cho hoan thanh": so du hien tai, khong theo ky.
+  - Bar chart (SVG, khong dependency moi): ho tro gia tri am, touch xem chi tiet, empty state.
+  - Loc lich su theo loai: Tat ca / Thu nhap / Dieu chinh hoan tien.
+  - Search: ten hoc vien, dich vu, ma booking.
+  - Load more pagination.
+  - Phan quyen: redirect member.
+- **Trang thai**: DONE (da commit `164b57d`)
+
+---
+
+## MOB-410 — Man hinh chi tiet booking revenue
+
+- **Boi canh** (2026-09-18): Chi tiet booking de kiem tra tinh toan.
+- **Pham vi**:
+  - Route: `/(modals)/revenue/[bookingId]`.
+  - Hoc vien, ma booking (copy), trang thai booking/payment/refund.
+  - Gia goc, giam gia, thuc tra, tong hoan tien, con lai.
+  - Ty le phi 10%, phi con lai, phan PT con lai.
+  - Trang thai thu nhap: cho hoan thanh / da ghi nhan / da dieu chinh.
+  - Timeline payment/hoan thanh/refund.
+  - Khong co nut thu tien, rut tien, phe duyet hoan tien.
+- **Trang thai**: DONE (da commit `164b57d`)
+
+---
+
+## MOB-411 — Menu entry Doanh thu trong Drawer — chi cho PT
+
+- **Boi canh** (2026-09-18): PT can truy cap man hinh Doanh thu.
+- **Pham vi**:
+  - Them menu "Doanh thu" icon `BarChart3` trong `drawer.tsx`.
+  - Chi hien thi voi `user.profile.isPt === true`.
+  - Navigate den `/(modals)/revenue`.
+  - Khong co tab chinh cho tat ca nguoi dung.
+- **Trang thai**: DONE (da commit `50bf653`)
+
+---
+
+## MOB-412 — BarChart primitive (SVG) cho revenue chart
+
+- **Boi canh** (2026-09-18): Man hinh revenue can bieu do bar.
+- **Pham vi**:
+  - `mobile/src/components/ui/BarChart.tsx`: SVG bar chart.
+  - Khong them dependency moi (dung `react-native-svg` san co).
+  - Ho tro negative values (refund, mau do).
+  - Touch xem chi tiet tung cot.
+  - Empty state + accessibility label.
+  - Responsive flex.
+- **Trang thai**: DONE (da commit `164b57d`)
+
+---
+
+> **TRANG THAI HIEN TAI (2026-09-18, sau Batch 8)**: MOB-407..412 DONE (da commit). MOB-001..135 IMPLEMENTED (code done), can runtime verification.
+
 
 > **TRANG THAI HIEN TAI (2026-09-18, Batch 5)**: Toan bo MOB-XXX da IMPLEMENTED (code done) sau 4 batches (6776129, a1b371a, 4ae282b, 6ba45a4) + Batch 5 refactor + features/. Can verify runtime: `cd mobile && npm install`, `npx tsc --noEmit`, `npx expo start` emulator + contrast WebAIM tool. Sau do moi set DONE theo AGENTS.md.

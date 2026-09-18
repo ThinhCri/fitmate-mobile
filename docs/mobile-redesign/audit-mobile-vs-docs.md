@@ -436,3 +436,73 @@ File: `mobile/app/(tabs)/workout.tsx`
 - npm install PASS.
 - FP-001..040 da co code logic.
 - Con lai: runtime verify emulator + manual contrast check tool that.
+
+---
+
+## 14. Batch 8 (2026-09-18 19:00) — Safe Area + PT Revenue [MOB-407..412]
+
+### 14.1 MOB-407 — Bottom nav safe area
+File: `mobile/app/(tabs)/_layout.tsx`
+- Bo `height: 64, paddingBottom: 8` co dinh.
+- Dung `useSafeAreaInsets()` de lay bottom inset Android gesture bar.
+- `tabBarHeight = 48 + Math.max(insets.bottom, 12)`.
+- `tabBarHideOnKeyboard: true`.
+- State `ready` tranh flicker khi insets chua tinh.
+
+### 14.2 MOB-408 — PT Revenue model + calculations + 33 tests
+File: `mobile/src/features/pt-revenue/revenueCalculations.ts`
+- Types: `BookingForPT`, `RefundEvent`, `RevenuePeriod`, `RevenueKPI`, `RevenueHistoryItem`, `RevenueChartPoint`.
+- `calcFeeAndPT(amount)`: fee = round(amount × 0.10), pt = amount - fee.
+- `calcRefundAdjustment(refundAmount, feeRemainingBefore)`: tinh phan PT bi dieu chinh (am).
+- `calcRemainingAfterRefunds(paidAmount, refunds)`: tinh fee/PT con lai sau refund.
+- `computeRevenueKPI/Chart/History`: tong hop theo `RevenuePeriod`.
+- `buildDateRange`, `isDateInRange`, `dateKeyFromISO`, `formatDateKeyAsia`: Asia/Ho_Chi_Minh (UTC+7).
+- `canAccessRevenue(user)`: client-side role guard.
+- 33 vitest PASS (MOB-408).
+
+File: `mobile/src/features/pt-revenue/revenueFixtures.ts`
+- 2 PT demo: `pt@fitmate.vn` (11 bookings) + `ptlong@fitmate.vn` (3 bookings).
+- Cases: completed, paid pending, unpaid, discount, cancelled full refund, partial refund, multi-refund, cross-month refund, pending/failed refund.
+- `getBookingsForPT(ptEmail)`: lay booking theo email, tach du lieu per-PT.
+
+### 14.3 MOB-412 — BarChart primitive (SVG, khong dependency moi)
+File: `mobile/src/components/ui/BarChart.tsx`
+- Dung `react-native-svg` san co.
+- Ho tro negative values (refund, mau error).
+- Touch xem chi tiet tung cot (accessibilityLabel).
+- Empty state + label truc quan.
+
+### 14.4 MOB-409 — Revenue screen overview
+File: `mobile/app/(modals)/revenue/index.tsx`
+- Route: `/(modals)/revenue`.
+- Header: title + "Du lieu mau" + ten PT.
+- Bo loc: Thang nay / Thang truoc / 3 thang gan day.
+- KPI chinh: Thu nhap trong ky (sau phi + dieu chinh).
+- 4 Sub-metrics (flexwrap responsive).
+- Khu vuc "Cho hoan thanh" (khong theo ky).
+- BarChart tich hop.
+- Loc loai lich su + search + load more.
+- Tap item → chi tiet.
+
+### 14.5 MOB-410 — Revenue detail screen
+File: `mobile/app/(modals)/revenue/[bookingId].tsx`
+- Route: `/(modals)/revenue/[bookingId]`.
+- Hoc vien, ma booking (sao chep), trang thai.
+- Gia goc, giam gia, thuc tra, hoan tien, con lai.
+- Phi 10%, phi con lai, phan PT con lai.
+- Trang thai thu nhap.
+- Timeline payment/hoan thanh/refund.
+- Khong co nut thu tien, rut tien, phe duyet hoan tien.
+
+### 14.6 MOB-411 — Menu entry Doanh thu
+File: `mobile/app/(modals)/drawer.tsx`
+- Them item "Doanh thu" icon `BarChart3`.
+- Chi hien thi khi `user.profile.isPt === true`.
+
+### Trang thai sau Batch 8
+- 46 vitest PASS.
+- tsc 0 errors.
+- FP-034 added to feature-parity-matrix.md.
+- DEC-021 (safe area), DEC-022 (fee/revenue policy) added.
+- Con lai: runtime verify emulator, manual UI check (font scaling, screen nho, gesture nav, keyboard).
+

@@ -32,10 +32,18 @@
 > - `npx tsc --noEmit` PASS (0 errors).
 > - Commits local: `45afadb` MOB-401 → `b1e782d` MOB-402/403/406 → `bb5d18c` MOB-404/405.
 
-- **MOB-000**: DONE that su (planning).
-- **MOB-015**: huy (override boi MOB-016).
-- **MOB-016**: DONE that su (sua light theme Soft Energy).
-- **MOB-016b**: DONE that su (refine semantic roles + content parity checklist).
+### Batch 8 (2026-09-18 19:00) — Safe Area + PT Revenue [MOB-407..412]
+
+- MOB-407 fix bottom nav safe area: `useSafeAreaInsets()` cho gesture bar Android. Commit `0db5895`.
+- MOB-408 PT revenue model: `BookingForPT`, `RefundEvent`, `RevenueKPI`, `RevenueHistoryItem`, `RevenueChartPoint`, fee calculations, `computeRevenueKPI/Chart/History`, Asia timezone handling. 33 vitest PASS. Commit `76fff41`.
+- MOB-409 PT revenue screen overview: KPI + chart + history + filters + search. Commit `164b57d`.
+- MOB-410 PT revenue detail: booking details + timeline + revenue breakdown. Commit `164b57d`.
+- MOB-411 Menu entry: `BarChart3` icon in drawer, `user.profile.isPt` guard. Commit `50bf653`.
+- MOB-412 BarChart SVG component (khong dependency moi). Commit `164b57d`.
+- 2 PT demo accounts: `pt@fitmate.vn` (11 bookings) + `ptlong@fitmate.vn` (3 bookings).
+- Fixture cases: completed, paid pending, unpaid, discount, cancelled refund, partial refund, multi-refund, cross-month refund, pending/failed refund.
+- Chinh sach: phi 10%, ghi nhan theo completedAt, nhieu lan hoan tinh phi con lai, khong double-count.
+- `npx tsc --noEmit` PASS (0 errors). `npm test` 46/46 PASS.
 - **MOB-001..005**: IMPLEMENTED code done → can `npm install` + emulator.
 - **MOB-002b** (BottomSheet): IMPLEMENTED code done.
 - **MOB-101..118**: IMPLEMENTED code done cho 5 tabs + Drawer + Notifications + Social + Messenger + Appointments + Nutrition.

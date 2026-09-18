@@ -337,6 +337,32 @@
 - **Task**: MOB-120
 - **Vi tri moi**: dung Linking.openURL('mailto:...') cua RN
 
+## FP-034 — Doanh thu PT (Revenue)
+
+- **Luong**: drawer (PT only) → Doanh thu
+- **Vai tro**: PT only
+- **Hanh dong**:
+  - Header: title + "Du lieu mau" + ten PT.
+  - Bo loc thoi gian: Thang nay / Thang truoc / 3 thang gan day.
+  - KPI chinh: Thu nhap trong ky (sau phi 10% + dieu chinh hoan tien).
+  - 4 Sub-metrics: Gia tri dich vu hoan thanh, Phi nen tang, Dieu chinh hoan tien, Buoi hoan thanh.
+  - Khu vuc "Cho hoan thanh" (so du hien tai, khong theo ky).
+  - Bar chart SVG (khong dependency moi): thu nhap theo ngay, ho tro am.
+  - Lich su thu nhap: earnings + refund adjustments, loc loai, search.
+  - Chi tiet booking: breakdown tien + timeline.
+- **Business logic**:
+  - Phi nền tảng: 10% của số tiền thực trả (sau giảm giá). PT nhận phần còn lại.
+  - Thời điểm ghi nhận: khi booking status = 'completed'.
+  - Hoàn tiền: điều chỉnh âm vào thu nhập tại thời điểm refund succeeded.
+  - Nhiều lần hoàn: tính phí còn lại từ số tiền còn lại sau mỗi lần hoàn.
+  - Làm tròn: Math.round (0.5 lên). Tổng phí + PT luôn khớp số tiền gốc.
+- **Model**: `BookingForPT`, `RefundEvent`, `RevenueKPI`, `RevenueHistoryItem`, `RevenueChartPoint`
+- **Files**: `src/features/pt-revenue/revenueCalculations.ts`, `revenueFixtures.ts`, `__tests__/revenueCalculations.test.ts`
+- **Screens**: `app/(modals)/revenue/index.tsx`, `[bookingId].tsx`
+- **Component**: `src/components/ui/BarChart.tsx` (SVG)
+- **Task**: MOB-408..412
+- **Trang thai**: IMPLEMENTED (code done, chua verify runtime)
+
 ## FP-034 — Status bar & phone chrome simulator
 
 - **Luong**: Dashboard top

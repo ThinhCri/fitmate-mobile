@@ -508,3 +508,87 @@
 - `screen-specs.md` Section 5.1-5.3 content parity checklist chi ra token dung cho moi block.
 - Neu phase sau them gamification → DEC-020 cap nhat de cho phep tertiary xuat hien o vi tri cu the (streak unlock, badge earn, level up).
 - Neu phase sau them dark theme → token values secondary/tertiary se khai bao rieng cho dark variant.
+
+---
+
+## DEC-021 — Bottom navigation safe area: dung `useSafeAreaInsets()`, khong hardcode
+
+**Ngay**: 2026-09-18. **Ap dung tu MOB-407**.
+
+**Boi canh**:
+- Android gesture bar 3 nut de len icon/label cua bottom tab → kho doc va cham nham.
+- Web khong co van de nay.
+
+**Quyet dinh**:
+- Su dung `useSafeAreaInsets()` tu `react-native-safe-area-context`.
+- `tabBarHeight = 48 + Math.max(insets.bottom, 12)`.
+- `paddingBottom = insets.bottom` de icon/label nam tren gesture bar.
+- `tabBarHideOnKeyboard: true` de khong bi de khi nhap text.
+- Nen tab bar co the mo rong xuong vung he thong (cho dep), nhung phan tuong tac phai nam tren vung do.
+- State `ready` de tranh flicker khi insets chua kip tinh lan dau.
+
+**Ly do**:
+- Padding co dinh (8dp, 16dp) se sai tren moi thiet bi (Pixel 7, Samsung Galaxy, Pixel 3a deu khac).
+- Hardcode 48dp cho gesture bar se che len status bar tren thiet bi khong co gesture bar.
+
+**He qua**:
+- `app/(tabs)/_layout.tsx` da sua.
+- Khi tich hop backend/sau, screen khac cu co fixed paddingBottom cua bottom CTA can kiem tra lai voi new tab bar height.
+
+---
+
+## DEC-022 — Doanh thu PT: phí 10% tren so tien THUC TRA (sau giam gia), ghi nhan khi completed
+
+**Ngay**: 2026-09-18. **Ap dung tu MOB-408**. **Thay the moi chi dan truoc do** ve phi/hoan tien neu co.
+
+**Boi canh**:
+- User yeu cau ro chinh sach fee/revenue de trien khai Doanh thu PT.
+- Cu can tich hop backend that (sau phase nay) thi backend la nguon tham quyen.
+
+**Quyet dinh**:
+
+### Phi nen tang
+- `FEE_RATE_BPS = 1000` (= 10%).
+- `calcFeeAndPT(amount)`:
+  - `fee = Math.round(amount * 0.10)` (lam tron 0.5 len).
+  - `ptShare = amount - fee` (de tong luon khop).
+- Vi du: 500k → fee 50k → PT 450k.
+
+### Giam gia
+- Phi tinh tren so tien THUC TRA sau giam gia hop le.
+- Vi du: 500k giam 50k → thuc tra 450k → fee 45k → PT 405k.
+- Khong tinh giam gia lan nua neu model da luu so tien cuoi cung.
+- Khong tu xay he thong voucher moi neu app chua co.
+
+### Thoi diem ghi nhan
+- Booking chua thanh toan → khong tinh.
+- Da thanh toan nhung chua hoan thanh → chi vao "Cho hoan thanh".
+- Da thanh toan VA da hoan thanh → ghi nhan phan PT tai `completedAt`, 1 lan cho moi booking.
+- Trang thai completed phai den tu luong hien co hoac du lieu demo ro rang, KHONG tu danh dau vi het gio.
+
+### Huy va hoan tien
+- Booking chua thanh toan bi huy → khong phat sinh.
+- Da thanh toan bi huy truoc hoan thanh → hoan toan bo, PT 0.
+- Sau hoan thanh: hoan 1 phan → giam phi + phan PT tuong ung; hoan toan bo → phi va phan PT con lai = 0.
+- Refund pending/failed → KHONG ghi nhan dieu chinh thanh cong.
+- `refundAdjustment` duoc ghi TAI THOI DIEM refund succeeded, KHONG sua lich su thang truoc.
+- Thu nhap ky hien tai co the am (khi nhieu refund).
+- Man hinh doanh thu KHONG tu tao hoac duyet hoan tien, KHONG hien thi thong tin ngan hang, KHONG co nut thu tien/rut tien.
+
+### Lam tron & chong trung
+- Tien dung so nguyen VND. Lam tron 0.5 len.
+- Luu `feeRateBps` snapshot tai booking de khong tinh lai tu config hien tai.
+- Nhieu lan hoan: tinh phi con lai tu so tien thuc tra con lai.
+- Khong cong trung booking khi retry payment.
+- Tong hoan thanh cong khong vuot so tien da thanh toan.
+
+### Phan quyen
+- `canAccessRevenue(user) = user.profile.isPt === true`.
+- Client check chi la UI/UX. Khi tich hop backend, backend van la nguon tham quyen ve quyen + so lieu.
+
+**He qua**:
+- `src/features/pt-revenue/revenueCalculations.ts` chua toan bo cong thuc.
+- `__tests__/revenueCalculations.test.ts` 33 test PASS.
+- `app/(modals)/revenue/` la UI; `drawer.tsx` chi hien thi menu cho PT.
+- Backend sau nay KHONG nen override client logic — client chi hien thi so lieu backend cung cap, KHONG tu tinh tien.
+
