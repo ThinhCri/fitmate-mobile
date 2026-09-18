@@ -1,13 +1,15 @@
 /**
  * Drawer (MOB-102) — side menu.
  * Sections (top-down): avatar + name + email, menu items, footer version.
+ *
+ * PT revenue menu (MOB-411): chi hien thi voi user.profile.isPt === true.
  */
 import { View, Text, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   User, Search, Users, MessageCircle, CalendarClock, Gem, HelpCircle, LogOut,
-  Settings as SettingsIcon,
+  Settings as SettingsIcon, BarChart3,
 } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
 import { useTheme } from '@/theme';
@@ -59,6 +61,7 @@ export default function DrawerModal() {
       {menuItem(<Users color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Bạn bè', () => { close(); router.push('/(modals)/friends'); })}
       {menuItem(<MessageCircle color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Tin nhắn', () => { close(); router.push('/(tabs)/social'); })}
       {menuItem(<CalendarClock color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Lịch hẹn', () => { close(); router.push('/(modals)/appointments'); })}
+      {user.profile.isPt ? menuItem(<BarChart3 color={resolveColor(theme, 'primary')} size={20} />, 'Doanh thu', () => { close(); router.push('/(modals)/revenue' as never); }) : null}
       {menuItem(<Gem color={resolveColor(theme, 'tertiary')} size={20} />, 'VIP', () => { close(); router.push('/(modals)/vip'); })}
       {menuItem(<HelpCircle color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Hỗ trợ', () => { close(); router.push('/(modals)/support'); })}
       {menuItem(<SettingsIcon color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Cài đặt', () => { close(); router.push('/(modals)/settings'); })}
