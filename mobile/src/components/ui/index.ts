@@ -25,3 +25,5 @@ export { BottomSheet } from './BottomSheet';
 export type { BottomSheetProps, BottomSheetRef } from './BottomSheet';
 export { BarChart } from './BarChart';
 export type { BarChartProps, BarChartPoint } from './BarChart';
+export { FloatingTabBar } from './FloatingTabBar';
+export type { FloatingTabBarProps, TabItem } from './FloatingTabBar';

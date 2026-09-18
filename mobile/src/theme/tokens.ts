@@ -2,12 +2,16 @@
  * Design tokens — Soft Energy (light theme only).
  *
  * Source of truth:
- * - docs/mobile-redesign/decisions.md  (DEC-019, DEC-020)
+ * - docs/mobile-redesign/decisions.md  (DEC-019, DEC-020, DEC-023)
  * - docs/mobile-redesign/design-system.md  (Section 2)
  *
  * Token values are verified per-pair by WCAG 2.1 relative luminance in
  * design-system.md. Re-verify with WebAIM / Material Theme Builder when
  * shipping.
+ *
+ * DEC-023 (2026-09-18):
+ *   Bo sac kem/nga vang. Page bg chuyen sang cool white (xanh lanh) va
+ *   container tiers pha teal rat nhe. Homepage dung gradient mint teal.
  *
  * DO NOT:
  *  - Import any CSS variable from web src/index.css (DEC-004).
@@ -16,22 +20,22 @@
  */
 
 export const palette = {
-  // Surface tiers (5 levels for card / subtle card / selected / hover / pressed)
-  surface: '#FAFAF7',
-  surfaceContainerLowest: '#FFFFFF',
-  surfaceContainerLow: '#F4F2ED',
-  surfaceContainer: '#EEEBE4',
-  surfaceContainerHigh: '#E5E2DA',
-  surfaceContainerHighest: '#DAD6CC',
+  // Surface tiers — DEC-023: cool white + mint teal tint (no warm cream).
+  surface: '#F5F8F8',            // page bg — cool off-white, slight teal tint
+  surfaceContainerLowest: '#FFFFFF', // cards / sheets body (pure white)
+  surfaceContainerLow: '#ECF1F0',    // subtle card — very light cool mint
+  surfaceContainer: '#E1E9E8',       // selected / segmented inner
+  surfaceContainerHigh: '#D5DEDF',    // hover / pressed
+  surfaceContainerHighest: '#C6D2D1', // divider tint
 
   // Text on surface
-  onSurface: '#1A1A1F',
-  onSurfaceVariant: '#45474C',
-  onSurfaceDisabled: '#8E939B', // AA-large/UI only — placeholder + caption only
+  onSurface: '#0F1A19',          // near-black with cool teal undertone
+  onSurfaceVariant: '#3F4948',   // secondary text
+  onSurfaceDisabled: '#8B9492',  // AA-large/UI only — placeholder + caption only
 
   // Outline
-  outline: '#5C5750', // hairline / focus ring (AAA UI 7.16:1 vs card)
-  outlineVariant: '#858078', // card subtle border 1dp (AA-large/UI 3.75:1)
+  outline: '#46514F',            // hairline / focus ring (AAA UI)
+  outlineVariant: '#7C8784',     // card subtle border 1dp (AA-large/UI 3:1+)
 
   // Primary (deep teal — sole CTA color)
   primary: '#0F766E',
@@ -65,8 +69,22 @@ export const palette = {
   scrim: '#000000', // used at 35% opacity for modal/sheet backdrop
 
   // Inverse (reserved — not used in phase UI)
-  inverseSurface: '#1F1B16',
-  inverseOnSurface: '#F4F0EA',
+  inverseSurface: '#0F1A19',
+  inverseOnSurface: '#F5F8F8',
+
+  // DEC-023: Homepage gradient stops (mint teal cool). Dung cho bg Homepage,
+  // KHONG thay the `surface` cho cac man khac.
+  gradientMintStart: '#DDEEEC',  // mint pastel
+  gradientMintEnd: '#F5F8F8',    // page bg
+  gradientTealHaze: '#CFE0DE',   // deeper mint for top-left accent
+
+  // Glass tint cho floating tab bar + hero card. Dung cung hex luc dac,
+  // blur se lam mo nen.
+  glassSurface: '#FFFFFF',       // glass tint base (mac dinh)
+  glassSurfaceAlt: '#F5F8F8',    // glass tint khi nen co gradient
+
+  // Watermark ink (low-opacity logo/text). Rat nhe, phai < 8% alpha.
+  watermarkInk: '#0F766E',       // same as primary — opacity controlled at usage
 } as const;
 
 export type PaletteKey = keyof typeof palette;
@@ -165,36 +183,37 @@ export type TypographyVariant =
 
 /**
  * Elevation — light theme prefers subtle shadow + outline.
+ * DEC-023: floating tab bar dùng level2; glass hero card dùng level1.
  */
 export const elevation = {
   none: { shadowOpacity: 0, elevation: 0 },
   level1: {
-    shadowColor: '#14141C',
+    shadowColor: '#0F1A19',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 2,
     elevation: 1,
   },
   level2: {
-    shadowColor: '#14141C',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  level3: {
-    shadowColor: '#14141C',
+    shadowColor: '#0F1A19',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  level4: {
-    shadowColor: '#14141C',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.14,
+    shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 4,
+  },
+  level3: {
+    shadowColor: '#0F1A19',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  level4: {
+    shadowColor: '#0F1A19',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 8,
   },
 } as const;
 
@@ -208,6 +227,8 @@ export const opacity = {
   pressed: 0.88,
   scrim: 0.35, // modal / bottom sheet backdrop
   iconMuted: 0.6,
+  watermark: 0.06, // logo/text watermark (rat nhe, khong can nhieu)
+  glass: 0.75, // glass surface opacity (de blur noi bat)
 } as const;
 
 /**
