@@ -18,6 +18,8 @@ export interface InputProps extends Omit<TextInputProps, 'style'> {
   errorText?: string;
   leadingIcon?: ReactNode;
   trailingIcon?: ReactNode;
+  rightIcon?: ReactNode; // alias for trailingIcon
+  leftIcon?: ReactNode; // alias for leadingIcon
   disabled?: boolean;
 }
 
@@ -27,12 +29,16 @@ export function Input({
   errorText,
   leadingIcon,
   trailingIcon,
+  rightIcon,
+  leftIcon,
   disabled,
   onFocus,
   onBlur,
   ...rest
 }: InputProps) {
   const theme = useTheme();
+  const resolvedLeading = leadingIcon ?? leftIcon;
+  const resolvedTrailing = trailingIcon ?? rightIcon;
   const [focused, setFocused] = useState(false);
 
   const hasError = !!errorText;
@@ -76,7 +82,7 @@ export function Input({
           opacity: disabled ? theme.tokens.opacity.disabled : 1,
         }}
       >
-        {leadingIcon}
+        {resolvedLeading}
         <View style={{ flex: 1 }}>
           <Text style={{ color: labelColor, fontSize: 12, fontWeight: '600', marginBottom: 2 }}>{label}</Text>
           <TextInput
@@ -94,7 +100,7 @@ export function Input({
             {...rest}
           />
         </View>
-        {trailingIcon}
+        {resolvedTrailing}
       </View>
       {(errorText || helperText) && (
         <Text style={{ color: hasError ? resolveColor(theme, 'error') : resolveColor(theme, 'onSurfaceVariant'), fontSize: 12 }}>

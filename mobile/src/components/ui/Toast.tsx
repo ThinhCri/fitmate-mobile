@@ -47,11 +47,31 @@ export function Toast({ visible, tone, message, onHide, durationMs = 3000 }: Toa
   let borderKey: keyof typeof theme.tokens.palette | null;
 
   switch (tone) {
-    case 'success': bgKey = 'surfaceContainerLowest'; fgKey = 'success'; borderKey = 'success'; break;
-    case 'warning': bgKey = 'surfaceContainerLowest'; fgKey = 'warning'; borderKey = 'warning'; break;
-    case 'error': bgKey = 'errorContainer'; fgKey = 'onErrorContainer'; borderKey = null; break;
-    case 'achievement': bgKey = 'achievementContainer'; fgKey = 'onAchievementContainer'; borderKey = 'achievement'; break;
-    case 'info': bgKey = 'surfaceContainerLowest'; fgKey = 'info'; borderKey = 'info'; break;
+    case 'success':
+      bgKey = 'surfaceContainerLowest';
+      fgKey = 'success';
+      borderKey = 'success';
+      break;
+    case 'warning':
+      bgKey = 'surfaceContainerLowest';
+      fgKey = 'warning';
+      borderKey = 'warning';
+      break;
+    case 'error':
+      bgKey = 'errorContainer';
+      fgKey = 'onErrorContainer';
+      borderKey = null;
+      break;
+    case 'achievement':
+      bgKey = 'tertiaryContainer';
+      fgKey = 'onTertiaryContainer';
+      borderKey = 'tertiary';
+      break;
+    case 'info':
+      bgKey = 'surfaceContainerLowest';
+      fgKey = 'info';
+      borderKey = 'info';
+      break;
   }
 
   return (

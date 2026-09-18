@@ -82,6 +82,8 @@ export interface User {
   // FP-019 medical survey
   medicalConditions?: string[];
   medicalNotes?: string;
+  // Nutrition / Scan
+  mealSchedule?: MealSchedule;
 }
 
 export interface WorkoutSession {
@@ -99,7 +101,7 @@ export interface Appointment {
   timeSlot: string;
   ptEmail: string;
   memberEmail: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'late' | 'rescheduled';
   notes: string;
 }
 
@@ -146,6 +148,21 @@ export interface Post {
   reactions: Reaction[];
   comments: Comment[];
 }
+
+export interface MealScheduleEntry {
+  date: string; // ISO date
+  meal: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  name: string;
+  calories: number;
+}
+
+/** Map meal → most-recent dish name. Used by Nutrition Scan quick-assign. */
+export type MealSchedule = Partial<{
+  breakfast: string;
+  lunch: string;
+  dinner: string;
+  snack: string;
+}>;
 
 export interface Reaction {
   userEmail: string;

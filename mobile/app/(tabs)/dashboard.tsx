@@ -95,7 +95,7 @@ export default function DashboardScreen() {
             target={7}
             onPress={async () => {
               await mockUserService.saveUser({ ...user, streak: user.streak + 1 });
-              await refresh();
+              await mockUserService.getCurrentUser();
               ToastService.show({ message: `Tuyệt vời! Streak = ${user.streak + 1} ngày.`, tone: 'achievement' });
             }}
           />

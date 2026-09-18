@@ -31,3 +31,9 @@ export function validatePost(text: string): { ok: boolean; reason?: string } {
   }
   return { ok: true };
 }
+
+/** Trim + collapse runs of whitespace + strip null bytes. Returns trimmed string. */
+export function cleanContent(text: string): string {
+  if (text == null) return '';
+  return text.replace(/\u0000/g, '').replace(/\s+/g, ' ').trim();
+}

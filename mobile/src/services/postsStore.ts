@@ -11,25 +11,19 @@
  */
 
 import type { Post, Reaction } from '@/types';
-import { storage } from './storage';
+import * as storage from './storage';
 import { DEFAULT_POSTS } from '@/mocks/fixtures';
 
-const STORAGE_KEY = '@fitmate/posts/v1';
+const STORAGE_PREFIX = '@fitmate/posts/';
+const STORAGE_KEY = `${STORAGE_PREFIX}v1`;
 
 let cached: Post[] | null = null;
 const subscribers = new Set<() => void>();
 
 async function loadInitial(): Promise<Post[]> {
-  try {
-    const raw = await storage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Post[];
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (_) {
-    // ignore
-  }
-  await storage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_POSTS));
+  const raw = await storage.get<Post[]>(STORAGE_KEY);
+  if (raw && Array.isArray(raw)) return raw;
+  await storage.set<Post[]>(STORAGE_KEY, DEFAULT_POSTS);
   return [...DEFAULT_POSTS];
 }
 
@@ -45,7 +39,7 @@ export function getAllPostsSync(): Post[] {
 
 async function persist() {
   if (cached) {
-    await storage.setItem(STORAGE_KEY, JSON.stringify(cached));
+    await storage.set<Post[]>(STORAGE_KEY, cached);
   }
   subscribers.forEach((s) => s());
 }
@@ -134,6 +128,6 @@ export async function bumpRandomKnowledgeReaction(): Promise<Post | null> {
 /** Reset store (for tests / dev). */
 export async function resetPostsStore(): Promise<void> {
   cached = [...DEFAULT_POSTS];
-  await storage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_POSTS));
+  await storage.set<Post[]>(STORAGE_KEY, DEFAULT_POSTS);
   subscribers.forEach((s) => s());
 }

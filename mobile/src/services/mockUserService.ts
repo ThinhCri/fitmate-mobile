@@ -98,6 +98,7 @@ export async function register(input: {
     conversations: {},
     posts: [],
     reviews: [],
+    workoutHistory: [],
   };
   cache[input.email] = newUser;
   await storage.set(KEY_USERS, cache);
@@ -155,3 +156,20 @@ export async function updateCurrentUser(patch: Partial<User>): Promise<User | nu
   await storage.set(KEY_USERS, cache);
   return JSON.parse(JSON.stringify(updated)) as User;
 }
+
+/**
+ * Namespace export for `import { mockUserService } from '@/services/mockUserService'`.
+ * Allows callers to do `mockUserService.saveUser(...)` style.
+ */
+export const mockUserService = {
+  getAllUsers,
+  getUserByEmail,
+  getCurrentUser,
+  login,
+  logout,
+  register,
+  saveUser,
+  updateOtherUser,
+  updateCurrentUser,
+  __resetForTests,
+};

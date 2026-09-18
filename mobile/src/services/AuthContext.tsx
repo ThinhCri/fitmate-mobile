@@ -26,7 +26,9 @@ export interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (input: { email: string; password: string; profile: User['profile'] }) => Promise<void>;
   logout: () => Promise<void>;
+  signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  saveUser: (user: User) => Promise<void>;
   setUser: (user: User | null) => void;
   clearError: () => void;
 }
@@ -100,11 +102,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null);
   }, []);
 
+  const signOut = logout;
+
+  const saveUser = useCallback(async (next: User) => {
+    await mockUserService.saveUser(next);
+    setUser(next);
+  }, []);
+
   const clearError = useCallback(() => setError(null), []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, error, login, register, logout, refresh, setUser, clearError }),
-    [user, loading, error, login, register, logout, refresh, clearError],
+    () => ({ user, loading, error, login, register, logout, signOut, refresh, saveUser, setUser, clearError }),
+    [user, loading, error, login, register, logout, saveUser, refresh, clearError],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

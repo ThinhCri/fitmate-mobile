@@ -82,3 +82,15 @@ export function defaultMacroTargets(tdee: number, goal: 'lose' | 'maintain' | 'g
   const fat = Math.round((calories * 0.3) / 9);
   return { calories, protein, carbs, fat };
 }
+
+/** Age from ISO date string (YYYY-MM-DD). Returns 25 as fallback if invalid. */
+export function ageFromBirthday(iso: string | null | undefined): number {
+  if (!iso) return 25;
+  const dob = new Date(iso);
+  if (isNaN(dob.getTime())) return 25;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return Math.max(0, age);
+}

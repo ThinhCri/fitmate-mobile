@@ -53,7 +53,8 @@ export async function multiGet<T extends Record<string, unknown>>(
       const key = keys[i];
       if (value != null) {
         try {
-          out[key] = JSON.parse(value) as T[keyof T];
+          // Safe cast: key is a string key of T
+          (out as Record<string, unknown>)[key] = JSON.parse(value);
         } catch {
           /* ignore parse error */
         }

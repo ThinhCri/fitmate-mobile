@@ -109,7 +109,7 @@ export default function NutritionScreen() {
     const cal = Math.round(scanned.baseCalories * portion);
     const newConsumed = user.caloriesConsumed + cal;
     const newMealSchedule = { ...user.mealSchedule, [meal]: scanned.name };
-    await saveUser({ caloriesConsumed: newConsumed, mealSchedule: newMealSchedule });
+    await saveUser({ ...user, caloriesConsumed: newConsumed, mealSchedule: newMealSchedule });
     sheetRef.current?.close();
     setScanned(null);
   };
@@ -119,7 +119,7 @@ export default function NutritionScreen() {
     const next = { ...skipped, [key]: !skipped[key] };
     setSkipped(next);
     if (next[key]) {
-      await saveUser({ caloriesConsumed: Math.max(0, user.caloriesConsumed - 200) });
+      await saveUser({ ...user, caloriesConsumed: Math.max(0, user.caloriesConsumed - 200) });
     }
   };
 

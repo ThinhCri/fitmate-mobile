@@ -16,7 +16,17 @@ import type { ReactNode } from 'react';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive' | 'warm' | 'achievement';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'tertiary'
+  | 'destructive'
+  | 'warm'
+  | 'achievement'
+  | 'success'
+  | 'warning'
+  | 'ghost'
+  | 'neutral';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> {
@@ -57,12 +67,20 @@ export function Button({
       bgKey = 'surfaceContainerLow'; fgKey = 'onSurface'; borderKey = 'outlineVariant'; break;
     case 'tertiary':
       bgKey = 'surfaceContainerLowest'; fgKey = 'primary'; break;
+    case 'ghost':
+      bgKey = 'surfaceContainerLowest'; fgKey = 'onSurface'; break;
     case 'destructive':
       bgKey = 'error'; fgKey = 'onError'; break;
     case 'warm':
       bgKey = 'secondaryContainer'; fgKey = 'onSecondaryContainer'; break;
     case 'achievement':
       bgKey = 'tertiaryContainer'; fgKey = 'onTertiaryContainer'; break;
+    case 'success':
+      bgKey = 'success'; fgKey = 'onPrimary'; break;
+    case 'warning':
+      bgKey = 'warning'; fgKey = 'onPrimary'; break;
+    case 'neutral':
+      bgKey = 'surfaceContainerLowest'; fgKey = 'onSurfaceVariant'; borderKey = 'outlineVariant'; break;
   }
 
   const bgColor = resolveColor(theme, bgKey);

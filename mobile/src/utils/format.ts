@@ -43,15 +43,7 @@ export function formatVnd(amount: number): string {
   return new Intl.NumberFormat(VI_LOCALE).format(amount) + 'đ';
 }
 
-export function ageFromBirthday(iso: string): number {
-  const b = new Date(iso);
-  if (isNaN(b.getTime())) return 0;
-  const now = new Date();
-  let age = now.getFullYear() - b.getFullYear();
-  const m = now.getMonth() - b.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
-  return age;
-}
+// ageFromBirthday is implemented in bmi.ts. Re-exported via utils/index.ts.
 
 export function formatStreak(days: number): string {
   if (days === 0) return 'Chưa có streak';

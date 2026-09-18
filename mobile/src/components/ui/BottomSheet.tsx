@@ -5,7 +5,7 @@ import BottomSheetLib, {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
-import { useTheme } from '../../theme/ThemeProvider';
+import { useTheme, resolveColor } from '../../theme/ThemeProvider';
 
 export type BottomSheetRef = {
   expand: () => void;
@@ -56,11 +56,11 @@ export const BottomSheet = forwardRef<BottomSheetRef, BottomSheetProps>(function
       onClose={onClose}
       backdropComponent={renderBackdrop}
       handleIndicatorStyle={{
-        backgroundColor: theme.semantic.outline,
+        backgroundColor: resolveColor(theme, 'outline'),
         width: 36,
       }}
       backgroundStyle={{
-        backgroundColor: theme.semantic.surface,
+        backgroundColor: resolveColor(theme, 'surface'),
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
       }}

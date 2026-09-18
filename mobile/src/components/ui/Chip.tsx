@@ -12,7 +12,16 @@ export interface ChipProps extends Omit<PressableProps, 'children'> {
   selected?: boolean;
   disabled?: boolean;
   iconLeft?: ReactNode;
-  tone?: 'neutral' | 'warm' | 'achievement';
+  tone?:
+    | 'neutral'
+    | 'warm'
+    | 'achievement'
+    | 'success'
+    | 'warning'
+    | 'destructive'
+    | 'primary'
+    | 'error'
+    | 'info';
 }
 
 export function Chip({
@@ -29,6 +38,7 @@ export function Chip({
   let fgKey: keyof typeof theme.tokens.palette;
   let borderKey: keyof typeof theme.tokens.palette | null;
 
+  // Unselected: tone drives color of label border / bg.
   if (disabled) {
     bgKey = 'surfaceContainerLowest'; fgKey = 'onSurfaceDisabled'; borderKey = 'outlineVariant';
   } else if (selected) {
@@ -36,11 +46,32 @@ export function Chip({
       bgKey = 'secondaryContainer'; fgKey = 'onSecondaryContainer'; borderKey = null;
     } else if (tone === 'achievement') {
       bgKey = 'tertiaryContainer'; fgKey = 'onTertiaryContainer'; borderKey = null;
+    } else if (tone === 'destructive' || tone === 'error') {
+      bgKey = 'errorContainer'; fgKey = 'onErrorContainer'; borderKey = null;
+    } else if (tone === 'warning') {
+      bgKey = 'secondaryContainer'; fgKey = 'onSecondaryContainer'; borderKey = null;
+    } else if (tone === 'success') {
+      bgKey = 'primaryContainer'; fgKey = 'onPrimaryContainer'; borderKey = null;
+    } else if (tone === 'info') {
+      bgKey = 'primaryContainer'; fgKey = 'onPrimaryContainer'; borderKey = null;
+    } else if (tone === 'primary') {
+      bgKey = 'primaryContainer'; fgKey = 'onPrimaryContainer'; borderKey = null;
     } else {
       bgKey = 'primaryContainer'; fgKey = 'onPrimaryContainer'; borderKey = null;
     }
   } else {
-    bgKey = 'surfaceContainerLowest'; fgKey = 'onSurfaceVariant'; borderKey = 'outlineVariant';
+    // Unselected still respects tone for subtle accent border.
+    if (tone === 'destructive' || tone === 'error') {
+      bgKey = 'surfaceContainerLowest'; fgKey = 'error'; borderKey = 'error';
+    } else if (tone === 'warning') {
+      bgKey = 'surfaceContainerLowest'; fgKey = 'warning'; borderKey = 'warning';
+    } else if (tone === 'success') {
+      bgKey = 'surfaceContainerLowest'; fgKey = 'success'; borderKey = 'success';
+    } else if (tone === 'info') {
+      bgKey = 'surfaceContainerLowest'; fgKey = 'info'; borderKey = 'info';
+    } else {
+      bgKey = 'surfaceContainerLowest'; fgKey = 'onSurfaceVariant'; borderKey = 'outlineVariant';
+    }
   }
 
   return (

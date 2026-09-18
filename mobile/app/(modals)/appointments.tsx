@@ -80,11 +80,11 @@ export default function AppointmentsScreen() {
 
   const updateStatus = async (id: string, status: StatusKey) => {
     const next = user.appointments.map((a) => (a.id === id ? { ...a, status } : a));
-    await saveUser({ appointments: next });
+    await saveUser({ ...user, appointments: next });
   };
 
   const deleteAppointment = async (id: string) => {
-    await saveUser({ appointments: user.appointments.filter((a) => a.id !== id) });
+    await saveUser({ ...user, appointments: user.appointments.filter((a) => a.id !== id) });
     if (selectedDayItems.length === 1) setSelectedDay(null);
   };
 

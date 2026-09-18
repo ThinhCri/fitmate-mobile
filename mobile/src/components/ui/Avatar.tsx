@@ -9,7 +9,7 @@ import { resolveColor } from '@/theme/ThemeProvider';
 export interface AvatarProps {
   name: string;
   uri?: string | null;
-  size?: 32 | 40 | 56 | 80 | 100;
+  size?: 24 | 28 | 32 | 36 | 40 | 44 | 48 | 56 | 64 | 72 | 80 | 100;
   tone?: 'neutral' | 'primary' | 'secondary' | 'tertiary';
   border?: boolean;
 }
