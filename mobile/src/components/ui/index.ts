@@ -23,3 +23,5 @@ export { Toast, ToastHost, ToastService } from './Toast';
 export type { ToastProps, ToastTone } from './Toast';
 export { BottomSheet } from './BottomSheet';
 export type { BottomSheetProps, BottomSheetRef } from './BottomSheet';
+export { BarChart } from './BarChart';
+export type { BarChartProps, BarChartPoint } from './BarChart';
