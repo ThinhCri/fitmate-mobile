@@ -151,6 +151,7 @@ export default function NutritionScreen() {
                   borderColor: resolveColor(theme, 'outlineVariant'),
                   borderStyle: 'dashed',
                   overflow: 'hidden',
+                  marginHorizontal: -1, // keep dashed border inside card border radius
                 }}
               >
                 {scanning ? (
@@ -171,9 +172,25 @@ export default function NutritionScreen() {
                   </View>
                 )}
               </View>
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-                <Button label="Chụp ảnh" variant="secondary" size="sm" fullWidth onPress={startScan} iconLeft={<Camera size={14} color={resolveColor(theme, 'onPrimaryContainer')} />} disabled={scanning} />
-                <Button label="Tải lên" variant="secondary" size="sm" fullWidth onPress={startScan} iconLeft={<Upload size={14} color={resolveColor(theme, 'onPrimaryContainer')} />} disabled={scanning} />
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                <Button
+                  label="Chụp ảnh"
+                  variant="secondary"
+                  size="sm"
+                  style={{ flex: 1, minWidth: 120 }}
+                  onPress={startScan}
+                  iconLeft={<Camera size={14} color={resolveColor(theme, 'onPrimaryContainer')} />}
+                  disabled={scanning}
+                />
+                <Button
+                  label="Tải lên"
+                  variant="secondary"
+                  size="sm"
+                  style={{ flex: 1, minWidth: 120 }}
+                  onPress={startScan}
+                  iconLeft={<Upload size={14} color={resolveColor(theme, 'onPrimaryContainer')} />}
+                  disabled={scanning}
+                />
               </View>
             </Card>
 
@@ -242,10 +259,13 @@ export default function NutritionScreen() {
       </ScrollView>
 
       {/* Scan result BottomSheet */}
-      <BottomSheet ref={sheetRef} snapPoints={['60%']}>
+      <BottomSheet ref={sheetRef} snapPoints={['70%']}>
         {scanned && (
-          <View style={{ padding: 20, gap: 16 }}>
-            <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 20, fontWeight: '800' }}>
+          <View style={{ padding: 20, gap: 16, paddingBottom: 32 }}>
+            <Text
+              numberOfLines={3}
+              style={{ color: resolveColor(theme, 'onSurface'), fontSize: 20, fontWeight: '800' }}
+            >
               {scanned.name}
             </Text>
 
@@ -261,23 +281,28 @@ export default function NutritionScreen() {
             </View>
 
             <View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 13, fontWeight: '600' }}>Khẩu phần</Text>
                 <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 13 }}>{portion.toFixed(2)}x</Text>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              {/* Wrap-friendly portion row: 7 chips flex-wrap to fit any screen width. */}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
                 {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((p) => (
                   <Pressable
                     key={p}
                     onPress={() => setPortion(p)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Khẩu phần ${p}x`}
+                    accessibilityState={{ selected: portion === p }}
                     style={{
+                      minWidth: 52,
                       paddingHorizontal: 10,
                       paddingVertical: 6,
                       borderRadius: 8,
                       backgroundColor: portion === p ? resolveColor(theme, 'primary') : resolveColor(theme, 'surfaceContainerHigh'),
                     }}
                   >
-                    <Text style={{ color: portion === p ? resolveColor(theme, 'onPrimary') : resolveColor(theme, 'onSurface'), fontSize: 12, fontWeight: '600' }}>{p}x</Text>
+                    <Text style={{ color: portion === p ? resolveColor(theme, 'onPrimary') : resolveColor(theme, 'onSurface'), fontSize: 12, fontWeight: '600', textAlign: 'center' }}>{p}x</Text>
                   </Pressable>
                 ))}
               </View>
@@ -285,10 +310,30 @@ export default function NutritionScreen() {
 
             <View>
               <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 13, fontWeight: '700', marginBottom: 8 }}>Gán vào bữa</Text>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Button label="Sáng" variant="primary" size="md" fullWidth onPress={() => assignMeal('sang')} iconLeft={<Check size={14} color={resolveColor(theme, 'onPrimary')} />} />
-                <Button label="Trưa" variant="primary" size="md" fullWidth onPress={() => assignMeal('trua')} />
-                <Button label="Tối" variant="primary" size="md" fullWidth onPress={() => assignMeal('toi')} />
+              {/* Wrap-friendly row: 3 buttons share space, wrap to next line if needed. */}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                <Button
+                  label="Sáng"
+                  variant="primary"
+                  size="md"
+                  style={{ flex: 1, minWidth: 96 }}
+                  onPress={() => assignMeal('sang')}
+                  iconLeft={<Check size={14} color={resolveColor(theme, 'onPrimary')} />}
+                />
+                <Button
+                  label="Trưa"
+                  variant="primary"
+                  size="md"
+                  style={{ flex: 1, minWidth: 96 }}
+                  onPress={() => assignMeal('trua')}
+                />
+                <Button
+                  label="Tối"
+                  variant="primary"
+                  size="md"
+                  style={{ flex: 1, minWidth: 96 }}
+                  onPress={() => assignMeal('toi')}
+                />
               </View>
             </View>
           </View>

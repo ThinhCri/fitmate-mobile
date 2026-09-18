@@ -384,6 +384,102 @@ Cac y tuong ghi ngoai pham vi KHONG tu trien khai:
 
 ---
 
+## MOB-401 — Sua layout Dinh dưỡng (nutrition scan tab + bottom sheet)
+
+- **Boi canh** (2026-09-18): screenshot cho thay 3 vi tri layout bi tran/can khong ro rang:
+  - Image container 200x… co `overflow:hidden` trong Card nhưng Card khong clip → border cham/rep bi tran qua goc Card.
+  - Nút "Chụp ảnh" / "Tải lên" dùng `fullWidth` trong Row có `gap:8` → 2 nút full-width khong the wrap, chiếm toàn bộ row → text/icon tràn ngoài khi padding card khong du.
+  - Bottom sheet "Thêm thực phẩm" (snap 60%): hàng khẩu phần 7 chip 0.5x..2x → hơn chiều rộng sheet, khong wrap → bi tran.
+  - Nút "Sáng"/"Trưa"/"Tối" trong BottomSheet → fullWidth 3 nút trong Row → có thể bi tran khi tang cỡ font.
+- **Pham vi**: chi sua layout, KHONG doi hanh vi/du lieu.
+  - Image container: them `overflow:hidden` cho Card scan (hoặc bo dashed border ở container nếu đã có parent).
+  - Hàng nút: dung `flex:1` thay `fullWidth` de 2 nút chia deu, icon+label co the wrap khi font scale 1.5x.
+  - BottomSheet portion: wrap 7 chip thanh 2-3 dong flex-wrap, hoặc horizontal ScrollView co chu dich.
+  - BottomSheet assign meal: 3 nut chia deu `flex:1`.
+  - Them `safe area bottom` cho bottom sheet noi dung.
+- **Parity IDs**: FP-014 (Nutrition scan flow).
+- **Dependencies**: khong.
+- **Tieu chi nghiem thu**: xem `acceptance-checklist.md` F-3.1; verify tren small phone 360dp + tablet 600dp + font scale 1.5x.
+- **Trang thai**: TODO
+
+---
+
+## MOB-402 — Bo sung model bài tập + phan biet time/reps
+
+- **Boi canh** (2026-09-18): model `Exercise` hien tai chi co `reps:number` (Plank dang hien "1 reps" sai y nghia), thieu phan biet time-based vs reps-based, thieu field cho huong dan + video/audio.
+- **Pham vi**:
+  - Them `type: 'reps' | 'time'`, `reps?:number`, `durationSec?:number`, `restAfterSec:number`, `restAfterLastSec?:number` (nghi truoc bai tiep), `notes?:string` (mo ta), `mediaUrl?:string`, `mediaType?:'video'|'audio'|null`, `mediaSource?:string` (license).
+  - Sua fixture Plank: `type:'time', durationSec:45` (45 giay/hiệp), `reps:0` hoặc khong set.
+  - Sua fixture Push-up/Squat/Lunge: giu `type:'reps', reps:12/15/12`.
+  - Ghi chu "demo values" trong `mocks/fixtures.ts`.
+- **Parity IDs**: FP-017 (workout plan), FP-020 (RestTimer).
+- **Dependencies**: MOB-401.
+- **Trang thai**: TODO
+
+---
+
+## MOB-403 — Engine phien tap (state machine + timer deadline-based)
+
+- **Boi canh** (2026-09-18): User muon man hình tap chuyen dung thay vi checklist; can state machine + timer deadline-based de pause/resume/khoi phuc khong bi loi.
+- **Pham vi**:
+  - Tao `mobile/src/features/workout/sessionEngine.ts`: pure function, khong React, testable.
+  - State: `idle | prepare | exercise | rest | paused | finished`.
+  - Moi set: `{ exerciseIndex, setIndex, status, startedAt, pausedAt?, endsAt?, remainingMs }` — tinh deadline thay vi giam bien moi giay.
+  - Action: `start() / pause() / resume() / completeSet() / skipRest() / skipExercise() / endEarly() / tick(now) / advance()`.
+  - Tick() chi cap nhat `remainingMs`, khi `remainingMs<=0` moi goi `advance()` 1 lan → state transition dung 1 lan.
+  - `restore(saved, now)` de khoi phuc tu AsyncStorage.
+  - Serialize session state (state + endsAt + pausedAt).
+- **Parity IDs**: FP-017, FP-020.
+- **Dependencies**: MOB-402.
+- **Trang thai**: TODO
+
+---
+
+## MOB-404 — Man hình "Đang tập" chuyen dung + media/audio cues
+
+- **Boi canh** (2026-09-18): yeu cau man hình tap rieng, huong dan video/audio, tu chuyen exercise/rest/next, controls pause/skip/audio toggle.
+- **Pham vi**:
+  - Tao `mobile/app/(modals)/workout-session.tsx` Expo Router route.
+  - Hien thi: ten bai + hướng dẫn ngắn, video area (WebView/Video neu co URL) hoặc audio cue area, hiep hien tai/tong, position bai trong buoi, dong ho dem nguoc hoac reps counter.
+  - Trang thai badge: Chuẩn bị / Đang tập / Nghỉ / Tạm dừng / Tổng kết.
+  - Controls: Pause/Resume, Skip rest, Skip exercise (ghi la bo qua), End set (cho bài reps), End workout (xac nhan).
+  - Audio cues: dung `expo-speech` TTS tieng Viet neu co, fallback text-only (luu ly do vao docs).
+  - Navigation: Back Android → confirm neu `exercise` hoac `rest` → chu khong phai `idle`/`finished`.
+  - Cleanup timers + media + listeners trong `useEffect` cleanup.
+- **Media**:
+  - Khong bịa URL. Neu co `mediaUrl` trong fixture → dung truc tiep; neu khong co → render placeholder + text instruction.
+  - TTS cues: "Bắt đầu hiệp", "Sắp hết", "Nghỉ", "Hiệp tiếp theo".
+- **Parity IDs**: FP-017, FP-020.
+- **Dependencies**: MOB-403.
+- **Trang thai**: TODO
+
+---
+
+## MOB-405 — Ket qua buoi tap + luu lich su + checkpoint
+
+- **Boi canh** (2026-09-18): save history phai phan biet completed/skipped/endedEarly; tranh ghi trung.
+- **Pham vi**:
+  - Tao `mobile/src/features/workout/sessionStorage.ts`: save/load checkpoint tu AsyncStorage key `workout_session_checkpoint`.
+  - Luu 1 record `WorkoutSession` khi FINISHED: include `status` (completed/skipped/endedEarly), `durationMin`, `caloriesBurned` (cong thuc uoc luong), `exercises` (so bai thuc su hoan thanh vs bo qua).
+  - Dung idempotency: luu `sessionId` trong checkpoint, khi save history check trung de tranh double-write.
+  - Calorie uoc luong co ghi ro "uoc tinh".
+- **Parity IDs**: FP-017 (history).
+- **Dependencies**: MOB-404.
+- **Trang thai**: TODO
+
+---
+
+## MOB-406 — Test engine phien tap (vitest)
+
+- **Boi canh** (2026-09-18): sessionEngine phai co test vi pure function, de verify cac transition va bug timer.
+- **Pham vi**:
+  - Tao `mobile/src/features/workout/__tests__/sessionEngine.test.ts` voi vitest.
+  - Cases: start → exercise → rest → next set; doi bai; het bai cuoi; reps set complete bang tay; pause/resume khong mat thoi gian; skip rest; skip exercise (status=skipped); endEarly; tick() qua deadline → state transition dung 1 lan; khoi phuc tu checkpoint.
+- **Dependencies**: MOB-403.
+- **Trang thai**: TODO
+
+---
+
 ## Phan loai cong viec phat sinh
 
 Moi muc khi phat sinh them vao day voi tag phu hop:
