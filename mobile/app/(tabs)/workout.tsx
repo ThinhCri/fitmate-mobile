@@ -19,11 +19,65 @@ import type { Exercise } from '@/types';
 
 const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
+/**
+ * Demo workout fixtures (MOB-402).
+ *
+ * NOTE: gia tri demo, co the cau hinh. Cập nhật 2026-09-18:
+ *  - Plank giu `type:'time'` (45s/hiep) thay vi "1 reps" (sai y nghia).
+ *  - Push-up/Squat/Lunge la `type:'reps'`.
+ *  - Them `tags` de FP-018 AI adaptive scoring.
+ *  - Them `notes` ngan cho moi bai (hien thi tren man hinh tap).
+ *  - Media demo: 1 video placeholder Pixabay (CC0) cho Push-up; cac bai khac
+ *    khong co URL vi chua co asset phu hop, hien thi placeholder + text.
+ */
 const SAMPLE_WORKOUT: Exercise[] = [
-  { id: 'w-1', name: 'Push-up', sets: 4, reps: 12, rest: 60, calories: 50 },
-  { id: 'w-2', name: 'Squat', sets: 4, reps: 15, rest: 60, calories: 70 },
-  { id: 'w-3', name: 'Plank', sets: 3, reps: 1, rest: 45, calories: 30 },
-  { id: 'w-4', name: 'Lunge', sets: 3, reps: 12, rest: 60, calories: 55 },
+  {
+    id: 'w-1',
+    name: 'Push-up',
+    type: 'reps',
+    sets: 4,
+    reps: 12,
+    restSec: 60,
+    calories: 50,
+    tags: ['push', 'arm', 'upper'],
+    notes: 'Giữ lưng thẳng, hạ ngực gần sàn rồi đẩy lên. Hít vào khi hạ xuống, thở ra khi đẩy lên.',
+    mediaUrl: 'https://cdn.pixabay.com/video/2022/10/04/133826-759222063_large.mp4',
+    mediaType: 'video',
+    mediaSource: 'Pixabay (CC0 / royalty-free) — chỉ dùng cho demo',
+  },
+  {
+    id: 'w-2',
+    name: 'Squat',
+    type: 'reps',
+    sets: 4,
+    reps: 15,
+    restSec: 60,
+    calories: 70,
+    tags: ['leg', 'lower', 'glute'],
+    notes: 'Đứng rộng bằng vai, hạ hông xuống như ngồi ghế, đầu gối không vượt quá mũi chân.',
+  },
+  {
+    id: 'w-3',
+    name: 'Plank',
+    type: 'time',
+    sets: 3,
+    durationSec: 45,
+    restSec: 45,
+    calories: 30,
+    tags: ['core', 'abs'],
+    notes: 'Giữ thân thẳng từ đầu đến chân, siết cơ bụng. Không để hông sụp xuống.',
+  },
+  {
+    id: 'w-4',
+    name: 'Lunge',
+    type: 'reps',
+    sets: 3,
+    reps: 12,
+    restSec: 60,
+    calories: 55,
+    tags: ['leg', 'lower', 'balance'],
+    notes: 'Bước chân dài về phía trước, hạ gối sau gần chạm sàn, đầu gối trước vuông góc.',
+  },
 ];
 
 export default function WorkoutScreen() {
@@ -84,9 +138,13 @@ export default function WorkoutScreen() {
     // Sort by score desc, take top 3
     const sorted = [...currentWorkout].sort((a, b) => (tagBoost[b.id] ?? 0) - (tagBoost[a.id] ?? 0));
     const next = sorted.slice(0, 3).map((ex) => {
-      // Reduce reps if easy prompt + medical
+      // Reduce reps if easy prompt + medical.
+      // Only modify reps-based exercises; time-based exercises keep their duration.
       const reduced = medical.length > 0 && (promptLower.includes('nhe') || promptLower.includes('easy'));
-      return reduced ? { ...ex, reps: Math.max(1, Math.round(ex.reps * 0.7)) } : ex;
+      if (reduced && ex.type === 'reps' && typeof ex.reps === 'number') {
+        return { ...ex, reps: Math.max(1, Math.round(ex.reps * 0.7)) };
+      }
+      return ex;
     });
     setCurrentWorkout(next);
     setShowAiSheet(false);
@@ -103,8 +161,15 @@ export default function WorkoutScreen() {
 
   const handleFinish = useCallback(async () => {
     if (!user || !startedAt) return;
-    const minutes = Math.round((Date.now() - startedAt) / 60000);
+    const minutes = Math.max(1, Math.round((Date.now() - startedAt) / 60000));
+    // Calorie uoc luong (gia dinh MET~5), khong phai so do thuc te.
     const burned = Math.round((minutes / 30) * 250);
+    const plannedSets = currentWorkout.reduce((acc, ex) => acc + ex.sets, 0);
+    const completedSets = currentWorkout.reduce((acc, ex) => {
+      return acc + (completed.includes(ex.id) ? ex.sets : 0);
+    }, completed.length === 0 ? plannedSets : 0);
+    const status: 'completed' | 'endedEarly' =
+      completed.length >= currentWorkout.length ? 'completed' : 'endedEarly';
     await mockUserService.saveUser({
       ...user,
       caloriesBurned: user.caloriesBurned + burned,
@@ -116,14 +181,23 @@ export default function WorkoutScreen() {
           day,
           durationMin: minutes,
           caloriesBurned: burned,
-          exercises: SAMPLE_WORKOUT.length,
+          exercises: currentWorkout.length,
+          status,
+          completedSets,
+          plannedSets,
         },
       ],
     });
     setStartedAt(null);
     setCompleted([]);
     await refresh();
-    ToastService.show({ message: `Hoàn thành! Đốt ${burned} kcal trong ${minutes} phút.`, tone: 'achievement' });
+    ToastService.show({
+      message:
+        status === 'completed'
+          ? `Hoàn thành! Đốt ~${burned} kcal (ước tính) trong ${minutes} phút.`
+          : `Kết thúc sớm. Đốt ~${burned} kcal (ước tính). ${completed.length}/${currentWorkout.length} bài đã hoàn thành.`,
+      tone: status === 'completed' ? 'achievement' : 'info',
+    });
   }, [user, startedAt, day, refresh]);
 
   if (!user) return null;

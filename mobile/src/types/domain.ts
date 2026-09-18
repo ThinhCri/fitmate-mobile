@@ -12,11 +12,34 @@ export type CertificateStatus = 'verified' | 'pending' | 'unverified';
 export interface Exercise {
   id: string;
   name: string;
+  /**
+   * Discriminator for how progress is measured.
+   *  - 'time'  : user holds/works for `durationSec`. Reps is not meaningful.
+   *  - 'reps'  : user performs `reps` repetitions per set.
+   * Phase UI does NOT auto-convert reps→time or vice-versa. Each value is
+   * rendered according to its own kind.
+   */
+  type: 'reps' | 'time';
   sets: number;
-  reps: number;
-  rest: number; // seconds
+  /** Required when type === 'reps'. Otherwise undefined. */
+  reps?: number;
+  /** Required when type === 'time'. Otherwise undefined. */
+  durationSec?: number;
+  /** Rest between sets within the same exercise. */
+  restSec: number;
+  /** Optional transition rest before the next exercise. */
+  restAfterSec?: number;
   calories: number;
+  /** Short on-screen instructions for the exercise. */
   notes?: string;
+  /** Optional media URL — may be a video file or audio file. */
+  mediaUrl?: string;
+  /** Media kind when mediaUrl is set. */
+  mediaType?: 'video' | 'audio';
+  /** License / source attribution for media (recorded in docs). */
+  mediaSource?: string;
+  /** Tags used by FP-018 AI adaptive scoring. */
+  tags?: string[];
 }
 
 export interface Certificate {
@@ -86,13 +109,29 @@ export interface User {
   mealSchedule?: MealSchedule;
 }
 
+/**
+ * One recorded workout session.
+ *
+ * `status` distinguishes:
+ *  - 'completed'  : user finished all planned sets.
+ *  - 'endedEarly' : user stopped before the end (confirmed exit).
+ *  - 'skipped'    : session was abandoned without completing (rare; reserved
+ *                    for future "skip workout" UX). Current UI only emits
+ *                    'completed' and 'endedEarly' via MOB-405.
+ *
+ * `completedSets` is the number of sets actually finished. When status is
+ * 'completed' it equals total planned sets.
+ */
 export interface WorkoutSession {
   id: string;
   date: string; // ISO date (YYYY-MM-DD)
   day: string; // 'T2'..'CN'
   durationMin: number;
-  caloriesBurned: number;
+  caloriesBurned: number; // estimated (ghi ro "uoc tinh")
   exercises: number;
+  status: 'completed' | 'endedEarly' | 'skipped';
+  completedSets?: number;
+  plannedSets?: number;
 }
 
 export interface Appointment {
