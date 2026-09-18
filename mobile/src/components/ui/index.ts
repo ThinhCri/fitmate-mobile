@@ -27,3 +27,5 @@ export { BarChart } from './BarChart';
 export type { BarChartProps, BarChartPoint } from './BarChart';
 export { FloatingTabBar } from './FloatingTabBar';
 export type { FloatingTabBarProps, TabItem } from './FloatingTabBar';
+export { GlassCard } from './GlassCard';
+export type { GlassCardProps } from './GlassCard';
