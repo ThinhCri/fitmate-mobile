@@ -271,13 +271,21 @@ export default function WorkoutScreen() {
             ))}
             {startedAt && <RestTimer initialSeconds={60} />}
             {!startedAt ? (
-              <Button label="Bắt đầu tập" variant="primary" fullWidth onPress={handleStart} />
-            ) : (
               <Button
-                label={`Hoàn thành (${completed.length}/${currentWorkout.length})`}
+                label="Bắt đầu tập"
                 variant="primary"
                 fullWidth
-                onPress={handleFinish}
+                onPress={() => {
+                  setStartedAt(Date.now());
+                  router.push({ pathname: '/(modals)/workout-session', params: { day } });
+                }}
+              />
+            ) : (
+              <Button
+                label="Mở lại màn hình tập"
+                variant="primary"
+                fullWidth
+                onPress={() => router.push({ pathname: '/(modals)/workout-session', params: { day } })}
               />
             )}
             <Button
