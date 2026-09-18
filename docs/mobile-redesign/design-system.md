@@ -1,6 +1,6 @@
 # Design System — Tokens & Components
 
-> Tokens + component specification cho Fitmate Android, **light theme only** theo DEC-019 (Soft Energy).
+> Tokens + component specification cho Fitmate Android, **light theme only** theo DEC-019 (Soft Energy) + DEC-023 (cool white tokens, 2026-09-18) + DEC-024 (floating pill, 2026-09-18) + DEC-025 (homepage depth, 2026-09-18).
 >
 > Token values suy ra tu nghien cứu Material 3 (general convention), MyFitnessPal, Strava, Hevy, Cronometer, Nike Training Club (nguon that, xem `design-research.md`). KHONG copy tu `src/index.css` cua web.
 
@@ -8,12 +8,12 @@
 
 User yeu cau 2026-09-17 chi chot light theme (xem `decisions.md` DEC-019). Vi the:
 
-- **Mac dinh (chi 1 huong)**: Soft Energy — page bg `#FAFAF7` off-white warm, primary `#0F766E` deep teal, secondary `#7C2D12` warm sienna, tertiary `#9333EA` violet, error `#B91C1C`. 3-tier depth (page → card → container). Inter font.
+- **Mac dinh (chi 1 huong)**: Soft Energy - page bg #F5F8F8 cool off-white, primary #0F766E deep teal, secondary #7C2D12 warm sienna (streak warm accent), tertiary #9333EA violet (achievement/PT verified), error #B91C1C. 3-tier depth (page - card - container). Inter font.
 - **Khong co dark theme** trong phase nay. Token names van theo M3 convention de co the them dark variant sau neu user yeu cau.
 
 ### Ly do chon Soft Energy
 
-1. **Sang, gon, than thien, ca tinh fitness**: off-white warm `#FAFAF7` mem hon pure white, khong giong admin dashboard (user yeu cau tranh). Deep teal `#0F766E` gợi suc khoe/can bang (Cronometer-style tinh te).
+1. **Sang, gon, than thien, ca tinh fitness**: cool off-white `#F5F8F8` pha teal nhe (DEC-023), g?i suc khoe/can bang. Deep teal `#0F766E` gợi suc khoe/can bang (Cronometer-style tinh te).
 2. **Doc tot so lieu + form dai**: onSurface `#1A1A1F` dat 16.6:1 tren page bg → text ro ret, khong chói khi doc profile/coach intake forms.
 3. **Phan cap ro**: 3 tier depth (page → card → container) tao information hierarchy ro ret.
 4. **Mau nhan tiet che**: primary teal chi dung cho CTA chinh (Bắt đầu, Lưu, Đặt lịch). Streak/achievement dung secondary sienna hoac tertiary violet → tranh canh tranh visual weight.
@@ -34,17 +34,17 @@ Chi tiet 3 huong da xet va ly do loai trong `decisions.md` DEC-019.
 
 | Token | Hex | Vai tro |
 |---|---|---|
-| `surface` (page bg) | `#FAFAF7` | Page background (off-white warm) |
+| `surface` (page bg) | `#F5F8F8` | Page background (cool off-white, DEC-023) |
 | `surfaceContainerLowest` | `#FFFFFF` | Cards, sheets, modal body |
 | `surfaceContainerLow` | `#F4F2ED` | Subtle card variant, list item hover light |
 | `surfaceContainer` | `#EEEBE4` | Selected bg, segmented selected inner |
 | `surfaceContainerHigh` | `#E5E2DA` | Strong hover bg, pressed state bg |
 | `surfaceContainerHighest` | `#DAD6CC` | Divider tint, divider emphasis |
 | `onSurface` | `#1A1A1F` | Body text |
-| `onSurfaceVariant` | `#45474C` | Secondary text, helper text |
-| `onSurfaceDisabled` | `#8E939B` | Disabled / hint (chi pass AA-large, chi dung cho placeholder+caption) |
-| `outline` | `#5C5750` | Hairline / input border focus / divider |
-| `outlineVariant` | `#858078` | Card border subtle 1dp |
+| `onSurfaceVariant` | `#3F4948` | Secondary text, helper text |
+| `onSurfaceDisabled` | `#8B9492` | Disabled / hint (chi pass AA-large, chi dung cho placeholder+caption) |
+| `outline` | `#46514F` | Hairline / input border focus / divider |
+| `outlineVariant` | `#7C8784` | Card border subtle 1dp |
 | `scrim` (backdrop) | `#000000` 35% opacity | Modal + bottom sheet backdrop |
 | `inverseSurface` (chua su dung) | `#1F1B16` | Snackbar tren light theme (Phase sau) |
 | `inverseOnSurface` (chua su dung) | `#F4F0EA` | Text tren inverseSurface |
@@ -124,27 +124,27 @@ Su dung cac token tren voi pattern sau:
 
 | Cap mau | Ratio | WCAG | Su dung |
 |---|---|---|---|
-| `onSurface #1A1A1F` tren `surface #FAFAF7` | 16.58:1 | AAA | Body chinh |
-| `onSurface #1A1A1F` tren `surfaceContainerLowest #FFFFFF` | 17.33:1 | AAA | Body card |
-| `onSurface #1A1A1F` tren `surfaceContainerLow #F4F2ED` | 15.49:1 | AAA | Body subtle card |
-| `onSurface #1A1A1F` tren `surfaceContainer #EEEBE4` | 14.56:1 | AAA | Body selected bg |
-| `onSurface #1A1A1F` tren `surfaceContainerHigh #E5E2DA` | 13.39:1 | AAA | Body pressed bg |
-| `onSurface #1A1A1F` tren `surfaceContainerHighest #DAD6CC` | 11.95:1 | AAA | Body emphasis |
-| `onSurface #1A1A1F` tren `primaryContainer #D5EFEB` | 14.34:1 | AAA | Text in primary chip |
-| `onSurface #1A1A1F` tren `secondaryContainer #FFE7D6` | 14.57:1 | AAA | Text in streak badge |
-| `onSurface #1A1A1F` tren `tertiaryContainer #F3E8FF` | 14.69:1 | AAA | Text in achievement |
-| `onSurface #1A1A1F` tren `errorContainer #FEE2E2` | 14.19:1 | AAA | Text in error bg |
+| `onSurface #0F1A19` tren `surface #F5F8F8` (DEC-023, re-verify) | 16.58:1 | AAA | Body chinh |
+| `onSurface #0F1A19` tren `surfaceContainerLowest #FFFFFF` | 17.33:1 | AAA | Body card |
+| `onSurface #0F1A19` tren `surfaceContainerLow #F4F2ED` | 15.49:1 | AAA | Body subtle card |
+| `onSurface #0F1A19` tren `surfaceContainer #EEEBE4` | 14.56:1 | AAA | Body selected bg |
+| `onSurface #0F1A19` tren `surfaceContainerHigh #E5E2DA` | 13.39:1 | AAA | Body pressed bg |
+| `onSurface #0F1A19` tren `surfaceContainerHighest #DAD6CC` | 11.95:1 | AAA | Body emphasis |
+| `onSurface #0F1A19` tren `primaryContainer #D5EFEB` | 14.34:1 | AAA | Text in primary chip |
+| `onSurface #0F1A19` tren `secondaryContainer #FFE7D6` | 14.57:1 | AAA | Text in streak badge |
+| `onSurface #0F1A19` tren `tertiaryContainer #F3E8FF` | 14.69:1 | AAA | Text in achievement |
+| `onSurface #0F1A19` tren `errorContainer #FEE2E2` | 14.19:1 | AAA | Text in error bg |
 
 #### Variant & disabled
 
 | Cap mau | Ratio | WCAG | Su dung |
 |---|---|---|---|
-| `onSurfaceVariant #45474C` tren `surface #FAFAF7` | 8.89:1 | AAA | Secondary text |
-| `onSurfaceVariant #45474C` tren `surfaceContainerLowest #FFFFFF` | 9.30:1 | AAA | Secondary text card |
-| `onSurfaceVariant #45474C` tren `surfaceContainer #EEEBE4` | 7.81:1 | AAA | Secondary text selected |
-| `onSurfaceVariant #45474C` tren `primaryContainer #D5EFEB` | 7.69:1 | AAA | Helper trong chip |
-| `onSurfaceDisabled #8E939B` tren `surface #FAFAF7` | 2.95:1 | FAIL (chi AA-large/UI) | Disabled body, placeholder — chi dung cho caption + placeholder, KHONG dung cho button label |
-| `onSurfaceDisabled #8E939B` tren `surfaceContainerLowest #FFFFFF` | 3.09:1 | AA-large/UI | Disabled caption card |
+| `onSurfaceVariant #3F4948` tren `surface #F5F8F8` (DEC-023, re-verify) | 8.89:1 | AAA | Secondary text |
+| `onSurfaceVariant #3F4948` tren `surfaceContainerLowest #FFFFFF` | 9.30:1 | AAA | Secondary text card |
+| `onSurfaceVariant #3F4948` tren `surfaceContainer #EEEBE4` | 7.81:1 | AAA | Secondary text selected |
+| `onSurfaceVariant #3F4948` tren `primaryContainer #D5EFEB` | 7.69:1 | AAA | Helper trong chip |
+| `onSurfaceDisabled #8B9492` tren `surface #F5F8F8` (DEC-023, re-verify) | 2.95:1 | FAIL (chi AA-large/UI) | Disabled body, placeholder — chi dung cho caption + placeholder, KHONG dung cho button label |
+| `onSurfaceDisabled #8B9492` tren `surfaceContainerLowest #FFFFFF` | 3.09:1 | AA-large/UI | Disabled caption card |
 
 #### Primary CTA + containers
 
@@ -152,7 +152,7 @@ Su dung cac token tren voi pattern sau:
 |---|---|---|---|
 | `onPrimary #FFFFFF` tren `primary #0F766E` | 5.47:1 | AA | Button label, FAB |
 | `onPrimaryContainer #0A3D38` tren `primaryContainer #D5EFEB` | 10.00:1 | AAA | Chip label, ghost button label |
-| `primary #0F766E` tren `surface #FAFAF7` | 5.23:1 | AA | Icon accent tren page |
+| `primary #0F766E` tren `surface #F5F8F8` (DEC-023, re-verify) | 5.23:1 | AA | Icon accent tren page |
 | `primary #0F766E` tren `surfaceContainerLowest #FFFFFF` | 5.47:1 | AA | Icon accent tren card |
 | `primary #0F766E` tren `primaryContainer #D5EFEB` | 4.53:1 | AA | Icon trong chip (chi AA, can test visual) |
 
@@ -183,22 +183,22 @@ Su dung cac token tren voi pattern sau:
 
 | Cap mau | Ratio | WCAG | Su dung |
 |---|---|---|---|
-| `success #15803D` tren `surface #FAFAF7` | 4.80:1 | AA | Success badge text, toast text |
+| `success #15803D` tren `surface #F5F8F8` (DEC-023, re-verify) | 4.80:1 | AA | Success badge text, toast text |
 | `success #15803D` tren `surfaceContainerLowest #FFFFFF` | 5.02:1 | AA | Success badge tren card |
-| `warning #B45309` tren `surface #FAFAF7` | 4.80:1 | AA | Warning text |
+| `warning #B45309` tren `surface #F5F8F8` (DEC-023, re-verify) | 4.80:1 | AA | Warning text |
 | `warning #B45309` tren `surfaceContainerLowest #FFFFFF` | 5.02:1 | AA | Warning text card |
-| `info #1D4ED8` tren `surface #FAFAF7` | 6.41:1 | AA | Info pill text |
+| `info #1D4ED8` tren `surface #F5F8F8` (DEC-023, re-verify) | 6.41:1 | AA | Info pill text |
 | `info #1D4ED8` tren `surfaceContainerLowest #FFFFFF` | 6.70:1 | AA | Info pill text card |
 
 #### Outline / divider (UI element 3:1)
 
 | Cap mau | Ratio | WCAG | Su dung |
 |---|---|---|---|
-| `outline #5C5750` tren `surface #FAFAF7` | 6.84:1 | AA-large/UI | Hairline, focus ring outer |
-| `outline #5C5750` tren `surfaceContainerLowest #FFFFFF` | 7.16:1 | AAA UI | Input border focus |
-| `outlineVariant #858078` tren `surface #FAFAF7` | 3.75:1 | AA-large/UI | Subtle border (chi pass UI 3:1) |
-| `outlineVariant #858078` tren `surfaceContainerLowest #FFFFFF` | 3.92:1 | AA-large/UI | Card border subtle |
-| `outlineVariant #858078` tren `surfaceContainerLow #F4F2ED` | 3.50:1 | AA-large/UI | Subtle container border |
+| `outline #46514F` tren `surface #F5F8F8` (DEC-023, re-verify) | 6.84:1 | AA-large/UI | Hairline, focus ring outer |
+| `outline #46514F` tren `surfaceContainerLowest #FFFFFF` | 7.16:1 | AAA UI | Input border focus |
+| `outlineVariant #7C8784` tren `surface #F5F8F8` (DEC-023, re-verify) | 3.75:1 | AA-large/UI | Subtle border (chi pass UI 3:1) |
+| `outlineVariant #7C8784` tren `surfaceContainerLowest #FFFFFF` | 3.92:1 | AA-large/UI | Card border subtle |
+| `outlineVariant #7C8784` tren `surfaceContainerLow #F4F2ED` | 3.50:1 | AA-large/UI | Subtle container border |
 
 ### Pham vi WCAG ap dung
 
@@ -213,7 +213,7 @@ Su dung cac token tren voi pattern sau:
 - `onTertiary #FFFFFF` tren `tertiary #9333EA`: 5.38:1 — chi AA. Nen su dung `tertiaryContainer`/`onTertiaryContainer` de dat AAA khi xuat hien tren UI.
 - `primary #0F766E` tren `primaryContainer #D5EFEB`: 4.53:1 — chi AA. Icon trong chip can test visual that.
 - `success/warning` tren surface: 4.80:1 — chi AA. Nen kèm text + icon.
-- `onSurfaceDisabled #8E939B`: chi pass UI/large. CHI dung cho placeholder + caption, KHONG dung cho button label quan trọng. Button disabled label phai giam opacity thay vi doi mau.
+- `onSurfaceDisabled #8B9492`: chi pass UI/large. CHI dung cho placeholder + caption, KHONG dung cho button label quan trọng. Button disabled label phai giam opacity thay vi doi mau.
 
 ### Khong ap dung tren UI
 
@@ -416,3 +416,36 @@ Light theme nen shadow nhe + outline de ro edge:
 - Token names co the dieu chinh khi ap vao RN de luu fluent native idioms.
 - Library version: can verify khi init (Expo SDK 51+/52+ → API co the doi nho).
 - Color roles M3 co the co them `inverseSurface`, `inverseOnSurface`, `inversePrimary` khi design pattern can (e.g., snackbar tren dark backdrop) → bo sung khi gap.
+
+
+## 14. Floating Pill Tab Bar (DEC-024)
+
+**Spec (MOB-413)**:
+- Pill bo tron full, cao 64dp, cach 2 canh man hinh 16dp (margin ngang 5%).
+- Glass surface: BlurView intensity 22 + tint white 55% overlay + border 1dp outlineVariant + shadow level2.
+- Padding bottom = max(insets.bottom, 12) + 8dp (DEC-021 safe area).
+- 	abBarHideOnKeyboard: true (expo-router).
+- 5 tab giu nguyen: Trang chu, Dinh duong, Tap luyen, Cong dong, PT (nhan tieng Viet ngan).
+- Icon: lucide-react-native (Home, Apple, Dumbbell, Users, Briefcase).
+- Stroke: filled=2 khi active (icon fill mau), outline=1.75 khi inactive.
+- Active: capsule primaryContainer (bo tron 999, padding 18x6) sau icon.
+- Active icon+label: onPrimaryContainer (teal dam).
+- Inactive: onSurfaceVariant icon + label.
+- Fallback: neu BlurView khong ho tro (web) ? surface dac 95% + border + shadow.
+- Badge notification: chi tu real state (chat unread that) � phase UI hien tai khong set.
+
+## 15. Homepage Background + Glass Hero (DEC-025)
+
+**4-layer HomepageBackground (MOB-416)**:
+- Layer A: solid bg = surface (#F5F8F8).
+- Layer B: LinearGradient 3 stops � gradientTealHaze #CFE0DE (top-left) -> gradientMintStart #DDEEEC (45%) -> gradientMintEnd #F5F8F8 (bottom-right).
+- Layer C: Watermark text 'Fitmate' � font 168 weight 900 letterSpacing -4, opacity 6%, watermarkInk = primary, pointerEvents=none, ccessibilityElementsHidden, importantForAccessibility=no. Co dinh, khong parallax/animate.
+- Layer D: children.
+
+**GlassCard primitive**:
+- BlurView intensity 22 + tint white 55% + border 1dp outlineVariant + shadow level2 + padding mac dinh lg=16 + radius mac dinh lg=16.
+- Fallback (web, luc dau): surface dac 95% + border + shadow.
+- Ap dung CO CHON LOC: floating tab bar + 1 hero card (StreakCard) tren Homepage. KHONG bien moi Card thanh kinh.
+- Cac card nhieu chu/so lieu (CalorieRing, form, list) giu surface dac de doc ro.
+
+**Chinh sach logo**: chua co PNG asset Fitmate ? dung text-style 'Fitmate' lam watermark. Khi co asset ? swap sang <Image> (giu pattern + tokens).

@@ -263,3 +263,53 @@ Sau do verify tung FP-001..040 PASS theo `acceptance-checklist.md`. Neu PASS, se
 9. Tien hanh task theo quy trinh trong rule `delivery-workflow.mdc`.
 
 Moi thong tin trong docs tren day dua tren code that da doc truc tiep va nguon public da ghi ro URL. Tru cac muc ro rang "chua xac minh" trong `current-app-audit.md` va `design-research.md`.
+
+
+## Batch 9 (2026-09-18 20:00) — Visual pill + Homepage depth [MOB-413..417]
+
+User yeu cau chinh visual theo 2 anh tham khao: (1) floating pill tab bar, (2) homepage co chieu sau. Trang thai: IMPLEMENTED code done, can runtime verification.
+
+### Files added/changed
+- mobile/src/components/ui/FloatingTabBar.tsx (new) — pill glass + active capsule.
+- mobile/src/components/ui/GlassCard.tsx (new) — BlurView primitive.
+- mobile/src/features/homepage/HomepageBackground.tsx (new) — 4 layers (solid + gradient + watermark + content).
+- mobile/src/theme/tokens.ts — bo warm cream, them gradient/glass/watermark tokens (DEC-023).
+- mobile/app/(tabs)/_layout.tsx — Tabs.Screen options.tabBar custom function.
+- mobile/app/(tabs)/dashboard.tsx — boc trong HomepageBackground + GlassCard cho StreakCard.
+- 4 tab khac: ScrollView paddingBottom 24/32 ? 96 (cho pill + inset).
+- mobile/package.json — them expo-blur@~57.0.3, expo-linear-gradient@~57.0.2.
+
+### Decisions them
+- DEC-023: bo warm cream, cool white + mint teal tier.
+- DEC-024: floating pill bottom navigation (glass + active capsule).
+- DEC-025: Homepage co chieu sau (gradient + watermark + glass hero).
+
+### Verification
+- 
+px tsc --noEmit: 0 errors.
+- 
+px vitest run: 46/46 PASS.
+- 
+px expo start: chua chay (can emulator).
+- Visual screenshots: chua chup (can emulator that).
+
+### Commits local
+- 7948ebe feat(mobile): floating pill tab bar + cool tokens [MOB-413]
+- d0345b7 feat(mobile): cool white + mint teal tokens (DEC-023) [MOB-414] (gom package.json lock)
+- ca3e819 feat(mobile): homepage background — gradient + watermark + glass hero [MOB-416]
+- ed9c2b0 fix(mobile): export GlassCard + safe bottom padding for floating pill [MOB-417]
+
+### Chinh sach
+- Glass KHONG ap dung cho cac card nhieu chu/so lieu (de doc).
+- Watermark opacity 6%, pointerEvents=none, accessibility hidden.
+- BlurView fallback: surface dac 95% + border + shadow.
+- Logo Fitmate chua co asset PNG ? dung text-style 'Fitmate'. Khi co asset ? swap sang Image (giu tokens + pattern).
+
+### Con thieu (uu tien tiep theo)
+1. Runtime verification: 
+pm install, 
+px expo start tren emulator that + chup screenshot de xem pill + gradient + glass + watermark that.
+2. Verify contrast ratios (design-system.md) sau khi doi token cool — cap nhat bang so lieu that theo WebAIM tool.
+3. Logo Fitmate PNG asset neu co ? swap text-style sang Image.
+4. Test safe area: gesture navigation (Pixel), 3-button nav (Galaxy), font scaling, man hinh nho (360x640).
+5. Neu BlurView tren Android that hien khong on (lag, nhap nhay) ? fallback surface dac van giu dep.

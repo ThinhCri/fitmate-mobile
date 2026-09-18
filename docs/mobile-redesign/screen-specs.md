@@ -496,3 +496,12 @@ Cac modal/sheet sau xuat hien trong nhieu man hinh. Spec giong nhau:
 - Them flow: chi ghi noi bo chua trien khai.
 
 Khi review, AI moi can check lai moi screen-spec voi parity ID tuong ung.
+
+
+## Ghi chu visual (DEC-024 + DEC-025, 2026-09-18)
+
+**DashboardScreen (FP-001/002/035)**: boc trong HomepageBackground (4 layers: solid + gradient mint teal + watermark 'Fitmate' + content). StreakCard boc GlassCard (radius 20). CalorieRing + QuickActionGrid giu Card mat dinh (de doc so lieu). Scroll padding bottom = 96dp (pill + inset + buffer).
+
+**Bottom Tabs (5 tab)**: floating pill — chi tiet DEC-024 trong design-system.md Section 14. Glass surface, active capsule primaryContainer, badge tu real state only. Safe area theo DEC-021 (useSafeAreaInsets).
+
+**Cac tab khac (nutrition/workout/social/marketplace)**: ScrollView padding bottom = 96dp de noi dung cuoi khong bi pill che. Card nhieu chu/so lieu giu surface dac.

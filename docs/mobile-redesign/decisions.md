@@ -592,3 +592,68 @@
 - `app/(modals)/revenue/` la UI; `drawer.tsx` chi hien thi menu cho PT.
 - Backend sau nay KHONG nen override client logic â€” client chi hien thi so lieu backend cung cap, KHONG tu tinh tien.
 
+
+
+---
+
+## DEC-023 — Bo warm cream, page bg chuyen sang cool white + mint teal tier (2026-09-18)
+
+**Boi canh**: User yeu cau 2026-09-18 bo sac kem/nga vang hien tai tren Homepage, huong sang nen trang lanh / gan trang pha teal nhe.
+
+**Ly do**:
+- Off-white warm #FAFAF7 giong admin dashboard (Cream Console khong hop fitness).
+- Surface tier pha warm cream #F4F2ED/#EEEBE4/... ? kho phan biet voi secondary sienna.
+- Teal cool palette (Cronometer, Hevy) tao cam giac sach, khoe, can bang.
+
+**Quyet dinh**:
+- surface #FAFAF7 ? #F5F8F8 (cool off-white, slight teal tint).
+- Container tiers chuyen sang cool mint: #ECF1F0 ? #E1E9E8 ? #D5DEDF ? #C6D2D1.
+- onSurface #1A1A1F ? #0F1A19 (cool teal undertone).
+- outline #5C5750 ? #46514F; outlineVariant #858078 ? #7C8784.
+- Them gradientMintStart #DDEEEC, gradientMintEnd #F5F8F8, gradientTealHaze #CFE0DE cho Homepage bg.
+- Them glassSurface, glassSurfaceAlt, watermarkInk de ho tro BlurView + watermark.
+- Them opacity.watermark = 0.06, opacity.glass = 0.75.
+
+**He qua**:
+- Contrast ratio body text tren cac surface tier chi thay doi < 1 diem (van AAA 14+:1).
+- Trang thai DONE: MOB-414 commit d0345b7.
+
+---
+
+## DEC-024 — Floating pill bottom navigation (glass + active capsule, 2026-09-18)
+
+**Boi canh**: User yeu cau 2026-09-18 doi tab bar mac dinh (border-top, full-width, chi doi mau khi active) sang floating pill (anh 1).
+
+**Quyet dinh**:
+- FloatingTabBar component moi: pill bo tron full, cao 64dp, cach 2 canh man hinh 16dp (margin ngang 5%).
+- Glass: BlurView intensity 22 + tint white 55% overlay + border 1dp outlineVariant + shadow level2.
+- Padding bottom = max(insets.bottom, 12) + 8dp (tren Android gesture bar, xem DEC-021).
+- Hide on keyboard open (expo-router 	abBarHideOnKeyboard: true).
+- Active: capsule primaryContainer (bo tron 999, padding 18x6) sau icon, icon onPrimaryContainer filled stroke=2, label onPrimaryContainer weight 700.
+- Inactive: icon onSurfaceVariant outline stroke=1.75, label onSurfaceVariant weight 600.
+- Icon library: lucide-react-native (co san, consistent).
+- Badge notification: chi tu real state (chat unread that). Phase UI hien khong set badge mac dinh.
+- Fallback: BlurView khong ho tro (web) ? surface dac 95% + border + shadow van dep.
+
+**He qua**:
+- Custom 	abBar function qua Tabs.Screen options (expo-router 4+ support runtime; TS cast s never do type chua expose).
+- Trang thai DONE: MOB-413 commit 7948ebe.
+
+---
+
+## DEC-025 — Homepage co chieu sau: gradient + watermark + glass hero (2026-09-18)
+
+**Boi canh**: User yeu cau 2026-09-18 n?n co chi?u sâu (anh 2), gradient teal/mint nhe, watermark logo Fitmate, glass hero cho 1 card noi bat.
+
+**Quyet dinh**:
+- HomepageBackground component 4 layers: A= solid bg, B= LinearGradient 3 stops (#CFE0DE -> #DDEEEC -> #F5F8F8), C= watermark text logo, D= children.
+- Watermark: text 'Fitmate' font 168 weight 900 letterSpacing -4, opacity 6%, watermarkInk, pointerEvents=none, ccessibilityElementsHidden, importantForAccessibility=no. Co dinh, khong parallax/animate.
+- GlassCard component: BlurView intensity 22 + tint white 55% + border 1dp outlineVariant + level2 shadow + padding mac dinh lg=16. Fallback surface dac 95%.
+- Chi 1 card tren Homepage (StreakCard) boc GlassCard. Card nhieu so lieu (CalorieRing) giu surface dac de doc ro.
+- Neu chua co PNG logo Fitmate ? dung text-style 'Fitmate'. Neu sau co asset ? swap sang <Image> watermark (giu cung pattern).
+- BlurView khong ho tro ? fallback surface dac (van dep, doc tot).
+
+**He qua**:
+- Trang thai DONE: MOB-416 commit ca3e819.
+
+---

@@ -584,7 +584,109 @@ Moi muc khi phat sinh them vao day voi tag phu hop:
 
 ---
 
-> **TRANG THAI HIEN TAI (2026-09-18, sau Batch 8)**: MOB-407..412 DONE (da commit). MOB-001..135 IMPLEMENTED (code done), can runtime verification.
+> **TRANG THAI HIEN TAI (2026-09-18, Batch 9 — visual pill + homepage)**: MOB-413..417 DONE (da commit `7948ebe`, `d0345b7`, `ca3e819`, `ed9c2b0`). MOB-407..412 DONE (Batch 8). MOB-001..135 IMPLEMENTED (code done), can runtime verification.
+
+
+---
+
+## MOB-413 — Floating pill tab bar (glass + active capsule)
+
+- **Boi canh** (2026-09-18): Tab bar mat dinh expo-router (border-top, full-width) giong generic app. User yeu cau pill nổi (anh 1), icon dong bo outline/filled, active co capsule primaryContainer phia sau icon.
+- **Pham vi**:
+  - `mobile/src/components/ui/FloatingTabBar.tsx` moi — pill 64dp, bo tròn full, glass surface (BlurView intensity 22 + tint white 55%).
+  - Viền 1dp `outlineVariant`, shadow `level2`, cach 2 canh man hinh 16dp (margin ngang 5%).
+  - Padding bottom = `max(insets.bottom, 12) + 8dp` de khong bi gesture bar de.
+  - `tabBarHideOnKeyboard: true` de khong che form.
+  - Active: capsule `primaryContainer` (bo tròn 999, paddingHorizontal 18) sau icon, label `onPrimaryContainer`.
+  - Inactive: icon `onSurfaceVariant`, label `onSurfaceVariant`.
+  - Icon stroke width: filled=2 khi active, outline=1.75 khi inactive.
+  - Badge notification (neu co) tu real state, mau `error` — phase UI khong set badge (chua co chat unread that).
+  - Fallback: neu BlurView khong ho tro (web) → surface dac 95% + border + shadow.
+- **Files**:
+  - `mobile/src/components/ui/FloatingTabBar.tsx` (new).
+  - `mobile/app/(tabs)/_layout.tsx` (refactor → Tabs.Screen options.tabBar custom function).
+  - `mobile/src/components/ui/index.ts` (export).
+- **Trang thai**: DONE (da commit `7948ebe`)
+
+---
+
+## MOB-414 — Bo warm cream, chuyen page bg sang cool white + mint teal tier
+
+- **Boi canh** (2026-09-18): User yeu cau "bo sac kem/nga vang hien tai tren Homepage". Token cu co surface `#FAFAF7` (off-white warm) + container tiers pha warm — giong admin dashboard.
+- **Pham vi**:
+  - `mobile/src/theme/tokens.ts`: doi toan bo surface tier sang cool white + mint teal tint.
+    - `surface #F5F8F8` (cool off-white).
+    - `surfaceContainerLow #ECF1F0` (very light mint).
+    - `surfaceContainer #E1E9E8`.
+    - `surfaceContainerHigh #D5DEDF`.
+    - `surfaceContainerHighest #C6D2D1`.
+  - `onSurface` → `#0F1A19` (cool teal undertone).
+  - `onSurfaceVariant` → `#3F4948`.
+  - `outline` → `#46514F`, `outlineVariant` → `#7C8784`.
+  - Them tokens cho Homepage: `gradientMintStart #DDEEEC`, `gradientMintEnd #F5F8F8`, `gradientTealHaze #CFE0DE`.
+  - Them `glassSurface #FFFFFF`, `glassSurfaceAlt #F5F8F8`, `watermarkInk #0F766E`.
+  - Them `opacity.watermark = 0.06`, `opacity.glass = 0.75`.
+  - `inverseSurface/inverseOnSurface` cap nhat theo cool tones.
+- **He qua**:
+  - CCCS contrast body card & so lieu khong thay doi dang ke (ren < 1 diem).
+  - Outline bien thanh "cool teal grey" — trung tinh, khong giong warm cream.
+  - Token names giu nguyen (M3 convention).
+- **Files**: `mobile/src/theme/tokens.ts`.
+- **Trang thai**: DONE (da commit `d0345b7`)
+
+---
+
+## MOB-415 — Them dependencies `expo-blur` + `expo-linear-gradient`
+
+- **Boi canh** (2026-09-18): Can BlurView cho pill tab bar + glass hero card. Can LinearGradient cho Homepage bg.
+- **Pham vi**:
+  - `expo-blur@~57.0.3`.
+  - `expo-linear-gradient@~57.0.2`.
+  - Pin theo bundledNativeModules SDK 57, khong them dependency ngoai he.
+- **Trang thai**: DONE (da commit `d0345b7` goi trong tokens commit, line counts theo file lock).
+
+---
+
+## MOB-416 — Homepage co chieu sau: gradient mint teal + watermark logo + glass hero
+
+- **Boi canh** (2026-09-18): User yeu cau nền co chiều sâu (anh 2) — gradient mint teal, watermark logo "Fitmate" phia sau, glass hero cho streak card.
+- **Pham vi**:
+  - `mobile/src/features/homepage/HomepageBackground.tsx` (new) — 4 layers:
+    - Layer A: solid `surface` (#F5F8F8).
+    - Layer B: LinearGradient 3 stops: `#CFE0DE` (top-left) → `#DDEEEC` (45%) → `#F5F8F8` (bottom-right).
+    - Layer C: Watermark "Fitmate" text (font 168, weight 900, letterSpacing -4, opacity 6%, `watermarkInk`), `pointerEvents=none`, `accessibilityElementsHidden`, `importantForAccessibility=no`. Co dinh, khong parallax/animate.
+    - Layer D: children (noi dung + cards).
+  - `mobile/src/components/ui/GlassCard.tsx` (new) — BlurView intensity 22 + tint white 55% + border 1dp `outlineVariant` + `level2` shadow + padding mac dinh lg=16. Fallback neu blur khong ho tro: surface dac 95% + border + shadow.
+  - `mobile/app/(tabs)/dashboard.tsx`: boc StreakCard trong GlassCard (radius 20, padding 16). Giu cac Card khac (CalorieRing, QuickActionGrid) mat dinh (de doc so lieu).
+  - Them scroll padding bottom = 96dp cho floating pill (co buffer).
+- **Chinh sach**:
+  - Glass KHONG ap dung cho cac card nhieu chu / so lieu / form (giu surface dac de doc).
+  - Watermark logo dung font he thong (Inter system fallback) — chua co PNG asset Fitmate; neu co asset trong tuong lai → swap sang `<Image>`.
+  - Layer C `pointerEvents=none` → khong canh tro text.
+- **Files**: 3 file moi + 1 file sua (dashboard).
+- **Trang thai**: DONE (da commit `ca3e819`)
+
+---
+
+## MOB-417 — Safe bottom padding cho moi tab + export GlassCard
+
+- **Boi canh** (2026-09-18): Floating pill (cao 64dp + 16dp margin + 12-28dp insets) de len noi dung cuoi neu ScrollView khong du padding.
+- **Pham vi**:
+  - Tang `paddingBottom` cua ScrollView trong 4 tabs (nutrition, workout, social, marketplace) tu 24/32 → 96.
+  - Dashboard da co `contentBottomPadding = 96` (tu MOB-416).
+  - `mobile/src/components/ui/index.ts`: them export `GlassCard` + `GlassCardProps`.
+- **Trang thai**: DONE (da commit `ed9c2b0`)
+
+---
+
+> **LUU Y VERIFICATION (2026-09-18)**:
+- `npx tsc --noEmit`: PASS (clean).
+- `npx vitest run`: PASS (46/46 tests).
+- `npx expo start`: chua chay (khong co emulator/dev server trong phien nay).
+- Visual verification: chua chup screenshot thuc te (Android emulator khong khoi dong trong phien nay). Can user chay thu tren emulator that hoac `npx expo start` de xem pill + gradient + glass + watermark.
+- Safe area Android: code da dung `useSafeAreaInsets()` (MOB-407) + BlurView co fall back → uoc luong se OK, can xac minh tren device that.
+
+
 
 
 > **TRANG THAI HIEN TAI (2026-09-18, Batch 5)**: Toan bo MOB-XXX da IMPLEMENTED (code done) sau 4 batches (6776129, a1b371a, 4ae282b, 6ba45a4) + Batch 5 refactor + features/. Can verify runtime: `cd mobile && npm install`, `npx tsc --noEmit`, `npx expo start` emulator + contrast WebAIM tool. Sau do moi set DONE theo AGENTS.md.
