@@ -60,6 +60,11 @@ export default function SocialScreen() {
     setPosts([...getAllPostsSync()].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
   }, []);
 
+  const onRefreshSocial = useCallback(() => {
+    refreshPosts();
+    setRefreshing(false);
+  }, [refreshPosts]);
+
   useEffect(() => {
     const unsub = subscribePosts(() => refreshPosts());
     return unsub;
@@ -284,8 +289,10 @@ export default function SocialScreen() {
       {segment === 'feed' && (
         <>
           <ScrollView
-            contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { refreshPosts(); setRefreshing(false); }} />}
+            contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 96 }}
+            refreshControl={(
+              <RefreshControl refreshing={refreshing} onRefresh={onRefreshSocial} />
+            )}
           >
             <Button
               label="Tạo bài viết"

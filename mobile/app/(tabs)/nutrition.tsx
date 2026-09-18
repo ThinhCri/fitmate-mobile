@@ -135,7 +135,9 @@ export default function NutritionScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 96 }}>
+
+
         {segment === 'scan' && (
           <>
             <Card variant="default">

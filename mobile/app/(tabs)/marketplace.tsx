@@ -41,7 +41,8 @@ export default function MarketplaceScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 96 }}>
+
         {pts.length === 0 ? (
           <Card variant="default">
             <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 14, textAlign: 'center', padding: 24 }}>

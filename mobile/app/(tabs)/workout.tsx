@@ -239,7 +239,9 @@ export default function WorkoutScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 96 }}>
+
+
         <Card variant="default">
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Calendar color={resolveColor(theme, 'primary')} size={18} />
