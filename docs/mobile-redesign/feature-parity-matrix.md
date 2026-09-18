@@ -167,38 +167,55 @@
 
 ## FP-017 — Workout: weekly plan tab
 
-- **Luong**: WorkoutPlanner tab days
-- **File**: `WorkoutPlanner.jsx`
-- **Vai tro**: B
-- **Muc**: 7 ngay bam tab; moi ngay co danh sach bai tap (name + sets + rest + calories)
-- **Hanh dong**: drag-drop reorder (min 2 exercises), delete exercise, swap bai (AI suggest 3 lua chon)
-- **Task**: MOB-112
+- **Luong web**: WorkoutPlanner tab days
+- **File web**: `WorkoutPlanner.jsx`
+- **Vai tro & dieu kien**: B (member, PT)
+- **Noi dung**: 7 ngay bam tab; moi ngay co danh sach bai tap (name + sets + rest + calories)
+- **Hanh dong web**: drag-drop reorder (min 2 exercises), delete exercise, swap bai (AI suggest 3 lua chon)
+- **Vi tri moi**: giu WorkoutScreen (MOB-112); them moi `WorkoutSessionScreen` (MOB-404, modal) la man hinh tap chuyen dung.
+- **Thay doi trinh bay**: model bai tap co `type: 'reps' | 'time'` (MOB-402) → Plank hien `45s/hiep` thay vi "1 reps". Co `notes` cho moi bai (text instruction). Push-up co video Pixabay CC0 (ghi `mediaSource`). Khong con checklist thu cong tren WorkoutScreen; nguoi dung bam "Bắt đầu tập" → WorkoutSessionScreen.
+- **Kiem chung**: khi mo screen session, status badge + timer/reps + controls hoat dong; auto-advance prepare→exercise→rest→next.
+- **Task**: MOB-112, MOB-402, MOB-404
+- **Trang thai**: TODO
 
 ## FP-018 — Workout: AI Adaptive mode
 
-- **Luong**: WorkoutPlanner "AI Thich ung"
-- **File**: `WorkoutPlanner.jsx`
-- **Vai tro**: B
-- **Hanh dong**: nhap prompt → AI tinh diem bai tap theo tag → thay the set hien tai
-- **Bonus**: BMI + medical condition logic swap/reduce reps
-- **Task**: MOB-112
+- **Luong web**: WorkoutPlanner "AI Thich ung"
+- **File web**: `WorkoutPlanner.jsx`
+- **Vai tro**: B (member, PT)
+- **Hanh dong web**: nhap prompt → AI tinh diem bai tap theo tag → thay the set hien tai
+- **Bonus web**: BMI + medical condition logic swap/reduce reps
+- **Vi tri moi**: giu tren WorkoutScreen (sheet "AI Thích ứng"); tag-based scoring giu nguyen. Reduce chi ap dung bai reps (`type === 'reps'`), KHONG ap cho bai time (MOB-402).
+- **Task**: MOB-112, MOB-402
+- **Trang thai**: TODO
 
 ## FP-019 — Workout: medical survey modal
 
-- **Luong**: WorkoutPlanner card "Cap nhat suc khoe"
-- **File**: `WorkoutPlanner.jsx` lines 1039-1265
-- **Vai tro**: M
+- **Luong web**: WorkoutPlanner card "Cap nhat suc khoe"
+- **File web**: `WorkoutPlanner.jsx` lines 1039-1265
+- **Vai tro**: M (member self)
 - **Muc**: 7 checkbox (tim mach, cao huyet ap, thoat vi, hen, dau khop, tieu duong, thieu mau) + custom text + ngay tap + khung gio
-- **Hanh dong**: luu → cap nhat `profile.medicalCondition`, `medicalSurveyDone`, `trainingDays`, `trainingTimes`
+- **Hanh dong web**: luu → cap nhat `profile.medicalCondition`, `medicalSurveyDone`, `trainingDays`, `trainingTimes`
+- **Vi tri moi**: giu nguyen `MedicalSurvey` component (MOB-112).
 - **Task**: MOB-112
+- **Trang thai**: TODO
 
 ## FP-020 — Workout: session timer + summary
 
-- **Luong**: WorkoutPlanner → start workout
-- **File**: `WorkoutPlanner.jsx`
+- **Luong web**: WorkoutPlanner → start workout
+- **File web**: `WorkoutPlanner.jsx`
 - **Vai tro**: B
-- **Hanh dong**: timer moi giay; mark exercise complete → cap nhat `activeExercises`; stop → summary (time, calories, exercises[]) → callback `onWorkoutComplete` → App.jsx `handleWorkoutComplete` cap nhat streak neu >= 2 exercises
-- **Task**: MOB-112
+- **Hanh dong web**: timer moi giay; mark exercise complete → cap nhat `activeExercises`; stop → summary (time, calories, exercises[]) → callback `onWorkoutComplete` → App.jsx `handleWorkoutComplete` cap nhat streak neu >= 2 exercises
+- **Vi tri moi**: thay bang `WorkoutSessionScreen` (MOB-404) + `sessionEngine` (MOB-403) deadline-based:
+  - State machine: prepare → exercise → rest → next → finished.
+  - Timer deadline-based (khong giam bien moi giay), pause luu `prevStatus`, resume giu dung thoi gian con lai, tick chi chuyen state 1 lan khi deadline het.
+  - Bài theo reps: user bam "Xong hiệp". Bài theo time: auto-complete sau `durationSec`.
+  - Cuoi buoi tap: KHONG chen rest vo nghia; bai cuoi cung → finished.
+- **Audio cues** (MOB-404): expo-speech tieng Viet; fallback text-only neu thiet bi khong co voice `vi-*`.
+- **Background** (MOB-403 + MOB-404): AppState listener auto-pause; restore tu checkpoint AsyncStorage.
+- **History** (MOB-405, buildSessionSummary): ghi 1 record `WorkoutSession` khi FINISHED voi `status` ∈ {completed, endedEarly, skipped}; idempotent qua `markHistorySaved`.
+- **Task**: MOB-403, MOB-404, MOB-405
+- **Trang thai**: TODO
 
 ## FP-021 — PT Marketplace
 
@@ -390,6 +407,12 @@
 - MOB-110 (Social Feed): FP-013, FP-037
 - MOB-111 (Nutrition): FP-014, FP-015, FP-016
 - MOB-112 (Workout): FP-017, FP-018, FP-019, FP-020
+- MOB-401 (Nutrition layout): FP-014 (wrap/overflow)
+- MOB-402 (Exercise model time/reps): FP-017, FP-020
+- MOB-403 (sessionEngine): FP-017, FP-020
+- MOB-404 (WorkoutSessionScreen + audio): FP-017, FP-020
+- MOB-405 (sessionStorage + history): FP-020
+- MOB-406 (vitest sessionEngine): FP-020
 - MOB-113 (PT Marketplace): FP-021
 - MOB-114 (Appointments): FP-022, FP-023
 - MOB-115 (Profile + Friends + Book PT): FP-024, FP-025, FP-026

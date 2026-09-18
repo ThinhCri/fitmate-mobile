@@ -79,24 +79,50 @@
 
 ## Phase 3 — Other primary tabs (MOB-111..115)
 
-### F-3.1 NutritionScreen (MOB-111)
+### F-3.1 NutritionScreen (MOB-111 + MOB-401 layout)
 - [ ] Segmented scan/plan switch PASS.
 - [ ] Scan tab: image picker mo dialog → chon → 2s "scanning" → hien thi mon.
+- [ ] Image container khong bi tran border qua goc Card (MOB-401).
+- [ ] Nut "Chụp ảnh" + "Tải lên" chia deu chieu rong, wrap khi font scale lon (MOB-401).
 - [ ] Portion slider scale calo real-time.
+- [ ] 7 chip khau phan (0.5x..2x) wrap nhieu dong trong BottomSheet (MOB-401).
+- [ ] 3 nut "Sáng/Trưa/Tối" chia deu chieu rong, wrap khi font scale lon (MOB-401).
+- [ ] BottomSheet content co padding bottom du (khong bi che boi nav bar).
 - [ ] Quick assign sang/trua/toi → cap nhat `mealSchedule` + `caloriesConsumed` (Dashboard se thay doi ring).
 - [ ] Plan tab: chon ngay → render 3 bua, ten mon + calo.
 - [ ] Skip meal → dietState chuyen thanh 'skipped_breakfast'.
 - [ ] Allergy sheet: chon items + custom → luu → profile update.
+- [ ] Tren man hinh nho 360dp + tablet 600dp + font scale 1.5x: khong co control nao bi tran/can.
 
-### F-3.2 WorkoutScreen (MOB-112)
+### F-3.2 WorkoutScreen + WorkoutSessionScreen (MOB-112, MOB-402..406)
 - [ ] Day ribbon switch → hien thi dung ngay.
-- [ ] Time slot chip multi-select PASS.
-- [ ] Drag-drop reorder 2 bai: PASS.
-- [ ] Swap → sheet 3 lua chon → apply.
-- [ ] Delete (min 2 con lai) → confirm dialog neu <2.
-- [ ] Medical sheet: luu → cap nhat profile.medicalCondition.
-- [ ] Bat dau tap → timer 1s tick → summary → `caloriesBurned` update Dashboard.
-- [ ] ≥2 exercises complete → streak +1.
+- [ ] Workout card list (reps-based): hien "4 hiệp × 12 reps". Plank (time-based) hien "3 hiệp × 0:45" thay vi "1 reps" (MOB-402).
+- [ ] Push-up co the hien "Video: Pixabay (CC0)" trong WorkoutSessionScreen notes (MOB-404).
+- [ ] "Bắt đầu tập" → push sang `/workout-session` (MOB-404).
+- [ ] WorkoutSessionScreen hien thi status badge, ten bai, hiep, timer/reps count.
+- [ ] Auto-advance: prepare (5s) → exercise → rest → next set/next exercise → finished (MOB-403).
+- [ ] Bài theo time (Plank): auto-complete sau 45s, chuyen sang rest hoặc next bai (MOB-403).
+- [ ] Bài theo reps (Push-up): hien so reps, nguoi dung bam "Xong hiệp" de complete (MOB-404).
+- [ ] Pause: timer dung, badge "Tạm dừng", "Tiep tuc" khoi phuc dung thoi gian con lai (MOB-403).
+- [ ] Skip rest: chuyen ngay sang set/bai tiep theo (MOB-404).
+- [ ] Skip exercise: ghi tat ca hiep con lai la `skipped`, chuyen bai tiep (MOB-403).
+- [ ] Skip set: ghi `skipped` cho hiep do, advance (MOB-403).
+- [ ] Audio cues (expo-speech tieng Viet): "Bắt đầu hiệp" / "Sắp hết" / "Nghỉ" / "Hiệp tiếp theo" / "Hoàn thành" (MOB-404). Neu thiet bi khong co voice `vi-*` → fallback text-only + thong bao UI.
+- [ ] Audio toggle: tat → Speech.stop() + khong cue nua.
+- [ ] App background → auto-pause; resume → khoi phuc dung status (MOB-404).
+- [ ] Hardware back → confirm dialog neu dang tap (MOB-404).
+- [ ] Repeat tick() qua deadline: state transition chi 1 lan (verified vitest MOB-406).
+- [ ] Restore tu checkpoint: mo session moi khi chua clear → khoi phuc state, hien "Đã khôi phục phiên tập" (MOB-405).
+- [ ] Khi FINISHED: ghi 1 record `WorkoutSession` voi `status` ∈ {completed, endedEarly, skipped}; khong ghi trung khi bam "Kết thúc sớm" 2 lan (MOB-405).
+- [ ] Calorie uoc luong ghi ro "ước tính" trong toast summary (MOB-405).
+- [ ] Cuoi buoi tap (last set last exercise): KHONG chen rest vo nghia → `status = finished` luon (MOB-403).
+- [ ] "Kết thúc sớm": confirm → ghi remaining sets la `skipped`, status `endedEarly` (MOB-405).
+- [ ] Timer cleanup: roi man hinh hoac finish → raf + Speech.stop() + listeners cleared (MOB-404).
+- [ ] AI Thích ứng (FP-018): nhan prompt "nhe" + medical → chi giam reps cho bai `type:'reps'`, KHONG giam `durationSec` (MOB-402).
+- [ ] ≥2 exercises complete → streak +1 (F-3.2 goc).
+
+### F-3.2a sessionEngine unit tests (MOB-406)
+- [ ] `npm test` PASS — 13 cases PASS (start, prepare→exercise, reps wait, time auto, last-set-last-exercise, pause/resume, skipRest, skipExercise, endEarly, skipCurrentSet, repeated tick, overallProgress, serialize/restore).
 
 ### F-3.3 MarketplaceScreen (MOB-113)
 - [ ] 3 PT card render (avatar + rating + exp + spec).

@@ -150,16 +150,31 @@ Moi man hinh co:
 - **Actions**: portion slider → real-time cap nhat calo; tap "Luu vao nhat ky" → them vao schedule; tap "Skip meal" → set dietState.
 - **States**: scan idle / scanning (2s with progress arc) / scanned / saved.
 
-### 3.5 WorkoutScreen (FP-017, FP-018, FP-019, FP-020, MOB-112)
+### 3.5 WorkoutScreen (FP-017, FP-018, FP-019, FP-020, MOB-112 + MOB-401..406)
 
-- **Sections**:
+- **Sections (WorkoutScreen)**:
   1. Day ribbon (FilterChip 7 ngay).
-  2. Time slot chip horizontal (1+ slots).
-  3. Workout card list (drag handle + sets/reps/rest/calories).
-  4. Footer: "Bat dau tap" primary CTA.
-  5. Stub: medical card o top → mo MedicalSurveySheet.
-- **Actions**: drag drop reorder, swap (mo sheet 3 lua chon), delete, start, skip (modal confirm).
-- **States**: not started / running (timer) / completed.
+  2. Khung gio training.
+  3. Workout card list (ten bai + sets/reps hoac sets/duration/rest/calories + notes).
+  4. Footer: "Bắt đầu tập" primary CTA (push sang `/workout-session`), "AI Thích ứng" secondary.
+  5. Phu: khao sat y te, lich su tap.
+- **Actions**: tap "Bắt đầu tập" → push `WorkoutSessionScreen` (modal). Khong con checklist thu cong tren man nay.
+- **WorkoutSessionScreen** (MOB-404, screen chuyen dung):
+  1. Top bar: back (confirm neu dang tap) + tieu de (Ngay + Bai/Hiep) + audio toggle.
+  2. Status badge: Chuẩn bị / Đang tập / Nghỉ / Tạm dừng / Tổng kết.
+  3. Card chinh: icon + ten bai + hiep hien tai/tong + dong ho dem nguoc hoac reps count lon.
+  4. Phase progress bar.
+  5. Card huong dan: notes bai tap (text instruction). Video placeholder neu co URL, nguon ghi ro (license).
+  6. Next-up preview khi dang nghi.
+  7. Overall progress bar cua buoi tap.
+  8. Controls: "Xong hiệp" (chi bai reps) + "Tạm dừng / Tiep tuc" + "Bỏ qua nghỉ/hiệp" + "Bỏ qua bài" (skip) + "Kết thúc sớm" (confirm).
+- **State machine** (MOB-403, sessionEngine pure): idle → prepare → exercise → rest → next set/exercise → finished. Timer deadline-based, pause luu `prevStatus`, tick chi chuyen state 1 lan khi deadline het.
+- **Audio** (MOB-404, expo-speech): cues tieng Viet ("Bắt đầu hiệp", "Sắp hết", "Nghỉ", "Hiệp tiếp theo", "Hoàn thành"). Fallback text-only neu thiet bi khong co voice `vi-*` (ghi ro trong UI).
+- **Background**: AppState listener auto-pause khi background, restore khi quay lai. Hardware back → confirm dialog.
+- **Checkpoint** (MOB-405): luu engine state vao AsyncStorage key `workout_session_checkpoint_v1`; restore o session moi.
+- **History** (MOB-405, buildSessionSummary): ghi 1 record `WorkoutSession` khi FINISHED voi `status` ∈ {completed, endedEarly, skipped} (KHONG ghi trung nho `markHistorySaved`).
+- **Media attribution**: video Push-up dùng Pixabay CC0 (ghi ro trong fixture + spec).
+- **States**: not started / running / paused / finished. Khong con checklist tung bai tren WorkoutScreen.
 
 ### 3.6 SocialScreen (FP-008..013, FP-037, MOB-107..110)
 
