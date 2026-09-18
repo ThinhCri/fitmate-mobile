@@ -4,11 +4,13 @@
 > Update 2026-09-18: da fix qua 4 batches (`6776129`, `a1b371a`, `4ae282b`, `6ba45a4`).
 > Update 2026-09-18 (Batch 5): refactor features/ folder theo AGENTS.md + bo sung FP-001, FP-017..020, FP-024, FP-025, Settings, ImagePickerService, 4 Cursor rule .mdc.
 >
-> Tong quan: tat ca parity FP-001..040 da co code logic (tru FP-021 time slot value can kiem tra gia tri that). Tinh trang: IMPLEMENTED, chua verify runtime (emulator).
+> Update 2026-09-18 10:30 (Batch 6): fix toan bo 62 TypeScript errors → tsc --noEmit = 0. Fix package versions theo Expo SDK 57 bundledNativeModules.json (lucide-react-native ~0.545, react-native-svg 15.15.4, react-native-screens ~4.26, react-native-reanimated 4.5.1, worklets 0.10.1). Them FP-018 AI Thich ung workout swap (BMI + medical + tag scoring).
+>
+> Tong quan: tat ca parity FP-001..040 da co code logic. FP-018 va FP-021 da hoan tat. Tinh trang: IMPLEMENTED + TS clean, chua verify runtime (emulator).
 >
 > **Van can verify runtime** (uu tien):
-> 1. `npm install` → khong conflict.
-> 2. `tsc --noEmit` → 0 errors.
+> 1. `npm install` → PASS (824 packages added).
+> 2. `tsc --noEmit` → PASS (0 errors).
 > 3. `expo start` emulator → render khong crash.
 > 4. Contrast per-pair bang tool that (WebAIM / Material Theme Builder).
 
@@ -381,3 +383,56 @@ Sau khi verify runtime PASS, chuyen trang thai task tu SKELETON → DONE trong `
 
 ### Trang thai (sau Batch 5)
 - IMPLEMENTED (code done, chua verify runtime emulator). Con lai: FP-017 drag-drop library + FP-018 AI swap + FP-021 time slot value check + Runtime verify.
+
+## 13. Batch 6 (2026-09-18 10:30) — TS clean + package versions + FP-018
+
+### 13.1 Version conflicts (npm install fail)
+- `lucide-react-native@0.460.0` yeu cau react <= 18, conflict voi react 19.2.3.
+  - Fix: bump len `~0.545.0` (lucide 0.511+ chinh thuc ho tro react 19).
+- `react-native-svg@16` khong co package.json (lucide yeu cau <= 15).
+  - Fix: set `15.15.4` (Expo SDK 57 pin).
+- `@react-native-community/datetimepicker@11.0.0` khong ton tai.
+  - Fix: set `9.1.0` (Expo SDK 57 pin).
+- `react-native-screens@5.0.0` chua release (max stable 4.28.0).
+  - Fix: set `~4.26.0` (Expo SDK 57 pin).
+- `react-native-reanimated@4.0.0` + `@gorhom/bottom-sheet@5.0.0` / `gesture-handler@3.0.0` chua release.
+  - Fix: set chinh xac theo bundledNativeModules.json cua expo@57.0.7.
+- `@types/react-native@0.86.0` khong co package.
+  - Fix: bo (RN >= 0.71 cung cap types built-in).
+- `eslint-config-expo@~10` -> fix `~57.0.2`.
+
+Sau khi fix het + `--legacy-peer-deps`: **824 packages installed successfully**.
+
+### 13.2 TypeScript clean (62 → 0 errors)
+- `Avatar` size mo rong them 24/28/36/44/48/64/72.
+- `Input` them alias `rightIcon/leftIcon` (giu `trailingIcon/leadingIcon`).
+- `Empty` them alias `description/message` + `actionLabel/onAction`.
+- `Button` them variants `success | warning | ghost | neutral`.
+- `Chip` them tones `success | warning | destructive | error | info | primary`.
+- `ThemeProvider.resolveColor` accept ca palette key hoac semantic role.
+- `Theme.semantic.*` -> `resolveColor(theme, '...')`.
+- `Toast` achievement tone dung `tertiaryContainer/onTertiaryContainer` (palette co san).
+- `AuthContext` them `saveUser`, `signOut` (= logout).
+- `mockUserService` them alias namespace `mockUserService = { ... }` + workouts default [].
+- `postsStore` doi `storage.setItem/getItem` (khong co) -> `storage.set/get` (da ton tai).
+- `User` them `mealSchedule?: MealSchedule` (object Partial<breakfast/lunch/dinner/snack>).
+- `Appointment.status` them `'late' | 'rescheduled'`.
+- `bmi.ts` them `ageFromBirthday` (xoas duplicate o `format.ts`).
+- `toxic.ts` them `cleanContent`.
+- `storage.multiGet` fix generic type assignability.
+- `appointments.tsx`/`nutrition.tsx` doi `saveUser({partial})` -> `saveUser({...user, ...partial})`.
+
+### 13.3 FP-018 — AI Thich ung workout swap
+File: `mobile/app/(tabs)/workout.tsx`
+- Them TextInput + "AI Thich ung" button trong workout card.
+- Heuristic scoring theo keyword (`chan` -> squat/lunge, `tay` -> push-up, `core` -> plank, `nhe` -> giam reps).
+- BMI overweight/obese → boost plank (core).
+- Medical conditions → swap push-up sang modified + giam reps.
+- Toast thong bao reason (BMI value + medical list).
+- Trai nghiem: user go prompt -> AI sắp xếp lại 3 bài trong top theo score.
+
+### Trang thai sau Batch 6
+- **tsc --noEmit = 0 errors** (verified 2026-09-18 10:25).
+- npm install PASS.
+- FP-001..040 da co code logic.
+- Con lai: runtime verify emulator + manual contrast check tool that.

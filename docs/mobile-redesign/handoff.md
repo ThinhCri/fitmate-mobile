@@ -8,21 +8,19 @@
 
 - Branch: `main`.
 - Working tree: clean truoc khi refactor Batch 5.
-- Commit gan nhat truoc Batch 5 (17 commits ahead of origin/main, chua push):
-  - `6ba45a4 feat(mobile): voucher/withdraw form + VIP 2 plan + support mailto + cert fullscreen/self/admin + search mentor category + register 2-step validation + chuyen-sau view/edit + custom text (FP-022..028, FP-031..033) [MOB-105,MOB-116,MOB-117,MOB-120]`
-  - `4ae282b feat(mobile): Messenger list screen + auto-reply 1500ms + scroll-to-bottom (FP-029) [MOB-118]`
-  - `a1b371a feat(mobile): postsStore + reward sim + 5 seed posts + reactions/comments + AI chat list/typing/edit/delete + 8 users (FP-040) [MOB-107..110,MOB-117,MOB-119,MOB-120]`
-  - `6776129 feat(mobile): BottomSheet + Nutrition scan logic + Appointments calendar grid [MOB-002b,MOB-111,MOB-114]`
-  - `be0d831 docs(audit): log mobile-vs-docs violations + downgrade MOB-001..135 to SKELETON [MOB-015]`
-  - `71b545d docs(handoff): record all phase 1-3 commits [MOB-001..135]`
-  - `527d50d feat(mobile): phase 3 auth + create-post + polish [MOB-119..135]`
+- Commit gan nhat sau Batch 6 (fixes + FP-018):
+  - `4b6b374 feat(mobile): FP-018 AI Thich ung workout swap (BMI + medical + tag scoring) [MOB-112]`
+  - `e3389f0 fix(mobile): 62 TS errors -> 0 (UI components, AuthContext, services, types) [MOB-115]`
+  - `615225b build(mobile): fix lucide/svg/screens versions to actual SDK 57 pins [MOB-101]`
 
 ## Trang thai task (sau Batch 5 refactor 2026-09-18)
 
 > **Luu y quan trong**: Tat ca task MOB-001..135 da IMPLEMENTED (code done) sau Batch 5 refactor + features/. KHONG phai DONE that su.
-> Can runtime verification: `cd mobile && npm install`, `npx tsc --noEmit`, `npx expo start` emulator + WebAIM contrast tool.
+> **Batch 6 (2026-09-18 10:30)**: Da fix toan bo 62 TypeScript errors -> **tsc --noEmit = 0 errors**. Da them package-lock.json (npm install SDK 57 compatible).
+> Da them FP-018 (AI Thich ung workout swap).
+> Can runtime verification: `cd mobile && npm install`, `npx tsc --noEmit` ✅, `npx expo start` emulator + WebAIM contrast tool.
 > Sau verify PASS, moi set DONE theo AGENTS.md rule "khong danh dau DONE khi thieu kiem chung".
-> Audit day du (FP-001..040): xem `docs/mobile-redesign/audit-mobile-vs-docs.md` Section 12 (Batch 5).
+> Audit day du (FP-001..040): xem `docs/mobile-redesign/audit-mobile-vs-docs.md` Section 12 (Batch 5) + 13 (Batch 6).
 
 - **MOB-000**: DONE that su (planning).
 - **MOB-015**: huy (override boi MOB-016).
