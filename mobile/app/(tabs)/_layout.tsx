@@ -6,30 +6,32 @@
  * - Cong dong (Social)
  * - PT (Marketplace)
  *
- * Safe area: gesture navigation Android co the che mat 48dp+ o cuoi man.
- * Dung SafeAreaView + useSafeAreaInsets() de tinh padding bottom thuc te.
- * Tab bar bg co the mo rong xuong vung gesture, nhung icon va label
- * nam trong vung tuong tac (paddingBottom = insets.bottom).
+ * DEC-024 (2026-09-18): custom FloatingTabBar pill.
+ *  - Bo tab bar mac dinh cua expo-router (border-top, full-width).
+ *  - Floating pill cach 2 canh man hinh 16dp, glass + BlurView.
+ *  - Safe area: bottom pad = insets.bottom + 8dp.
+ *  - Hide on keyboard open.
+ *  - Selected tab co capsule primaryContainer phia sau icon (khong chi thay mau).
+ *  - Fallback: surface dac neu BlurView khong ho tro.
+ *
+ * Note: expo-router 4+ Tabs.Screen options `tabBar` (custom function) accepted
+ * at runtime nhung TS type chua expose, nen cast `as never`.
  */
 import { useEffect, useState } from 'react';
-import { Tabs } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Tabs, useRouter, useSegments } from 'expo-router';
 import { Home, Apple, Dumbbell, Users, Briefcase } from 'lucide-react-native';
-import { useTheme } from '@/theme';
-import { resolveColor } from '@/theme/ThemeProvider';
+import { FloatingTabBar, type TabItem } from '@/components/ui';
 
 export default function TabsLayout() {
-  const theme = useTheme();
-  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const segments = useSegments();
 
-  // State de tranh flicker khi insets chua kip tinh (treo 1 frame).
   const [ready, setReady] = useState(false);
   useEffect(() => { setReady(true); }, []);
 
   if (!ready) {
-    // Render tab bar don gian trong khi doi insets.
     return (
-      <Tabs screenOptions={{ headerShown: false }}>
+      <Tabs screenOptions={{ headerShown: false, tabBarStyle: { display: 'none' } } as never}>
         <Tabs.Screen name="dashboard" />
         <Tabs.Screen name="nutrition" />
         <Tabs.Screen name="workout" />
@@ -39,65 +41,70 @@ export default function TabsLayout() {
     );
   }
 
-  // Tong chieu cao tab bar = height(48) + paddingBottom(= insets.bottom de icon
-  // nam tren gesture bar). Dat min 12dp vi thiet bi moi gap.
-  const tabBarBottom = Math.max(insets.bottom, 12);
-  const tabBarHeight = 48 + tabBarBottom;
+  const activeRoute = segments[segments.length - 1] ?? 'dashboard';
+
+  const tabs: TabItem[] = [
+    {
+      key: 'dashboard',
+      label: 'Trang chủ',
+      icon: ({ color, size, filled }) => (
+        <Home color={color} size={size} fill={filled ? color : 'transparent'} strokeWidth={filled ? 2 : 1.75} />
+      ),
+      active: activeRoute === 'dashboard',
+      onPress: () => router.push('/(tabs)/dashboard' as never),
+      accessibilityLabel: 'Trang chủ',
+    },
+    {
+      key: 'nutrition',
+      label: 'Dinh dưỡng',
+      icon: ({ color, size, filled }) => (
+        <Apple color={color} size={size} fill={filled ? color : 'transparent'} strokeWidth={filled ? 2 : 1.75} />
+      ),
+      active: activeRoute === 'nutrition',
+      onPress: () => router.push('/(tabs)/nutrition' as never),
+      accessibilityLabel: 'Dinh dưỡng',
+    },
+    {
+      key: 'workout',
+      label: 'Tập luyện',
+      icon: ({ color, size, filled }) => (
+        <Dumbbell color={color} size={size} fill={filled ? color : 'transparent'} strokeWidth={filled ? 2 : 1.75} />
+      ),
+      active: activeRoute === 'workout',
+      onPress: () => router.push('/(tabs)/workout' as never),
+      accessibilityLabel: 'Tập luyện',
+    },
+    {
+      key: 'social',
+      label: 'Cộng đồng',
+      icon: ({ color, size, filled }) => (
+        <Users color={color} size={size} fill={filled ? color : 'transparent'} strokeWidth={filled ? 2 : 1.75} />
+      ),
+      active: activeRoute === 'social',
+      onPress: () => router.push('/(tabs)/social' as never),
+      accessibilityLabel: 'Cộng đồng',
+    },
+    {
+      key: 'marketplace',
+      label: 'PT',
+      icon: ({ color, size, filled }) => (
+        <Briefcase color={color} size={size} fill={filled ? color : 'transparent'} strokeWidth={filled ? 2 : 1.75} />
+      ),
+      active: activeRoute === 'marketplace',
+      onPress: () => router.push('/(tabs)/marketplace' as never),
+      accessibilityLabel: 'PT',
+    },
+  ];
 
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: resolveColor(theme, 'onPrimaryContainer'),
-        tabBarInactiveTintColor: resolveColor(theme, 'onSurfaceVariant'),
-        tabBarStyle: {
-          backgroundColor: resolveColor(theme, 'surfaceContainerLowest'),
-          borderTopColor: resolveColor(theme, 'outlineVariant'),
-          borderTopWidth: 1,
-          height: tabBarHeight,
-          paddingBottom: tabBarBottom,
-          paddingTop: 0,
-        },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-        // An tab bar khi ban phim mo (noi dung duoc KeyboardAvoidingView xu ly).
-        tabBarHideOnKeyboard: true,
-      }}
+      screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true } as never}
     >
-      <Tabs.Screen
-        name="dashboard"
-        options={{
-          title: 'Trang chủ',
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="nutrition"
-        options={{
-          title: 'Dinh dưỡng',
-          tabBarIcon: ({ color, size }) => <Apple color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="workout"
-        options={{
-          title: 'Tập luyện',
-          tabBarIcon: ({ color, size }) => <Dumbbell color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="social"
-        options={{
-          title: 'Cộng đồng',
-          tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="marketplace"
-        options={{
-          title: 'PT',
-          tabBarIcon: ({ color, size }) => <Briefcase color={color} size={size} />,
-        }}
-      />
+      <Tabs.Screen name="dashboard" options={{ tabBar: () => <FloatingTabBar tabs={tabs} /> } as never} />
+      <Tabs.Screen name="nutrition" options={{ tabBar: () => <FloatingTabBar tabs={tabs} /> } as never} />
+      <Tabs.Screen name="workout" options={{ tabBar: () => <FloatingTabBar tabs={tabs} /> } as never} />
+      <Tabs.Screen name="social" options={{ tabBar: () => <FloatingTabBar tabs={tabs} /> } as never} />
+      <Tabs.Screen name="marketplace" options={{ tabBar: () => <FloatingTabBar tabs={tabs} /> } as never} />
     </Tabs>
   );
 }
