@@ -25,7 +25,7 @@ export default function DashboardScreen() {
         refreshing={refreshing}
         onLogMealPress={() => router.push('/(tabs)/nutrition')}
         onScanMealPress={() => router.push('/(tabs)/nutrition')}
-        onStartWorkoutPress={() => router.push('/(tabs)/workouts')}
+        onStartWorkoutPress={() => router.push('/(tabs)/workout')}
         onFindTrainerPress={() => router.push('/(tabs)/marketplace')}
         onNotificationPress={() => router.push('/(modals)/notifications')}
         onWorkoutDetailPress={(id) => {

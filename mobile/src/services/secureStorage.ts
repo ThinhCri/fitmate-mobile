@@ -17,6 +17,14 @@ export async function getAuthEmail(): Promise<string | null> {
   }
 }
 
+export async function getAuthToken(): Promise<string | null> {
+  try {
+    return await SecureStore.getItemAsync(KEY_AUTH_TOKEN);
+  } catch {
+    return null;
+  }
+}
+
 export async function setAuthEmail(email: string): Promise<void> {
   try {
     await SecureStore.setItemAsync(KEY_AUTH_EMAIL, email);

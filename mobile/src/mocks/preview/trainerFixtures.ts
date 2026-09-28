@@ -1,0 +1,101 @@
+import {
+  TrainerPublicDetail,
+  TrainerPublicSummary,
+} from '@/services/api/types';
+
+export const trainerListFixture: TrainerPublicSummary[] = [
+  {
+    id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    name: 'Mai Xuân Tú',
+    avatarUrl: null,
+    specialties: ['Tăng cơ', 'Giảm mỡ', 'Calisthenics'],
+    rating: 4.9,
+    reviewCount: 38,
+    sessionPriceVnd: 450000,
+    experienceYears: 5,
+    isVerified: true,
+  },
+  {
+    id: 'c9a646d3-9c61-4cd7-9f59-533c32bd72f4',
+    name: 'Trần Minh Long',
+    avatarUrl: null,
+    specialties: ['Phục hồi chấn thương', 'Yoga trị liệu'],
+    rating: 4.8,
+    reviewCount: 22,
+    sessionPriceVnd: 500000,
+    experienceYears: 4,
+    isVerified: true,
+  },
+  {
+    id: 'd3b07384-d113-466b-b4ff-b4e8c5d5e2a1',
+    name: 'Lê Hoàng Sơn',
+    avatarUrl: null,
+    specialties: ['Powerlifting', 'Thể lực chuyên sâu'],
+    rating: 4.7,
+    reviewCount: 15,
+    sessionPriceVnd: 400000,
+    experienceYears: 3,
+    isVerified: false,
+  },
+  {
+    id: 'e2a89341-3b7c-486a-8d12-1f38a7c29e10',
+    name: 'Nguyễn Thị Thu Hằng',
+    avatarUrl: null,
+    specialties: ['Pilates', 'Giảm cân sau sinh'],
+    rating: 5.0,
+    reviewCount: 45,
+    sessionPriceVnd: 600000,
+    experienceYears: 6,
+    isVerified: true,
+  },
+];
+
+export const trainerDetailFixture: TrainerPublicDetail = {
+  id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+  name: 'Mai Xuân Tú',
+  avatarUrl: null,
+  specialties: ['Tăng cơ', 'Giảm mỡ', 'Calisthenics'],
+  rating: 4.9,
+  reviewCount: 38,
+  sessionPriceVnd: 450000,
+  experienceYears: 5,
+  isVerified: true,
+  bio: 'HLV chuyên sâu về thể hình thể chất và kiểm soát cân nặng bền vững. Hơn 5 năm kinh nghiệm đồng hành cùng hơn 200 học viên đạt mục tiêu.',
+  certificates: [
+    {
+      id: 'cert-1',
+      title: 'Chứng chỉ Huấn luyện viên Cá nhân Quốc tế ISSA',
+      issuer: 'ISSA',
+      year: 2021,
+    },
+    {
+      id: 'cert-2',
+      title: 'Chứng chỉ Dinh dưỡng Thể thao Ứng dụng',
+      issuer: 'NASM',
+      year: 2022,
+    },
+  ],
+  availableDays: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'],
+  availableTimeSlots: [
+    '07:00 - 08:30',
+    '09:00 - 10:30',
+    '15:00 - 16:30',
+    '17:30 - 19:00',
+  ],
+  reviews: [
+    {
+      id: 'rev-1',
+      reviewerName: 'Trần Văn An',
+      rating: 5,
+      comment: 'Thầy Tú hướng dẫn rất kỹ kỹ thuật, sửa form cẩn thận và chế độ ăn rất thực tế.',
+      date: '15/09/2026',
+    },
+    {
+      id: 'rev-2',
+      reviewerName: 'Phạm Hồng Nhung',
+      rating: 5,
+      comment: 'Tập 2 tháng giảm được 4kg mỡ mà người vẫn khỏe khoắn, không bị mệt mỏi.',
+      date: '02/09/2026',
+    },
+  ],
+};
