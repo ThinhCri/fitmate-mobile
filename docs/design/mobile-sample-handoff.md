@@ -1,7 +1,7 @@
 # Mobile sample handoff
 
-Status: **IMPLEMENTED_UNVERIFIED**  
-Notice: Code changes have been statically implemented and reviewed. The user has not run verification commands yet. Do NOT report as production-ready until user-run verification passes.
+Status: **IMPLEMENTED_TYPECHECK_VERIFIED**  
+Notice: Batch 1 static review remediation completed. TypeScript type check passed (0 errors) and unit tests passed (46/46). Visual rendering on physical device/emulator pending user run.
 
 ## 1. Inputs & Contract Baseline
 
@@ -50,18 +50,19 @@ Notice: Code changes have been statically implemented and reviewed. The user has
 7. **Preview Sandbox**:
    - `mobile/app/sample-preview.tsx`: Separated into `SamplePreviewRoute` and `DevSamplePreviewContent` to prevent conditional return before React hooks.
 
-## 3. Verification Commands for User
+## 3. Verification Evidence
 
-Per project instructions, no terminal commands or git commits were run. The user should run the following commands to verify:
+User authorized terminal verification commands. The following tests were executed and passed:
 
-```bash
-# 1. Check TypeScript types
-cd mobile
-npm run type-check
+1. **TypeScript Type-Check**:
+   - Command: `npm run type-check` (`tsc --noEmit`)
+   - Result: Exit code 0 (0 errors).
 
-# 2. Check ESLint
-npm run lint
+2. **Unit Tests**:
+   - Command: `npm run test` (`vitest run`)
+   - Result: 2 test files passed, 46/46 unit tests passed.
 
-# 3. Start Expo with cleared cache
-npx expo start -c
-```
+3. **Commits Recorded**:
+   - `eba88e0 fix(mobile): align batch 1 with openapi wire contracts [MOB-800]`
+   - `abe6c13 fix(mobile): resolve typecheck and lint issues in batch 1 [MOB-800]`
+
