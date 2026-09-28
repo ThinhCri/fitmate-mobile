@@ -26,8 +26,17 @@ const API_BASE_URL = RAW_BASE_URL.replace(/\/+$/, '');
 class SessionManager {
   private inMemoryAccessToken: string | null = null;
   private refreshPromise: Promise<string> | null = null;
+  private refreshPromiseGeneration: number = 0;
   private abortController: AbortController = new AbortController();
   private sessionExpiredListeners: Set<() => void> = new Set();
+  private generation: number = 0;
+
+  /**
+   * Get current session generation epoch
+   */
+  getGeneration(): number {
+    return this.generation;
+  }
 
   /**
    * Get current in-memory access token
@@ -71,13 +80,27 @@ class SessionManager {
   }
 
   /**
-   * Initialize a new session upon successful login or registration
+   * Initialize a new session upon successful login or registration.
+   * Cancels in-flight requests from any prior session and advances epoch.
    */
   async setSession(
     accessToken: string,
     refreshToken: string,
     user: UserSummary
   ): Promise<void> {
+    // 1. Abort in-flight requests from prior account
+    try {
+      this.abortController.abort();
+    } catch {
+      // Ignore if already aborted
+    }
+    this.abortController = new AbortController();
+
+    // 2. Advance generation to invalidate stale in-flight responses
+    this.generation++;
+    this.refreshPromise = null;
+
+    // 3. Commit new tokens and session cache
     this.inMemoryAccessToken = accessToken;
     await setRefreshToken(refreshToken);
     await setCachedSessionUser(user);
@@ -87,19 +110,25 @@ class SessionManager {
   }
 
   /**
-   * Single-flight token refresh
+   * Single-flight token refresh with generation epoch guard.
    * Concurrent callers share the exact same refresh promise.
    */
   async refreshSession(): Promise<string> {
-    if (this.refreshPromise) {
+    if (this.refreshPromise && this.refreshPromiseGeneration === this.generation) {
       return this.refreshPromise;
     }
+
+    const requestGeneration = this.generation;
+    this.refreshPromiseGeneration = requestGeneration;
+    const requestSignal = this.abortController.signal;
 
     this.refreshPromise = (async () => {
       const storedRefreshToken = await getRefreshToken();
       if (!storedRefreshToken) {
-        await this.clearSession();
-        this.notifySessionExpired();
+        if (this.generation === requestGeneration && !requestSignal.aborted) {
+          await this.clearSession();
+          this.notifySessionExpired();
+        }
         throw new Error('Không có refresh token');
       }
 
@@ -111,6 +140,7 @@ class SessionManager {
             Accept: 'application/json',
           },
           body: JSON.stringify({ refresh_token: storedRefreshToken }),
+          signal: requestSignal,
         });
 
         if (!response.ok) {
@@ -118,6 +148,12 @@ class SessionManager {
         }
 
         const data = (await response.json()) as AuthResponse;
+
+        // Generation guard: discard stale response if session was cleared or switched
+        if (this.generation !== requestGeneration || requestSignal.aborted) {
+          throw new Error('Phiên đã thay đổi hoặc bị hủy');
+        }
+
         this.inMemoryAccessToken = data.access_token;
 
         if (data.refresh_token) {
@@ -129,12 +165,17 @@ class SessionManager {
 
         return data.access_token;
       } catch (err) {
-        // Fail-closed: invalid or expired refresh token triggers full session cleanup
-        await this.clearSession();
-        this.notifySessionExpired();
+        // Only fail-closed if we are still on the same generation and not aborted externally
+        if (this.generation === requestGeneration && !requestSignal.aborted) {
+          await this.clearSession();
+          this.notifySessionExpired();
+        }
         throw err;
       } finally {
-        this.refreshPromise = null;
+        // Prevent old promise in finally from clearing a newer session's promise
+        if (this.generation === requestGeneration) {
+          this.refreshPromise = null;
+        }
       }
     })();
 
@@ -145,7 +186,10 @@ class SessionManager {
    * Clear session, abort active requests, and wipe tokens from SecureStore
    */
   async clearSession(): Promise<void> {
-    // 1. Abort any pending network requests from the previous account
+    // 1. Advance generation to prevent in-flight responses from restoring state
+    this.generation++;
+
+    // 2. Abort any pending network requests from the previous account
     try {
       this.abortController.abort();
     } catch {
@@ -153,11 +197,11 @@ class SessionManager {
     }
     this.abortController = new AbortController();
 
-    // 2. Clear in-memory token
+    // 3. Clear in-memory token and running refresh promise
     this.inMemoryAccessToken = null;
     this.refreshPromise = null;
 
-    // 3. Clear stored refresh token and user
+    // 4. Clear stored refresh token and user
     await deleteRefreshToken();
     await clearAuth();
   }

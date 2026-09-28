@@ -1,12 +1,23 @@
 import { apiClient } from './client';
 import {
+  AdminMfaResponse,
   AuthResponse,
   ForgotPasswordRequest,
   LoginRequest,
   RegisterRequest,
   ResetPasswordRequest,
   UserProfile,
+  isAdminMfaResponse,
 } from './types';
+
+export class AdminMfaNotSupportedError extends Error {
+  constructor(
+    message = 'Tài khoản Quản trị viên (Admin) yêu cầu đăng nhập và xác thực 2 bước (MFA) trên Web Admin. Ứng dụng di động chỉ hỗ trợ đăng nhập Hội viên và Huấn luyện viên.'
+  ) {
+    super(message);
+    this.name = 'AdminMfaNotSupportedError';
+  }
+}
 
 export const authService = {
   /**
@@ -33,12 +44,24 @@ export const authService = {
    * Login with email and password
    * Operation: login
    * Endpoint: POST /auth/login
+   *
+   * Disallows Admin MFA responses (HTTP 202) on mobile clients.
    */
   async login(data: LoginRequest): Promise<AuthResponse> {
-    return apiClient<AuthResponse>('/auth/login', {
+    const raw = await apiClient<AuthResponse | AdminMfaResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+
+    if (isAdminMfaResponse(raw)) {
+      throw new AdminMfaNotSupportedError();
+    }
+
+    if (!raw.access_token || !raw.refresh_token) {
+      throw new Error('Dữ liệu xác thực không hợp lệ từ máy chủ');
+    }
+
+    return raw;
   },
 
   /**

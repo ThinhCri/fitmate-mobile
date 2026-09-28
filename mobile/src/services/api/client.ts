@@ -1,4 +1,5 @@
 import { sessionManager } from '@/services/session/sessionManager';
+import { isProblemDetails } from './types';
 
 const RAW_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8080/api/v1';
@@ -16,6 +17,10 @@ export class ApiError extends Error {
   }
 }
 
+export function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError';
+}
+
 interface RequestOptions extends RequestInit {
   _isRetry?: boolean;
 }
@@ -27,6 +32,7 @@ export async function apiClient<T>(
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
   const url = API_BASE_URL + cleanEndpoint;
 
+  const requestGen = sessionManager.getGeneration();
   const token = sessionManager.getAccessToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -47,6 +53,13 @@ export async function apiClient<T>(
       signal,
     });
 
+    // Guard against stale response if session changed while request was in-flight
+    if (sessionManager.getGeneration() !== requestGen || signal.aborted) {
+      const abortError = new Error('Yêu cầu bị hủy do thay đổi phiên đăng nhập');
+      abortError.name = 'AbortError';
+      throw abortError;
+    }
+
     // 401 Handling: Automatic single-flight refresh and retry
     if (response.status === 401 && !options._isRetry) {
       const isAuthEndpoint =
@@ -65,7 +78,10 @@ export async function apiClient<T>(
               Authorization: 'Bearer ' + newToken,
             },
           });
-        } catch {
+        } catch (refreshErr) {
+          if (isAbortError(refreshErr)) {
+            throw refreshErr;
+          }
           // Refresh failed — fail-closed
           throw new ApiError('Phiên đăng nhập đã hết hạn', 401);
         }
@@ -73,22 +89,37 @@ export async function apiClient<T>(
     }
 
     if (!response.ok) {
-      let errorData: any;
+      let errorData: unknown;
       try {
         errorData = await response.json();
       } catch {
         errorData = await response.text();
       }
-      const message =
-        (typeof errorData === 'object' &&
-          errorData !== null &&
-          (errorData.detail || errorData.message || errorData.title)) ||
-        'API request failed with status ' + response.status;
-      throw new ApiError(
-        message,
-        response.status,
-        errorData
-      );
+
+      let message: string;
+      if (isProblemDetails(errorData)) {
+        message =
+          errorData.detail ||
+          errorData.title ||
+          'API request failed with status ' + response.status;
+      } else if (
+        typeof errorData === 'object' &&
+        errorData !== null &&
+        'message' in errorData &&
+        typeof (errorData as Record<string, unknown>).message === 'string'
+      ) {
+        message = (errorData as Record<string, unknown>).message as string;
+      } else if (
+        typeof errorData === 'string' &&
+        errorData.trim().length > 0 &&
+        errorData.length < 300
+      ) {
+        message = errorData;
+      } else {
+        message = 'API request failed with status ' + response.status;
+      }
+
+      throw new ApiError(message, response.status, errorData);
     }
 
     if (response.status === 204) {
@@ -100,9 +131,13 @@ export async function apiClient<T>(
     if (error instanceof ApiError) {
       throw error;
     }
+    if (isAbortError(error)) {
+      throw error;
+    }
     throw new ApiError(
-      error instanceof Error ? error.message : 'Lỗi kết nối mạng',
-      0
+      'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.',
+      0,
+      error instanceof Error ? error.message : undefined
     );
   }
 }

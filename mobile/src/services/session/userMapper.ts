@@ -1,56 +1,57 @@
-import type { User } from '@/types';
-import { UserProfile, UserSummary } from '@/services/api/types';
+import type { User, Gender, CertificateStatus } from '@/types';
+import type { UserSummary, UserProfile } from '../api/types';
 
-/**
- * Pure domain user mapper (MOB-800)
- * Maps backend wire DTOs (UserSummary, UserProfile) to domain User.
- *
- * Guarantees:
- * - Plaintext password is never stored (password: '')
- * - PT registration starts as unverified (never auto-verified)
- */
 export function mapToDomainUser(
   summary: UserSummary,
   profile?: UserProfile | null
 ): User {
   const isPt = summary.role === 'pt';
-  const certificateStatus = isPt
-    ? profile?.certificate_status === 'verified'
-      ? 'verified'
-      : 'pending'
-    : 'unverified';
+
+  let gender: Gender = 'Khác';
+  if (profile?.gender === 'male') {
+    gender = 'Nam';
+  } else if (profile?.gender === 'female') {
+    gender = 'Nữ';
+  }
+
+  let certificateStatus: CertificateStatus = 'unverified';
+  let isVerified = false;
+  if (isPt) {
+    if (profile?.certificate_status === 'verified') {
+      certificateStatus = 'verified';
+      isVerified = true;
+    } else {
+      certificateStatus = 'pending';
+      isVerified = false;
+    }
+  }
 
   return {
     email: summary.email,
-    password: '', // Plaintext password is never persisted
+    password: '',
     profile: {
-      avatar: summary.avatar_url || profile?.avatar_url || null,
-      name: summary.full_name || profile?.full_name || 'Người dùng Fitmate',
+      avatar: profile?.avatar_url ?? summary.avatar_url ?? null,
+      name: profile?.full_name ?? summary.full_name,
       bio: '',
-      goal: profile?.fitness_goal || '',
-      phone: profile?.phone || '',
-      birthday: profile?.birthday || '2000-01-01',
-      gender:
-        profile?.gender === 'female'
-          ? 'Nữ'
-          : profile?.gender === 'other'
-          ? 'Khác'
-          : 'Nam',
-      height: profile?.height_cm || 170,
-      weight: profile?.weight_kg || 65,
+      goal: profile?.fitness_goal ?? '',
+      phone: profile?.phone ?? '',
+      birthday: profile?.birthday ?? '',
+      gender,
+      height: profile?.height_cm ?? 0,
+      weight: profile?.weight_kg ?? 0,
       medicalCondition: '',
       allergies: [],
       allergySurveyDone: false,
-      trainingDays: profile?.training_days || ['T2', 'T4', 'T6'],
-      trainingTime: '18:00 - 19:30',
+      trainingDays: profile?.training_days ?? [],
+      trainingTime: '',
       trainingTimes: [],
       spec: profile?.specialty
-        ? profile.specialty.split(',').map((s: string) => s.trim())
+        ? profile.specialty.split(',').map((s) => s.trim())
         : [],
-      exp: profile?.experience_years || 0,
-      price: profile?.price_per_session_vnd || 0,
-      isVerified: certificateStatus === 'verified',
-      certificateStatus: certificateStatus as any,
+      exp: profile?.experience_years ?? 0,
+      price: profile?.price_per_session_vnd ?? 0,
+      isVerified,
+      certificateStatus,
       certificates: [],
       isPt,
       isSelf: true,

@@ -84,6 +84,34 @@ export interface ProblemDetails {
   errors?: Record<string, string[]>;
 }
 
+export function isProblemDetails(data: unknown): data is ProblemDetails {
+  if (typeof data !== 'object' || data === null) return false;
+  const obj = data as Record<string, unknown>;
+  return (
+    (typeof obj.title === 'string' || typeof obj.detail === 'string') &&
+    (obj.status === undefined || typeof obj.status === 'number')
+  );
+}
+
+export type AdminMfaChallengeResponse = {
+  mfaRequired: true;
+  challengeId: string;
+  expiresIn: number;
+};
+
+export type AdminMfaSetupResponse = {
+  mfaSetupRequired: true;
+  setupToken: string;
+};
+
+export type AdminMfaResponse = AdminMfaChallengeResponse | AdminMfaSetupResponse;
+
+export function isAdminMfaResponse(data: unknown): data is AdminMfaResponse {
+  if (typeof data !== 'object' || data === null) return false;
+  const obj = data as Record<string, unknown>;
+  return obj.mfaRequired === true || obj.mfaSetupRequired === true;
+}
+
 export interface PTPublicProfile {
   id: string; // uuid
   full_name: string;

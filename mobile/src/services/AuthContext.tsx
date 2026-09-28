@@ -22,6 +22,7 @@ import {
 } from 'react';
 import type { User } from '@/types';
 import { authService } from '@/services/api/authService';
+import { ApiError } from '@/services/api/client';
 import { sessionManager } from '@/services/session/sessionManager';
 import {
   getCachedSessionUser,
@@ -92,10 +93,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const cachedSummary = await getCachedSessionUser<UserSummary>();
 
       if (cachedSummary) {
+        if (cachedSummary.role === 'admin') {
+          await sessionManager.clearSession();
+          setUser(null);
+          return;
+        }
+
         try {
           const profile = await authService.getMe();
           setUser(mapToDomainUser(cachedSummary, profile));
-        } catch {
+        } catch (getMeErr) {
+          if (
+            getMeErr instanceof ApiError &&
+            (getMeErr.status === 401 ||
+              getMeErr.status === 403 ||
+              getMeErr.status === 404)
+          ) {
+            // Fail-closed: account suspended, revoked, deleted, or token invalid
+            await sessionManager.clearSession();
+            setUser(null);
+            if (getMeErr.status === 403) {
+              setError(
+                'Tài khoản của bạn đã bị khóa hoặc không có quyền truy cập.'
+              );
+            }
+            return;
+          }
+          // Only allow offline view of cached summary if network is unreachable (status 0)
           setUser(mapToDomainUser(cachedSummary));
         }
       }
@@ -130,6 +154,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
     try {
       const authRes = await authService.login({ email, password });
+
+      if (authRes.user.role === 'admin') {
+        await sessionManager.clearSession();
+        throw new Error(
+          'Tài khoản Quản trị viên (Admin) chỉ dùng trên Web Admin. Ứng dụng di động chỉ dành cho Hội viên và Huấn luyện viên.'
+        );
+      }
+
       await sessionManager.setSession(
         authRes.access_token,
         authRes.refresh_token,
@@ -139,8 +171,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       let profile: UserProfile | null = null;
       try {
         profile = await authService.getMe();
-      } catch {
-        // Fall back to summary if getMe is temporarily unavailable
+      } catch (getMeErr) {
+        if (
+          getMeErr instanceof ApiError &&
+          (getMeErr.status === 401 ||
+            getMeErr.status === 403 ||
+            getMeErr.status === 404)
+        ) {
+          await sessionManager.clearSession();
+          setUser(null);
+          throw getMeErr;
+        }
       }
 
       setUser(mapToDomainUser(authRes.user, profile));
@@ -180,6 +221,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       };
 
       const authRes = await authService.register(req);
+
+      if (authRes.user.role === 'admin') {
+        await sessionManager.clearSession();
+        throw new Error(
+          'Tài khoản Quản trị viên (Admin) chỉ dùng trên Web Admin. Ứng dụng di động chỉ dành cho Hội viên và Huấn luyện viên.'
+        );
+      }
+
       await sessionManager.setSession(
         authRes.access_token,
         authRes.refresh_token,
@@ -189,8 +238,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       let profile: UserProfile | null = null;
       try {
         profile = await authService.getMe();
-      } catch {
-        // Optional profile fetch
+      } catch (getMeErr) {
+        if (
+          getMeErr instanceof ApiError &&
+          (getMeErr.status === 401 ||
+            getMeErr.status === 403 ||
+            getMeErr.status === 404)
+        ) {
+          await sessionManager.clearSession();
+          setUser(null);
+          throw getMeErr;
+        }
       }
 
       setUser(mapToDomainUser(authRes.user, profile));
