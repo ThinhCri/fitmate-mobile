@@ -167,4 +167,113 @@ describe('SessionManager (MOB-800)', () => {
     expect(secureStoreMock.get('fitmate_refresh_token')).toBe('user-2-refresh');
     expect(secureStoreMock.get('fitmate_session_user')).toContain('pt@fitmate.vn');
   });
+
+  it('6. Aborts pending refresh when clearSession is called during refresh', async () => {
+    secureStoreMock.set('fitmate_refresh_token', 'refresh-token-pending');
+
+    let resolveFetch: (val: any) => void;
+    global.fetch = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        })
+    );
+
+    const refreshPromise = sessionManager.refreshSession();
+
+    // While refresh is pending, clearSession is called
+    await sessionManager.clearSession();
+
+    // Resolve the old fetch now
+    resolveFetch!({
+      ok: true,
+      json: async () => ({
+        access_token: 'stale-token-after-logout',
+        refresh_token: 'stale-refresh-after-logout',
+        user: { id: 'stale-usr', email: 'stale@fitmate.vn', role: 'member' },
+      }),
+    });
+
+    // The refresh promise must reject because generation changed / signal aborted
+    await expect(refreshPromise).rejects.toThrow();
+
+    // Access token must remain null and storage clean
+    expect(sessionManager.getAccessToken()).toBeNull();
+    expect(secureStoreMock.get('fitmate_refresh_token')).toBeUndefined();
+  });
+
+  it('7. Discards stale refresh response when switched to new user before refresh resolves', async () => {
+    secureStoreMock.set('fitmate_refresh_token', 'old-user-refresh');
+
+    let resolveFetch: (val: any) => void;
+    global.fetch = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        })
+    );
+
+    const refreshPromise = sessionManager.refreshSession();
+
+    // Account B logs in before Account A's refresh finishes
+    await sessionManager.setSession('user-b-access', 'user-b-refresh', {
+      id: 'usr-b',
+      email: 'userb@fitmate.vn',
+      full_name: 'User B',
+      role: 'member',
+    });
+
+    // Now resolve the old fetch for Account A
+    resolveFetch!({
+      ok: true,
+      json: async () => ({
+        access_token: 'stale-user-a-access',
+        refresh_token: 'stale-user-a-refresh',
+        user: { id: 'usr-a', email: 'usera@fitmate.vn', role: 'member' },
+      }),
+    });
+
+    // The old refresh promise must reject
+    await expect(refreshPromise).rejects.toThrow();
+
+    // Crucially: Account B's session was NOT overwritten by stale Account A response!
+    expect(sessionManager.getAccessToken()).toBe('user-b-access');
+    expect(secureStoreMock.get('fitmate_refresh_token')).toBe('user-b-refresh');
+    expect(secureStoreMock.get('fitmate_session_user')).toContain('userb@fitmate.vn');
+  });
+
+  it('8. Ensures old refresh finally block does not corrupt newer session', async () => {
+    secureStoreMock.set('fitmate_refresh_token', 'initial-refresh');
+
+    let resolveOldFetch: (val: any) => void;
+    global.fetch = vi.fn().mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveOldFetch = resolve;
+        })
+    );
+
+    const oldRefresh = sessionManager.refreshSession();
+
+    // User switches session
+    await sessionManager.setSession('new-user-access', 'new-user-refresh', {
+      id: 'usr-new',
+      email: 'new@fitmate.vn',
+      full_name: 'New User',
+      role: 'member',
+    });
+
+    // Resolve old fetch
+    resolveOldFetch!({
+      ok: true,
+      json: async () => ({
+        access_token: 'old-access',
+        refresh_token: 'old-refresh',
+        user: { id: 'usr-old', email: 'old@fitmate.vn', role: 'member' },
+      }),
+    });
+
+    await expect(oldRefresh).rejects.toThrow();
+    expect(sessionManager.getAccessToken()).toBe('new-user-access');
+  });
 });

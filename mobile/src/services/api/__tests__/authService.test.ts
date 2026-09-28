@@ -21,8 +21,8 @@ vi.mock('expo-secure-store', () => ({
   }),
 }));
 
-import { authService } from '../authService';
-import { apiClient, ApiError } from '../client';
+import { authService, AdminMfaNotSupportedError } from '../authService';
+import { apiClient, ApiError, isAbortError } from '../client';
 import { sessionManager } from '@/services/session/sessionManager';
 import { mapToDomainUser } from '@/services/session/userMapper';
 import type { UserSummary } from '../types';
@@ -207,6 +207,83 @@ describe('AuthService & ApiClient (MOB-800)', () => {
       expect(refreshSpy).toHaveBeenCalledTimes(1);
 
       refreshSpy.mockRestore();
+    });
+  });
+
+  describe('5. Admin MFA Rejection on Mobile (OpenAPI HTTP 202)', () => {
+    it('throws AdminMfaNotSupportedError when login returns MFA challenge (HTTP 202)', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 202,
+        json: async () => ({
+          mfaRequired: true,
+          mfaToken: 'mfa-challenge-token-xyz',
+        }),
+      } as any);
+
+      await expect(
+        authService.login({
+          email: 'admin@fitmate.vn',
+          password: 'AdminPassword123!',
+        })
+      ).rejects.toThrow(AdminMfaNotSupportedError);
+
+      expect(sessionManager.getAccessToken()).toBeNull();
+    });
+
+    it('throws AdminMfaNotSupportedError when login returns MFA setup (HTTP 202)', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 202,
+        json: async () => ({
+          mfaSetupRequired: true,
+          setupToken: 'mfa-setup-token-abc',
+          qrCodeUri: 'otpauth://totp/Fitmate:admin@fitmate.vn?secret=JBSWY3DPEHPK3PXP',
+        }),
+      } as any);
+
+      await expect(
+        authService.login({
+          email: 'admin-setup@fitmate.vn',
+          password: 'AdminPassword123!',
+        })
+      ).rejects.toThrow(AdminMfaNotSupportedError);
+
+      expect(sessionManager.getAccessToken()).toBeNull();
+    });
+  });
+
+  describe('6. In-flight Request Abortion Across Account Switch', () => {
+    it('aborts Account A request when Account B logs in while request is in-flight', async () => {
+      sessionManager.setAccessToken('token-account-a');
+
+      let resolveAccountAFetch: (val: any) => void;
+      global.fetch = vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveAccountAFetch = resolve;
+          })
+      );
+
+      const requestA = apiClient<{ data: string }>('/users/me');
+
+      // Account B logs in before Request A completes
+      await sessionManager.setSession('token-account-b', 'refresh-account-b', {
+        id: 'usr-b',
+        email: 'userb@fitmate.vn',
+        full_name: 'User B',
+        role: 'member',
+      });
+
+      // Now Account A's fetch returns
+      resolveAccountAFetch!({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: 'account-a-sensitive-data' }),
+      });
+
+      // Request A must reject with AbortError
+      await expect(requestA).rejects.toSatisfy((err: unknown) => isAbortError(err));
     });
   });
 });
