@@ -50,19 +50,47 @@ Notice: Batch 1 static review remediation completed. TypeScript type check passe
 7. **Preview Sandbox**:
    - `mobile/app/sample-preview.tsx`: Separated into `SamplePreviewRoute` and `DevSamplePreviewContent` to prevent conditional return before React hooks.
 
-## 3. Verification Evidence
+## 3. MOB-800 Production Authentication & Screens
 
-User authorized terminal verification commands. The following tests were executed and passed:
+1. **Stitch Full Inventory Mapping**:
+   - `docs/design/stitch-to-react-native-map.md`: Verified all 54 Stitch screens against backend OpenAPI `fitmate-v1.yaml`. Flagged gaps with `CONTRACT_GAP`, `CAPABILITY_GATED`, `LOCAL_UI`, or `CONTRACT_READY`.
+
+2. **Production Session Architecture**:
+   - `mobile/src/services/session/sessionManager.ts`: Memory-only access token, SecureStore refresh token, single-flight refresh (`refreshPromise`), abort controller for request cancellation on logout/switch, fail-closed expiry listeners.
+   - `mobile/src/services/secureStorage.ts`: Refresh token and user cached in SecureStore; access token strictly excluded from disk.
+   - `mobile/src/services/api/types.ts`: Wire DTOs for `RegisterRequest`, `LoginRequest`, `AuthResponse`, `ForgotPasswordRequest`, `ResetPasswordRequest`, `ProblemDetails`.
+   - `mobile/src/services/api/client.ts`: Automatic in-memory Bearer token injection, single-flight 401 refresh with single retry, problem details error extraction.
+   - `mobile/src/services/api/authService.ts`: Typed operations for login, register, refresh, logout, forgotPassword, resetPassword with 12–128 char password policy.
+   - `mobile/src/services/session/userMapper.ts`: Pure domain mapper ensuring `password: ''`, PT `isVerified: false`, and `certificate_status: 'pending' | 'unverified'`.
+   - `mobile/src/services/AuthContext.tsx`: Full production session state, zero `DEMO_USERS`, zero mock success fallbacks.
+
+3. **Stitch Authentication Screens**:
+   - `mobile/app/(auth)/welcome.tsx` (a01): Welcome onboarding splash with primary "Đăng nhập" and secondary "Tạo tài khoản mới".
+   - `mobile/app/(auth)/login.tsx` (a02): Login screen with email, password toggle, role auto-detection notice, real error banner, links to forgot-password and register. Zero mock shortcuts.
+   - `mobile/app/(auth)/register.tsx` (a03): Registration screen with stepper, role choice chips, PT audit notice banner, 12-128 chars password policy with strength meter, and terms consent.
+   - `mobile/app/(auth)/verify-email.tsx` (a04): Email verification link state with pulsing mail illustration, instructions, open email client CTA, and honest `CONTRACT_GAP` notice.
+   - `mobile/app/(auth)/forgot-password.tsx` (a05): Dual-tab forgot & reset password flow wired to `POST /auth/password/forgot` and `POST /auth/password/reset` with 12-128 char validation.
+
+## 4. Verification Evidence
 
 1. **TypeScript Type-Check**:
    - Command: `npm run type-check` (`tsc --noEmit`)
    - Result: Exit code 0 (0 errors).
 
-2. **Unit Tests**:
+2. **Linter**:
+   - Command: `npm run lint` (`expo lint`)
+   - Result: Exit code 0 (0 errors, 52 warnings).
+
+3. **Unit Tests**:
    - Command: `npm run test` (`vitest run`)
-   - Result: 2 test files passed, 46/46 unit tests passed.
+   - Result: 4 test files passed, 60/60 unit tests passed (100%).
+     - `src/services/session/__tests__/sessionManager.test.ts`: 5/5 passed (memory-only token, single-flight refresh, fail-closed 401, clearSession abort, account switching).
+     - `src/services/api/__tests__/authService.test.ts`: 9/9 passed (12-128 password policy, PT unverified guarantee, mock exclusion, 401 auto-refresh & single retry).
+     - `src/features/workout/__tests__/sessionEngine.test.ts`: 13/13 passed.
+     - `src/features/pt-revenue/__tests__/revenueCalculations.test.ts`: 33/33 passed.
 
-3. **Commits Recorded**:
-   - `eba88e0 fix(mobile): align batch 1 with openapi wire contracts [MOB-800]`
-   - `abe6c13 fix(mobile): resolve typecheck and lint issues in batch 1 [MOB-800]`
-
+4. **Commits Recorded**:
+   - `2b074b0 fix(mobile): validate API contract inventory [MOB-800]`
+   - `41c3189 feat(mobile): integrate production authentication [MOB-800]`
+   - `9408a23 feat(mobile): implement authentication screens [MOB-800]`
+   - `e8315fe test(mobile): cover session lifecycle [MOB-800]`
