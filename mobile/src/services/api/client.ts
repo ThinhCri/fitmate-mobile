@@ -44,6 +44,10 @@ export async function apiClient<T>(
     headers.Authorization = 'Bearer ' + token;
   }
 
+  if (typeof FormData !== 'undefined' && options.body instanceof FormData) {
+    delete headers['Content-Type'];
+  }
+
   const signal = options.signal || sessionManager.getAbortSignal();
 
   try {

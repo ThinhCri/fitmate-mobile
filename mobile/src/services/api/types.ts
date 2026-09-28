@@ -133,6 +133,56 @@ export interface Service {
   is_active: boolean;
 }
 
+export interface ServiceInput {
+  name: string;
+  description?: string;
+  price_vnd: number;
+  duration_minutes: number;
+}
+
+export interface ServiceUpdate {
+  name?: string;
+  description?: string;
+  price_vnd?: number;
+  duration_minutes?: number;
+  is_active?: boolean;
+}
+
+export interface AvailabilitySlotInput {
+  slot_start_local: string; // date-time
+  duration_minutes: number; // 15..240
+}
+
+export interface SetAvailabilityRequest {
+  slots: AvailabilitySlotInput[];
+}
+
+export interface PtCertificate {
+  id: string; // uuid
+  pt_id: string; // uuid
+  title: string;
+  issued_by: string;
+  code: string;
+  issue_date: string; // date (YYYY-MM-DD)
+  status: 'pending' | 'approved' | 'rejected' | string;
+  image_url?: string | null;
+  reject_reason?: string | null;
+  verified_at?: string | null;
+}
+
+export interface UserProfileUpdate {
+  full_name?: string;
+  avatar_url?: string;
+  phone?: string;
+  height_cm?: number;
+  weight_kg?: number;
+  fitness_goal?: string;
+  training_days?: string[];
+  medical_conditions?: string[];
+  allergies?: string[];
+  timezone?: string;
+}
+
 export interface Review {
   id: string; // uuid
   from_user_id: string; // uuid
