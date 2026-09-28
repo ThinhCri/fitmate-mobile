@@ -18,7 +18,6 @@ export async function get<T>(key: string): Promise<T | null> {
     if (raw == null) return null;
     return JSON.parse(raw) as T;
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn(`[storage.get] ${key} parse failed`, err);
     return null;
   }
@@ -28,7 +27,6 @@ export async function set<T>(key: string, value: T): Promise<void> {
   try {
     await AsyncStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn(`[storage.set] ${key} write failed`, err);
   }
 }
@@ -37,7 +35,6 @@ export async function remove(key: string): Promise<void> {
   try {
     await AsyncStorage.removeItem(STORAGE_PREFIX + key);
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn(`[storage.remove] ${key} delete failed`, err);
   }
 }
@@ -62,7 +59,6 @@ export async function multiGet<T extends Record<string, unknown>>(
     });
     return out;
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn('[storage.multiGet] failed', err);
     return {};
   }
@@ -76,7 +72,6 @@ export async function multiSet(entries: Record<string, unknown>): Promise<void> 
     ]);
     await AsyncStorage.multiSet(pairs);
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn('[storage.multiSet] failed', err);
   }
 }
@@ -87,7 +82,17 @@ export async function clearAll(): Promise<void> {
     const prefixed = keys.filter((k) => k.startsWith(STORAGE_PREFIX));
     await AsyncStorage.multiRemove(prefixed);
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn('[storage.clearAll] failed', err);
   }
+}
+
+const KEY_HAS_SEEN_WELCOME = 'has_seen_welcome';
+
+export async function getHasSeenWelcome(): Promise<boolean> {
+  const val = await get<boolean>(KEY_HAS_SEEN_WELCOME);
+  return val === true;
+}
+
+export async function setHasSeenWelcome(seen: boolean): Promise<void> {
+  await set<boolean>(KEY_HAS_SEEN_WELCOME, seen);
 }

@@ -1,11 +1,14 @@
 /**
  * Stitch a04_x_c_minh_email_email_link_state
- * Screen: Email Verification / Link State
+ * Screen: Email Verification Notice
  * Route: /(auth)/verify-email
  *
- * Contract Note:
- * Endpoint xác minh OTP chưa có trong OpenAPI fitmate-v1.yaml (CONTRACT_GAP).
- * Màn hình hiển thị liên kết mở client hòm thư và hướng dẫn kích hoạt an toàn.
+ * Requirements:
+ * - Honest user copy: informs user that email verification is currently not available,
+ *   allowing immediate login if the account was registered.
+ * - Masked email presentation (e.g. t***@domain.com).
+ * - Safe email client launcher with fallback alert if no mail app is installed.
+ * - Zero developer jargon (no 'OpenAPI', 'CONTRACT_GAP', or invented sender names).
  */
 import React from 'react';
 import {
@@ -15,6 +18,7 @@ import {
   StyleSheet,
   ScrollView,
   Linking,
+  Alert,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
@@ -22,24 +26,45 @@ import {
   Mail,
   MailCheck,
   CheckCircle2,
-  AlertTriangle,
   Info,
   ExternalLink,
+  ArrowRight,
 } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 
+export function maskEmail(email: string): string {
+  if (!email || !email.includes('@')) return 't***@fitmate.vn';
+  const [local, domain] = email.split('@');
+  if (local.length <= 2) {
+    return `${local[0]}***@${domain}`;
+  }
+  return `${local[0]}***${local[local.length - 1]}@${domain}`;
+}
+
 export default function VerifyEmailScreen() {
   const { user } = useAuth();
   const params = useLocalSearchParams<{ email?: string }>();
-  const targetEmail = (params.email as string) || user?.email || 'ban@fitmate.vn';
+  const rawEmail = (params.email as string) || user?.email || '';
+  const maskedEmail = maskEmail(rawEmail);
 
   const handleOpenEmailApp = async () => {
     try {
-      await Linking.openURL('mailto:');
+      const canOpen = await Linking.canOpenURL('mailto:');
+      if (canOpen) {
+        await Linking.openURL('mailto:');
+      } else {
+        Alert.alert(
+          'Không thể mở ứng dụng Email',
+          'Thiết bị chưa thiết lập ứng dụng quản lý hòm thư mặc định.'
+        );
+      }
     } catch {
-      // Ignored if device has no default mail app configured
+      Alert.alert(
+        'Không thể mở ứng dụng Email',
+        'Thiết bị chưa thiết lập ứng dụng quản lý hòm thư mặc định.'
+      );
     }
   };
 
@@ -69,7 +94,7 @@ export default function VerifyEmailScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Pulsing Verified Mail Envelope Visual */}
+        {/* Visual Graphic */}
         <View style={styles.visualContainer}>
           <View style={styles.pulseOuterGlow}>
             <View style={styles.pulseInnerGlow}>
@@ -82,31 +107,33 @@ export default function VerifyEmailScreen() {
 
         {/* Main Information Block */}
         <View style={styles.infoCluster}>
-          <Text style={styles.mainTitle}>Kiểm tra hộp thư của bạn</Text>
+          <Text style={styles.mainTitle}>Thông tin xác minh email</Text>
           <Text style={styles.mainSubtitle}>
-            Chúng tôi đã gửi một đường dẫn xác minh tài khoản đến địa chỉ email:
+            Tính năng xác minh email hiện chưa khả dụng. Bạn có thể tiếp tục đăng nhập nếu tài khoản đã được tạo.
           </Text>
-          <View style={styles.emailPill}>
-            <Mail size={16} color={colors.primary} />
-            <Text style={styles.emailPillText}>{targetEmail}</Text>
-          </View>
-          <Text style={styles.instructionNote}>
-            Vui lòng nhấn vào liên kết trong email để kích hoạt tài khoản của bạn.
-          </Text>
+
+          {rawEmail ? (
+            <View style={styles.emailPill}>
+              <Mail size={16} color={colors.primary} />
+              <Text style={styles.emailPillText}>{maskedEmail}</Text>
+            </View>
+          ) : null}
         </View>
 
-        {/* Step-by-Step Instruction Card */}
+        {/* Helpful Guidance Card */}
         <View style={styles.stepsCard}>
           <View style={styles.stepsCardHeader}>
-            <CheckCircle2 size={18} color={colors.primary} />
-            <Text style={styles.stepsCardTitle}>3 bước kích hoạt nhanh</Text>
+            <Info size={18} color={colors.primary} />
+            <Text style={styles.stepsCardTitle}>Hướng dẫn đăng nhập</Text>
           </View>
 
           <View style={styles.stepRow}>
             <View style={styles.stepNumCircle}>
               <Text style={styles.stepNumText}>1</Text>
             </View>
-            <Text style={styles.stepDesc}>Mở ứng dụng email trên điện thoại của bạn.</Text>
+            <Text style={styles.stepDesc}>
+              Nhấn nút <Text style={styles.boldText}>&quot;Tiếp tục Đăng nhập&quot;</Text> phía dưới.
+            </Text>
           </View>
 
           <View style={styles.stepRow}>
@@ -114,7 +141,7 @@ export default function VerifyEmailScreen() {
               <Text style={styles.stepNumText}>2</Text>
             </View>
             <Text style={styles.stepDesc}>
-              Tìm thư từ <Text style={styles.boldText}>Fitmate Security Team</Text>.
+              Nhập email và mật khẩu (từ 12–128 ký tự) đã đăng ký.
             </Text>
           </View>
 
@@ -123,30 +150,34 @@ export default function VerifyEmailScreen() {
               <Text style={styles.stepNumText}>3</Text>
             </View>
             <Text style={styles.stepDesc}>
-              Nhấn vào nút <Text style={styles.boldText}>&quot;Xác nhận địa chỉ email&quot;</Text> để hoàn tất.
+              Hệ thống sẽ tự động chuyển vào không gian luyện tập tương ứng của bạn.
             </Text>
           </View>
         </View>
 
-        {/* Friendly Notice / Spam Warning Banner */}
-        <View style={styles.spamNotice}>
-          <AlertTriangle size={18} color={colors.warning} style={{ marginTop: 2, flexShrink: 0 }} />
-          <Text style={styles.spamNoticeText}>
-            Nếu không thấy email trong <Text style={styles.boldText}>Hộp thư đến</Text>, vui lòng kiểm tra thư mục{' '}
-            <Text style={styles.boldText}>Spam</Text> hoặc <Text style={styles.boldText}>Thư rác</Text>.
+        {/* Friendly Notice */}
+        <View style={styles.friendlyNotice}>
+          <CheckCircle2 size={18} color={colors.success} style={{ marginTop: 2, flexShrink: 0 }} />
+          <Text style={styles.friendlyNoticeText}>
+            Tài khoản của bạn đã được lưu an toàn trên hệ thống máy chủ Fitmate.
           </Text>
         </View>
 
-        {/* Contract Gap Transparent Notice */}
-        <View style={styles.contractGapCard}>
-          <Info size={16} color={colors.info} style={{ marginTop: 2, flexShrink: 0 }} />
-          <Text style={styles.contractGapText}>
-            Lưu ý hệ thống: Hiện tại Backend OpenAPI chưa cung cấp endpoint xác thực OTP qua API. Luồng kích hoạt thực tế thực hiện qua liên kết an toàn gửi trực tiếp đến hòm thư.
-          </Text>
-        </View>
-
-        {/* Primary Interactive Action: Open Email App Client (52dp) */}
+        {/* Action Stack */}
         <View style={styles.actionStack}>
+          {/* Primary Action: Go to Login */}
+          <TouchableOpacity
+            style={styles.loginButton}
+            activeOpacity={0.85}
+            onPress={() => router.replace('/(auth)/login')}
+            accessibilityRole="button"
+            accessibilityLabel="Tiếp tục Đăng nhập"
+          >
+            <Text style={styles.loginButtonText}>Tiếp tục Đăng nhập</Text>
+            <ArrowRight size={20} color={colors.white} />
+          </TouchableOpacity>
+
+          {/* Secondary Action: Check mail app */}
           <TouchableOpacity
             style={styles.openMailButton}
             activeOpacity={0.85}
@@ -154,19 +185,8 @@ export default function VerifyEmailScreen() {
             accessibilityRole="button"
             accessibilityLabel="Mở ứng dụng Email"
           >
-            <ExternalLink size={20} color={colors.white} />
+            <ExternalLink size={18} color={colors.primary} />
             <Text style={styles.openMailButtonText}>Mở ứng dụng Email</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.backToLoginButton}
-            activeOpacity={0.85}
-            onPress={() => router.replace('/(auth)/login')}
-            accessibilityRole="button"
-            accessibilityLabel="Quay lại Đăng nhập"
-          >
-            <ArrowLeft size={18} color={colors.primary} />
-            <Text style={styles.backToLoginButtonText}>Quay lại Đăng nhập</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -270,19 +290,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radius.full,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
+    marginTop: spacing.md,
   },
   emailPillText: {
     ...typography.captionMedium,
     color: colors.textPrimary,
     fontWeight: '600',
-  },
-  instructionNote: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 4,
   },
   stepsCard: {
     backgroundColor: colors.surfaceSubtle,
@@ -332,41 +345,26 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textPrimary,
   },
-  spamNotice: {
+  friendlyNotice: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.sm,
-    backgroundColor: colors.warningLight,
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    marginBottom: spacing.md,
-  },
-  spamNoticeText: {
-    ...typography.caption,
-    color: colors.textPrimary,
-    flex: 1,
-    lineHeight: 18,
-  },
-  contractGapCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    backgroundColor: colors.infoLight,
+    backgroundColor: colors.successLight,
     padding: spacing.md,
     borderRadius: radius.lg,
     marginBottom: spacing.lg,
   },
-  contractGapText: {
+  friendlyNoticeText: {
     ...typography.caption,
-    fontSize: 11,
-    color: colors.info,
+    color: colors.primaryDark,
     flex: 1,
-    lineHeight: 16,
+    lineHeight: 18,
+    fontWeight: '500',
   },
   actionStack: {
     gap: spacing.md,
   },
-  openMailButton: {
+  loginButton: {
     height: 52,
     borderRadius: radius.lg,
     backgroundColor: colors.primary,
@@ -380,12 +378,12 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-  openMailButtonText: {
+  loginButtonText: {
     ...typography.bodyBold,
     color: colors.white,
     fontSize: 16,
   },
-  backToLoginButton: {
+  openMailButton: {
     height: 52,
     borderRadius: radius.lg,
     backgroundColor: colors.surfaceSubtle,
@@ -396,7 +394,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.xs,
   },
-  backToLoginButtonText: {
+  openMailButtonText: {
     ...typography.bodyBold,
     color: colors.primary,
     fontSize: 16,

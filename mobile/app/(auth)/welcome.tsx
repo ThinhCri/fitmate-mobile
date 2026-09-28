@@ -21,6 +21,7 @@ import {
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
+import { setHasSeenWelcome } from '@/services/storage';
 
 export default function WelcomeScreen() {
   return (
@@ -85,7 +86,10 @@ export default function WelcomeScreen() {
           <TouchableOpacity
             style={styles.primaryButton}
             activeOpacity={0.85}
-            onPress={() => router.push('/(auth)/login')}
+            onPress={() => {
+              setHasSeenWelcome(true);
+              router.push('/(auth)/login');
+            }}
             accessibilityRole="button"
             accessibilityLabel="Đăng nhập"
           >
@@ -96,7 +100,10 @@ export default function WelcomeScreen() {
           <TouchableOpacity
             style={styles.secondaryButton}
             activeOpacity={0.85}
-            onPress={() => router.push('/(auth)/register')}
+            onPress={() => {
+              setHasSeenWelcome(true);
+              router.push('/(auth)/register');
+            }}
             accessibilityRole="button"
             accessibilityLabel="Tạo tài khoản mới"
           >
