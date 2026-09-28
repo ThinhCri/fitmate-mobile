@@ -1,7 +1,7 @@
 # Mobile sample handoff
 
-Status: **MOB-800_COMPLETED_AND_VERIFIED**
-Notice: MOB-800 Phase A hardening is fully complete. TypeScript type check passed (0 errors), ESLint passed (0 errors), and unit tests passed (66/66). Session lifecycle hardened with epoch generation counters, Admin MFA 202 rejection, and clean routing. Ready for MOB-801 (Phase B).
+Status: **MOB-800_AND_MOB-801_COMPLETED_AND_VERIFIED**
+Notice: MOB-800 Phase A hardening and MOB-801 Phase B (PT Profile, Services, Availability, and Certificates) are fully implemented and verified. TypeScript type check passed (0 errors), ESLint passed (0 errors), and unit tests passed (75/75).
 
 ## 1. Inputs & Contract Baseline
 
@@ -85,7 +85,26 @@ Notice: MOB-800 Phase A hardening is fully complete. TypeScript type check passe
    - `mobile/app/(auth)/verify-email.tsx` (a04): Email verification link state with masked email, honest availability copy without technical jargon, and external mail app opener.
    - `mobile/app/(auth)/forgot-password.tsx` (a05): Dual-tab forgot & reset password flow wired to `POST /auth/password/forgot` and `POST /auth/password/reset` with 12-128 char validation.
 
-## 4. Verification Evidence
+## 4. MOB-801 PT Profile, Services, Availability & Certificates
+
+1. **Wire Contracts & Operations**:
+   - `mobile/src/services/api/types.ts`: Wire DTOs `Service`, `ServiceInput`, `ServiceUpdate`, `AvailabilitySlotInput`, `SetAvailabilityRequest`, `PtCertificate`, `UserProfileUpdate`.
+   - `mobile/src/services/api/ptService.ts`: Full operations:
+     - `getMyServices` (`GET /me/services`), `createService` (`POST /me/services`), `updateService` (`PATCH /me/services/{id}`), `deleteService` (`DELETE /me/services/{id}`). Handles 409 Conflict with friendly copy ("Không thể xóa/sửa dịch vụ vì đang có học viên đặt lịch chờ hoàn thành").
+     - `setMyAvailability` (`PUT /me/availability`): Replaces availability array. Handles 204 No Content and 400 validation overlap error.
+     - `getMyAvailability` (`GET /trainers/{id}/availability?from=&to=`): Fetches slot schedule for current PT.
+     - `getMyCertificates` (`GET /me/certificates`), `submitCertificate` (`POST /me/certificates` multipart/form-data): Binary file upload with 413 Payload Too Large protection (15MB limit).
+     - `updateMyProfile` (`PATCH /users/me`): Updates profile fields on server.
+
+2. **Role Guarding**:
+   - `mobile/src/components/auth/PtRoleGuard.tsx`: Role guard wrapping all PT routes. Blocks non-PT members with clear explanation and navigates back to dashboard.
+
+3. **Stitch PT Screens**:
+   - `mobile/src/features/pt/ProfileServicesPresentation.tsx` & `mobile/app/pt/profile-services.tsx` (p02): Profile header, bento stat cards, bio editor, specialties pills, active services counter, interactive active/pause switch, price/duration view, snapshot safety note, add/edit/delete service modals.
+   - `mobile/src/features/pt/SchedulePresentation.tsx` & `mobile/app/pt/schedule.tsx` (p03): Week switcher, GMT+7 timezone badge, day-of-week strip, daily metric banner, day-off exception toggle with warning, booked slots locked for protection, open slots management, add interval modal with validation, replace-all save CTA with warning confirmation.
+   - `mobile/src/features/pt/CertificatesPresentation.tsx` & `mobile/app/pt/certificates.tsx` (p04): Fitmate audit standards banner, saved certificate cards with verified server statuses (`approved`, `pending`, `rejected` with `reject_reason`), secure document preview watermark, file picker with image/PDF support, add certificate form.
+
+## 5. Verification Evidence
 
 1. **TypeScript Type-Check**:
    - Command: `npm run type-check` (`tsc --noEmit`)
@@ -97,9 +116,10 @@ Notice: MOB-800 Phase A hardening is fully complete. TypeScript type check passe
 
 3. **Unit Tests**:
    - Command: `npm run test` (`vitest run`)
-   - Result: 4 test files passed, 66/66 unit tests passed (100%).
-     - `src/services/session/__tests__/sessionManager.test.ts`: 8/8 passed (memory-only token, single-flight refresh, fail-closed 401, clearSession abort, account switching, pending refresh cancellation, stale refresh response rejection, epoch generation preservation).
-     - `src/services/api/__tests__/authService.test.ts`: 12/12 passed (12-128 password policy, PT unverified guarantee, mock exclusion, 401 auto-refresh & single retry, Admin MFA HTTP 202 challenge/setup rejection, account-switch in-flight abort).
+   - Result: 5 test files passed, 75/75 unit tests passed (100%).
+     - `src/services/api/__tests__/ptService.test.ts`: 9/9 passed (CRUD services, 409 conflict friendly copy, 204 delete/availability, 400 overlap error, certificate listing, multipart upload with 413 limit, profile patch).
+     - `src/services/session/__tests__/sessionManager.test.ts`: 8/8 passed (session epoch, single-flight refresh, memory-only token, stale response rejection).
+     - `src/services/api/__tests__/authService.test.ts`: 12/12 passed (password policy, PT unverified guarantee, mock exclusion, 401 refresh/retry, Admin MFA HTTP 202 rejection).
      - `src/features/workout/__tests__/sessionEngine.test.ts`: 13/13 passed.
      - `src/features/pt-revenue/__tests__/revenueCalculations.test.ts`: 33/33 passed.
 
@@ -107,4 +127,7 @@ Notice: MOB-800 Phase A hardening is fully complete. TypeScript type check passe
    - `5755e50 fix(mobile): harden authentication session lifecycle [MOB-800]`
    - `c7863ff fix(mobile): correct authentication routing and states [MOB-800]`
    - `b7b5199 test(mobile): cover stale authentication responses [MOB-800]`
-   - `docs(mobile): record final authentication evidence [MOB-800]`
+   - `9cb5179 docs(mobile): record final authentication evidence [MOB-800]`
+   - `7707ca7 feat(mobile): integrate PT API contracts and client [MOB-801]`
+   - `405a675 feat(mobile): implement PT screens and role guarding [MOB-801]`
+   - `docs(mobile): record MOB-801 evidence and handoff [MOB-801]`
