@@ -309,17 +309,18 @@ export function ProfileServicesPresentation({
           {/* Specialties Pills */}
           <View style={styles.specialtiesBlock}>
             <Text style={styles.blockSubHeader}>Chuyên môn mũi nhọn</Text>
-            <View style={styles.pillsRow}>
-              {(specialties.length > 0
-                ? specialties
-                : ['Tăng cơ cắt nét', 'Phục hồi vận động', 'Dinh dưỡng cá nhân hóa']
-              ).map((spec, index) => (
-                <View key={index} style={styles.pillBadge}>
-                  <Stethoscope size={14} color={colors.primary} style={{ marginRight: 6 }} />
-                  <Text style={styles.pillText}>{spec}</Text>
-                </View>
-              ))}
-            </View>
+            {specialties.length > 0 ? (
+              <View style={styles.pillsRow}>
+                {specialties.map((spec, index) => (
+                  <View key={index} style={styles.pillBadge}>
+                    <Stethoscope size={14} color={colors.primary} style={{ marginRight: 6 }} />
+                    <Text style={styles.pillText}>{spec}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.emptySpecialtyText}>Chưa cập nhật chuyên môn</Text>
+            )}
           </View>
 
           {/* Bio Box */}
@@ -328,10 +329,8 @@ export function ProfileServicesPresentation({
               <Text style={styles.bioLabel}>Tiểu sử hiển thị cho học viên</Text>
               <Text style={styles.bioPublicStatus}>Công khai</Text>
             </View>
-            <Text style={styles.bioText}>
-              {bio
-                ? `“${bio}”`
-                : '“Huấn luyện viên thể hình chuyên nghiệp. Phương pháp cá nhân hóa giáo án theo thể trạng và mục tiêu sức khỏe.”'}
+            <Text style={[styles.bioText, !bio && styles.bioTextEmpty]}>
+              {bio ? `“${bio}”` : 'Chưa cập nhật tiểu sử'}
             </Text>
           </View>
         </View>
@@ -831,6 +830,16 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textPrimary,
     lineHeight: 22,
+  },
+  bioTextEmpty: {
+    color: colors.textMuted,
+    fontStyle: 'italic',
+  },
+  emptySpecialtyText: {
+    ...typography.body,
+    color: colors.textMuted,
+    fontStyle: 'italic',
+    paddingVertical: 4,
   },
   servicesHeaderRow: {
     flexDirection: 'row',

@@ -1,9 +1,10 @@
 /**
- * ImagePickerService — graceful wrapper around expo-image-picker.
+ * ImagePickerService — production wrapper around expo-image-picker.
  *
- * If expo-image-picker is not installed, falls back to mock placeholders.
- * Returns { uri: string } on success or null if user cancels.
+ * Enforces production permissions, fail-closed error handling,
+ * and preserves original image aspect ratio for certificate uploads.
  */
+import * as ImagePicker from 'expo-image-picker';
 import { Alert } from 'react-native';
 
 export interface PickedImage {
@@ -21,68 +22,72 @@ export interface PickImageOptions {
   quality?: number;
 }
 
-let pickerModule: typeof import('expo-image-picker') | null = null;
-try {
-  // Optional dep — wrapped try/catch so missing package doesn't crash app
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  pickerModule = require('expo-image-picker');
-} catch {
-  pickerModule = null;
-}
-
 export const ImagePickerService = {
   async pickFromLibrary(options?: PickImageOptions): Promise<PickedImage | null> {
-    if (!pickerModule) {
-      Alert.alert(
-        'Demo mode',
-        'Chức năng chọn ảnh thật cần cài thêm expo-image-picker. Hiện đang dùng ảnh placeholder demo.',
-      );
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          'Cần quyền truy cập thư viện ảnh',
+          'Vui lòng cấp quyền truy cập thư viện hình ảnh trong Cài đặt thiết bị để tiếp tục.'
+        );
+        return null;
+      }
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: options?.allowsEditing ?? false,
+        aspect: options?.aspect,
+        quality: options?.quality ?? 0.85,
+      });
+      if (res.canceled || !res.assets?.[0]) return null;
+      const asset = res.assets[0];
+      return {
+        uri: asset.uri,
+        width: asset.width,
+        height: asset.height,
+        fileSize: asset.fileSize,
+        fileName: asset.fileName,
+        mimeType: asset.mimeType,
+      };
+    } catch {
+      Alert.alert('Lỗi truy cập thư viện ảnh', 'Không thể khởi chạy thư viện hình ảnh.');
       return null;
     }
-    const perm = await pickerModule.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Cần quyền truy cập thư viện ảnh', 'Vào Settings để cấp quyền.');
-      return null;
-    }
-    const res = await pickerModule.launchImageLibraryAsync({
-      mediaTypes: pickerModule.MediaTypeOptions.Images,
-      allowsEditing: options?.allowsEditing ?? false,
-      aspect: options?.aspect,
-      quality: options?.quality ?? 0.8,
-    });
-    if (res.canceled || !res.assets?.[0]) return null;
-    const asset = res.assets[0];
-    return {
-      uri: asset.uri,
-      width: asset.width,
-      height: asset.height,
-      fileSize: asset.fileSize,
-      fileName: asset.fileName,
-      mimeType: asset.mimeType,
-    };
   },
 
-  async pickFromCamera(): Promise<PickedImage | null> {
-    if (!pickerModule) {
-      Alert.alert('Demo mode', 'Camera chưa được cài đặt trong demo này.');
+  async pickFromCamera(options?: PickImageOptions): Promise<PickedImage | null> {
+    try {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          'Cần quyền máy ảnh',
+          'Vui lòng cấp quyền sử dụng máy ảnh trong Cài đặt thiết bị để tiếp tục.'
+        );
+        return null;
+      }
+      const res = await ImagePicker.launchCameraAsync({
+        allowsEditing: options?.allowsEditing ?? false,
+        aspect: options?.aspect,
+        quality: options?.quality ?? 0.8,
+      });
+      if (res.canceled || !res.assets?.[0]) return null;
+      const asset = res.assets[0];
+      return {
+        uri: asset.uri,
+        width: asset.width,
+        height: asset.height,
+        fileSize: asset.fileSize,
+        fileName: asset.fileName,
+        mimeType: asset.mimeType,
+      };
+    } catch {
+      Alert.alert('Lỗi máy ảnh', 'Không thể khởi chạy máy ảnh trên thiết bị.');
       return null;
     }
-    const perm = await pickerModule.requestCameraPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Cần quyền camera', 'Vào Settings để cấp quyền camera.');
-      return null;
-    }
-    const res = await pickerModule.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-    if (res.canceled || !res.assets?.[0]) return null;
-    return { uri: res.assets[0].uri, width: res.assets[0].width, height: res.assets[0].height };
   },
 
   isAvailable(): boolean {
-    return pickerModule !== null;
+    return true;
   },
 };
 
