@@ -17,7 +17,7 @@ export default function CertificatesRoute() {
     setError(null);
     try {
       const data = await ptService.getMyCertificates();
-      setCertificates(data || []);
+      setCertificates(data?.items || []);
     } catch (err) {
       setError(
         err instanceof Error

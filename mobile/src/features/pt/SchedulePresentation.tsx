@@ -21,7 +21,6 @@ import {
   Moon,
   AlertTriangle,
   Sun,
-  Dumbbell,
   Lock,
   PlusCircle,
   X,
@@ -49,6 +48,9 @@ export interface SchedulePresentationProps {
   slots: AvailabilitySlot[];
   loading: boolean;
   saving: boolean;
+  error?: string | null;
+  timezone?: string;
+  onRefresh?: () => void;
   onBack: () => void;
   onSaveSchedule: (newSlots: AvailabilitySlotInput[]) => Promise<void>;
 }
@@ -63,6 +65,9 @@ export function SchedulePresentation({
   slots,
   loading,
   saving,
+  error,
+  timezone = 'Asia/Ho_Chi_Minh',
+  onRefresh,
   onBack,
   onSaveSchedule,
 }: SchedulePresentationProps) {
@@ -84,7 +89,6 @@ export function SchedulePresentation({
     return s.slot_start_local.startsWith(selectedDay.dateStr);
   });
 
-  const bookedSlotsCount = currentDaySlots.filter((s) => s.status === 'booked').length;
   const openSlotsCount = currentDaySlots.filter((s) => s.status === 'open').length;
 
   const handleAddSlotConfirm = () => {
@@ -105,10 +109,22 @@ export function SchedulePresentation({
     const timeStr = `${pad(h)}:${pad(m)}:00`;
     const slotStartLocal = `${selectedDay.dateStr}T${timeStr}`;
 
-    // Simple duplicate check
-    const isDup = localSlots.some((s) => s.slot_start_local === slotStartLocal);
-    if (isDup) {
-      Alert.alert('Trùng lặp', 'Khung giờ này đã được thêm trong danh sách');
+    const newStartMs = new Date(slotStartLocal).getTime();
+    const newEndMs = newStartMs + dur * 60 * 1000;
+
+    // Strict interval overlap check [start, end) across existing and local slots
+    const allSlots = [...currentDaySlots, ...localSlots];
+    const hasOverlap = allSlots.some((s) => {
+      const sStartMs = new Date(s.slot_start_local).getTime();
+      const sEndMs = sStartMs + s.duration_minutes * 60 * 1000;
+      return newStartMs < sEndMs && sStartMs < newEndMs;
+    });
+
+    if (hasOverlap) {
+      Alert.alert(
+        'Trùng lặp khung giờ',
+        'Khung giờ bạn chọn bị giao thoa (overlap) với một khung giờ đã tồn tại trên lịch.'
+      );
       return;
     }
 
@@ -124,37 +140,6 @@ export function SchedulePresentation({
 
   const handleRemoveLocalSlot = (index: number) => {
     setLocalSlots((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSaveWeeklySchedule = () => {
-    Alert.alert(
-      'Xác nhận cập nhật lịch',
-      'Lưu ý: Thao tác này sẽ cập nhật và thay thế (replace) toàn bộ lịch khả dụng của bạn trên hệ thống. Bạn có chắc chắn muốn lưu?',
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Lưu lịch',
-          style: 'default',
-          onPress: async () => {
-            // Combine existing open slots from other days + current modified slots
-            const otherDaysSlots: AvailabilitySlotInput[] = slots
-              .filter((s) => !s.slot_start_local.startsWith(selectedDay.dateStr) && s.status === 'open')
-              .map((s) => ({
-                slot_start_local: s.slot_start_local,
-                duration_minutes: s.duration_minutes,
-              }));
-
-            const combined = isDayOff ? otherDaysSlots : [...otherDaysSlots, ...localSlots];
-            try {
-              await onSaveSchedule(combined);
-              Alert.alert('Thành công', 'Lịch rảnh của bạn đã được cập nhật trên hệ thống.');
-            } catch (err) {
-              Alert.alert('Lỗi cập nhật lịch', err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
-            }
-          },
-        },
-      ]
-    );
   };
 
   return (
@@ -187,7 +172,7 @@ export function SchedulePresentation({
               <Text style={styles.weekTitle}>{weekLabel}</Text>
               <View style={styles.tzRow}>
                 <Clock size={14} color={colors.primary} style={{ marginRight: 4 }} />
-                <Text style={styles.tzText}>Múi giờ chuẩn: GMT+7 (Hồ Chí Minh)</Text>
+                <Text style={styles.tzText}>Múi giờ chuẩn: {timezone}</Text>
               </View>
             </View>
 
@@ -224,6 +209,18 @@ export function SchedulePresentation({
           </View>
         </View>
 
+        {/* Authoritative Error State */}
+        {error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            {onRefresh ? (
+              <Pressable style={styles.retryBtn} onPress={onRefresh}>
+                <Text style={styles.retryText}>Thử lại</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
+
         {/* Summary Metric Banner */}
         <View style={styles.summaryBanner}>
           <View style={styles.summaryLeft}>
@@ -235,7 +232,7 @@ export function SchedulePresentation({
                 Tổng khả dụng {selectedDay?.dayLabel} ({selectedDay?.dateStr})
               </Text>
               <Text style={styles.summaryDetails}>
-                {openSlotsCount + localSlots.length} khung giờ rảnh • {bookedSlotsCount} ca đã đặt
+                {openSlotsCount + localSlots.length} khung giờ rảnh đang mở nhận
               </Text>
             </View>
           </View>
@@ -296,46 +293,6 @@ export function SchedulePresentation({
               <Text style={styles.loadingText}>Đang tải khung giờ...</Text>
             </View>
           ) : null}
-
-          {/* Booked / Locked Slots from Server */}
-          {currentDaySlots
-            .filter((s) => s.status === 'booked')
-            .map((slot) => {
-              const startT = slot.slot_start_local.split('T')[1]?.substring(0, 5) || '18:00';
-              return (
-                <View key={slot.id} style={styles.bookedSlotCard}>
-                  <View style={styles.bookedSlotRow}>
-                    <View style={styles.bookedIcon}>
-                      <Dumbbell size={20} color={colors.primary} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={styles.bookedBadgeRow}>
-                        <Text style={styles.bookedTimeRange}>
-                          {startT} ({slot.duration_minutes} phút)
-                        </Text>
-                        <View style={styles.bookedTag}>
-                          <Text style={styles.bookedTagText}>ĐÃ ĐẶT LỊCH</Text>
-                        </View>
-                      </View>
-                      <View style={styles.bookedClientRow}>
-                        <Text style={styles.bookingCode}>#BK-{slot.id.substring(0, 8)}</Text>
-                        <Text style={styles.dot}>•</Text>
-                        <Text style={styles.clientName}>Học viên Fitmate</Text>
-                      </View>
-                      <View style={styles.lockRow}>
-                        <Lock size={12} color={colors.textMuted} style={{ marginRight: 4 }} />
-                        <Text style={styles.lockNotice}>
-                          Đã khóa bảo hộ: Không cho sửa/xóa slot để tránh hủy lịch khách
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={styles.lockIconBox}>
-                      <Lock size={18} color={colors.textMuted} />
-                    </View>
-                  </View>
-                </View>
-              );
-            })}
 
           {/* Server Open Slots */}
           {currentDaySlots
@@ -411,29 +368,49 @@ export function SchedulePresentation({
 
         {/* Action Footer */}
         <View style={styles.footerSection}>
+          <View style={styles.gapNoticeBox}>
+            <AlertTriangle
+              size={18}
+              color={colors.warning}
+              style={{ marginRight: 8, marginTop: 2 }}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.gapNoticeTitle}>Khóa cập nhật lịch rảnh</Text>
+              <Text style={styles.gapNoticeText}>
+                Backend hiện chỉ có lệnh ghi đè toàn bộ lịch Open của tài khoản [CONTRACT_GAP: PUT /me/availability replaces all open slots]. Thao tác lưu tạm thời bị khóa để tránh làm mất các ca rảnh khác cho đến khi hệ thống có API cập nhật theo phạm vi.
+              </Text>
+            </View>
+          </View>
+
           <Pressable
-            style={styles.repeatBtn}
+            style={[styles.repeatBtn, { opacity: 0.6 }]}
             onPress={() => {
-              Alert.alert('Quy tắc định kỳ', `Lịch rảnh sẽ tự động nhân bản cho các ${selectedDay?.dayLabel} tuần tiếp theo khi bạn lưu.`);
+              Alert.alert(
+                'Chưa khả dụng',
+                'Tính năng tự động nhân bản lịch định kỳ chưa được hỗ trợ bởi hệ thống máy chủ.'
+              );
             }}
           >
-            <Repeat size={18} color={colors.primary} style={{ marginRight: 8 }} />
-            <Text style={styles.repeatBtnText}>Áp dụng cho các {selectedDay?.dayLabel} hàng tuần</Text>
+            <Repeat size={18} color={colors.textMuted} style={{ marginRight: 8 }} />
+            <Text style={[styles.repeatBtnText, { color: colors.textMuted }]}>
+              Áp dụng định kỳ (Chưa khả dụng)
+            </Text>
           </Pressable>
 
           <Pressable
-            style={styles.saveBtn}
-            onPress={handleSaveWeeklySchedule}
-            disabled={saving}
+            style={[styles.saveBtn, { backgroundColor: colors.surfaceSubtle }]}
+            onPress={() => {
+              Alert.alert(
+                'Tính năng tạm khóa',
+                'Thao tác lưu lịch bị khóa để tránh ghi đè toàn bộ lịch trên máy chủ [CONTRACT_GAP: PUT /me/availability].'
+              );
+            }}
+            disabled={true}
           >
-            {saving ? (
-              <ActivityIndicator size="small" color={colors.white} />
-            ) : (
-              <>
-                <CheckCircle size={20} color={colors.white} style={{ marginRight: 8 }} />
-                <Text style={styles.saveBtnText}>Lưu lịch rảnh tuần này</Text>
-              </>
-            )}
+            <Lock size={18} color={colors.textMuted} style={{ marginRight: 8 }} />
+            <Text style={[styles.saveBtnText, { color: colors.textMuted }]}>
+              Lưu lịch (Tạm khóa để bảo vệ dữ liệu)
+            </Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -1022,5 +999,50 @@ const styles = StyleSheet.create({
   confirmModalText: {
     ...typography.bodyBold,
     color: colors.white,
+  },
+  gapNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.warningLight,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    marginBottom: spacing.md,
+  },
+  gapNoticeTitle: {
+    ...typography.captionMedium,
+    color: colors.textPrimary,
+    marginBottom: 2,
+    fontWeight: '700',
+  },
+  gapNoticeText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  errorContainer: {
+    backgroundColor: colors.dangerLight,
+    padding: spacing.md,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+  },
+  errorText: {
+    ...typography.body,
+    color: colors.danger,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  retryBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.danger,
+  },
+  retryText: {
+    ...typography.captionMedium,
+    color: colors.danger,
   },
 });

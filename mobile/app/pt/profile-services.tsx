@@ -2,7 +2,13 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/services/AuthContext';
 import { ptService } from '@/services/api/ptService';
-import type { Service, ServiceInput, ServiceUpdate } from '@/services/api/types';
+import { trainersService } from '@/services/api/trainersService';
+import type {
+  PTPublicDetail,
+  Service,
+  ServiceInput,
+  ServiceUpdate,
+} from '@/services/api/types';
 import { ProfileServicesPresentation } from '@/features/pt/ProfileServicesPresentation';
 
 export default function ProfileServicesRoute() {
@@ -10,6 +16,7 @@ export default function ProfileServicesRoute() {
   const { user } = useAuth();
 
   const [services, setServices] = useState<Service[]>([]);
+  const [trainerDetail, setTrainerDetail] = useState<PTPublicDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +24,7 @@ export default function ProfileServicesRoute() {
     setLoading(true);
     setError(null);
     try {
-      const data = await ptService.getMyServices();
+      const data = await ptService.getMyServices(true);
       setServices(data || []);
     } catch (err) {
       setError(
@@ -30,9 +37,21 @@ export default function ProfileServicesRoute() {
     }
   }, []);
 
+  const fetchTrainerDetail = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const detail = await trainersService.getTrainer(user.id);
+      setTrainerDetail(detail);
+    } catch {
+      // PT may be unverified (approved certificate required for public marketplace detail)
+      setTrainerDetail(null);
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchServices();
-  }, [fetchServices]);
+    fetchTrainerDetail();
+  }, [fetchServices, fetchTrainerDetail]);
 
   const handleCreateService = async (input: ServiceInput) => {
     const created = await ptService.createService(input);
@@ -49,19 +68,12 @@ export default function ProfileServicesRoute() {
     setServices((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const handleUpdateBio = async (bioText: string) => {
-    // Updates profile on server
-    await ptService.updateMyProfile({
-      fitness_goal: bioText,
-    });
-  };
-
   const ptName = user?.profile?.name || 'Huấn luyện viên';
   const experienceYears = user?.profile?.exp || 0;
-  const rating = 4.9; // Default display score
-  const reviewsCount = user?.reviews?.length || 0;
+  const rating = trainerDetail?.rating;
+  const reviewsCount = trainerDetail?.reviews_count;
   const specialties = user?.profile?.spec || [];
-  const bio = user?.profile?.goal || user?.profile?.bio || '';
+  const bio = trainerDetail?.bio || user?.profile?.bio || '';
 
   return (
     <ProfileServicesPresentation
@@ -75,7 +87,10 @@ export default function ProfileServicesRoute() {
       services={services}
       loading={loading}
       error={error}
-      onRefresh={fetchServices}
+      onRefresh={() => {
+        fetchServices();
+        fetchTrainerDetail();
+      }}
       onBack={() => {
         if (router.canGoBack()) {
           router.back();
@@ -86,7 +101,6 @@ export default function ProfileServicesRoute() {
       onCreateService={handleCreateService}
       onUpdateService={handleUpdateService}
       onDeleteService={handleDeleteService}
-      onUpdateBio={handleUpdateBio}
     />
   );
 }

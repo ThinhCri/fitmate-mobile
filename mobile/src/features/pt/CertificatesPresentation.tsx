@@ -24,7 +24,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
-import type { PtCertificate } from '@/services/api/types';
+import type { PtCertificate, UploadFilePayload } from '@/services/api/types';
 import { ImagePickerService } from '@/services/imagePicker';
 
 export interface CertificatesPresentationProps {
@@ -39,7 +39,7 @@ export interface CertificatesPresentationProps {
     issued_by: string;
     code: string;
     issue_date: string;
-    file: { uri: string; name: string; type: string };
+    file: UploadFilePayload;
   }) => Promise<void>;
 }
 
@@ -57,27 +57,46 @@ export function CertificatesPresentation({
   const [issuedBy, setIssuedBy] = useState('');
   const [code, setCode] = useState('');
   const [issueDate, setIssueDate] = useState('');
-  const [selectedFile, setSelectedFile] = useState<{
-    uri: string;
-    name: string;
-    type: string;
-  } | null>(null);
+  const [selectedFile, setSelectedFile] = useState<UploadFilePayload | null>(null);
 
   const handlePickFile = async () => {
     try {
-      const picked = await ImagePickerService.pickFromLibrary();
+      const picked = await ImagePickerService.pickFromLibrary({
+        allowsEditing: false,
+        quality: 0.85,
+      });
       if (picked && picked.uri) {
         const uriParts = picked.uri.split('/');
-        const fileName = uriParts[uriParts.length - 1] || 'certificate.jpg';
+        const fileName =
+          picked.fileName || uriParts[uriParts.length - 1] || 'certificate.jpg';
         const ext = fileName.split('.').pop()?.toLowerCase();
-        let mimeType = 'image/jpeg';
+
+        if (ext === 'pdf' || picked.mimeType === 'application/pdf') {
+          Alert.alert(
+            'Định dạng không hỗ trợ',
+            'Chỉ chấp nhận tệp hình ảnh (JPEG, PNG, WebP) có dung lượng tối đa 5MB. Định dạng PDF không được hỗ trợ.'
+          );
+          return;
+        }
+
+        let mimeType = picked.mimeType || 'image/jpeg';
         if (ext === 'png') mimeType = 'image/png';
-        if (ext === 'pdf') mimeType = 'application/pdf';
+        else if (ext === 'webp') mimeType = 'image/webp';
+        else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
+
+        if (picked.fileSize && picked.fileSize > 5 * 1024 * 1024) {
+          Alert.alert(
+            'Tệp quá lớn',
+            'Dung lượng tệp vượt quá 5MB. Vui lòng chọn tệp hình ảnh nhỏ hơn.'
+          );
+          return;
+        }
 
         setSelectedFile({
           uri: picked.uri,
           name: fileName,
           type: mimeType,
+          size: picked.fileSize,
         });
       }
     } catch {
@@ -297,7 +316,7 @@ export function CertificatesPresentation({
                 <UploadCloud size={26} color={colors.primary} />
               </View>
               <Text style={styles.dropZoneTitle}>Nhấn để chọn tệp chứng chỉ</Text>
-              <Text style={styles.dropZoneSub}>Hỗ trợ định dạng JPG, PNG, PDF (Tối đa 15MB)</Text>
+              <Text style={styles.dropZoneSub}>Hỗ trợ ảnh định dạng JPG, PNG, WebP (Tối đa 5MB)</Text>
             </Pressable>
           )}
 

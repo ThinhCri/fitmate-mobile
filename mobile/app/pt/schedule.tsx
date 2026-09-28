@@ -17,15 +17,17 @@ export default function ScheduleRoute() {
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Generate days of the week based on current week offset
-  const { daysOfWeek, weekLabel, fromDate, toDate } = useMemo(() => {
+  // Generate days of the week based on current week offset and UTC query bounds
+  const { daysOfWeek, weekLabel, fromDateUtc, toDateUtc } = useMemo(() => {
     const today = new Date();
     const currentDayOfWeek = today.getDay(); // 0 is Sunday, 1 is Monday...
     const diffToMonday = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
 
     const monday = new Date(today);
     monday.setDate(today.getDate() + diffToMonday + currentWeekOffset * 7);
+    monday.setHours(0, 0, 0, 0);
 
     const days: ScheduleDay[] = [];
     const dayLabels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
@@ -54,9 +56,11 @@ export default function ScheduleRoute() {
 
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
 
-    const fromDateStr = days[0].dateStr;
-    const toDateStr = days[6].dateStr;
+    const nextMonday = new Date(monday);
+    nextMonday.setDate(monday.getDate() + 7);
+    nextMonday.setHours(0, 0, 0, 0);
 
     const pad = (n: number) => (n < 10 ? '0' + n : n.toString());
     const label = `Tuần (${pad(monday.getDate())}/${pad(monday.getMonth() + 1)} - ${pad(sunday.getDate())}/${pad(sunday.getMonth() + 1)}/${sunday.getFullYear()})`;
@@ -64,27 +68,36 @@ export default function ScheduleRoute() {
     return {
       daysOfWeek: days,
       weekLabel: label,
-      fromDate: fromDateStr,
-      toDate: toDateStr,
+      fromDateUtc: monday.toISOString(),
+      toDateUtc: nextMonday.toISOString(),
     };
   }, [currentWeekOffset]);
 
   const fetchAvailability = useCallback(async () => {
-    const trainerId = user?.profile?.phone || '00000000-0000-0000-0000-000000000000';
+    if (!user?.id) {
+      setError('Không xác định được mã định danh huấn luyện viên.');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
+    setError(null);
     try {
-      const result = await ptService.getMyAvailability(trainerId, {
-        from: fromDate,
-        to: toDate,
+      const result = await ptService.getMyAvailability(user.id, {
+        from: fromDateUtc,
+        to: toDateUtc,
       });
       setSlots(result || []);
-    } catch {
-      // If fetching fails or no existing slots, keep slots empty without throwing unhandled rejection
-      setSlots([]);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Không thể tải lịch khả dụng từ máy chủ. Vui lòng thử lại.'
+      );
     } finally {
       setLoading(false);
     }
-  }, [user, fromDate, toDate]);
+  }, [user, fromDateUtc, toDateUtc]);
 
   useEffect(() => {
     fetchAvailability();
@@ -100,6 +113,8 @@ export default function ScheduleRoute() {
     }
   };
 
+  const timezone = user?.profile?.timezone || 'Asia/Ho_Chi_Minh';
+
   return (
     <SchedulePresentation
       daysOfWeek={daysOfWeek}
@@ -111,6 +126,9 @@ export default function ScheduleRoute() {
       slots={slots}
       loading={loading}
       saving={saving}
+      error={error}
+      timezone={timezone}
+      onRefresh={fetchAvailability}
       onBack={() => {
         if (router.canGoBack()) {
           router.back();

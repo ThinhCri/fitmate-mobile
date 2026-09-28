@@ -19,7 +19,6 @@ import {
   ShieldCheck,
   Dumbbell,
   Brain,
-  Edit2,
   Stethoscope,
   Clock,
   Info,
@@ -36,8 +35,8 @@ export interface ProfileServicesPresentationProps {
   ptName: string;
   avatarUrl: string | null;
   experienceYears: number;
-  rating: number;
-  reviewsCount: number;
+  rating?: number;
+  reviewsCount?: number;
   specialties: string[];
   bio: string;
   services: Service[];
@@ -72,10 +71,6 @@ export function ProfileServicesPresentation({
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
-
-  // Bio edit modal
-  const [bioModalVisible, setBioModalVisible] = useState(false);
-  const [bioInput, setBioInput] = useState(bio);
 
   // Form states
   const [serviceName, setServiceName] = useState('');
@@ -248,12 +243,20 @@ export function ProfileServicesPresentation({
                 {experienceYears > 0 ? `${experienceYears} năm kinh nghiệm` : 'Huấn luyện viên Fitmate'}
               </Text>
               <View style={styles.ratingRow}>
-                <Star size={16} color={colors.warning} fill={colors.warning} />
-                <Text style={styles.ratingValue}>{rating > 0 ? rating.toFixed(1) : 'Mới'}</Text>
-                <Text style={styles.dotSeparator}>•</Text>
-                <Text style={styles.reviewsText}>
-                  {reviewsCount > 0 ? `${reviewsCount} đánh giá` : 'Đang đón học viên mới'}
-                </Text>
+                {rating !== undefined && rating > 0 ? (
+                  <>
+                    <Star size={16} color={colors.warning} fill={colors.warning} />
+                    <Text style={styles.ratingValue}>{rating.toFixed(1)}</Text>
+                    <Text style={styles.dotSeparator}>•</Text>
+                    <Text style={styles.reviewsText}>
+                      {reviewsCount !== undefined && reviewsCount > 0
+                        ? `${reviewsCount} đánh giá`
+                        : 'Chưa có đánh giá'}
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={styles.reviewsText}>Chưa có đánh giá</Text>
+                )}
               </View>
             </View>
           </View>
@@ -292,11 +295,13 @@ export function ProfileServicesPresentation({
             <Pressable
               style={styles.editBioButton}
               onPress={() => {
-                setBioInput(bio);
-                setBioModalVisible(true);
+                Alert.alert(
+                  'Tiểu sử HLV',
+                  'Chức năng chỉnh sửa tiểu sử huấn luyện viên đang chờ API backend hỗ trợ cập nhật hồ sơ chuyên môn [CONTRACT_GAP: /users/me hiện chỉ cập nhật mục tiêu của hội viên].'
+                );
               }}
             >
-              <Edit2 size={13} color={colors.primary} style={{ marginRight: 4 }} />
+              <Info size={13} color={colors.primary} style={{ marginRight: 4 }} />
               <Text style={styles.editBioText}>Tiểu sử</Text>
             </Pressable>
           </View>
@@ -573,61 +578,6 @@ export function ProfileServicesPresentation({
                 </Pressable>
               </View>
             </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Bio Edit Modal */}
-      <Modal
-        visible={bioModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setBioModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Tiểu sử chuyên môn</Text>
-              <Pressable
-                onPress={() => setBioModalVisible(false)}
-                style={styles.closeModalButton}
-              >
-                <X size={20} color={colors.textSecondary} />
-              </Pressable>
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Tiểu sử công khai</Text>
-              <TextInput
-                style={[styles.textInput, { height: 110, textAlignVertical: 'top' }]}
-                value={bioInput}
-                onChangeText={setBioInput}
-                placeholder="Nhập phần giới thiệu bản thân, triết lý huấn luyện..."
-                placeholderTextColor={colors.textMuted}
-                multiline
-              />
-            </View>
-
-            <View style={styles.modalActions}>
-              <Pressable
-                style={styles.cancelModalButton}
-                onPress={() => setBioModalVisible(false)}
-              >
-                <Text style={styles.cancelModalText}>Đóng</Text>
-              </Pressable>
-
-              <Pressable
-                style={styles.submitModalButton}
-                onPress={async () => {
-                  if (onUpdateBio) {
-                    await onUpdateBio(bioInput);
-                  }
-                  setBioModalVisible(false);
-                }}
-              >
-                <Text style={styles.submitModalText}>Xác nhận</Text>
-              </Pressable>
-            </View>
           </View>
         </View>
       </Modal>

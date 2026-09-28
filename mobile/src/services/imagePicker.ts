@@ -10,19 +10,28 @@ export interface PickedImage {
   uri: string;
   width?: number;
   height?: number;
+  fileSize?: number;
+  fileName?: string | null;
+  mimeType?: string | null;
+}
+
+export interface PickImageOptions {
+  allowsEditing?: boolean;
+  aspect?: [number, number];
+  quality?: number;
 }
 
 let pickerModule: typeof import('expo-image-picker') | null = null;
 try {
   // Optional dep — wrapped try/catch so missing package doesn't crash app
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   pickerModule = require('expo-image-picker');
 } catch {
   pickerModule = null;
 }
 
 export const ImagePickerService = {
-  async pickFromLibrary(): Promise<PickedImage | null> {
+  async pickFromLibrary(options?: PickImageOptions): Promise<PickedImage | null> {
     if (!pickerModule) {
       Alert.alert(
         'Demo mode',
@@ -37,12 +46,20 @@ export const ImagePickerService = {
     }
     const res = await pickerModule.launchImageLibraryAsync({
       mediaTypes: pickerModule.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
+      allowsEditing: options?.allowsEditing ?? false,
+      aspect: options?.aspect,
+      quality: options?.quality ?? 0.8,
     });
     if (res.canceled || !res.assets?.[0]) return null;
-    return { uri: res.assets[0].uri, width: res.assets[0].width, height: res.assets[0].height };
+    const asset = res.assets[0];
+    return {
+      uri: asset.uri,
+      width: asset.width,
+      height: asset.height,
+      fileSize: asset.fileSize,
+      fileName: asset.fileName,
+      mimeType: asset.mimeType,
+    };
   },
 
   async pickFromCamera(): Promise<PickedImage | null> {
