@@ -73,14 +73,19 @@ export async function apiClient<T>(
     }
 
     if (!response.ok) {
-      let errorData: unknown;
+      let errorData: any;
       try {
         errorData = await response.json();
       } catch {
         errorData = await response.text();
       }
+      const message =
+        (typeof errorData === 'object' &&
+          errorData !== null &&
+          (errorData.detail || errorData.message || errorData.title)) ||
+        'API request failed with status ' + response.status;
       throw new ApiError(
-        'API request failed with status ' + response.status,
+        message,
         response.status,
         errorData
       );
