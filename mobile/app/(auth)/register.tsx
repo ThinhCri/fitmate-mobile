@@ -1,208 +1,833 @@
 /**
- * RegisterScreen (MOB-119, FP-030).
- * Member: 2-step (accountType -> form + chon ngay tap).
- * PT: 1-step (accountType -> form day du).
- * Validation: email format + password >= MIN_PASSWORD_LEN.
+ * Stitch a03_ng_k_default
+ * Screen: Registration
+ * Route: /(auth)/register
  *
- * MIN_PASSWORD_LEN phải khớp BE `Fitmate.Domain.Common.PasswordPolicy.MinimumLength`
- * (chốt 2026-09-28 = 12). Trước đó để 6, thấp hơn cả validator cũ của BE (8).
+ * Production security requirements:
+ * - Password policy: 12-128 characters strictly enforced
+ * - PT registration NEVER sets verified certificate status
+ * - Wire DTO: email, password, full_name, role ('member' | 'pt')
+ * - Zero mock fallbacks on API errors
  */
-import { useState } from 'react';
-import { ScrollView, View, Text, Pressable, Alert } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Dumbbell,
+  Award,
+  ShieldAlert,
+  User,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  AlertCircle,
+  Check,
+} from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
-import { useTheme } from '@/theme';
-import { resolveColor } from '@/theme/ThemeProvider';
-import { Card, Button, Input, Chip } from '@/components/ui';
+import { colors, radius, spacing, typography } from '@/theme/designTokens';
+import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 
-type AccountType = 'member' | 'pt';
-const DAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LEN = 12;
+const MAX_PASSWORD_LEN = 128;
+
+type RoleType = 'member' | 'pt';
 
 export default function RegisterScreen() {
   const { register, error, clearError } = useAuth();
-  const theme = useTheme();
-  const [step, setStep] = useState(1);
-  const [accountType, setAccountType] = useState<AccountType>('member');
+  const [role, setRole] = useState<RoleType>('member');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [trainingDays, setTrainingDays] = useState<string[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const toggleDay = (d: string) => {
-    setTrainingDays((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]);
-  };
+  // Password strength calculation
+  const passwordStrength = useMemo(() => {
+    if (!password) return { score: 0, text: 'Chưa nhập', color: colors.textMuted };
+    let score = 0;
+    if (password.length >= MIN_PASSWORD_LEN) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[^A-Za-z0-9]/.test(password)) score += 1;
 
-  const validateStep2 = (): string | null => {
-    if (!name.trim()) return 'Vui lòng nhập họ và tên.';
-    if (!EMAIL_REGEX.test(email.trim())) return 'Email không hợp lệ.';
-    if (password.length < MIN_PASSWORD_LEN) return `Mật khẩu phải có ít nhất ${MIN_PASSWORD_LEN} ký tự.`;
-    if (password !== confirmPassword) return 'Mật khẩu xác nhận không khớp.';
-    if (accountType === 'member' && trainingDays.length === 0) return 'Vui lòng chọn ít nhất 1 ngày tập.';
-    return null;
-  };
+    switch (score) {
+      case 1:
+        return { score: 1, text: 'Yếu', color: colors.danger };
+      case 2:
+        return { score: 2, text: 'Trung bình', color: colors.warning };
+      case 3:
+        return { score: 3, text: 'Khá', color: colors.info };
+      case 4:
+        return { score: 4, text: 'Mạnh', color: colors.success };
+      default:
+        return { score: 1, text: 'Yếu', color: colors.danger };
+    }
+  }, [password]);
 
-  const onRegister = async () => {
+  const handleSubmit = async () => {
     setLocalError(null);
-    const err = validateStep2();
-    if (err) {
-      setLocalError(err);
+    clearError();
+
+    const trimmedName = fullName.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName) {
+      setLocalError('Vui lòng nhập họ và tên');
       return;
     }
+    if (!trimmedEmail) {
+      setLocalError('Vui lòng nhập địa chỉ email');
+      return;
+    }
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setLocalError('Địa chỉ email không hợp lệ');
+      return;
+    }
+    if (password.length < MIN_PASSWORD_LEN || password.length > MAX_PASSWORD_LEN) {
+      setLocalError(`Mật khẩu phải có độ dài từ ${MIN_PASSWORD_LEN} đến ${MAX_PASSWORD_LEN} ký tự theo quy định bảo mật.`);
+      return;
+    }
+    if (password !== confirmPassword) {
+      setLocalError('Mật khẩu xác nhận không khớp');
+      return;
+    }
+    if (!termsAccepted) {
+      setLocalError('Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách riêng tư');
+      return;
+    }
+
     setSubmitting(true);
     try {
       await register({
-        email: email.trim(),
+        email: trimmedEmail,
         password,
-        profile: {
-          avatar: null,
-          name: name.trim(),
-          bio: '',
-          goal: '',
-          phone,
-          birthday: '',
-          gender: 'Nam',
-          height: 170,
-          weight: 65,
-          medicalCondition: '',
-          allergies: [],
-          allergySurveyDone: false,
-          trainingDays: accountType === 'member' ? trainingDays : ['T2', 'T3', 'T4', 'T5', 'T6'],
-          trainingTime: accountType === 'member' ? '18:00 - 20:00' : '08:00 - 21:00',
-          trainingTimes: accountType === 'member' ? ['18:00', '19:00'] : ['08:00', '10:00', '14:00', '16:00'],
-          spec: accountType === 'pt' ? ['General Fitness'] : [],
-          exp: accountType === 'pt' ? 0 : 0,
-          price: accountType === 'pt' ? 200000 : 0,
-          isVerified: false,
-          certificateStatus: 'unverified',
-          certificates: [],
-          isPt: accountType === 'pt',
-          isSelf: true,
-        },
+        fullName: trimmedName,
+        role,
       });
-      router.replace('/(tabs)/dashboard');
-    } catch {
-      // error in context
+
+      if (role === 'pt') {
+        Alert.alert(
+          'Đăng ký thành công',
+          'Tài khoản Huấn luyện viên đã được khởi tạo. Hồ sơ chứng chỉ đang ở trạng thái chờ xét duyệt trước khi có thể hiển thị dịch vụ.',
+          [
+            {
+              text: 'Bắt đầu',
+              onPress: () => router.replace('/(tabs)/dashboard'),
+            },
+          ]
+        );
+      } else {
+        router.replace('/(tabs)/dashboard');
+      }
+    } catch (err: any) {
+      setLocalError(err?.message || 'Đăng ký không thành công. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const showError = localError ?? error;
+  const displayedError = localError || error;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={{ padding: 24, gap: 24, flexGrow: 1, justifyContent: 'center' }}>
-        <View style={{ alignItems: 'center', gap: 8 }}>
-          <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 28, fontWeight: '800' }}>Đăng ký</Text>
-          <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 13 }}>
-            Tạo tài khoản Fitmate
-          </Text>
+    <ScreenContainer backgroundColor={colors.background}>
+      {/* Top Bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/(auth)/welcome' as any);
+            }
+          }}
+          style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Quay lại"
+        >
+          <ArrowLeft size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.topBarTitle}>Đăng Ký</Text>
+        <View style={styles.topBarRightPlaceholder} />
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Stepper Indicator */}
+        <View style={styles.stepperCard}>
+          <View style={styles.stepperTrack}>
+            <View style={styles.stepperProgress} />
+          </View>
+          <View style={styles.stepperRow}>
+            {/* Step 1 */}
+            <View style={styles.stepItem}>
+              <View style={[styles.stepCircle, styles.stepCircleActive]}>
+                <Text style={styles.stepCircleTextActive}>1</Text>
+              </View>
+              <Text style={styles.stepLabelActive}>Tài khoản</Text>
+            </View>
+            {/* Step 2 */}
+            <View style={styles.stepItem}>
+              <View style={styles.stepCircle}>
+                <Text style={styles.stepCircleText}>2</Text>
+              </View>
+              <Text style={styles.stepLabel}>Hồ sơ cá nhân</Text>
+            </View>
+          </View>
         </View>
 
-        {step === 1 && (
-          <Card variant="default">
-            <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '700', marginBottom: 12 }}>
-              Bạn là?
-            </Text>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setAccountType('member')}
-                style={{
-                  flex: 1,
-                  padding: 16,
-                  borderRadius: 12,
-                  backgroundColor: accountType === 'member' ? resolveColor(theme, 'primaryContainer') : resolveColor(theme, 'surfaceContainerLow'),
-                  borderWidth: accountType === 'member' ? 2 : 1,
-                  borderColor: accountType === 'member' ? resolveColor(theme, 'primary') : resolveColor(theme, 'outlineVariant'),
-                }}
-              >
-                <Text style={{ color: accountType === 'member' ? resolveColor(theme, 'onPrimaryContainer') : resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '700', textAlign: 'center' }}>
-                  Hội viên
-                </Text>
-                <Text style={{ color: accountType === 'member' ? resolveColor(theme, 'onPrimaryContainer') : resolveColor(theme, 'onSurfaceVariant'), fontSize: 11, textAlign: 'center', marginTop: 4 }}>
-                  Theo dõi dinh dưỡng & tập luyện
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setAccountType('pt')}
-                style={{
-                  flex: 1,
-                  padding: 16,
-                  borderRadius: 12,
-                  backgroundColor: accountType === 'pt' ? resolveColor(theme, 'tertiaryContainer') : resolveColor(theme, 'surfaceContainerLow'),
-                  borderWidth: accountType === 'pt' ? 2 : 1,
-                  borderColor: accountType === 'pt' ? resolveColor(theme, 'tertiary') : resolveColor(theme, 'outlineVariant'),
-                }}
-              >
-                <Text style={{ color: accountType === 'pt' ? resolveColor(theme, 'onTertiaryContainer') : resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '700', textAlign: 'center' }}>
-                  Huấn luyện viên
-                </Text>
-                <Text style={{ color: accountType === 'pt' ? resolveColor(theme, 'onTertiaryContainer') : resolveColor(theme, 'onSurfaceVariant'), fontSize: 11, textAlign: 'center', marginTop: 4 }}>
-                  Nhận booking từ học viên
-                </Text>
-              </Pressable>
-            </View>
-            <Button label="Tiếp tục" variant="primary" fullWidth onPress={() => setStep(2)} />
-          </Card>
-        )}
-
-        {step === 2 && (
-          <Card variant="default">
-            <Input label="Họ và tên" value={name} onChangeText={(v) => { setName(v); clearError(); setLocalError(null); }} placeholder="Nhập họ và tên" />
-            <Input label="Email" value={email} onChangeText={(v) => { setEmail(v); clearError(); setLocalError(null); }} keyboardType="email-address" autoCapitalize="none" placeholder="example@fitmate.vn" />
-            <Input label={`Mật khẩu (tối thiểu ${MIN_PASSWORD_LEN} ký tự)`} value={password} onChangeText={(v) => { setPassword(v); clearError(); setLocalError(null); }} secureTextEntry placeholder="******" />
-            <Input label="Xác nhận mật khẩu" value={confirmPassword} onChangeText={(v) => { setConfirmPassword(v); clearError(); setLocalError(null); }} secureTextEntry placeholder="Nhập lại mật khẩu" />
-            <Input label="Số điện thoại (tuỳ chọn)" value={phone} onChangeText={(v) => { setPhone(v); clearError(); setLocalError(null); }} keyboardType="phone-pad" />
-            {accountType === 'member' && (
-              <>
-                <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 13, fontWeight: '700', marginTop: 12 }}>Ngày tập trong tuần</Text>
-                <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                  {DAYS.map((d) => (
-                    <Chip key={d} label={d} selected={trainingDays.includes(d)} onPress={() => toggleDay(d)} />
-                  ))}
+        {/* Role Selector (Choice Chips) */}
+        <View style={styles.roleSection}>
+          <Text style={styles.sectionTitle}>Vai trò tham gia của bạn</Text>
+          <View style={styles.roleSelectorGrid}>
+            {/* Option 1: Member */}
+            <TouchableOpacity
+              style={[
+                styles.roleOptionCard,
+                role === 'member' && styles.roleOptionCardActive,
+              ]}
+              onPress={() => setRole('member')}
+              activeOpacity={0.8}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: role === 'member' }}
+            >
+              <View style={styles.roleOptionHeader}>
+                <View
+                  style={[
+                    styles.roleIconCircle,
+                    role === 'member' && styles.roleIconCircleActive,
+                  ]}
+                >
+                  <Dumbbell
+                    size={20}
+                    color={role === 'member' ? colors.white : colors.textSecondary}
+                  />
                 </View>
+                {role === 'member' ? (
+                  <CheckCircle2 size={20} color={colors.primary} />
+                ) : (
+                  <View style={styles.radioUnchecked} />
+                )}
+              </View>
+              <Text style={styles.roleOptionTitle}>Hội viên</Text>
+              <Text style={styles.roleOptionSubtitle}>
+                Theo dõi tập luyện & dinh dưỡng khoa học
+              </Text>
+            </TouchableOpacity>
+
+            {/* Option 2: PT */}
+            <TouchableOpacity
+              style={[
+                styles.roleOptionCard,
+                role === 'pt' && styles.roleOptionCardActive,
+              ]}
+              onPress={() => setRole('pt')}
+              activeOpacity={0.8}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: role === 'pt' }}
+            >
+              <View style={styles.roleOptionHeader}>
+                <View
+                  style={[
+                    styles.roleIconCircle,
+                    role === 'pt' && styles.roleIconCircleActive,
+                  ]}
+                >
+                  <Award
+                    size={20}
+                    color={role === 'pt' ? colors.white : colors.textSecondary}
+                  />
+                </View>
+                {role === 'pt' ? (
+                  <CheckCircle2 size={20} color={colors.primary} />
+                ) : (
+                  <View style={styles.radioUnchecked} />
+                )}
+              </View>
+              <Text style={styles.roleOptionTitle}>Huấn luyện viên</Text>
+              <Text style={styles.roleOptionSubtitle}>
+                PT quản lý lịch dạy & học viên chuyên nghiệp
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* PT Audit Note Banner */}
+          {role === 'pt' && (
+            <View style={styles.ptNoticeBanner}>
+              <ShieldAlert size={20} color={colors.warning} style={{ marginTop: 2, flexShrink: 0 }} />
+              <Text style={styles.ptNoticeText}>
+                Tài khoản HLV cần tải chứng chỉ tại bước kế tiếp và qua quy trình xét duyệt hồ sơ trước khi chính thức hiển thị dịch vụ.
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Error Alert Banner */}
+        {displayedError ? (
+          <View style={styles.errorBanner}>
+            <AlertCircle size={18} color={colors.danger} style={{ marginTop: 2 }} />
+            <Text style={styles.errorBannerText}>{displayedError}</Text>
+          </View>
+        ) : null}
+
+        {/* Registration Form */}
+        <View style={styles.form}>
+          {/* Full Name */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>
+              Họ và tên <Text style={styles.requiredAsterisk}>*</Text>
+            </Text>
+            <View style={styles.inputWrapper}>
+              <User size={18} color={colors.textMuted} style={styles.inputLeftIcon} />
+              <TextInput
+                style={styles.input}
+                value={fullName}
+                onChangeText={(val) => {
+                  setFullName(val);
+                  setLocalError(null);
+                  clearError();
+                }}
+                placeholder="Nguyễn Văn An"
+                placeholderTextColor={colors.textMuted}
+                autoCorrect={false}
+                editable={!submitting}
+              />
+            </View>
+          </View>
+
+          {/* Email */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>
+              Địa chỉ Email <Text style={styles.requiredAsterisk}>*</Text>
+            </Text>
+            <View style={styles.inputWrapper}>
+              <Mail size={18} color={colors.textMuted} style={styles.inputLeftIcon} />
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={(val) => {
+                  setEmail(val);
+                  setLocalError(null);
+                  clearError();
+                }}
+                placeholder="minhanh.fit@gmail.com"
+                placeholderTextColor={colors.textMuted}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoCorrect={false}
+                editable={!submitting}
+              />
+            </View>
+          </View>
+
+          {/* Password */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>
+              Mật khẩu <Text style={styles.requiredAsterisk}>*</Text>
+            </Text>
+            <View style={styles.inputWrapper}>
+              <Lock size={18} color={colors.textMuted} style={styles.inputLeftIcon} />
+              <TextInput
+                style={[styles.input, { paddingRight: 44 }]}
+                value={password}
+                onChangeText={(val) => {
+                  setPassword(val);
+                  setLocalError(null);
+                  clearError();
+                }}
+                placeholder="Tối thiểu 12 ký tự"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!submitting}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword((prev) => !prev)}
+                style={styles.eyeButton}
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              >
+                {showPassword ? (
+                  <EyeOff size={18} color={colors.textSecondary} />
+                ) : (
+                  <Eye size={18} color={colors.textSecondary} />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Password Strength Meter */}
+            <View style={styles.strengthMeterContainer}>
+              <View style={styles.strengthMeterHeader}>
+                <Text style={styles.strengthMeterLabel}>Độ an toàn mật khẩu</Text>
+                <Text style={[styles.strengthMeterValue, { color: passwordStrength.color }]}>
+                  {passwordStrength.text}
+                </Text>
+              </View>
+              <View style={styles.strengthBarsRow}>
+                {[1, 2, 3, 4].map((i) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.strengthBar,
+                      passwordStrength.score >= i && { backgroundColor: passwordStrength.color },
+                    ]}
+                  />
+                ))}
+              </View>
+              <Text style={styles.strengthPolicyHint}>
+                Quy định bảo mật Fitmate: Tối thiểu 12 ký tự, bao gồm cả chữ cái và số.
+              </Text>
+            </View>
+          </View>
+
+          {/* Confirm Password */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>
+              Xác nhận mật khẩu <Text style={styles.requiredAsterisk}>*</Text>
+            </Text>
+            <View style={styles.inputWrapper}>
+              <Lock size={18} color={colors.textMuted} style={styles.inputLeftIcon} />
+              <TextInput
+                style={[styles.input, { paddingRight: 44 }]}
+                value={confirmPassword}
+                onChangeText={(val) => {
+                  setConfirmPassword(val);
+                  setLocalError(null);
+                  clearError();
+                }}
+                placeholder="Nhập lại mật khẩu"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!submitting}
+              />
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword((prev) => !prev)}
+                style={styles.eyeButton}
+                accessibilityRole="button"
+                accessibilityLabel={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff size={18} color={colors.textSecondary} />
+                ) : (
+                  <Eye size={18} color={colors.textSecondary} />
+                )}
+              </TouchableOpacity>
+            </View>
+            {confirmPassword.length > 0 && confirmPassword !== password && (
+              <Text style={styles.passwordMismatchText}>Mật khẩu xác nhận không khớp</Text>
+            )}
+          </View>
+
+          {/* Terms and Privacy Checkbox */}
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setTermsAccepted((prev) => !prev)}
+            activeOpacity={0.8}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: termsAccepted }}
+          >
+            <View style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}>
+              {termsAccepted && <Check size={14} color={colors.white} strokeWidth={3} />}
+            </View>
+            <Text style={styles.checkboxLabel}>
+              Tôi đã đọc và đồng ý với{' '}
+              <Text style={styles.legalLink}>Điều khoản dịch vụ</Text> và{' '}
+              <Text style={styles.legalLink}>Chính sách riêng tư</Text> của Fitmate.
+            </Text>
+          </TouchableOpacity>
+
+          {/* Primary CTA Button (52dp) */}
+          <TouchableOpacity
+            style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+            activeOpacity={0.85}
+            onPress={handleSubmit}
+            disabled={submitting}
+            accessibilityRole="button"
+            accessibilityLabel="Tiếp tục tạo tài khoản"
+          >
+            {submitting ? (
+              <ActivityIndicator color={colors.white} size="small" />
+            ) : (
+              <>
+                <Text style={styles.submitButtonText}>Tiếp tục tạo tài khoản</Text>
+                <ArrowRight size={20} color={colors.white} />
               </>
             )}
-            {showError && (
-              <Text style={{ color: resolveColor(theme, 'error'), fontSize: 12, marginTop: 8 }}>{showError}</Text>
-            )}
-          </Card>
-        )}
+          </TouchableOpacity>
+        </View>
 
-        {step === 2 && (
-          <View style={{ gap: 8 }}>
-            <Button
-              label={submitting ? 'Đang đăng ký...' : `Đăng ký${accountType === 'pt' ? ' HLV' : ' Hội viên'}`}
-              variant="primary"
-              fullWidth
-              onPress={onRegister}
-              disabled={submitting}
-            />
-            <Button
-              label="Quay lại"
-              variant="tertiary"
-              fullWidth
-              onPress={() => setStep(1)}
-            />
-          </View>
-        )}
-
-        <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11, textAlign: 'center' }}>
-          Đã có tài khoản?{' '}
-          <Text style={{ color: resolveColor(theme, 'primary'), fontWeight: '600' }} onPress={() => router.push('/(auth)/login')}>
-            Đăng nhập
-          </Text>
-        </Text>
+        {/* Login Link Alternative */}
+        <View style={styles.loginRow}>
+          <Text style={styles.loginRowPrompt}>Đã có tài khoản?</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(auth)/login')}
+            accessibilityRole="button"
+            accessibilityLabel="Đăng nhập"
+          >
+            <Text style={styles.loginRowLink}>Đăng nhập</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  topBar: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.full,
+  },
+  topBarTitle: {
+    ...typography.title2,
+    color: colors.textPrimary,
+    fontWeight: '700',
+  },
+  topBarRightPlaceholder: {
+    width: 40,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
+  },
+  stepperCard: {
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    marginBottom: spacing.lg,
+  },
+  stepperTrack: {
+    position: 'absolute',
+    top: 28,
+    left: 48,
+    right: 48,
+    height: 3,
+    backgroundColor: colors.borderSubtle,
+    borderRadius: radius.full,
+  },
+  stepperProgress: {
+    width: '50%',
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: radius.full,
+  },
+  stepperRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+  },
+  stepItem: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  stepCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepCircleActive: {
+    backgroundColor: colors.primary,
+  },
+  stepCircleText: {
+    ...typography.captionMedium,
+    color: colors.textMuted,
+  },
+  stepCircleTextActive: {
+    ...typography.captionMedium,
+    color: colors.white,
+    fontWeight: '700',
+  },
+  stepLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  stepLabelActive: {
+    ...typography.captionMedium,
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  roleSection: {
+    marginBottom: spacing.lg,
+  },
+  sectionTitle: {
+    ...typography.captionMedium,
+    color: colors.textPrimary,
+    fontWeight: '700',
+    marginBottom: spacing.sm,
+  },
+  roleSelectorGrid: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  roleOptionCard: {
+    flex: 1,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  roleOptionCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
+  },
+  roleOptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  roleIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleIconCircleActive: {
+    backgroundColor: colors.primary,
+  },
+  radioUnchecked: {
+    width: 18,
+    height: 18,
+    borderRadius: radius.full,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  roleOptionTitle: {
+    ...typography.bodyBold,
+    color: colors.textPrimary,
+    fontSize: 15,
+  },
+  roleOptionSubtitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  ptNoticeBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: colors.warningLight,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    marginTop: spacing.sm,
+  },
+  ptNoticeText: {
+    ...typography.caption,
+    color: colors.textPrimary,
+    flex: 1,
+    lineHeight: 18,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: colors.dangerLight,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.danger,
+  },
+  errorBannerText: {
+    ...typography.caption,
+    color: colors.danger,
+    flex: 1,
+    fontWeight: '500',
+  },
+  form: {
+    gap: spacing.md,
+  },
+  fieldGroup: {
+    gap: spacing.xs,
+  },
+  fieldLabel: {
+    ...typography.captionMedium,
+    color: colors.textSecondary,
+  },
+  requiredAsterisk: {
+    color: colors.danger,
+  },
+  inputWrapper: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    height: 48,
+    paddingHorizontal: spacing.md,
+  },
+  inputLeftIcon: {
+    marginRight: spacing.sm,
+  },
+  input: {
+    flex: 1,
+    height: '100%',
+    ...typography.body,
+    color: colors.textPrimary,
+    paddingVertical: 0,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  strengthMeterContainer: {
+    marginTop: spacing.xs,
+    gap: 4,
+  },
+  strengthMeterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  strengthMeterLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  strengthMeterValue: {
+    ...typography.captionMedium,
+    fontWeight: '700',
+  },
+  strengthBarsRow: {
+    flexDirection: 'row',
+    gap: 4,
+    height: 4,
+  },
+  strengthBar: {
+    flex: 1,
+    height: 4,
+    backgroundColor: colors.borderSubtle,
+    borderRadius: radius.full,
+  },
+  strengthPolicyHint: {
+    ...typography.caption,
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  passwordMismatchText: {
+    ...typography.caption,
+    color: colors.danger,
+    marginTop: 2,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: radius.xs,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  checkboxLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    flex: 1,
+    lineHeight: 18,
+  },
+  legalLink: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  submitButton: {
+    height: 52,
+    borderRadius: radius.lg,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  submitButtonDisabled: {
+    opacity: 0.65,
+  },
+  submitButtonText: {
+    ...typography.bodyBold,
+    color: colors.white,
+    fontSize: 16,
+  },
+  loginRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.xl,
+  },
+  loginRowPrompt: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+  loginRowLink: {
+    ...typography.bodyBold,
+    color: colors.primary,
+  },
+});
