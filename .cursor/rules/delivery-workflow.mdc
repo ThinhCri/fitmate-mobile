@@ -16,7 +16,7 @@ This rule defines how AI agents pick up, execute, and hand off FitMate Android m
 3. Read docs/mobile-redesign/tasks.md and find the next TODO or IN_PROGRESS task (lowest MOB-XXX ID that matches the requested phase).
 4. Read docs/mobile-redesign/decisions.md for the latest rulings.
 5. For the chosen task, read the parity IDs in docs/mobile-redesign/feature-parity-matrix.md and acceptance criteria in docs/mobile-redesign/acceptance-checklist.md.
-6. Run git status and git log --oneline -10. If working tree has unexpected changes, ask the user before proceeding.
+6. Inspect git status and the relevant diff. Preserve pre-existing changes and do not block independent work merely because the tree is dirty.
 
 ## Status transitions
 
@@ -25,20 +25,20 @@ This rule defines how AI agents pick up, execute, and hand off FitMate Android m
 - IN_PROGRESS -> BLOCKED: when an unresolvable issue blocks progress. Record blocker in tasks.md (cause, attempts, next step).
 - DONE -> (re-open) -> IN_PROGRESS: when a regression is found later.
 
-## Commit cycle
+## Review and commit boundary
 
 After every meaningful chunk of work:
 
 1. Run git status. Confirm the changes are only yours.
 2. Run git diff and review the scope (no unintended files).
 3. Update task status, parity matrix entries, and any spec touched.
-4. Stage only the files you intended (git add <path1> <path2>). Never use git add . mechanically.
-5. Commit with a Conventional Commits message that includes the task ID:
+4. Do not stage or commit automatically. Provide the exact intended file list and propose a message for user review.
+5. Only after the user explicitly authorizes a commit, stage the named files and commit with a Conventional Commits message that includes the task ID:
    - docs(plan): <description> [MOB-XXX]
    - feat(<scope>): <description> [MOB-XXX]
    - fix(<scope>): <description> [MOB-XXX]
    - chore(<scope>): <description> [MOB-XXX]
-6. Run git log -1 to confirm the commit exists and the tree is clean.
+6. After an authorized commit, inspect `git log -1 --format=%B` and report remaining changes; do not claim the whole tree is clean unless checked.
 7. Do NOT include the commit hash inside the commit message itself (avoid loops). Reference the task ID instead. Hashes can be added to docs in the NEXT commit.
 8. Do NOT push, merge, amend, rebase, reset --hard, or rewrite history.
 
@@ -46,7 +46,7 @@ After every meaningful chunk of work:
 
 - One purpose per commit. If a chunk contains unrelated changes, split it or use multiple commits.
 - Never commit secrets, API keys, or personal data. Demo auth must use user@fitmate.vn / pt@fitmate.vn only.
-- Never commit pre-existing untracked changes from another AI or the user without explicit confirmation.
+- Never commit pre-existing untracked changes from another AI or the user without explicit confirmation. Never infer commit permission from a task asking for code.
 - Never commit empty changes.
 - If a hook or pre-commit check fails, fix the issue. Do not bypass.
 
@@ -59,6 +59,13 @@ After every meaningful chunk of work:
 - git commit --amend of a previous commit.
 - git filter-branch, git filter-repo.
 - Force push equivalents.
+
+## Current verification workflow
+
+- Do not run install, build, test, lint, typecheck, Expo, emulator, Docker, migration, server, or deployment commands when the user has requested manual execution.
+- Write/update meaningful test source and provide exact PowerShell commands for the user.
+- Record unexecuted checks as `NOT RUN — user will execute`.
+- Use `IMPLEMENTED_UNVERIFIED`, not DONE/VERIFIED/production-ready, until the user returns successful evidence.
 
 If the user explicitly asks for any of the above, confirm the intent before doing it.
 

@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Generated Stitch web exports are local visual references, not app source.
+/design-reference/stitch-export/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

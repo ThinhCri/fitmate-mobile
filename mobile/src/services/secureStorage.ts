@@ -1,9 +1,3 @@
-/**
- * Secure storage — wraps expo-secure-store for tokens.
- *
- * Use only for small encrypted values (auth token, refresh token).
- * Demo mock auth stores user email here so we can auto-resume the session.
- */
 import * as SecureStore from 'expo-secure-store';
 
 const KEY_AUTH_EMAIL = 'fitmate_auth_email';
@@ -17,6 +11,14 @@ export async function getAuthEmail(): Promise<string | null> {
   }
 }
 
+export async function setAuthEmail(email: string): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(KEY_AUTH_EMAIL, email);
+  } catch (err) {
+    console.warn('[secureStore.setAuthEmail] failed', err);
+  }
+}
+
 export async function getAuthToken(): Promise<string | null> {
   try {
     return await SecureStore.getItemAsync(KEY_AUTH_TOKEN);
@@ -25,12 +27,11 @@ export async function getAuthToken(): Promise<string | null> {
   }
 }
 
-export async function setAuthEmail(email: string): Promise<void> {
+export async function setAuthToken(token: string): Promise<void> {
   try {
-    await SecureStore.setItemAsync(KEY_AUTH_EMAIL, email);
+    await SecureStore.setItemAsync(KEY_AUTH_TOKEN, token);
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.warn('[secureStore.setAuthEmail] failed', err);
+    console.warn('[secureStore.setAuthToken] failed', err);
   }
 }
 
@@ -39,7 +40,6 @@ export async function clearAuth(): Promise<void> {
     await SecureStore.deleteItemAsync(KEY_AUTH_EMAIL);
     await SecureStore.deleteItemAsync(KEY_AUTH_TOKEN);
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn('[secureStore.clearAuth] failed', err);
   }
 }

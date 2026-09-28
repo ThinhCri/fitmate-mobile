@@ -1,5 +1,7 @@
 # Cursor Rules — Noi dung de AI implement tao file .mdc
 
+> **HISTORICAL TEMPLATE:** các file `.cursor/rules/*.mdc` hiện hành đã tồn tại. Không copy đè từ tài liệu này vì phần mock-only/auto-commit bên dưới đã lỗi thời. Với production và Stitch migration, đọc `../design/stitch-react-native-rules.md` cùng active rules.
+
 > Plan mode khong cho tao file `.mdc` (Cursor rule). File nay ghi noi dung 4 rule, AI trien khai se copy thanh file `.mdc` tai `.cursor/rules/` theo ten tuong ung.
 
 Khi chay "Trien khai theo ke hoach" (MOB-001..), can tao 4 file sau trong `.cursor/rules/`:

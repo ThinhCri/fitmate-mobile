@@ -1,0 +1,14 @@
+## Payment và chi PT — cập nhật 2026-09-26
+Provider checkout mới là payOS; chưa bật live và chưa chạy build/test/migration. BE vẫn giữ VNPay để xử lý lịch sử. Xem docs/backend-release/runbooks/payos-manual-settlement.md trong repo BE.
+- Mobile gửi POST /api/v1/payments với hold_id (UUID), method=payos và Idempotency-Key. Payment trả snake_case: appointment_id, amount_vnd, refunded_so_far_vnd, redirect_url, provider_txn_ref, created_at, completed_at; method lowercase, status PascalCase. Mở redirect_url, quay lại thì đọc GET /api/v1/me/payments/{id}; không xác nhận paid từ return/cancel query.
+- Tôn trọng paymentsEnabled; PT automatic payout luôn false. Lịch Completed khác đã được duyệt chi và đã chuyển khoản.
+- PT revenue/history thêm paidOutVnd và settlementStatus (pending_review/on_hold/approved/paid). Không gọi approved là đã nhận tiền. pendingPayoutVnd là chênh lệch chưa chi, không phải số tự rút; có thể âm khi hoàn tiền sau payout.
+- Admin: gọi khách và PT sau buổi, xem session record và xác minh người nhận tiền, kiểm tra tranh chấp; POST /admin/finance/manual-settlements/{appointmentId}/approve với customerConfirmedAt, trainerConfirmedAt, sessionEvidenceReference, payeeEvidenceReference, noOpenDisputeConfirmed=true. Các field của manual finance dùng camelCase, UTC Z.
+- Có tranh chấp/thiếu chứng cứ: POST .../{appointmentId}/hold với reason. Sau chuyển khoản thật từ app ngân hàng, POST .../{appointmentId}/record-transfer với bankReference, evidenceReference, transferredAt. Một transfer/một buổi; không có API tự gửi tiền. Không dùng POST /admin/finance/settlements cũ.
+- Admin có GET /admin/finance/manual-settlements?page=1&pageSize=25; chưa có record thì chọn từ booking Completed để review. Hoàn tiền payOS qua POST/GET /admin/finance/manual-refunds rồi POST .../{refundId}/record-transfer; không dùng refund success giả hay hủy link để hoàn tiền.
+- Mọi đường dẫn admin trên có prefix /api/v1, Admin auth và Idempotency-Key cho mutation. 409 phải tải lại trạng thái; retry ghi chứng từ không chuyển tiền lần hai.
+- Record buổi là hồ sơ private, không mặc định phải video/audio. Không gửi raw sức khỏe/ngân hàng vào log; API lưu evidence reference. Private storage ownership và Admin MFA cần gate nghiệm thu BE-816/803 trước production.
+- Chưa code UI trong thay đổi BE này; cập nhật adapter/types và UAT sau khi BE contract được kiểm chứng. Không fallback mock khi thanh toán lỗi.
+- Bổ sung MFA tài chính: mọi mutation manual-settlements/manual-refunds gửi X-Finance-Totp (6 chữ số hiện tại). Admin phải bật MFA; BE gọi verifier trước thay đổi dữ liệu. Không lưu/log mã này. Request đã xử lý cùng Idempotency-Key trả lại receipt, không chuyển tiền lần nữa.
+
+- Admin đối soát qua GET /api/v1/admin/finance/payments/{paymentId}/provider-status; chỉ đọc provider status, không tự đánh dấu paid từ trình duyệt.

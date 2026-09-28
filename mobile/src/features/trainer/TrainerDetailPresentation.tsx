@@ -9,13 +9,13 @@ import {
 import {
   Star,
   ShieldCheck,
-  Award,
-  Calendar,
+  Briefcase,
   Clock,
   MessageSquare,
+  Lock,
 } from 'lucide-react-native';
 import { colors, radius, shadow, spacing, typography } from '@/theme/designTokens';
-import { TrainerPublicDetail } from '@/services/api/types';
+import { TrainerDetailViewModel } from '@/services/api/types';
 import { Badge } from '@/components/design-system/BadgesAndChips';
 import { SectionHeader } from '@/components/design-system/SectionHeader';
 import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
@@ -27,15 +27,15 @@ import {
 } from '@/components/design-system/FeedbackStates';
 
 export interface TrainerDetailPresentationProps {
-  trainer?: TrainerPublicDetail | null;
+  trainer?: TrainerDetailViewModel | null;
   loading?: boolean;
   isNotFound?: boolean;
   isError?: boolean;
   isOffline?: boolean;
   onRetry?: () => void;
   onBack?: () => void;
-  onBookPress?: (trainerId: string) => void;
-  onChatPress?: (trainerId: string) => void;
+  bookingEnabled?: boolean;
+  chatEnabled?: boolean;
 }
 
 export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps> = ({
@@ -46,8 +46,8 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
   isOffline = false,
   onRetry,
   onBack,
-  onBookPress,
-  onChatPress,
+  bookingEnabled = false,
+  chatEnabled = false,
 }) => {
   if (isNotFound) {
     return (
@@ -126,7 +126,7 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
               </View>
 
               <Text style={[typography.caption, styles.experienceText]}>
-                Kinh nghiệm: {trainer.experienceYears ?? 3}+ năm huấn luyện
+                Kinh nghiệm: {trainer.experienceYears}+ năm huấn luyện
               </Text>
             </View>
           </View>
@@ -134,7 +134,7 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
           <View style={styles.specialtiesWrapper}>
             {trainer.specialties.map((spec, idx) => (
               <Badge
-                key={`${spec}-${idx}`}
+                key={spec + '-' + idx}
                 label={spec}
                 tone="neutral"
                 style={styles.specialtyBadge}
@@ -152,87 +152,67 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
           </View>
         ) : null}
 
-        {trainer.certificates && trainer.certificates.length > 0 ? (
+        {trainer.services && trainer.services.length > 0 ? (
           <View style={styles.sectionMargin}>
-            <SectionHeader title="Bằng cấp & Chứng chỉ chuyên môn" />
-            <View style={[styles.card, shadow.card]}>
-              {trainer.certificates.map((cert) => (
-                <View key={cert.id} style={styles.certItem}>
-                  <Award size={20} color={colors.primary} style={styles.certIcon} />
-                  <View style={styles.certContent}>
-                    <Text style={[typography.bodyMedium, styles.certTitle]}>
-                      {cert.title}
-                    </Text>
-                    <Text style={[typography.caption, styles.certIssuer]}>
-                      {cert.issuer} • Năm {cert.year}
+            <SectionHeader title="Các gói & Dịch vụ huấn luyện" />
+            {trainer.services.map((srv) => (
+              <View key={srv.id} style={[styles.serviceCard, shadow.card]}>
+                <View style={styles.serviceHeader}>
+                  <View style={styles.serviceTitleRow}>
+                    <Briefcase size={18} color={colors.primary} />
+                    <Text style={[typography.bodyBold, styles.serviceTitle]}>
+                      {srv.name}
                     </Text>
                   </View>
+                  <Text style={[typography.bodyBold, styles.servicePrice]}>
+                    {new Intl.NumberFormat('vi-VN', {
+                      style: 'currency',
+                      currency: 'VND',
+                      maximumFractionDigits: 0,
+                    }).format(srv.priceVnd)}
+                  </Text>
                 </View>
-              ))}
-            </View>
+                {srv.description ? (
+                  <Text style={[typography.body, styles.serviceDesc]}>
+                    {srv.description}
+                  </Text>
+                ) : null}
+                <View style={styles.serviceMetaRow}>
+                  <Clock size={14} color={colors.textSecondary} />
+                  <Text style={[typography.caption, styles.serviceMetaText]}>
+                    Thời lượng: {srv.durationMinutes} phút/buổi
+                  </Text>
+                </View>
+              </View>
+            ))}
           </View>
         ) : null}
-
-        <View style={styles.sectionMargin}>
-          <SectionHeader title="Khung giờ nhận dạy" />
-          <View style={[styles.card, shadow.card]}>
-            <View style={styles.scheduleRow}>
-              <Calendar size={18} color={colors.textSecondary} />
-              <Text style={[typography.bodyMedium, styles.scheduleLabel]}>
-                Các ngày trong tuần:
-              </Text>
-            </View>
-            <View style={styles.daysBadgeGroup}>
-              {trainer.availableDays.map((day, idx) => (
-                <Badge
-                  key={`${day}-${idx}`}
-                  label={day}
-                  tone="info"
-                  style={styles.dayBadge}
-                />
-              ))}
-            </View>
-
-            <View style={[styles.scheduleRow, { marginTop: spacing.md }]}>
-              <Clock size={18} color={colors.textSecondary} />
-              <Text style={[typography.bodyMedium, styles.scheduleLabel]}>
-                Khung giờ khả dụng:
-              </Text>
-            </View>
-            <View style={styles.daysBadgeGroup}>
-              {trainer.availableTimeSlots.map((slot, idx) => (
-                <Badge
-                  key={`${slot}-${idx}`}
-                  label={slot}
-                  tone="neutral"
-                  style={styles.dayBadge}
-                />
-              ))}
-            </View>
-          </View>
-        </View>
 
         {trainer.reviews && trainer.reviews.length > 0 ? (
           <View style={styles.sectionMargin}>
             <SectionHeader
-              title={`Đánh giá (${trainer.reviews.length})`}
+              title={'Đánh giá từ học viên (' + trainer.reviews.length + ')'}
             />
             {trainer.reviews.map((rev) => (
               <View key={rev.id} style={[styles.reviewCard, shadow.card]}>
                 <View style={styles.reviewHeader}>
-                  <Text style={[typography.bodyBold, styles.reviewerName]}>
-                    {rev.reviewerName}
-                  </Text>
                   <View style={styles.reviewRating}>
-                    <Star size={14} color="#F59E0B" fill="#F59E0B" />
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        size={14}
+                        color="#F59E0B"
+                        fill={i < rev.rating ? '#F59E0B' : 'transparent'}
+                      />
+                    ))}
                     <Text style={[typography.captionMedium, styles.ratingNumber]}>
-                      {rev.rating}
+                      {rev.rating}.0
                     </Text>
                   </View>
+                  <Text style={[typography.caption, styles.reviewDate]}>
+                    {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('vi-VN') : ''}
+                  </Text>
                 </View>
-                <Text style={[typography.caption, styles.reviewDate]}>
-                  {rev.date}
-                </Text>
                 <Text style={[typography.body, styles.reviewComment]}>
                   "{rev.comment}"
                 </Text>
@@ -240,11 +220,18 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
             ))}
           </View>
         ) : null}
+
+        <View style={styles.capabilityNotice}>
+          <Lock size={16} color={colors.textMuted} />
+          <Text style={[typography.caption, styles.capabilityNoticeText]}>
+            Tính năng Đặt lịch và Nhắn tin trực tiếp với PT sẽ được kích hoạt ở giai đoạn tích hợp MOB-801.
+          </Text>
+        </View>
       </ScrollView>
 
       <View style={[styles.bottomBar, shadow.floating]}>
         <View style={styles.bottomPriceCol}>
-          <Text style={[typography.caption, styles.priceSubtitle]}>Học phí</Text>
+          <Text style={[typography.caption, styles.priceSubtitle]}>Học phí tham khảo</Text>
           <Text style={[typography.title2, styles.priceMain]}>
             {formattedPrice}
             <Text style={[typography.caption, styles.priceSub]}>/buổi</Text>
@@ -254,13 +241,15 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
         <View style={styles.bottomActions}>
           <SecondaryButton
             label="Nhắn tin"
-            leftIcon={<MessageSquare size={18} color={colors.textPrimary} />}
-            onPress={() => onChatPress?.(trainer.id)}
+            leftIcon={<MessageSquare size={18} color={colors.textMuted} />}
+            onPress={() => {}}
+            disabled={!chatEnabled}
             style={styles.chatButton}
           />
           <PrimaryButton
-            label="Đặt lịch tập"
-            onPress={() => onBookPress?.(trainer.id)}
+            label="Đặt lịch"
+            onPress={() => {}}
+            disabled={!bookingEnabled}
             style={styles.bookButton}
           />
         </View>
@@ -369,42 +358,46 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 22,
   },
-  certItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  serviceCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  certIcon: {
-    marginRight: spacing.md,
-    marginTop: 2,
+  serviceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
   },
-  certContent: {
-    flex: 1,
-  },
-  certTitle: {
-    color: colors.textPrimary,
-  },
-  certIssuer: {
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  scheduleRow: {
+  serviceTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
+    flex: 1,
+    marginRight: spacing.sm,
   },
-  scheduleLabel: {
+  serviceTitle: {
     color: colors.textPrimary,
   },
-  daysBadgeGroup: {
+  servicePrice: {
+    color: colors.primaryDark,
+  },
+  serviceDesc: {
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+    lineHeight: 20,
+  },
+  serviceMetaRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
+    alignItems: 'center',
+    gap: 4,
     marginTop: spacing.sm,
   },
-  dayBadge: {
-    marginRight: 4,
-    marginBottom: 4,
+  serviceMetaText: {
+    color: colors.textSecondary,
   },
   reviewCard: {
     backgroundColor: colors.surface,
@@ -418,26 +411,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  reviewerName: {
-    color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
   reviewRating: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   ratingNumber: {
     color: colors.textPrimary,
+    marginLeft: 4,
   },
   reviewDate: {
     color: colors.textMuted,
-    marginTop: 2,
   },
   reviewComment: {
     color: colors.textSecondary,
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
     fontStyle: 'italic',
+    lineHeight: 20,
+  },
+  capabilityNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.md,
+  },
+  capabilityNoticeText: {
+    color: colors.textMuted,
+    textAlign: 'center',
   },
   bottomBar: {
     position: 'absolute',

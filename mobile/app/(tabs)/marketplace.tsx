@@ -4,8 +4,10 @@ import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { AppTopBar } from '@/components/design-system/AppTopBar';
 import { TrainerListPresentation } from '@/features/trainer/TrainerListPresentation';
 import { trainersService } from '@/services/api/trainersService';
-import { TrainerPublicSummary } from '@/services/api/types';
-import { trainerListFixture } from '@/mocks/preview';
+import {
+  TrainerSummaryViewModel,
+  mapPTPublicProfileToSummary,
+} from '@/services/api/types';
 
 const SPECIALTY_OPTIONS = [
   { id: 'all', label: 'Tất cả' },
@@ -15,47 +17,73 @@ const SPECIALTY_OPTIONS = [
   { id: 'Yoga', label: 'Yoga' },
 ];
 
+/**
+ * MarketplaceScreen (Production Route)
+ *
+ * Strictly calls GET /trainers with server-side query filters.
+ * NEVER falls back to mock fixture upon API failure.
+ *
+ * NOTE (CONTRACT_GAP): The OpenAPI contract for GET /trainers does not expose
+ * a full-text search parameter. Search query filters client-side across the
+ * server-paginated items currently loaded.
+ */
 export default function MarketplaceScreen() {
-  const [trainers, setTrainers] = useState<TrainerPublicSummary[]>([]);
+  const [trainers, setTrainers] = useState<TrainerSummaryViewModel[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [isError, setIsError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
 
-  const loadTrainers = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-
-    try {
-      const response = await trainersService.listTrainers({
-        specialty: selectedSpecialty !== 'all' ? selectedSpecialty : undefined,
-      });
-      setTrainers(response.items || []);
-      setIsError(false);
-    } catch {
-      // In DEV, if backend server is not running on 10.0.2.2/localhost, display fixture
-      if (__DEV__) {
-        const filtered = trainerListFixture.filter((t) => {
-          const matchesSpecialty =
-            selectedSpecialty === 'all' ||
-            t.specialties.includes(selectedSpecialty);
-          return matchesSpecialty;
-        });
-        setTrainers(filtered);
-        setIsError(false);
+  const fetchTrainers = useCallback(
+    async (cursor?: string, isRefresh = false) => {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else if (cursor) {
+        setLoadingMore(true);
       } else {
-        setIsError(true);
+        setLoading(true);
       }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [selectedSpecialty]);
+
+      try {
+        const response = await trainersService.listTrainers({
+          specialty: selectedSpecialty !== 'all' ? selectedSpecialty : undefined,
+          cursor: cursor || undefined,
+          limit: 10,
+        });
+
+        const mapped = (response.items || []).map(mapPTPublicProfileToSummary);
+
+        if (cursor) {
+          setTrainers((prev) => [...prev, ...mapped]);
+        } else {
+          setTrainers(mapped);
+        }
+
+        setNextCursor(response.nextCursor || null);
+        setIsError(false);
+      } catch {
+        setIsError(true);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+        setRefreshing(false);
+      }
+    },
+    [selectedSpecialty]
+  );
 
   useEffect(() => {
-    loadTrainers();
-  }, [loadTrainers]);
+    fetchTrainers();
+  }, [fetchTrainers]);
+
+  const handleEndReached = () => {
+    if (!loading && !loadingMore && nextCursor) {
+      fetchTrainers(nextCursor);
+    }
+  };
 
   const displayedTrainers = trainers.filter((t) => {
     if (!searchQuery) return true;
@@ -78,13 +106,15 @@ export default function MarketplaceScreen() {
         onSelectSpecialty={setSelectedSpecialty}
         specialtyOptions={SPECIALTY_OPTIONS}
         onTrainerPress={(id) => {
-          router.push(`/(modals)/trainer/${id}`);
+          router.push('/(modals)/trainer/' + id);
         }}
         loading={loading}
+        loadingMore={loadingMore}
         isError={isError}
-        onRetry={() => loadTrainers()}
-        onRefresh={() => loadTrainers(true)}
+        onRetry={() => fetchTrainers()}
+        onRefresh={() => fetchTrainers(undefined, true)}
         refreshing={refreshing}
+        onEndReached={handleEndReached}
       />
     </ScreenContainer>
   );

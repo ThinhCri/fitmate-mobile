@@ -14,6 +14,10 @@ import { MemberHomePresentation } from '@/features/dashboard/MemberHomePresentat
 import { TrainerListPresentation } from '@/features/trainer/TrainerListPresentation';
 import { TrainerDetailPresentation } from '@/features/trainer/TrainerDetailPresentation';
 import {
+  TrainerSummaryViewModel,
+  TrainerDetailViewModel,
+} from '@/services/api/types';
+import {
   memberHomeFixture,
   trainerListFixture,
   trainerDetailFixture,
@@ -36,27 +40,41 @@ const SPECIALTY_OPTIONS = [
   { id: 'Yoga', label: 'Yoga' },
 ];
 
-export default function SamplePreviewScreen() {
+/**
+ * SamplePreviewRoute (Wrapper)
+ * Does NOT call hooks before conditional production check.
+ */
+export default function SamplePreviewRoute() {
   if (!__DEV__) {
     return <Redirect href="/(tabs)/dashboard" />;
   }
 
+  return <DevSamplePreviewContent />;
+}
+
+/**
+ * DevSamplePreviewContent (DEV-only Component)
+ * Safely calls all preview hooks and renders Stitch Batch 1 interactive sandbox.
+ */
+function DevSamplePreviewContent() {
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>('home');
   const [activeState, setActiveState] = useState<ActiveState>('populated');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
 
-  const filteredTrainers = trainerListFixture.filter((t) => {
-    const matchesSearch =
-      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.specialties.some((s) =>
-        s.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    const matchesSpecialty =
-      selectedSpecialty === 'all' ||
-      t.specialties.includes(selectedSpecialty);
-    return matchesSearch && matchesSpecialty;
-  });
+  const filteredTrainers: TrainerSummaryViewModel[] = trainerListFixture.filter(
+    (t: TrainerSummaryViewModel) => {
+      const matchesSearch =
+        t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.specialties.some((s: string) =>
+          s.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      const matchesSpecialty =
+        selectedSpecialty === 'all' ||
+        t.specialties.includes(selectedSpecialty);
+      return matchesSearch && matchesSpecialty;
+    }
+  );
 
   return (
     <ScreenContainer edges={['top', 'bottom']}>
@@ -187,9 +205,7 @@ export default function SamplePreviewScreen() {
                 : memberHomeFixture
             }
             onFindTrainerPress={() => setActiveScreen('trainerList')}
-            onWorkoutDetailPress={(id) => {
-              console.log('Open workout detail:', id);
-            }}
+            onWorkoutDetailPress={(_id: string) => {}}
           />
         ) : activeScreen === 'trainerList' ? (
           <TrainerListPresentation
@@ -206,7 +222,7 @@ export default function SamplePreviewScreen() {
             selectedSpecialty={selectedSpecialty}
             onSelectSpecialty={setSelectedSpecialty}
             specialtyOptions={SPECIALTY_OPTIONS}
-            onTrainerPress={(id) => {
+            onTrainerPress={(_id: string) => {
               setActiveScreen('trainerDetail');
             }}
             loading={activeState === 'loading'}
@@ -216,13 +232,19 @@ export default function SamplePreviewScreen() {
           />
         ) : (
           <TrainerDetailPresentation
-            trainer={activeState === 'empty' ? null : trainerDetailFixture}
+            trainer={
+              activeState === 'empty'
+                ? null
+                : (trainerDetailFixture as TrainerDetailViewModel)
+            }
             loading={activeState === 'loading'}
             isNotFound={activeState === 'not_found'}
             isError={activeState === 'error'}
             isOffline={activeState === 'offline'}
             onRetry={() => setActiveState('populated')}
             onBack={() => setActiveScreen('trainerList')}
+            bookingEnabled={false}
+            chatEnabled={false}
           />
         )}
       </View>

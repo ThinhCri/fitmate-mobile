@@ -1,0 +1,20 @@
+---
+description: Production rules for converting approved Stitch exports to the Fitmate React Native app without losing API, security, or business behavior.
+globs:
+  - design-reference/stitch-export/**
+  - mobile/**
+  - docs/design/**
+alwaysApply: true
+---
+
+# Rule: Stitch to React Native production migration
+
+Read `AGENTS.md` and `docs/design/stitch-react-native-rules.md` before editing mobile UI.
+
+- Stitch controls visual appearance only. Backend business rules, authorization, and OpenAPI control behavior and wire data.
+- Replace screens incrementally and remove old presentation code only after all callers move and no business logic is lost.
+- Never import HTML/CSS/Tailwind/DOM into React Native or use WebView as a conversion shortcut.
+- Keep production API integration, secure session storage, UUID identity, server pagination, idempotency, private media authorization, and truthful error states.
+- Fixtures are development-preview-only and never a runtime fallback.
+- Do not run verification commands or commit/push unless the user explicitly requests it.
+- Report `IMPLEMENTED_UNVERIFIED` until the user supplies verification evidence.

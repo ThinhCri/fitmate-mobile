@@ -1,5 +1,7 @@
 # Integration Boundaries — Mock adapters & diem tich hop backend
 
+> **HISTORICAL PROTOTYPE DOCUMENT — SUPERSEDED FOR PRODUCTION.** Không triển khai mới theo các endpoint ví dụ, email identity, password `123456`, localDb hoặc “RealApiAdapter later” trong file này. Baseline hiện hành là `../production/README.md`, backend OpenAPI được ghi trong `../production/contract-baseline.json`, và `../design/stitch-react-native-rules.md`. Nội dung dưới đây chỉ giúp tìm mock cần loại bỏ; API lỗi không được fallback về mock.
+
 > Muc dich: moi chuc nang UI phai co mock adapter chay duoc offline, sau do khi co backend chi can thay adapter (khong sua UI).
 
 ## 1. Tong quan pattern

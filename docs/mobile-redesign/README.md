@@ -1,17 +1,19 @@
 # Fitmate — Mobile Redesign (Android UI Migration)
 
+> **PRODUCTION SUPERSESSION — 2026-09-28:** Phần “UI only/mock” bên dưới mô tả lịch sử prototype và không còn là execution baseline. Công việc hiện tại đọc `../production/README.md`, `../production/integration-plan.md` và `../design/stitch-react-native-rules.md`. Mobile dùng API local/staging đã được phát hành theo contract, không fallback mock khi API lỗi, không giữ demo credentials/reward/AI/payment trong production. Stitch export là nguồn chuẩn thị giác cho các màn đã map. Các checklist prototype chỉ là inventory cho tới khi được chuyển thành acceptance production.
+
 > Frontend web hien tai chi la **nguon chuẩn content/nghiep vu** (fields, validation, role behavior). Theme, layout, navigation va component duoc thiet ke moi cho Android, doc lap voi web (xem `decisions.md` DEC-004, DEC-015, DEC-019).
 >
 > **Theme mac dinh: light theme Soft Energy** (xem `decisions.md` DEC-019, `design-system.md` Section 1-2). Phase nay KHONG build dark theme.
 
-## Pham vi giai doan nay (UI only)
+## Pham vi lịch sử (UI-only prototype, không dùng để quyết định production)
 
 - Rebuild UI tren Android (React Native + Expo + TypeScript + Expo Router) voi design moi, khong ke thua theme web.
 - Giu **day du** noi dung, chuc nang, truong du lieu, modal, luong cua web (tham chieu `current-app-audit.md` + `feature-parity-matrix.md`).
 - Su dung **mock + local** data de chay va trinh dien duoc **khong can backend**.
 - Tap kien truc de sau nay thay mock = backend that ma khong phai sua UI.
 
-## KHONG trong pham vi giai doan nay
+## Ngoài phạm vi lịch sử của prototype
 
 - Tich hop backend that (chi chuan bi adapter, ghi trong `integration-boundaries.md`).
 - iOS, web mobile, Capacitor wrapper.
@@ -38,7 +40,7 @@
 | `decisions.md` | Quyet dinh quan trong va ly do (lock + override log). |
 | `cursor-rules-content.md` | Noi dung 4 rule `.mdc` (copy khi trien khai). |
 
-## Dinh nghia hoan thanh giai doan UI
+## Định nghĩa hoàn thành lịch sử (không phải release gate)
 
 Mot task UI duoc coi la hoan thanh (DONE) khi **tat ca** dieu sau dung:
 

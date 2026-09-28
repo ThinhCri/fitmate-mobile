@@ -18,15 +18,15 @@ export default function MessengerListScreen() {
   const theme = useTheme();
   const [query, setQuery] = useState('');
 
-  if (!user) return null;
-
-  const friendUsers = useMemo(() => user.friendsList, [user.friendsList]);
+  const friendUsers = useMemo(() => user?.friendsList || [], [user?.friendsList]);
 
   const filteredFriends = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return friendUsers;
     return friendUsers.filter((email) => email.toLowerCase().includes(q));
   }, [friendUsers, query]);
+
+  if (!user) return null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top', 'bottom']}>

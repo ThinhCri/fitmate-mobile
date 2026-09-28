@@ -1,5 +1,7 @@
 # Feature Parity Matrix
 
+> Prototype fields/actions are inventory only. Demo credentials, email-based routes, reward simulation, mock AI/payment and client-side financial calculations must not enter production. Production behavior and contract come from `../production/`, backend OpenAPI, and `../design/stitch-react-native-rules.md`.
+
 > Moi muc o day la mot item phai **giu nguyen** trong ban Android. Parity ID `FP-XXX` la khoa chinh de lien ket voi `tasks.md`.
 
 **Cot "Trang thai"**:

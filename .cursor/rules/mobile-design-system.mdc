@@ -11,6 +11,15 @@ globs:
 
 This rule enforces the visual direction, tokens, and component rules for FitMate Android. The full token list lives in docs/mobile-redesign/design-system.md.
 
+## Approved Stitch supersession (2026-09-28)
+
+- Read `docs/design/stitch-react-native-rules.md` and the mapping for `design-reference/stitch-export/` before changing visuals.
+- Stitch is now the approved visual reference for mapped screens. Business behavior, permissions, and wire data still come from production requirements and backend OpenAPI.
+- Existing Soft Energy tokens are the fallback during migration. Do not keep two permanent themes or mix old/new values screen by screen.
+- Extract one coherent semantic token set from the approved representative Stitch screens, document the differences, then migrate shared components before feature screens.
+- Do not copy HTML/Tailwind into React Native, use a WebView, or hardcode screenshot coordinates.
+- Remove an old visual token/component only after callers have migrated and no behavior is lost.
+
 ## Visual direction (mandatory)
 
 - Theme: **Soft Energy** — light theme only, page bg `#FAFAF7` off-white warm, primary `#0F766E` deep teal, secondary `#7C2D12` warm sienna, tertiary `#9333EA` violet (achievement, gamification), error `#B91C1C`. See **DEC-019** in docs/mobile-redesign/decisions.md (replaced DEC-015 in 2026-09-17).

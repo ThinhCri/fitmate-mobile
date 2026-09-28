@@ -400,7 +400,7 @@ Light theme nen shadow nhe + outline de ro edge:
 | Icons | `lucide-react-native` |
 | Form / input | React Native TextInput native + custom wrap |
 | Date picker | `@react-native-community/datetimepicker` |
-| Toast | `react-native-toast-message` |
+| Toast | Existing `mobile/src/components/ui/Toast.tsx` |
 | Progress ring | `react-native-svg` + `Animated` |
 | Linear progress | `react-native-svg` hoac custom View width |
 | Image picker | `expo-image-picker` |
@@ -414,7 +414,7 @@ Light theme nen shadow nhe + outline de ro edge:
 
 - Chua kiem tra contrast that tren emulator (verify bang tool khi implement).
 - Token names co the dieu chinh khi ap vao RN de luu fluent native idioms.
-- Library version: can verify khi init (Expo SDK 51+/52+ → API co the doi nho).
+- Library versions follow the active Expo SDK baseline in `mobile/package.json` (currently Expo SDK 57). Do not reuse SDK 51/52-era examples; follow `docs/design/stitch-react-native-rules.md` before adding or upgrading dependencies.
 - Color roles M3 co the co them `inverseSurface`, `inverseOnSurface`, `inversePrimary` khi design pattern can (e.g., snackbar tren dark backdrop) → bo sung khi gap.
 
 

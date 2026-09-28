@@ -2,7 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { trainersService } from '@/services/api/trainersService';
-import { TrainerPublicDetail } from '@/services/api/types';
+import {
+  TrainerDetailViewModel,
+  mapPTPublicDetailToDetail,
+} from '@/services/api/types';
 import { TrainerDetailPresentation } from '@/features/trainer/TrainerDetailPresentation';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { AppTopBar } from '@/components/design-system/AppTopBar';
@@ -10,7 +13,7 @@ import { ApiError } from '@/services/api/client';
 
 export default function TrainerDetailModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [trainer, setTrainer] = useState<TrainerPublicDetail | null>(null);
+  const [trainer, setTrainer] = useState<TrainerDetailViewModel | null>(null);
   const [loading, setLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -19,7 +22,7 @@ export default function TrainerDetailModal() {
     trainersService
       .getTrainer(trainerId)
       .then((data) => {
-        setTrainer(data);
+        setTrainer(mapPTPublicDetailToDetail(data));
         setIsNotFound(false);
         setIsError(false);
       })
@@ -61,12 +64,8 @@ export default function TrainerDetailModal() {
             }
           }}
           onBack={() => router.back()}
-          onBookPress={(trainerId) => {
-            console.log('Book trainer:', trainerId);
-          }}
-          onChatPress={(trainerId) => {
-            console.log('Chat with trainer:', trainerId);
-          }}
+          bookingEnabled={false}
+          chatEnabled={false}
         />
       </View>
     </ScreenContainer>

@@ -2,7 +2,10 @@
  * RegisterScreen (MOB-119, FP-030).
  * Member: 2-step (accountType -> form + chon ngay tap).
  * PT: 1-step (accountType -> form day du).
- * Validation: email format + password >= 6.
+ * Validation: email format + password >= MIN_PASSWORD_LEN.
+ *
+ * MIN_PASSWORD_LEN phải khớp BE `Fitmate.Domain.Common.PasswordPolicy.MinimumLength`
+ * (chốt 2026-09-28 = 12). Trước đó để 6, thấp hơn cả validator cũ của BE (8).
  */
 import { useState } from 'react';
 import { ScrollView, View, Text, Pressable, Alert } from 'react-native';
@@ -16,7 +19,7 @@ import { Card, Button, Input, Chip } from '@/components/ui';
 type AccountType = 'member' | 'pt';
 const DAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LEN = 6;
+const MIN_PASSWORD_LEN = 12;
 
 export default function RegisterScreen() {
   const { register, error, clearError } = useAuth();

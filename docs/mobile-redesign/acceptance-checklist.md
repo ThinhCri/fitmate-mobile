@@ -1,5 +1,7 @@
 # Acceptance Checklist — Kich ban & tieu chi nghiem thu
 
+> **PROTOTYPE CHECKLIST:** các case tăng streak bằng tap, mock auth/localDb, demo reward/AI/payment và yêu cầu commit tự động không phải acceptance production. Với MOB-800..808, dùng `../production/integration-plan.md`, kế hoạch task tương ứng và `../design/stitch-react-native-rules.md`. Không đánh DONE/VERIFIED khi user chưa chạy lệnh và UAT/API gate chưa có evidence.
+
 > Moi kich ban lien ket parity ID (FP-XXX) + task ID (MOB-XXX). AI chi set DONE khi tat ca case cua task lien qua PASS.
 
 **Convention trang thai**:
@@ -19,7 +21,7 @@
 - [ ] Type-check PASS (`tsc --noEmit`).
 - [ ] ESLint PASS.
 - [ ] Folder structure (theme / features / services) khop docs.
-- [ ] Commit local.
+- [ ] Nếu user đã yêu cầu commit: commit đúng scope; nếu chưa, ghi `NOT COMMITTED — awaiting user instruction`.
 
 ### F-1.2 Tokens & primitives (MOB-002)
 - [ ] Tokens file import thanh cong.

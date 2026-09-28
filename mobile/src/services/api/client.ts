@@ -1,6 +1,8 @@
 import { getAuthToken } from '@/services/secureStorage';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:8080';
+const RAW_BASE_URL =
+  process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8080/api/v1';
+const API_BASE_URL = RAW_BASE_URL.replace(/\/+$/, '');
 
 export class ApiError extends Error {
   status: number;
@@ -26,10 +28,11 @@ export async function apiClient<T>(
   };
 
   if (token) {
-    headers.Authorization = `Bearer ${token}`;
+    headers.Authorization = 'Bearer ' + token;
   }
 
-  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
+  const url = API_BASE_URL + cleanEndpoint;
 
   try {
     const response = await fetch(url, {
@@ -45,7 +48,7 @@ export async function apiClient<T>(
         errorData = await response.text();
       }
       throw new ApiError(
-        `API request failed with status ${response.status}`,
+        'API request failed with status ' + response.status,
         response.status,
         errorData
       );

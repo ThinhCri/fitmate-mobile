@@ -1,9 +1,9 @@
 import {
-  TrainerPublicDetail,
-  TrainerPublicSummary,
+  TrainerDetailViewModel,
+  TrainerSummaryViewModel,
 } from '@/services/api/types';
 
-export const trainerListFixture: TrainerPublicSummary[] = [
+export const trainerListFixture: TrainerSummaryViewModel[] = [
   {
     id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
     name: 'Mai Xuân Tú',
@@ -50,7 +50,7 @@ export const trainerListFixture: TrainerPublicSummary[] = [
   },
 ];
 
-export const trainerDetailFixture: TrainerPublicDetail = {
+export const trainerDetailFixture: TrainerDetailViewModel = {
   id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
   name: 'Mai Xuân Tú',
   avatarUrl: null,
@@ -61,41 +61,38 @@ export const trainerDetailFixture: TrainerPublicDetail = {
   experienceYears: 5,
   isVerified: true,
   bio: 'HLV chuyên sâu về thể hình thể chất và kiểm soát cân nặng bền vững. Hơn 5 năm kinh nghiệm đồng hành cùng hơn 200 học viên đạt mục tiêu.',
-  certificates: [
+  services: [
     {
-      id: 'cert-1',
-      title: 'Chứng chỉ Huấn luyện viên Cá nhân Quốc tế ISSA',
-      issuer: 'ISSA',
-      year: 2021,
+      id: 'srv-1',
+      name: 'Buổi tập cá nhân 1-1 (60 phút)',
+      description: 'Kèm sát kỹ thuật, chỉnh form từng động tác, theo dõi nhịp tim và tải trọng an toàn.',
+      priceVnd: 450000,
+      durationMinutes: 60,
+      isActive: true,
     },
     {
-      id: 'cert-2',
-      title: 'Chứng chỉ Dinh dưỡng Thể thao Ứng dụng',
-      issuer: 'NASM',
-      year: 2022,
+      id: 'srv-2',
+      name: 'Buổi tư vấn & đánh giá tư thế FMS (45 phút)',
+      description: 'Kiểm tra độ linh hoạt khớp, phát hiện mất cân bằng cơ học và thiết lập lộ trình cải thiện.',
+      priceVnd: 350000,
+      durationMinutes: 45,
+      isActive: true,
     },
-  ],
-  availableDays: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'],
-  availableTimeSlots: [
-    '07:00 - 08:30',
-    '09:00 - 10:30',
-    '15:00 - 16:30',
-    '17:30 - 19:00',
   ],
   reviews: [
     {
       id: 'rev-1',
-      reviewerName: 'Trần Văn An',
+      reviewerId: 'user-001',
       rating: 5,
-      comment: 'Thầy Tú hướng dẫn rất kỹ kỹ thuật, sửa form cẩn thận và chế độ ăn rất thực tế.',
-      date: '15/09/2026',
+      comment: 'Thầy Tú hướng dẫn rất kỹ thuật, sửa form cẩn thận và chế độ ăn rất thực tế.',
+      createdAt: '2026-09-15T08:30:00Z',
     },
     {
       id: 'rev-2',
-      reviewerName: 'Phạm Hồng Nhung',
+      reviewerId: 'user-002',
       rating: 5,
       comment: 'Tập 2 tháng giảm được 4kg mỡ mà người vẫn khỏe khoắn, không bị mệt mỏi.',
-      date: '02/09/2026',
+      createdAt: '2026-09-02T14:15:00Z',
     },
   ],
 };

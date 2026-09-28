@@ -1,5 +1,22 @@
 # AGENTS.md
 
+## Production integration baseline — 2026-09-22
+Đọc docs/production/README.md, business-requirements.md, shared-business-rules.md và integration-plan.md trước task tích hợp.
+Chỉ dẫn mock-only dưới đây áp dụng prototype; giai đoạn production được dùng BE local/staging theo contract đã verified. Không tự gọi production hoặc dịch vụ trả phí.
+Wire DTO/UUID/permissions/financial calculations theo BE; prototype chỉ là content inventory. Được sửa model/route email thành UUID có adapter/migration, giữ đủ trường hiển thị.
+Không giữ nguyên mock schema khi nó sai nghiệp vụ. Không fallback mock khi API lỗi hoặc đưa password/demo reward vào production.
+Nguồn chuẩn BE PROD-2026-09-22-v1; snapshot rules không sửa độc lập. Công việc tiếp theo MOB-800..808; chưa DONE chỉ vì đã có UI.
+Commit tiếng Anh <=72 ký tự, không Co-authored-by; không tự commit thay đổi của người khác.
+
+## Mobile production + Stitch baseline — 2026-09-28
+
+- Đọc `docs/design/stitch-react-native-rules.md` trước mọi thay đổi trong `mobile/**` hoặc `design-reference/stitch-export/**`.
+- Stitch là nguồn chuẩn thị giác cho các màn đã map; backend business rules + OpenAPI là nguồn chuẩn hành vi và wire contract.
+- Contract có thật tại repo BE, nhưng từng operation chỉ được bật khi task/evidence tương ứng cho phép. OpenAPI không tự chứng minh release readiness.
+- Mock/localDb/RewardSimulation chỉ là lịch sử prototype hoặc development preview explicit; không fallback mock khi API lỗi.
+- Không xóa app cũ trước khi replacement tồn tại. Chuyển caller rồi mới xóa presentation code không còn dùng.
+- Theo yêu cầu user hiện hành: không tự chạy install/build/test/lint/typecheck/server/Expo/Docker/migration và không tự commit/push. Viết code/test source/docs và đưa lệnh để user chạy.
+
 > Huong dan cho moi AI (Cursor Agent, Claude, ChatGPT, ...) khi lam viec tren repo nay.
 
 Repo nay chua mot frontend web React + Vite dang chuyen giao thanh **ung dung Android** (React Native + Expo + TypeScript + Expo Router).
@@ -36,9 +53,9 @@ Xem [docs/mobile-redesign/decisions.md](docs/mobile-redesign/decisions.md) DEC-0
 - **Khong tu xoa** code frontend web hien tai. Code web duoc giu nguyen de tham chieu content.
 - **Khong copy token / CSS / component style tu web sang mobile**. Mobile tokens doc lap theo DEC-015.
 - **Khong tu y them tinh nang nghiep vu moi** (out of scope). Neu thay co y tuong, ghi vao tasks voi tag `out-of-scope` roi dung lai.
-- **Khong goi API production** hoac dich vu tra phi. Toan bo luong demo phai dung mock fixture va local state.
+- **Khong goi API production** hoac dich vu tra phi. Production implementation dùng backend local/staging đã cấu hình; fixture chỉ dùng trong preview `__DEV__`, không làm fallback khi API lỗi.
 - **Khong push / merge / amend / reset --hard**. Chi commit local.
-- **Khong commit secrets** (token that, email that, ...). Trong demo auth chi dung `user@fitmate.vn` va `pt@fitmate.vn` voi password `123456` (mock).
+- **Khong commit secrets** (token, password, khóa provider, dữ liệu thật). Demo credentials cũ chỉ là inventory prototype và phải bị loại khỏi production paths.
 - **Khong tu thay** validation/cach tinh dang co neu khong co ly do ro rang va duoc ghi trong `decisions.md`.
 - **Khong danh dau DONE** task khi thieu kiem chung. Xem `acceptance-checklist.md` cho tieu chi.
 - **Khong viet commit dua tren placeholder gia su that user**.
@@ -60,7 +77,7 @@ Xem [docs/mobile-redesign/decisions.md](docs/mobile-redesign/decisions.md) DEC-0
 
 ## Commit
 
-- Commit local sau moi phan hoan chinh (xem `decisions.md` + rule `delivery-workflow.mdc`).
+- Không tự commit. Chỉ chuẩn bị danh sách file + message tiếng Anh và commit khi user yêu cầu rõ ràng (xem `delivery-workflow.mdc`).
 - Message: `<type>(<scope>): <mo ta ngan> [MOB-XXX]`
 - Khong commit thay doi cua AI khac neu khong xac dinh duoc.
 - Khong commit file rong.

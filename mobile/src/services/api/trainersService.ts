@@ -1,15 +1,21 @@
 import { apiClient } from './client';
 import {
-  PaginatedResponse,
+  AvailabilitySlot,
+  GetAvailabilityParams,
+  ListTrainersResponse,
+  PTPublicDetail,
   TrainerFilterParams,
-  TrainerPublicDetail,
-  TrainerPublicSummary,
 } from './types';
 
 export const trainersService = {
+  /**
+   * List trainers with server-side filtering and cursor pagination
+   * Operation: listTrainers
+   * Endpoint: GET /trainers (base URL already includes /api/v1)
+   */
   async listTrainers(
     params: TrainerFilterParams = {}
-  ): Promise<PaginatedResponse<TrainerPublicSummary>> {
+  ): Promise<ListTrainersResponse> {
     const query = new URLSearchParams();
     if (params.specialty) query.append('specialty', params.specialty);
     if (params.minPriceVnd !== undefined)
@@ -22,19 +28,35 @@ export const trainersService = {
     if (params.limit) query.append('limit', params.limit.toString());
 
     const queryString = query.toString();
-    const endpoint = `/api/v1/trainers${queryString ? `?${queryString}` : ''}`;
-    return apiClient<PaginatedResponse<TrainerPublicSummary>>(endpoint);
+    const endpoint = '/trainers' + (queryString ? '?' + queryString : '');
+    return apiClient<ListTrainersResponse>(endpoint);
   },
 
-  async getTrainer(id: string): Promise<TrainerPublicDetail> {
-    return apiClient<TrainerPublicDetail>(`/api/v1/trainers/${encodeURIComponent(id)}`);
+  /**
+   * Get public trainer detail by UUID (verified only)
+   * Operation: getTrainer
+   * Endpoint: GET /trainers/{id}
+   */
+  async getTrainer(id: string): Promise<PTPublicDetail> {
+    return apiClient<PTPublicDetail>('/trainers/' + encodeURIComponent(id));
   },
 
+  /**
+   * Get trainer availability slots
+   * Operation: getTrainerAvailability
+   * Endpoint: GET /trainers/{id}/availability?from=...&to=...
+   * Note: 'from' and 'to' are required in OpenAPI contract
+   */
   async getTrainerAvailability(
-    id: string
-  ): Promise<{ availableDays: string[]; timeSlots: string[] }> {
-    return apiClient<{ availableDays: string[]; timeSlots: string[] }>(
-      `/api/v1/trainers/${encodeURIComponent(id)}/availability`
+    id: string,
+    params: GetAvailabilityParams
+  ): Promise<AvailabilitySlot[]> {
+    const query = new URLSearchParams({
+      from: params.from,
+      to: params.to,
+    });
+    return apiClient<AvailabilitySlot[]>(
+      '/trainers/' + encodeURIComponent(id) + '/availability?' + query.toString()
     );
   },
 };

@@ -657,3 +657,7 @@
 - Trang thai DONE: MOB-416 commit ca3e819.
 
 ---
+
+
+## Production supersession 2026-09-22
+User requested shared production requirements. Read ../production/README.md. Mock-only rules apply to prototypes; verified local/staging API adapters replace mock models for production integration. Preserve visual design and all required content.

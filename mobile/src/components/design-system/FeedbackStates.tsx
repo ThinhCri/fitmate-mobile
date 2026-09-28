@@ -12,7 +12,7 @@ import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { PrimaryButton, SecondaryButton } from './Buttons';
 
 export interface FeedbackStateProps {
-  title?: string;
+  title: string;
   description?: string;
   actionLabel?: string;
   onAction?: () => void;

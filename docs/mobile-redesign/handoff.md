@@ -313,3 +313,30 @@ px expo start tren emulator that + chup screenshot de xem pill + gradient + glas
 3. Logo Fitmate PNG asset neu co ? swap text-style sang Image.
 4. Test safe area: gesture navigation (Pixel), 3-button nav (Galaxy), font scaling, man hinh nho (360x640).
 5. Neu BlurView tren Android that hien khong on (lag, nhap nhay) ? fallback surface dac van giu dep.
+
+
+## Production handoff 2026-09-22
+Read ../production/README.md and ../production/integration-plan.md. Baseline PROD-2026-09-22-v1. MOB-800..808 are TODO. This session changes documentation only; existing prototype history and user code are preserved.
+
+
+## Production execution plans completed
+MOB-800..808 now each have a plan under ../production/plans/README.md. Integration task links are present. All cross-repo plan links and IDs passed documentation checks. Implementation remains TODO; no runtime code changed, no commit or deployment.
+
+
+## 2026-09-26 — BE payment contract addendum
+Đã bổ sung docs/production/payment-manual-settlement.md và contract-baseline.json cho payOS + chi PT thủ công. Chưa sửa UI hoặc chạy build/test; giữ nguyên thay đổi user đang dở. Snapshot có addendum BE, đọc addendum mới trước phần VNPay cũ.
+
+## 2026-09-28 — Stitch mobile design handoff
+
+User requested a bright, clean, professional mobile design covering Member and PT workflows. New documents: [Stitch package](../stitch-mobile/README.md), DESIGN.md, SCREENS.md and STITCH-PROMPT.md in docs/stitch-mobile/. Start with five representative screens, approve the visual direction, then continue the listed batches.
+
+This is a design target, not runtime verification. Production privacy, server-confirmed payOS payments, manual PT settlement and explicit AI confirmation override old prototype behaviors. Gemini is a possible adapter, not an already integrated capability. No fake streak, payment, rewards or certificate approval actions.
+
+Documentation only: no application/backend code changes, build, tests, typecheck, install, Docker, migrations or commits. Existing theme code remains unchanged. HTML/Tailwind exports require conversion to React Native/Expo; native-ready output is not assumed. Previous implementation entries above do not certify this new design.
+## 2026-09-28 - Local tooling cleanup after incomplete sample conversion
+
+- Added `mobile/eslint.config.js` using the Expo SDK 57 flat configuration so `npm run lint` from `mobile/` does not load the web ESLint config at the repository root.
+- Removed unresolved icon, splash, and adaptive-icon references from `mobile/app.json`; approved production brand assets are still required before release configuration is restored.
+- Removed the empty `sample-preview` route and all zero-byte presentation/design-system/trainer/fixture stubs created by the incomplete conversion attempt. Existing prototype screens remain in place.
+- The representative Stitch batch remains **NOT IMPLEMENTED / NOT VERIFIED**. Next implementation must complete Member home (`b01`), trainer list (`e01`), trainer detail (`e02`), populate the mapping, and then create a guarded development preview.
+- Static cleanup only. No install, build, lint, typecheck, test, Expo, emulator, backend, commit, or push command was run by the agent.

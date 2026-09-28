@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
-import { colors, spacing } from '@/theme/designTokens';
-import { TrainerPublicSummary } from '@/services/api/types';
+import { View, StyleSheet, FlatList, ActivityIndicator, Text } from 'react-native';
+import { colors, spacing, typography } from '@/theme/designTokens';
+import { TrainerSummaryViewModel } from '@/services/api/types';
 import { SearchInput } from '@/components/design-system/Inputs';
 import { FilterChipGroup } from '@/components/design-system/BadgesAndChips';
 import { TrainerCard } from '@/components/design-system/TrainerCard';
@@ -13,7 +13,7 @@ import {
 } from '@/components/design-system/FeedbackStates';
 
 export interface TrainerListPresentationProps {
-  trainers: TrainerPublicSummary[];
+  trainers: TrainerSummaryViewModel[];
   searchQuery: string;
   onSearchChange: (text: string) => void;
   onSearchClear: () => void;
@@ -22,11 +22,13 @@ export interface TrainerListPresentationProps {
   specialtyOptions: Array<{ id: string; label: string }>;
   onTrainerPress: (trainerId: string) => void;
   loading?: boolean;
+  loadingMore?: boolean;
   isError?: boolean;
   isOffline?: boolean;
   onRetry?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onEndReached?: () => void;
 }
 
 export const TrainerListPresentation: React.FC<TrainerListPresentationProps> = ({
@@ -39,11 +41,13 @@ export const TrainerListPresentation: React.FC<TrainerListPresentationProps> = (
   specialtyOptions,
   onTrainerPress,
   loading = false,
+  loadingMore = false,
   isError = false,
   isOffline = false,
   onRetry,
   onRefresh,
   refreshing = false,
+  onEndReached,
 }) => {
   return (
     <View style={styles.container}>
@@ -52,7 +56,7 @@ export const TrainerListPresentation: React.FC<TrainerListPresentationProps> = (
           value={searchQuery}
           onChangeText={onSearchChange}
           onClear={onSearchClear}
-          placeholder="Tìm tên hoặc chuyên môn PT..."
+          placeholder="Lọc PT trong danh sách tải về..."
         />
 
         <View style={styles.chipRow}>
@@ -77,7 +81,7 @@ export const TrainerListPresentation: React.FC<TrainerListPresentationProps> = (
       ) : trainers.length === 0 ? (
         <EmptyState
           title="Không tìm thấy huấn luyện viên"
-          description="Hãy thử đổi từ khóa tìm kiếm hoặc chọn chuyên môn khác."
+          description="Hãy thử chọn chuyên môn khác hoặc làm mới lại trang."
           actionLabel="Xóa bộ lọc"
           onAction={onSearchClear}
         />
@@ -103,6 +107,18 @@ export const TrainerListPresentation: React.FC<TrainerListPresentationProps> = (
           showsVerticalScrollIndicator={false}
           onRefresh={onRefresh}
           refreshing={refreshing}
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={styles.footerLoading}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={[typography.caption, styles.footerLoadingText]}>
+                  Đang tải thêm PT...
+                </Text>
+              </View>
+            ) : null
+          }
         />
       )}
     </View>
@@ -129,5 +145,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: 96,
+  },
+  footerLoading: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+  },
+  footerLoadingText: {
+    color: colors.textSecondary,
+    marginLeft: spacing.sm,
   },
 });

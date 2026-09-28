@@ -1,0 +1,16 @@
+---
+description: English-only commit messages without AI attribution
+alwaysApply: true
+---
+
+# Commit policy
+
+- Follow the repository's `AGENTS.md` commit and safety rules.
+- Write all commit subjects and bodies in English.
+- Use Conventional Commits: `<type>(<scope>): <imperative summary> [MOB-XXX]` (mobile) or `[BE-NNN]` / `[FP-XXX]` when wiring.
+- **Subject line ≤ 72 chars, body ≤ 2 short lines (only the essentials).** A long enumerated list of files / schemas / test counts belongs in `docs/<area>/handoff.md` instead of the commit message. If the subject alone fully conveys the change, omit the body.
+- Read the staged diff and describe the actual change; avoid generic messages such as `docs: handoff`.
+- Do not add `Co-authored-by` trailers, AI attribution, or tool-generated signatures.
+- Verify the final message with `git log -1 --format=%B` after committing.
+- Stage only task-related changes. Never commit secrets.
+- Do not push or rewrite history without explicit authorization for that operation.

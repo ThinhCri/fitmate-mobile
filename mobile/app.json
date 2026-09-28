@@ -4,25 +4,15 @@
     "slug": "fitmate-mobile",
     "version": "0.1.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "scheme": "fitmate",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FAFAF7"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "vn.fitmate.app"
     },
     "android": {
       "package": "vn.fitmate.app",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FAFAF7"
-      },
       "edgeToEdgeEnabled": true
     },
     "web": {

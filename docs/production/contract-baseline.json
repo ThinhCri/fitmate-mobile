@@ -1,0 +1,17 @@
+{
+  "baseline": "PROD-2026-09-22-v1",
+  "capturedAt": "2026-09-28",
+  "backendRepository": "FitmateAI_BE",
+  "backendObservedHead": "12b9bcab53d24aceb70e7934a406c51a0658f21d",
+  "openapiSource": "FitmateAI_BE/docs/backend-release/openapi/fitmate-v1.yaml",
+  "openapiSha256": "E294D297B5A010DC5CAEF690B99EBA33EA402B55053BE3BE2A370129C7BB8BF9",
+  "domainRulesSha256": "C2C770858138FA7BB2CBDFAAD8A556CEFF1DD2DB0C8FA5E24A78A649FCA0DC71",
+  "hashEncoding": "UTF-8 text with CRLF normalized to LF",
+  "status": "CORE_VERIFIED_PAYMENT_UAT_RELEASE_GATES_OPEN",
+  "refreshWhen": "The backend OpenAPI, domain rules, or relevant BE task status changes; regenerate wire types and record the exact hash before integration.",
+  "contractMeaning": "OpenAPI is the wire source of truth, not proof that every operation is released. Check backend tasks and evidence per feature.",
+  "verifiedCore": "BE-801..807, BE-811..816, and BE-819 are recorded VERIFIED in backend tasks.md.",
+  "openGates": "BE-808..810 and BE-400 payment/payOS re-verification; BE-817 capability readiness; BE-826 three-repo UAT; BE-827 release approval.",
+  "paymentContractUpdate": "payOS is the intended new checkout provider and VNPay remains historical; runtime/live enablement is still gated.",
+  "backendWorkingTreeDirty": true
+}

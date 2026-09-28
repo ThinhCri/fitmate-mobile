@@ -1,5 +1,8 @@
 # Tasks — Trang thai task MOB-XXX
 
+## Production integration backlog
+MOB-800..808 tại [integration plan](../production/integration-plan.md). DONE prototype dưới đây không là production integration.
+
 > Moi task co ID on dinh. Status: TODO / IN_PROGRESS / BLOCKED / DONE. Moi task phai lien ket parity ID (FP-XXX).
 
 ---
