@@ -81,6 +81,8 @@ export async function register(input: {
     throw new AuthError('Email đã được đăng ký.');
   }
   const newUser: User = {
+    id: `mock-user-${Date.now()}`,
+    role: input.profile.isPt ? 'pt' : 'member',
     email: input.email,
     password: input.password,
     profile: { ...input.profile, isSelf: true },

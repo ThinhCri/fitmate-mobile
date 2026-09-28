@@ -30,6 +30,7 @@ export interface UserProfile {
   experience_years?: number | null;
   price_per_session_vnd?: number | null;
   certificate_status?: string | null;
+  timezone?: string | null;
 }
 
 export interface RegisterRequest {
@@ -168,6 +169,26 @@ export interface PtCertificate {
   image_url?: string | null;
   reject_reason?: string | null;
   verified_at?: string | null;
+}
+
+export interface CertificatePage {
+  items: PtCertificate[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface UploadResponse {
+  storageKey: string;
+  uri: string;
+  signedUrl: string;
+}
+
+export interface UploadFilePayload {
+  uri: string;
+  name: string;
+  type: string;
+  size?: number;
 }
 
 export interface UserProfileUpdate {

@@ -5,7 +5,11 @@ export function mapToDomainUser(
   summary: UserSummary,
   profile?: UserProfile | null
 ): User {
-  const isPt = summary.role === 'pt';
+  const role = (summary.role ? summary.role.toLowerCase() : 'member') as
+    | 'member'
+    | 'pt'
+    | 'admin';
+  const isPt = role === 'pt';
 
   let gender: Gender = 'Khác';
   if (profile?.gender === 'male') {
@@ -27,6 +31,8 @@ export function mapToDomainUser(
   }
 
   return {
+    id: summary.id,
+    role,
     email: summary.email,
     password: '',
     profile: {
@@ -45,6 +51,7 @@ export function mapToDomainUser(
       trainingDays: profile?.training_days ?? [],
       trainingTime: '',
       trainingTimes: [],
+      timezone: profile?.timezone ?? 'Asia/Ho_Chi_Minh',
       spec: profile?.specialty
         ? profile.specialty.split(',').map((s) => s.trim())
         : [],

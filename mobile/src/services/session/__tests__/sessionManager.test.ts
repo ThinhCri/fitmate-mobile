@@ -9,6 +9,7 @@
  * 5. Session clear aborts active in-flight requests and wipes storage.
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { sessionManager } from '../sessionManager';
 
 const secureStoreMock = new Map<string, string>();
 
@@ -21,8 +22,6 @@ vi.mock('expo-secure-store', () => ({
     secureStoreMock.delete(key);
   }),
 }));
-
-import { sessionManager } from '../sessionManager';
 
 describe('SessionManager (MOB-800)', () => {
   const originalFetch = global.fetch;

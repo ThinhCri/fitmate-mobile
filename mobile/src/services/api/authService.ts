@@ -81,9 +81,14 @@ export const authService = {
    * Operation: logout
    * Endpoint: POST /auth/logout
    */
-  async logout(): Promise<void> {
+  async logout(tokenOverride?: string | null): Promise<void> {
+    const headers: Record<string, string> = {};
+    if (tokenOverride) {
+      headers.Authorization = 'Bearer ' + tokenOverride;
+    }
     return apiClient<void>('/auth/logout', {
       method: 'POST',
+      headers,
     });
   },
 

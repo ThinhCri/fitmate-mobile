@@ -30,6 +30,28 @@ class SessionManager {
   private abortController: AbortController = new AbortController();
   private sessionExpiredListeners: Set<() => void> = new Set();
   private generation: number = 0;
+  private storageQueue: Promise<void> = Promise.resolve();
+
+  /**
+   * Enqueue a storage operation guarded by generation epoch.
+   * If generation advances before execution, the operation is discarded.
+   */
+  private enqueueStorageOp<T>(
+    opGen: number,
+    action: () => Promise<T>
+  ): Promise<T | void> {
+    const next = this.storageQueue.then(async () => {
+      if (this.generation !== opGen) {
+        return;
+      }
+      return await action();
+    });
+    this.storageQueue = next.then(
+      () => {},
+      () => {}
+    );
+    return next;
+  }
 
   /**
    * Get current session generation epoch
@@ -97,16 +119,18 @@ class SessionManager {
     this.abortController = new AbortController();
 
     // 2. Advance generation to invalidate stale in-flight responses
-    this.generation++;
+    const sessionGen = ++this.generation;
     this.refreshPromise = null;
 
     // 3. Commit new tokens and session cache
     this.inMemoryAccessToken = accessToken;
-    await setRefreshToken(refreshToken);
-    await setCachedSessionUser(user);
-    if (user.email) {
-      await setAuthEmail(user.email);
-    }
+    await this.enqueueStorageOp(sessionGen, async () => {
+      await setRefreshToken(refreshToken);
+      await setCachedSessionUser(user);
+      if (user.email) {
+        await setAuthEmail(user.email);
+      }
+    });
   }
 
   /**
@@ -156,12 +180,14 @@ class SessionManager {
 
         this.inMemoryAccessToken = data.access_token;
 
-        if (data.refresh_token) {
-          await setRefreshToken(data.refresh_token);
-        }
-        if (data.user) {
-          await setCachedSessionUser(data.user);
-        }
+        await this.enqueueStorageOp(requestGeneration, async () => {
+          if (data.refresh_token) {
+            await setRefreshToken(data.refresh_token);
+          }
+          if (data.user) {
+            await setCachedSessionUser(data.user);
+          }
+        });
 
         return data.access_token;
       } catch (err) {
@@ -187,7 +213,7 @@ class SessionManager {
    */
   async clearSession(): Promise<void> {
     // 1. Advance generation to prevent in-flight responses from restoring state
-    this.generation++;
+    const clearGen = ++this.generation;
 
     // 2. Abort any pending network requests from the previous account
     try {
@@ -201,9 +227,11 @@ class SessionManager {
     this.inMemoryAccessToken = null;
     this.refreshPromise = null;
 
-    // 4. Clear stored refresh token and user
-    await deleteRefreshToken();
-    await clearAuth();
+    // 4. Clear stored refresh token and user via generation-guarded queue
+    await this.enqueueStorageOp(clearGen, async () => {
+      await deleteRefreshToken();
+      await clearAuth();
+    });
   }
 }
 

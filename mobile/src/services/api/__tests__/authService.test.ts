@@ -8,6 +8,11 @@
  * 4. Automatic 401 token refresh and single retry in apiClient.
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { authService, AdminMfaNotSupportedError } from '../authService';
+import { apiClient, ApiError, isAbortError } from '../client';
+import { sessionManager } from '@/services/session/sessionManager';
+import { mapToDomainUser } from '@/services/session/userMapper';
+import type { UserSummary } from '../types';
 
 const secureStoreMock = new Map<string, string>();
 
@@ -20,12 +25,6 @@ vi.mock('expo-secure-store', () => ({
     secureStoreMock.delete(key);
   }),
 }));
-
-import { authService, AdminMfaNotSupportedError } from '../authService';
-import { apiClient, ApiError, isAbortError } from '../client';
-import { sessionManager } from '@/services/session/sessionManager';
-import { mapToDomainUser } from '@/services/session/userMapper';
-import type { UserSummary } from '../types';
 
 describe('AuthService & ApiClient (MOB-800)', () => {
   const originalFetch = global.fetch;
@@ -93,6 +92,8 @@ describe('AuthService & ApiClient (MOB-800)', () => {
 
       const domainPt = mapToDomainUser(ptSummary);
 
+      expect(domainPt.id).toBe('pt-uuid-001');
+      expect(domainPt.role).toBe('pt');
       expect(domainPt.profile.isPt).toBe(true);
       expect(domainPt.profile.isVerified).toBe(false);
       expect(domainPt.profile.certificateStatus).toBe('pending');
@@ -110,6 +111,8 @@ describe('AuthService & ApiClient (MOB-800)', () => {
 
       const domainMember = mapToDomainUser(memberSummary);
 
+      expect(domainMember.id).toBe('member-uuid-002');
+      expect(domainMember.role).toBe('member');
       expect(domainMember.profile.isPt).toBe(false);
       expect(domainMember.profile.isVerified).toBe(false);
       expect(domainMember.profile.certificateStatus).toBe('unverified');
@@ -284,6 +287,61 @@ describe('AuthService & ApiClient (MOB-800)', () => {
 
       // Request A must reject with AbortError
       await expect(requestA).rejects.toSatisfy((err: unknown) => isAbortError(err));
+    });
+  });
+
+  describe('7. Session Revocation & Error Classification', () => {
+    it('sends captured tokenOverride in logout request headers even if memory token was cleared', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+      } as unknown as Response);
+
+      await authService.logout('captured-token-snapshot');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/logout'),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer captured-token-snapshot',
+          }),
+        })
+      );
+    });
+
+    it('classifies network connection failure as status 0 ApiError', async () => {
+      global.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+
+      let caughtErr: unknown;
+      try {
+        await apiClient('/users/me');
+      } catch (err) {
+        caughtErr = err;
+      }
+
+      expect(caughtErr).toBeInstanceOf(ApiError);
+      expect((caughtErr as ApiError).status).toBe(0);
+      expect((caughtErr as ApiError).message).toContain('Không thể kết nối đến máy chủ');
+    });
+
+    it('classifies server 500 error with status 500 and does not treat as network failure', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ detail: 'Internal Server Error' }),
+      } as unknown as Response);
+
+      let caughtErr: unknown;
+      try {
+        await apiClient('/users/me');
+      } catch (err) {
+        caughtErr = err;
+      }
+
+      expect(caughtErr).toBeInstanceOf(ApiError);
+      expect((caughtErr as ApiError).status).toBe(500);
+      expect((caughtErr as ApiError).message).toBe('Internal Server Error');
     });
   });
 });

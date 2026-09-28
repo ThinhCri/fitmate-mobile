@@ -119,8 +119,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
             }
             return;
           }
-          // Only allow offline view of cached summary if network is unreachable (status 0)
-          setUser(mapToDomainUser(cachedSummary));
+          if (getMeErr instanceof ApiError && getMeErr.status === 0) {
+            // Genuine network unreachable: allow offline view of cached summary
+            setUser(mapToDomainUser(cachedSummary));
+            return;
+          }
+          // Server 5xx, schema error, or unknown error: do NOT treat cache as valid session
+          await sessionManager.clearSession();
+          setUser(null);
+          setError('Máy chủ gặp sự cố hoặc phiên làm việc không hợp lệ.');
         }
       }
     } catch {
@@ -263,14 +270,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const logout = useCallback(async () => {
+    // 1. Capture snapshot needed for best-effort server revoke
+    const tokenSnapshot = sessionManager.getAccessToken();
+
+    // 2. Immediately switch UI to signed-out
+    setUser(null);
+
+    // 3. Immediately abort account-scoped requests and wipe session
+    const clearPromise = sessionManager.clearSession();
+
+    // 4. Best-effort server revoke in background (never blocks UI or delays logout)
     try {
-      await authService.logout();
+      authService.logout(tokenSnapshot).catch(() => {});
     } catch {
-      // Continue cleanup regardless of network status
-    } finally {
-      await sessionManager.clearSession();
-      setUser(null);
+      // Ignore
     }
+
+    await clearPromise;
   }, []);
 
   const signOut = logout;

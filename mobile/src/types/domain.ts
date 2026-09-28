@@ -75,12 +75,15 @@ export interface Profile {
   isVerified: boolean;
   certificateStatus: CertificateStatus;
   certificates: Certificate[];
+  timezone?: string;
   // Meta
   isPt: boolean;
   isSelf: boolean;
 }
 
 export interface User {
+  id: string; // Canonical user UUID
+  role: 'member' | 'pt' | 'admin'; // Normalized user role
   email: string;
   password: string; // mock-only; never store real password
   profile: Profile;

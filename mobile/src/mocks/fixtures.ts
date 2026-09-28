@@ -72,6 +72,8 @@ function buildBasePt(name: string, bio: string, spec: string[], exp: number, pri
 
 export const DEFAULT_USERS: Record<string, User> = {
   'user@fitmate.vn': {
+    id: 'mock-user-1',
+    role: 'member',
     email: 'user@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: {
@@ -147,6 +149,8 @@ export const DEFAULT_USERS: Record<string, User> = {
   },
 
   'pt@fitmate.vn': {
+    id: 'mock-pt-0',
+    role: 'pt',
     email: 'pt@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: {
@@ -212,6 +216,8 @@ export const DEFAULT_USERS: Record<string, User> = {
 
   // Demo: 2nd PT (chua verify) de test mau verified vs unverified.
   'ptlong@fitmate.vn': {
+    id: 'mock-pt-long',
+    role: 'pt',
     email: 'ptlong@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: {
@@ -268,6 +274,8 @@ export const DEFAULT_USERS: Record<string, User> = {
 
   // Demo: HV thu 3 (Lan Anh) — gui friend request cho user.
   'lananh@fitmate.vn': {
+    id: 'mock-user-lananh',
+    role: 'member',
     email: 'lananh@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: {
@@ -314,6 +322,8 @@ export const DEFAULT_USERS: Record<string, User> = {
 
   // Demo: HV thu 4 (Minh) — da ket ban voi user.
   'minh@fitmate.vn': {
+    id: 'mock-user-minh',
+    role: 'member',
     email: 'minh@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: {
@@ -493,6 +503,8 @@ export const DEFAULT_AI_CHATS: AiChat[] = DEFAULT_USERS['user@fitmate.vn'].aiCha
 
 const additionalUsers: Record<string, User> = {
   'phuong@fitmate.vn': {
+    id: 'mock-user-phuong',
+    role: 'member',
     email: 'phuong@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: buildBaseMember('Phương', 'Runner 3 năm, đang tập marathon', 'Hoàn thành sub-4 marathon', 1, 54),
@@ -513,6 +525,8 @@ const additionalUsers: Record<string, User> = {
     workoutHistory: [],
   },
   'khanh@fitmate.vn': {
+    id: 'mock-user-khanh',
+    role: 'member',
     email: 'khanh@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: buildBaseMember('Khánh', 'Tập gym 1 năm, muốn tăng sức mạnh', 'Đẩy tạ 100kg', 2, 80),
@@ -533,6 +547,8 @@ const additionalUsers: Record<string, User> = {
     workoutHistory: [],
   },
   'thao@fitmate.vn': {
+    id: 'mock-user-thao',
+    role: 'member',
     email: 'thao@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: buildBaseMember('Thảo', 'Yoga & Pilates, 6 tháng kinh nghiệm', 'Yoga 30 ngày liên tục', 3, 52),
@@ -553,6 +569,8 @@ const additionalUsers: Record<string, User> = {
     workoutHistory: [],
   },
   'duc@fitmate.vn': {
+    id: 'mock-user-duc',
+    role: 'member',
     email: 'duc@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: buildBaseMember('Đức', 'Crossfit 2 năm, body 15% fat', 'Duy trì body fat <15%', 4, 72),
@@ -574,6 +592,8 @@ const additionalUsers: Record<string, User> = {
   },
   // Mentor = member already accumulated enough experience to mentor others.
   'thuhang@fitmate.vn': {
+    id: 'mock-user-thuhang',
+    role: 'member',
     email: 'thuhang@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: buildBaseMember('Thu Hằng', 'Mentor giảm cân, từng giảm 20kg', 'Đồng hành cùng 100 HV giảm cân', 5, 58),
@@ -594,6 +614,8 @@ const additionalUsers: Record<string, User> = {
     workoutHistory: [],
   },
   'van@fitmate.vn': {
+    id: 'mock-user-van',
+    role: 'member',
     email: 'van@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: buildBaseMember('Văn', 'Mentor Calisthenics, 4 năm kinh nghiệm', 'Cộng đồng Street Workout HN', 6, 68),
@@ -614,6 +636,8 @@ const additionalUsers: Record<string, User> = {
     workoutHistory: [],
   },
   'huyen@fitmate.vn': {
+    id: 'mock-user-huyen',
+    role: 'member',
     email: 'huyen@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: buildBaseMember('Huyền', 'Mentor chạy bộ, sub-4 marathon 2 lần', 'Dẫn dắt CLB chạy bộ sáng CN', 7, 55),
@@ -634,6 +658,8 @@ const additionalUsers: Record<string, User> = {
     workoutHistory: [],
   },
   'son@fitmate.vn': {
+    id: 'mock-user-son',
+    role: 'member',
     email: 'son@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: buildBaseMember('Sơn', 'Mentor Strength, từng đạt 200kg squat', 'Đào tạo HV thi Powerlifting', 8, 88),
@@ -658,6 +684,8 @@ const additionalUsers: Record<string, User> = {
 // Additional 2 PT (unverified) de co du 4 PT tong cong (1 verified + 1 pending + 2 unverified).
 const additionalPts: Record<string, User> = {
   'ptkhoa@fitmate.vn': {
+    id: 'mock-pt-khoa',
+    role: 'pt',
     email: 'ptkhoa@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: buildBasePt('Nguyễn Minh Khoa', 'HLV Boxing & HIIT 2 năm', ['Boxing', 'HIIT', 'Giảm cân'], 2, 280000, 'unverified', false),
@@ -678,6 +706,8 @@ const additionalPts: Record<string, User> = {
     workoutHistory: [],
   },
   'pttan@fitmate.vn': {
+    id: 'mock-pt-tan',
+    role: 'pt',
     email: 'pttan@fitmate.vn',
     password: DEMO_PASSWORD,
     profile: buildBasePt('Phạm Tấn', 'HLV Powerlifting 6 năm', ['Powerlifting', 'Strength', 'Hypertrophy'], 6, 400000, 'unverified', false),
