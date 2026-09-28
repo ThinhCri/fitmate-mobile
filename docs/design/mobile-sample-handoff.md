@@ -91,17 +91,18 @@ Notice: Static review remediations, type checks, lint checks, and unit tests pas
    - `mobile/src/services/api/types.ts`: Wire DTOs `Service`, `ServiceInput`, `ServiceUpdate`, `AvailabilitySlotInput`, `SetAvailabilityRequest`, `PtCertificate`, `UserProfileUpdate`.
    - `mobile/src/services/api/ptService.ts`: Full operations:
      - `getMyServices` (`GET /me/services`), `createService` (`POST /me/services`), `updateService` (`PATCH /me/services/{id}`), `deleteService` (`DELETE /me/services/{id}`). Handles 409 Conflict with friendly copy ("Không thể xóa/sửa dịch vụ vì đang có học viên đặt lịch chờ hoàn thành").
-     - `setMyAvailability` (`PUT /me/availability`): Replaces availability array. Handles 204 No Content and 400 validation overlap error.
-     - `getMyAvailability` (`GET /trainers/{id}/availability?from=&to=`): Fetches slot schedule for current PT.
-     - `getMyCertificates` (`GET /me/certificates`), `submitCertificate` (`POST /me/certificates` multipart/form-data): Binary file upload with 413 Payload Too Large protection (15MB limit).
+     - `setMyAvailability` (`PUT /me/availability?from=&to=`): Scoped atomic replacement of Open slots in range [from, to], preserving Held and Booked slots. Handles 204 No Content, 400 validation error, and 409 conflict error.
+     - `getMyAvailability` (`GET /me/availability?from=&to=`): Authoritative range query for current PT.
+     - `getTrainerAvailability` (`GET /trainers/{id}/availability?from=&to=`): Public booking availability view.
+     - `getMyCertificates` (`GET /me/certificates`), `submitCertificate` (`POST /uploads` category='certificates' then `POST /me/certificates`): Binary file upload with 413 Payload Too Large protection (5MB limit, JPEG/PNG/WebP only, no PDF).
      - `updateMyProfile` (`PATCH /users/me`): Updates profile fields on server.
 
 2. **Role Guarding**:
    - `mobile/src/components/auth/PtRoleGuard.tsx`: Role guard wrapping all PT routes. Blocks non-PT members with clear explanation and navigates back to dashboard.
 
 3. **Stitch PT Screens**:
-   - `mobile/src/features/pt/ProfileServicesPresentation.tsx` & `mobile/app/pt/profile-services.tsx` (p02): Profile header, bento stat cards, bio editor, specialties pills, active services counter, interactive active/pause switch, price/duration view, snapshot safety note, add/edit/delete service modals.
-   - `mobile/src/features/pt/SchedulePresentation.tsx` & `mobile/app/pt/schedule.tsx` (p03): Week switcher, GMT+7 timezone badge, day-of-week strip, daily metric banner, day-off exception toggle with warning, booked slots locked for protection, open slots management, add interval modal with validation, replace-all save CTA with warning confirmation.
+   - `mobile/src/features/pt/ProfileServicesPresentation.tsx` & `mobile/app/pt/profile-services.tsx` (p02): Profile header, bento stat cards, honest unconfigured specialty and bio states ("Chưa cập nhật chuyên môn", "Chưa cập nhật tiểu sử"), bio editing capability-gated, active services counter, interactive active/pause switch, price/duration view, snapshot safety note, add/edit/delete service modals.
+   - `mobile/src/features/pt/SchedulePresentation.tsx` & `mobile/app/pt/schedule.tsx` (p03): Week switcher, profile timezone badge (default Asia/Ho_Chi_Minh), day-of-week strip, daily metric banner, day-off exception toggle with warning, booked and held slots locked for protection, open slots management, add interval modal with overlap check, scoped save for current week preserving held/booked slots, recurrence capability-gated.
    - `mobile/src/features/pt/CertificatesPresentation.tsx` & `mobile/app/pt/certificates.tsx` (p04): Fitmate audit standards banner, saved certificate cards with verified server statuses (`approved`, `pending`, `rejected` with `reject_reason`), secure document preview watermark, 2-step certificate upload (`POST /uploads` category='certificates' then `POST /me/certificates`), strictly enforcing image-only (JPEG/PNG/WebP, max 5MB, PDF rejected).
 
 ## 5. Verification Evidence
@@ -116,8 +117,9 @@ Notice: Static review remediations, type checks, lint checks, and unit tests pas
 
 3. **Unit Tests**:
    - Command: `npm run test` (`vitest run`)
-   - Result: 5 test files passed, 81/81 unit tests passed (100%).
-     - `src/services/api/__tests__/ptService.test.ts`: 12/12 passed (2-step cert upload, PDF/5MB rejection, include_inactive=true, reactivation, availability UTC bounds, 409 conflict, 204 delete).
+   - Result: 6 test files passed, 88/88 unit tests passed (100%).
+     - `src/services/api/__tests__/ptService.test.ts`: 14/14 passed (2-step cert upload, PDF/5MB rejection, include_inactive=true, reactivation, scoped availability range, 409 conflict, 204 delete).
+     - `src/services/__tests__/imagePicker.test.ts`: 5/5 passed (permissions granted/denied, fail closed, library & camera).
      - `src/services/session/__tests__/sessionManager.test.ts`: 8/8 passed (session epoch, single-flight refresh, memory-only token, stale response rejection).
      - `src/services/api/__tests__/authService.test.ts`: 15/15 passed (password policy, PT unverified guarantee, mock exclusion, 401 refresh/retry, Admin MFA HTTP 202 rejection, canonical identity preservation).
      - `src/features/workout/__tests__/sessionEngine.test.ts`: 13/13 passed.

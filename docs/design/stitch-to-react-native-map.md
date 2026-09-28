@@ -75,8 +75,8 @@ This file provides the canonical mapping from Stitch design exports to React Nat
 | `i03_b_ng_linh_ki_n_v_quy_chu_n_thi_t_k_default` | Component Library Guide | Developer | `mobile/app/sample-preview.tsx` | Development Component Showcase | `REFERENCE_ONLY` |
 | `p01_t_ng_quan_pt_default` | Trainer Dashboard | PT | `/(pt-tabs)/overview` | `CONTRACT_GAP` (Missing PT aggregate dashboard endpoint in OpenAPI) | `CONTRACT_GAP` |
 | `p02_h_s_chuy_n_m_n_v_d_ch_v_default` | Trainer Professional Profile & Services | PT | `/pt/profile-services` | `GET /me/services`, `POST /me/services`, `PATCH /me/services/{id}`, `DELETE /me/services/{id}` | `CONTRACT_READY` |
-| `p03_l_ch_r_nh_default` | Trainer Schedule Management | PT | `/pt/schedule` | `PUT /me/availability` | `CONTRACT_READY` |
-| `p04_ch_ng_ch_c_a_t_i_default` | Trainer Certifications | PT | `/pt/certificates` | `GET /me/certificates`, `POST /me/certificates` | `CONTRACT_READY` |
+| `p03_l_ch_r_nh_default` | Trainer Schedule Management | PT | `/pt/schedule` | `GET /me/availability?from=&to=`, `PUT /me/availability?from=&to=` | `CONTRACT_READY` |
+| `p04_ch_ng_ch_c_a_t_i_default` | Trainer Certifications | PT | `/pt/certificates` | `GET /me/certificates`, `POST /uploads`, `POST /me/certificates` | `CONTRACT_READY` |
 | `p05_qu_n_l_bu_i_v_i_kh_ch_allowed_actions` | Manage Client Sessions | PT | `/pt/client-sessions` | `GET /me/bookings` | `CONTRACT_READY` |
 | `p06_doanh_thu_hu_n_luy_n_vi_n_default` | Trainer Revenue & Earnings | PT | `/pt/earnings` | `GET /me/revenue`, `GET /me/revenue/{bookingId}` | `CONTRACT_READY` |
 | `p07_chi_ti_t_kho_n_chi_default` | Payout Detail & Banking Statement | PT | `/pt/earnings/payout/[id]` | `CONTRACT_GAP` (PT payout statement missing in OpenAPI; only admin manual settlements exist) | `CONTRACT_GAP` |

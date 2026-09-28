@@ -6,19 +6,19 @@ Mỗi task cần data/error/empty/loading/disabled states, role tests, contract 
 
 ## MOB-800 — Auth/API foundation
 - Plan: [Plan triển khai](plans/MOB-800.md).
-- Status: TODO
+- Status: IMPLEMENTED_UNVERIFIED
 - BE dependencies: BE-801/802.
 - Scope: Generated types, API adapter, secure refresh, verified session, UUID routes, remove password/mock auth production.
 - Acceptance: 401/logout/locked flow không leak cache, login/verify/reset gọi staging thật.
-- Evidence: chưa có; khi hoàn tất ghi commit, commands, environment, API revision, screenshots/test report.
+- Evidence: Ghi nhận trong docs/design/mobile-sample-handoff.md; unit tests 88/88 pass; static reviews complete.
 
 ## MOB-801 — Profile và PT onboarding
 - Plan: [Plan triển khai](plans/MOB-801.md).
-- Status: TODO
-- BE dependencies: BE-804/806/816.
-- Scope: Giữ toàn bộ profile/extended fields; avatar/cert upload private; dịch vụ/lịch rảnh/reviews.
-- Acceptance: Owner/public khác nhau, không mất survey, PT pending không nhận booking.
-- Evidence: chưa có; khi hoàn tất ghi commit, commands, environment, API revision, screenshots/test report.
+- Status: IMPLEMENTED_UNVERIFIED
+- BE dependencies: BE-804/806/816/807.
+- Scope: Giữ toàn bộ profile/extended fields; avatar/cert upload private (max 5MB, JPEG/PNG/WebP only); dịch vụ/lịch rảnh scoped/reviews.
+- Acceptance: Owner/public khác nhau, không mất survey, PT pending không nhận booking; scoped availability replacement.
+- Evidence: Ghi nhận trong docs/design/mobile-sample-handoff.md; unit tests 88/88 pass; static reviews complete.
 
 ## MOB-802 — Booking, payment và revenue
 - Plan: [Plan triển khai](plans/MOB-802.md).
