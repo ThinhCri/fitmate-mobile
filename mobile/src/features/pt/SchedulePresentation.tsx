@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -80,16 +80,40 @@ export function SchedulePresentation({
   const [startMinute, setStartMinute] = useState('00');
   const [durationMinutes, setDurationMinutes] = useState('60');
 
-  // Local editable slots for the current selected day
-  const [localSlots, setLocalSlots] = useState<AvailabilitySlotInput[]>([]);
+  // Weekly open slots synchronized with authoritative server slots
+  const [weeklyOpenSlots, setWeeklyOpenSlots] = useState<AvailabilitySlotInput[]>([]);
 
-  // Filter slots for selected day from prop
-  const currentDaySlots = slots.filter((s) => {
-    if (!selectedDay) return false;
-    return s.slot_start_local.startsWith(selectedDay.dateStr);
-  });
+  useEffect(() => {
+    const serverOpenSlots = slots
+      .filter((s) => s.status === 'open')
+      .map((s) => ({
+        slot_start_local: s.slot_start_local,
+        duration_minutes: s.duration_minutes,
+      }));
+    setWeeklyOpenSlots(serverOpenSlots);
+  }, [slots]);
 
-  const openSlotsCount = currentDaySlots.filter((s) => s.status === 'open').length;
+  // Open slots for selected day
+  const dayOpenSlots = useMemo(() => {
+    if (!selectedDay) return [];
+    return weeklyOpenSlots
+      .filter((s) => s.slot_start_local.startsWith(selectedDay.dateStr))
+      .sort((a, b) => a.slot_start_local.localeCompare(b.slot_start_local));
+  }, [weeklyOpenSlots, selectedDay]);
+
+  // Booked or held slots for selected day (from server, immutable/protected)
+  const dayBookedSlots = useMemo(() => {
+    if (!selectedDay) return [];
+    return slots
+      .filter(
+        (s) =>
+          s.slot_start_local.startsWith(selectedDay.dateStr) &&
+          (s.status === 'booked' || s.status === 'held')
+      )
+      .sort((a, b) => a.slot_start_local.localeCompare(b.slot_start_local));
+  }, [slots, selectedDay]);
+
+  const openSlotsCount = dayOpenSlots.length;
 
   const handleAddSlotConfirm = () => {
     const h = parseInt(startHour, 10);
@@ -112,9 +136,15 @@ export function SchedulePresentation({
     const newStartMs = new Date(slotStartLocal).getTime();
     const newEndMs = newStartMs + dur * 60 * 1000;
 
-    // Strict interval overlap check [start, end) across existing and local slots
-    const allSlots = [...currentDaySlots, ...localSlots];
-    const hasOverlap = allSlots.some((s) => {
+    // Strict interval overlap check [start, end) across dayOpenSlots and dayBookedSlots
+    const allDaySlots = [
+      ...dayOpenSlots,
+      ...dayBookedSlots.map((b) => ({
+        slot_start_local: b.slot_start_local,
+        duration_minutes: b.duration_minutes,
+      })),
+    ];
+    const hasOverlap = allDaySlots.some((s) => {
       const sStartMs = new Date(s.slot_start_local).getTime();
       const sEndMs = sStartMs + s.duration_minutes * 60 * 1000;
       return newStartMs < sEndMs && sStartMs < newEndMs;
@@ -128,7 +158,7 @@ export function SchedulePresentation({
       return;
     }
 
-    setLocalSlots((prev) => [
+    setWeeklyOpenSlots((prev) => [
       ...prev,
       {
         slot_start_local: slotStartLocal,
@@ -138,8 +168,52 @@ export function SchedulePresentation({
     setAddModalVisible(false);
   };
 
-  const handleRemoveLocalSlot = (index: number) => {
-    setLocalSlots((prev) => prev.filter((_, i) => i !== index));
+  const handleRemoveOpenSlot = (slotToRemove: AvailabilitySlotInput) => {
+    setWeeklyOpenSlots((prev) =>
+      prev.filter(
+        (s) =>
+          s.slot_start_local !== slotToRemove.slot_start_local ||
+          s.duration_minutes !== slotToRemove.duration_minutes
+      )
+    );
+  };
+
+  const handleToggleDayOff = (value: boolean) => {
+    setIsDayOff(value);
+    if (value && dayOpenSlots.length > 0) {
+      Alert.alert(
+        'Đánh dấu ngày nghỉ',
+        `Xóa toàn bộ ${dayOpenSlots.length} ca rảnh trống trong ngày ${selectedDay?.dayLabel}? Các ca đã có người đặt vẫn được giữ nguyên.`,
+        [
+          { text: 'Giữ lại ca rảnh', style: 'cancel' },
+          {
+            text: 'Xóa ca rảnh',
+            style: 'destructive',
+            onPress: () => {
+              setWeeklyOpenSlots((prev) =>
+                prev.filter((s) => !s.slot_start_local.startsWith(selectedDay.dateStr))
+              );
+            },
+          },
+        ]
+      );
+    }
+  };
+
+  const handleSavePress = () => {
+    Alert.alert(
+      'Xác nhận lưu lịch',
+      `Lưu sẽ cập nhật lại các khung giờ rảnh (Open) trong ${weekLabel}. Các ca đã có học viên đặt (Booked) hoặc đang giữ chỗ (Held) sẽ được bảo toàn nguyên vẹn.`,
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Xác nhận lưu',
+          onPress: () => {
+            onSaveSchedule(weeklyOpenSlots);
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -232,7 +306,7 @@ export function SchedulePresentation({
                 Tổng khả dụng {selectedDay?.dayLabel} ({selectedDay?.dateStr})
               </Text>
               <Text style={styles.summaryDetails}>
-                {openSlotsCount + localSlots.length} khung giờ rảnh đang mở nhận
+                {openSlotsCount} khung giờ rảnh đang mở nhận
               </Text>
             </View>
           </View>
@@ -257,7 +331,7 @@ export function SchedulePresentation({
             </View>
             <Switch
               value={isDayOff}
-              onValueChange={setIsDayOff}
+              onValueChange={handleToggleDayOff}
               trackColor={{ false: colors.border, true: colors.warning }}
               thumbColor={colors.white}
             />
@@ -280,7 +354,7 @@ export function SchedulePresentation({
               <Text style={styles.intervalsTitle}>Khung Giờ Nhận Khách</Text>
               <View style={styles.slotsCountBadge}>
                 <Text style={styles.slotsCountText}>
-                  {currentDaySlots.length + localSlots.length} ca
+                  {dayBookedSlots.length + dayOpenSlots.length} ca
                 </Text>
               </View>
             </View>
@@ -294,38 +368,49 @@ export function SchedulePresentation({
             </View>
           ) : null}
 
-          {/* Server Open Slots */}
-          {currentDaySlots
-            .filter((s) => s.status === 'open')
-            .map((slot) => {
-              const startT = slot.slot_start_local.split('T')[1]?.substring(0, 5) || '07:00';
-              return (
-                <View key={slot.id} style={styles.openSlotCard}>
-                  <View style={styles.openSlotLeft}>
-                    <View style={styles.openSlotIcon}>
-                      <Sun size={20} color={colors.textPrimary} />
-                    </View>
-                    <View>
-                      <View style={styles.openBadgeRow}>
-                        <Text style={styles.openTimeRange}>{startT}</Text>
-                        <View style={styles.openTag}>
-                          <Text style={styles.openTagText}>Trống</Text>
-                        </View>
+          {/* Server Booked / Held Slots (Protected) */}
+          {dayBookedSlots.map((slot) => {
+            const startT = slot.slot_start_local.split('T')[1]?.substring(0, 5) || '07:00';
+            const isHeld = slot.status === 'held';
+            return (
+              <View key={slot.id} style={styles.bookedSlotCard}>
+                <View style={styles.bookedSlotRow}>
+                  <View style={styles.bookedIcon}>
+                    <Lock size={18} color={isHeld ? colors.warning : colors.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.bookedBadgeRow}>
+                      <Text style={styles.bookedTimeRange}>{startT}</Text>
+                      <View
+                        style={[
+                          styles.bookedTag,
+                          isHeld && { backgroundColor: colors.warningLight },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.bookedTagText,
+                            isHeld && { color: colors.warning },
+                          ]}
+                        >
+                          {isHeld ? 'Đang giữ chỗ' : 'Đã có lịch hẹn'}
+                        </Text>
                       </View>
-                      <Text style={styles.openDuration}>
-                        Sẵn sàng nhận khách ({slot.duration_minutes} phút)
-                      </Text>
                     </View>
+                    <Text style={styles.bookedClientText}>
+                      Thời lượng {slot.duration_minutes} phút (Không thể chỉnh sửa hoặc xóa)
+                    </Text>
                   </View>
                 </View>
-              );
-            })}
+              </View>
+            );
+          })}
 
-          {/* Newly added local slots */}
-          {localSlots.map((slot, index) => {
+          {/* Open Slots */}
+          {dayOpenSlots.map((slot, index) => {
             const startT = slot.slot_start_local.split('T')[1]?.substring(0, 5) || '00:00';
             return (
-              <View key={`local-${index}`} style={styles.openSlotCard}>
+              <View key={`${slot.slot_start_local}-${index}`} style={styles.openSlotCard}>
                 <View style={styles.openSlotLeft}>
                   <View style={styles.openSlotIcon}>
                     <Sun size={20} color={colors.primary} />
@@ -333,18 +418,20 @@ export function SchedulePresentation({
                   <View>
                     <View style={styles.openBadgeRow}>
                       <Text style={styles.openTimeRange}>{startT}</Text>
-                      <View style={[styles.openTag, { backgroundColor: colors.primaryLight }]}>
-                        <Text style={[styles.openTagText, { color: colors.primary }]}>Mới thêm</Text>
+                      <View style={styles.openTag}>
+                        <Text style={styles.openTagText}>Trống</Text>
                       </View>
                     </View>
                     <Text style={styles.openDuration}>
-                      Khung giờ rảnh ({slot.duration_minutes} phút)
+                      Sẵn sàng nhận khách ({slot.duration_minutes} phút)
                     </Text>
                   </View>
                 </View>
                 <Pressable
-                  onPress={() => handleRemoveLocalSlot(index)}
+                  onPress={() => handleRemoveOpenSlot(slot)}
                   style={styles.deleteSlotBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Xóa khung giờ rảnh"
                 >
                   <Trash2 size={16} color={colors.danger} />
                 </Pressable>
@@ -368,16 +455,16 @@ export function SchedulePresentation({
 
         {/* Action Footer */}
         <View style={styles.footerSection}>
-          <View style={styles.gapNoticeBox}>
-            <AlertTriangle
+          <View style={styles.scopedNoticeBox}>
+            <CheckCircle
               size={18}
-              color={colors.warning}
+              color={colors.primary}
               style={{ marginRight: 8, marginTop: 2 }}
             />
             <View style={{ flex: 1 }}>
-              <Text style={styles.gapNoticeTitle}>Khóa cập nhật lịch rảnh</Text>
-              <Text style={styles.gapNoticeText}>
-                Backend hiện chỉ có lệnh ghi đè toàn bộ lịch Open của tài khoản [CONTRACT_GAP: PUT /me/availability replaces all open slots]. Thao tác lưu tạm thời bị khóa để tránh làm mất các ca rảnh khác cho đến khi hệ thống có API cập nhật theo phạm vi.
+              <Text style={styles.scopedNoticeTitle}>Cập nhật theo tuần</Text>
+              <Text style={styles.scopedNoticeText}>
+                Lưu lịch sẽ cập nhật lại các ca rảnh (Open) trong tuần đang xem. Các ca đã có người đặt (Booked) hoặc đang giữ chỗ (Held) luôn được bảo vệ an toàn.
               </Text>
             </View>
           </View>
@@ -387,7 +474,7 @@ export function SchedulePresentation({
             onPress={() => {
               Alert.alert(
                 'Chưa khả dụng',
-                'Tính năng tự động nhân bản lịch định kỳ chưa được hỗ trợ bởi hệ thống máy chủ.'
+                'Tính năng tự động nhân bản lịch định kỳ [CAPABILITY_GATED] chưa được hỗ trợ bởi hệ thống máy chủ.'
               );
             }}
           >
@@ -398,18 +485,22 @@ export function SchedulePresentation({
           </Pressable>
 
           <Pressable
-            style={[styles.saveBtn, { backgroundColor: colors.surfaceSubtle }]}
-            onPress={() => {
-              Alert.alert(
-                'Tính năng tạm khóa',
-                'Thao tác lưu lịch bị khóa để tránh ghi đè toàn bộ lịch trên máy chủ [CONTRACT_GAP: PUT /me/availability].'
-              );
-            }}
-            disabled={true}
+            style={[
+              styles.saveBtn,
+              (loading || saving) && { opacity: 0.6 },
+            ]}
+            onPress={handleSavePress}
+            disabled={loading || saving}
+            accessibilityRole="button"
+            accessibilityLabel="Lưu lịch rảnh tuần này"
           >
-            <Lock size={18} color={colors.textMuted} style={{ marginRight: 8 }} />
-            <Text style={[styles.saveBtnText, { color: colors.textMuted }]}>
-              Lưu lịch (Tạm khóa để bảo vệ dữ liệu)
+            {saving ? (
+              <ActivityIndicator size="small" color={colors.white} style={{ marginRight: 8 }} />
+            ) : (
+              <CheckCircle size={18} color={colors.white} style={{ marginRight: 8 }} />
+            )}
+            <Text style={styles.saveBtnText}>
+              {saving ? 'Đang lưu lịch...' : 'Lưu lịch tuần này'}
             </Text>
           </Pressable>
         </View>
@@ -787,6 +878,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
+  bookedClientText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
   bookingCode: {
     ...typography.captionMedium,
     color: colors.textPrimary,
@@ -1015,6 +1111,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   gapNoticeText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  scopedNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.primaryLight,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    marginBottom: spacing.md,
+  },
+  scopedNoticeTitle: {
+    ...typography.captionMedium,
+    color: colors.primary,
+    marginBottom: 2,
+    fontWeight: '700',
+  },
+  scopedNoticeText: {
     ...typography.caption,
     color: colors.textSecondary,
     lineHeight: 18,

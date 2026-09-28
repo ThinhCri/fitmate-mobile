@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/services/AuthContext';
 import { ptService } from '@/services/api/ptService';
@@ -19,8 +20,8 @@ export default function ScheduleRoute() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Generate days of the week based on current week offset and UTC query bounds
-  const { daysOfWeek, weekLabel, fromDateUtc, toDateUtc } = useMemo(() => {
+  // Generate days of the week based on current week offset and date query bounds
+  const { daysOfWeek, weekLabel, fromDateStr, toDateStr } = useMemo(() => {
     const today = new Date();
     const currentDayOfWeek = today.getDay(); // 0 is Sunday, 1 is Monday...
     const diffToMonday = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
@@ -56,11 +57,6 @@ export default function ScheduleRoute() {
 
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23, 59, 59, 999);
-
-    const nextMonday = new Date(monday);
-    nextMonday.setDate(monday.getDate() + 7);
-    nextMonday.setHours(0, 0, 0, 0);
 
     const pad = (n: number) => (n < 10 ? '0' + n : n.toString());
     const label = `Tuần (${pad(monday.getDate())}/${pad(monday.getMonth() + 1)} - ${pad(sunday.getDate())}/${pad(sunday.getMonth() + 1)}/${sunday.getFullYear()})`;
@@ -68,24 +64,18 @@ export default function ScheduleRoute() {
     return {
       daysOfWeek: days,
       weekLabel: label,
-      fromDateUtc: monday.toISOString(),
-      toDateUtc: nextMonday.toISOString(),
+      fromDateStr: days[0].dateStr,
+      toDateStr: days[6].dateStr,
     };
   }, [currentWeekOffset]);
 
   const fetchAvailability = useCallback(async () => {
-    if (!user?.id) {
-      setError('Không xác định được mã định danh huấn luyện viên.');
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
     try {
-      const result = await ptService.getMyAvailability(user.id, {
-        from: fromDateUtc,
-        to: toDateUtc,
+      const result = await ptService.getMyAvailability({
+        from: fromDateStr,
+        to: toDateStr,
       });
       setSlots(result || []);
     } catch (err) {
@@ -97,7 +87,7 @@ export default function ScheduleRoute() {
     } finally {
       setLoading(false);
     }
-  }, [user, fromDateUtc, toDateUtc]);
+  }, [fromDateStr, toDateStr]);
 
   useEffect(() => {
     fetchAvailability();
@@ -106,8 +96,22 @@ export default function ScheduleRoute() {
   const handleSaveSchedule = async (newSlots: AvailabilitySlotInput[]) => {
     setSaving(true);
     try {
-      await ptService.setMyAvailability(newSlots);
+      await ptService.setMyAvailability(
+        { from: fromDateStr, to: toDateStr },
+        newSlots
+      );
       await fetchAvailability();
+      Alert.alert(
+        'Thành công',
+        `Đã lưu và cập nhật lịch rảnh cho ${weekLabel}. Các ca đã có người đặt vẫn được bảo toàn.`
+      );
+    } catch (err) {
+      Alert.alert(
+        'Lỗi lưu lịch',
+        err instanceof Error
+          ? err.message
+          : 'Không thể lưu lịch rảnh lên máy chủ. Vui lòng thử lại.'
+      );
     } finally {
       setSaving(false);
     }

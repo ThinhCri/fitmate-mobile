@@ -119,21 +119,38 @@ export const ptService = {
   },
 
   /**
-   * Set and replace entire availability schedule for current PT
+   * Set and replace availability schedule for current PT within a specific date range [from, to]
    * Operation: setMyAvailability
-   * Endpoint: PUT /me/availability
+   * Endpoint: PUT /me/availability?from=&to=
    */
-  async setMyAvailability(slots: AvailabilitySlotInput[]): Promise<void> {
+  async setMyAvailability(
+    params: GetAvailabilityParams,
+    slots: AvailabilitySlotInput[]
+  ): Promise<void> {
+    if (!params.from || !params.to) {
+      throw new Error('Tham số from và to là bắt buộc');
+    }
+    const query = new URLSearchParams({
+      from: params.from,
+      to: params.to,
+    });
     const payload: SetAvailabilityRequest = { slots };
     try {
-      await apiClient<void>('/me/availability', {
+      await apiClient<void>(`/me/availability?${query.toString()}`, {
         method: 'PUT',
         body: JSON.stringify(payload),
       });
     } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        throw new ApiError(
+          'Khung giờ rảnh xung đột với lịch đã có học viên đặt hoặc đang giữ chỗ.',
+          409,
+          err.data
+        );
+      }
       if (err instanceof ApiError && err.status === 400) {
         throw new ApiError(
-          err.message || 'Khung giờ rảnh bị trùng lặp hoặc không hợp lệ.',
+          err.message || 'Khung giờ rảnh bị trùng lặp hoặc nằm ngoài khoảng thời gian đã chọn.',
           400,
           err.data
         );
@@ -143,14 +160,35 @@ export const ptService = {
   },
 
   /**
-   * Get availability slots of PT
-   * Operation: getTrainerAvailability
-   * Endpoint: GET /trainers/{id}/availability
+   * Get availability slots of current PT (authoritative owner endpoint)
+   * Operation: getMyAvailability
+   * Endpoint: GET /me/availability?from=&to=
    */
   async getMyAvailability(
+    params: GetAvailabilityParams
+  ): Promise<AvailabilitySlot[]> {
+    if (!params.from || !params.to) {
+      throw new Error('Tham số from và to là bắt buộc');
+    }
+    const query = new URLSearchParams({
+      from: params.from,
+      to: params.to,
+    });
+    return apiClient<AvailabilitySlot[]>('/me/availability?' + query.toString());
+  },
+
+  /**
+   * Get availability slots of a trainer (public/member booking view)
+   * Operation: getTrainerAvailability
+   * Endpoint: GET /trainers/{id}/availability?from=&to=
+   */
+  async getTrainerAvailability(
     trainerId: string,
     params: GetAvailabilityParams
   ): Promise<AvailabilitySlot[]> {
+    if (!params.from || !params.to) {
+      throw new Error('Tham số from và to là bắt buộc');
+    }
     const query = new URLSearchParams({
       from: params.from,
       to: params.to,

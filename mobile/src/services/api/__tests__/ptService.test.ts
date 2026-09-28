@@ -203,12 +203,13 @@ describe('ptService (MOB-801)', () => {
   });
 
   describe('2. Availability Management (/me/availability)', () => {
-    it('sets and replaces availability with 204 No Content', async () => {
+    it('sets and replaces availability within scoped date bounds with 204 No Content', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 204,
       } as unknown as Response);
 
+      const params = { from: '2026-09-28', to: '2026-10-04' };
       const slots = [
         {
           slot_start_local: '2026-09-28T07:00:00',
@@ -220,10 +221,10 @@ describe('ptService (MOB-801)', () => {
         },
       ];
 
-      await expect(ptService.setMyAvailability(slots)).resolves.toBeUndefined();
+      await expect(ptService.setMyAvailability(params, slots)).resolves.toBeUndefined();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/me/availability'),
+        expect.stringContaining('/me/availability?from=2026-09-28&to=2026-10-04'),
         expect.objectContaining({
           method: 'PUT',
           body: JSON.stringify({ slots }),
@@ -231,7 +232,30 @@ describe('ptService (MOB-801)', () => {
       );
     });
 
-    it('fetches availability with UTC ISO-8601 query bounds', async () => {
+    it('handles 409 Conflict with friendly Vietnamese message when slot conflicts with booked session', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 409,
+        json: async () => ({
+          title: 'Conflict',
+          detail: 'Slot conflicts with existing booked slot',
+        }),
+      } as unknown as Response);
+
+      const params = { from: '2026-09-28', to: '2026-10-04' };
+      const slots = [
+        {
+          slot_start_local: '2026-09-28T07:00:00',
+          duration_minutes: 60,
+        },
+      ];
+
+      await expect(ptService.setMyAvailability(params, slots)).rejects.toThrow(
+        'Khung giờ rảnh xung đột với lịch đã có học viên đặt hoặc đang giữ chỗ.'
+      );
+    });
+
+    it('fetches availability for current PT via GET /me/availability?from=&to=', async () => {
       const mockSlots = [
         {
           id: 'slot-1',
@@ -248,17 +272,39 @@ describe('ptService (MOB-801)', () => {
         json: async () => mockSlots,
       } as unknown as Response);
 
-      const fromIso = '2026-09-28T00:00:00.000Z';
-      const toIso = '2026-10-05T00:00:00.000Z';
-
-      const result = await ptService.getMyAvailability('pt-uuid-1', {
-        from: fromIso,
-        to: toIso,
-      });
+      const params = { from: '2026-09-28', to: '2026-10-04' };
+      const result = await ptService.getMyAvailability(params);
 
       expect(result).toEqual(mockSlots);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining(encodeURIComponent(fromIso)),
+        expect.stringContaining('/me/availability?from=2026-09-28&to=2026-10-04'),
+        expect.any(Object)
+      );
+    });
+
+    it('fetches public trainer availability via GET /trainers/{id}/availability?from=&to=', async () => {
+      const mockSlots = [
+        {
+          id: 'slot-2',
+          slot_start_utc: '2026-09-28T01:00:00Z',
+          slot_start_local: '2026-09-28T08:00:00',
+          duration_minutes: 60,
+          status: 'open' as const,
+        },
+      ];
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => mockSlots,
+      } as unknown as Response);
+
+      const params = { from: '2026-09-28', to: '2026-10-04' };
+      const result = await ptService.getTrainerAvailability('pt-uuid-1', params);
+
+      expect(result).toEqual(mockSlots);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/trainers/pt-uuid-1/availability?from=2026-09-28&to=2026-10-04'),
         expect.any(Object)
       );
     });
