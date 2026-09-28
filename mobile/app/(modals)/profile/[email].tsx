@@ -146,11 +146,9 @@ export default function ProfileModal() {
   );
 }
 
-function InfoSection({ profile }: { profile: User }) {
+function ProfileRow({ label, value }: { label: string; value: string }) {
   const theme = useTheme();
-  const isPt = profile.profile.isPt;
-
-  const Row = ({ label, value }: { label: string; value: string }) => (
+  return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 }}>
       <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 14 }}>{label}</Text>
       <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '600', maxWidth: '60%', textAlign: 'right' }}>
@@ -158,6 +156,11 @@ function InfoSection({ profile }: { profile: User }) {
       </Text>
     </View>
   );
+}
+
+function InfoSection({ profile }: { profile: User }) {
+  const theme = useTheme();
+  const isPt = profile.profile.isPt;
 
   return (
     <>
@@ -168,12 +171,12 @@ function InfoSection({ profile }: { profile: User }) {
         {profile.profile.goal ? (
           <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, marginBottom: 8 }}>{profile.profile.goal}</Text>
         ) : null}
-        <Row label="Email" value={profile.email} />
-        <Row label="Số điện thoại" value={profile.profile.phone} />
-        <Row label="Ngày sinh" value={formatDate(profile.profile.birthday)} />
-        <Row label="Giới tính" value={profile.profile.gender} />
-        <Row label="Chiều cao" value={`${profile.profile.height} cm`} />
-        <Row label="Cân nặng" value={`${profile.profile.weight} kg`} />
+        <ProfileRow label="Email" value={profile.email} />
+        <ProfileRow label="Số điện thoại" value={profile.profile.phone} />
+        <ProfileRow label="Ngày sinh" value={formatDate(profile.profile.birthday)} />
+        <ProfileRow label="Giới tính" value={profile.profile.gender} />
+        <ProfileRow label="Chiều cao" value={`${profile.profile.height} cm`} />
+        <ProfileRow label="Cân nặng" value={`${profile.profile.weight} kg`} />
       </Card>
 
       {!isPt && (
@@ -181,10 +184,10 @@ function InfoSection({ profile }: { profile: User }) {
           <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 16, fontWeight: '700', marginBottom: 8 }}>
             Sức khỏe (chỉ hội viên)
           </Text>
-          <Row label="Bệnh nền" value={profile.profile.medicalCondition || 'Không có'} />
-          <Row label="Dị ứng" value={profile.profile.allergies.length > 0 ? profile.profile.allergies.join(', ') : 'Không có'} />
-          <Row label="Ngày tập" value={profile.profile.trainingDays.join(', ')} />
-          <Row label="Khung giờ" value={profile.profile.trainingTime} />
+          <ProfileRow label="Bệnh nền" value={profile.profile.medicalCondition || 'Không có'} />
+          <ProfileRow label="Dị ứng" value={profile.profile.allergies.length > 0 ? profile.profile.allergies.join(', ') : 'Không có'} />
+          <ProfileRow label="Ngày tập" value={profile.profile.trainingDays.join(', ')} />
+          <ProfileRow label="Khung giờ" value={profile.profile.trainingTime} />
         </Card>
       )}
 
@@ -197,10 +200,10 @@ function InfoSection({ profile }: { profile: User }) {
                 <Chip key={s} label={s} tone="warm" />
               ))}
             </View>
-            <Row label="Kinh nghiệm" value={`${profile.profile.exp} năm`} />
-            <Row label="Giá" value={`${formatVnd(profile.profile.price)}/buổi`} />
-            <Row label="Ngày dạy" value={profile.profile.trainingDays.join(', ')} />
-            <Row label="Giờ trống" value={profile.profile.trainingTime} />
+            <ProfileRow label="Kinh nghiệm" value={`${profile.profile.exp} năm`} />
+            <ProfileRow label="Giá" value={`${formatVnd(profile.profile.price)}/buổi`} />
+            <ProfileRow label="Ngày dạy" value={profile.profile.trainingDays.join(', ')} />
+            <ProfileRow label="Giờ trống" value={profile.profile.trainingTime} />
           </Card>
           <Card variant="default">
             <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 16, fontWeight: '700', marginBottom: 8 }}>

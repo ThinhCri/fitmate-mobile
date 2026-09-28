@@ -328,7 +328,7 @@ export default function WorkoutScreen() {
             </Text>
           </View>
           <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 12 }}>
-            Ví dụ: "tập nhẹ cho người mới", "tập nhiều chân", "tập core"
+            {'Ví dụ: "tập nhẹ cho người mới", "tập nhiều chân", "tập core"'}
           </Text>
           <TextInput
             value={aiPrompt}
