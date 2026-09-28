@@ -214,7 +214,7 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
                   </Text>
                 </View>
                 <Text style={[typography.body, styles.reviewComment]}>
-                  "{rev.comment}"
+                  {`"${rev.comment}"`}
                 </Text>
               </View>
             ))}

@@ -19,7 +19,7 @@ export interface TrainerListPresentationProps {
   onSearchClear: () => void;
   selectedSpecialty: string;
   onSelectSpecialty: (specialtyId: string) => void;
-  specialtyOptions: Array<{ id: string; label: string }>;
+  specialtyOptions: { id: string; label: string }[];
   onTrainerPress: (trainerId: string) => void;
   loading?: boolean;
   loadingMore?: boolean;

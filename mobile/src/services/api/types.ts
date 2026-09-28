@@ -214,11 +214,11 @@ export interface MemberDashboardSummary {
     exerciseCount: number;
     isCompleted: boolean;
   } | null;
-  todayMeals: Array<{
+  todayMeals: {
     id: string;
     name: string;
     type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
     calories: number;
     time: string;
-  }>;
+  }[];
 }

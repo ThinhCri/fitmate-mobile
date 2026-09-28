@@ -106,7 +106,7 @@ export default function MarketplaceScreen() {
         onSelectSpecialty={setSelectedSpecialty}
         specialtyOptions={SPECIALTY_OPTIONS}
         onTrainerPress={(id) => {
-          router.push('/(modals)/trainer/' + id);
+          router.push(`/(modals)/trainer/${id}` as any);
         }}
         loading={loading}
         loadingMore={loadingMore}
