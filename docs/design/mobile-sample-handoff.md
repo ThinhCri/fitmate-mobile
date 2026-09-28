@@ -1,7 +1,7 @@
 # Mobile sample handoff
 
-Status: **MOB-800_AND_MOB-801_COMPLETED_AND_VERIFIED**
-Notice: MOB-800 Phase A hardening and MOB-801 Phase B (PT Profile, Services, Availability, and Certificates) are fully implemented and verified. TypeScript type check passed (0 errors), ESLint passed (0 errors), and unit tests passed (75/75).
+Status: **IMPLEMENTED_UNVERIFIED**
+Notice: Static review remediations, type checks, lint checks, and unit tests passed cleanly for MOB-800 and MOB-801. Live emulator/backend verification pending runtime deployment.
 
 ## 1. Inputs & Contract Baseline
 
@@ -102,7 +102,7 @@ Notice: MOB-800 Phase A hardening and MOB-801 Phase B (PT Profile, Services, Ava
 3. **Stitch PT Screens**:
    - `mobile/src/features/pt/ProfileServicesPresentation.tsx` & `mobile/app/pt/profile-services.tsx` (p02): Profile header, bento stat cards, bio editor, specialties pills, active services counter, interactive active/pause switch, price/duration view, snapshot safety note, add/edit/delete service modals.
    - `mobile/src/features/pt/SchedulePresentation.tsx` & `mobile/app/pt/schedule.tsx` (p03): Week switcher, GMT+7 timezone badge, day-of-week strip, daily metric banner, day-off exception toggle with warning, booked slots locked for protection, open slots management, add interval modal with validation, replace-all save CTA with warning confirmation.
-   - `mobile/src/features/pt/CertificatesPresentation.tsx` & `mobile/app/pt/certificates.tsx` (p04): Fitmate audit standards banner, saved certificate cards with verified server statuses (`approved`, `pending`, `rejected` with `reject_reason`), secure document preview watermark, file picker with image/PDF support, add certificate form.
+   - `mobile/src/features/pt/CertificatesPresentation.tsx` & `mobile/app/pt/certificates.tsx` (p04): Fitmate audit standards banner, saved certificate cards with verified server statuses (`approved`, `pending`, `rejected` with `reject_reason`), secure document preview watermark, 2-step certificate upload (`POST /uploads` category='certificates' then `POST /me/certificates`), strictly enforcing image-only (JPEG/PNG/WebP, max 5MB, PDF rejected).
 
 ## 5. Verification Evidence
 
@@ -112,14 +112,14 @@ Notice: MOB-800 Phase A hardening and MOB-801 Phase B (PT Profile, Services, Ava
 
 2. **Linter**:
    - Command: `npm run lint` (`expo lint`)
-   - Result: Exit code 0 (0 errors).
+   - Result: Exit code 0 (0 errors, 44 warnings in existing legacy components).
 
 3. **Unit Tests**:
    - Command: `npm run test` (`vitest run`)
-   - Result: 5 test files passed, 75/75 unit tests passed (100%).
-     - `src/services/api/__tests__/ptService.test.ts`: 9/9 passed (CRUD services, 409 conflict friendly copy, 204 delete/availability, 400 overlap error, certificate listing, multipart upload with 413 limit, profile patch).
+   - Result: 5 test files passed, 81/81 unit tests passed (100%).
+     - `src/services/api/__tests__/ptService.test.ts`: 12/12 passed (2-step cert upload, PDF/5MB rejection, include_inactive=true, reactivation, availability UTC bounds, 409 conflict, 204 delete).
      - `src/services/session/__tests__/sessionManager.test.ts`: 8/8 passed (session epoch, single-flight refresh, memory-only token, stale response rejection).
-     - `src/services/api/__tests__/authService.test.ts`: 12/12 passed (password policy, PT unverified guarantee, mock exclusion, 401 refresh/retry, Admin MFA HTTP 202 rejection).
+     - `src/services/api/__tests__/authService.test.ts`: 15/15 passed (password policy, PT unverified guarantee, mock exclusion, 401 refresh/retry, Admin MFA HTTP 202 rejection, canonical identity preservation).
      - `src/features/workout/__tests__/sessionEngine.test.ts`: 13/13 passed.
      - `src/features/pt-revenue/__tests__/revenueCalculations.test.ts`: 33/33 passed.
 
@@ -130,4 +130,4 @@ Notice: MOB-800 Phase A hardening and MOB-801 Phase B (PT Profile, Services, Ava
    - `9cb5179 docs(mobile): record final authentication evidence [MOB-800]`
    - `7707ca7 feat(mobile): integrate PT API contracts and client [MOB-801]`
    - `405a675 feat(mobile): implement PT screens and role guarding [MOB-801]`
-   - `docs(mobile): record MOB-801 evidence and handoff [MOB-801]`
+   - `cf10978 docs(mobile): record MOB-801 evidence and handoff [MOB-801]`
