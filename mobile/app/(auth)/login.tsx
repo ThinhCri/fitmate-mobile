@@ -68,6 +68,15 @@ export default function LoginScreen() {
 
         <Button label={submitting ? 'Đang đăng nhập...' : 'Đăng nhập'} variant="primary" fullWidth onPress={onLogin} disabled={submitting} />
 
+        {__DEV__ && (
+          <Button
+            label="🎨 Xem 3 Màn Hình Stitch (Dev Preview)"
+            variant="secondary"
+            fullWidth
+            onPress={() => router.push('/sample-preview')}
+          />
+        )}
+
         <View style={{ gap: 8 }}>
           <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 12, fontWeight: '600', textAlign: 'center' }}>
             Đăng nhập nhanh (demo):

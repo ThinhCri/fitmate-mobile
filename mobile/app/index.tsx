@@ -1,7 +1,8 @@
 /**
  * Index — redirect theo auth state.
- * - Chua login → /(auth)/login
- * - Da login → /(tabs)/dashboard
+ * - __DEV__ -> /sample-preview (xem 3 man hinh mau Stitch)
+ * - Chua login -> /(auth)/login
+ * - Da login -> /(tabs)/dashboard
  */
 import { Redirect } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
@@ -15,10 +16,22 @@ export default function Index() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: resolveColor(theme, 'surface') }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: resolveColor(theme, 'surface'),
+        }}
+      >
         <ActivityIndicator size="large" color={resolveColor(theme, 'primary')} />
       </View>
     );
+  }
+
+  // Trong DEV mode, tu dong mo man hinh Sandbox Preview de kiem tra 3 man Stitch
+  if (__DEV__) {
+    return <Redirect href="/sample-preview" />;
   }
 
   if (!user) return <Redirect href="/(auth)/login" />;
