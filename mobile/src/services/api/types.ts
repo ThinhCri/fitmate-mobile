@@ -6,6 +6,84 @@
 // 1. Wire DTOs (Exact OpenAPI snake_case)
 // ==========================================
 
+export interface UserSummary {
+  id: string; // uuid
+  email: string;
+  full_name: string;
+  role: 'member' | 'pt' | 'admin';
+  avatar_url?: string | null;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url?: string | null;
+  phone?: string | null;
+  gender?: 'male' | 'female' | 'other';
+  birthday?: string | null;
+  height_cm?: number | null;
+  weight_kg?: number | null;
+  fitness_goal?: string | null;
+  training_days?: string[];
+  specialty?: string | null;
+  experience_years?: number | null;
+  price_per_session_vnd?: number | null;
+  certificate_status?: string | null;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string; // 12-128 chars
+  full_name: string;
+  role: 'member' | 'pt';
+  height_cm?: number;
+  weight_kg?: number;
+  gender?: 'male' | 'female' | 'other';
+  birthday?: string;
+  fitness_goal?: string;
+  training_days?: string[];
+  specialty?: string;
+  experience_years?: number;
+  price_per_session_vnd?: number;
+  timezone?: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+  device_label?: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in?: number;
+  user: UserSummary;
+}
+
+export interface RefreshTokenRequest {
+  refresh_token: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string; // 12-128 chars
+}
+
+export interface ProblemDetails {
+  type?: string;
+  title?: string;
+  status?: number;
+  detail?: string;
+  instance?: string;
+  errors?: Record<string, string[]>;
+}
+
 export interface PTPublicProfile {
   id: string; // uuid
   full_name: string;

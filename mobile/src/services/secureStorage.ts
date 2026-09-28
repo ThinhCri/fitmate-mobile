@@ -1,7 +1,8 @@
 import * as SecureStore from 'expo-secure-store';
 
 const KEY_AUTH_EMAIL = 'fitmate_auth_email';
-const KEY_AUTH_TOKEN = 'fitmate_auth_token';
+const KEY_REFRESH_TOKEN = 'fitmate_refresh_token';
+const KEY_SESSION_USER = 'fitmate_session_user';
 
 export async function getAuthEmail(): Promise<string | null> {
   try {
@@ -19,26 +20,60 @@ export async function setAuthEmail(email: string): Promise<void> {
   }
 }
 
-export async function getAuthToken(): Promise<string | null> {
+export async function getRefreshToken(): Promise<string | null> {
   try {
-    return await SecureStore.getItemAsync(KEY_AUTH_TOKEN);
+    return await SecureStore.getItemAsync(KEY_REFRESH_TOKEN);
   } catch {
     return null;
   }
 }
 
-export async function setAuthToken(token: string): Promise<void> {
+export async function setRefreshToken(token: string): Promise<void> {
   try {
-    await SecureStore.setItemAsync(KEY_AUTH_TOKEN, token);
+    await SecureStore.setItemAsync(KEY_REFRESH_TOKEN, token);
   } catch (err) {
-    console.warn('[secureStore.setAuthToken] failed', err);
+    console.warn('[secureStore.setRefreshToken] failed', err);
+  }
+}
+
+export async function deleteRefreshToken(): Promise<void> {
+  try {
+    await SecureStore.deleteItemAsync(KEY_REFRESH_TOKEN);
+  } catch (err) {
+    console.warn('[secureStore.deleteRefreshToken] failed', err);
+  }
+}
+
+export async function getCachedSessionUser<T>(): Promise<T | null> {
+  try {
+    const raw = await SecureStore.getItemAsync(KEY_SESSION_USER);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function setCachedSessionUser<T>(user: T): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(KEY_SESSION_USER, JSON.stringify(user));
+  } catch (err) {
+    console.warn('[secureStore.setCachedSessionUser] failed', err);
+  }
+}
+
+export async function deleteCachedSessionUser(): Promise<void> {
+  try {
+    await SecureStore.deleteItemAsync(KEY_SESSION_USER);
+  } catch (err) {
+    console.warn('[secureStore.deleteCachedSessionUser] failed', err);
   }
 }
 
 export async function clearAuth(): Promise<void> {
   try {
     await SecureStore.deleteItemAsync(KEY_AUTH_EMAIL);
-    await SecureStore.deleteItemAsync(KEY_AUTH_TOKEN);
+    await SecureStore.deleteItemAsync(KEY_REFRESH_TOKEN);
+    await SecureStore.deleteItemAsync(KEY_SESSION_USER);
   } catch (err) {
     console.warn('[secureStore.clearAuth] failed', err);
   }

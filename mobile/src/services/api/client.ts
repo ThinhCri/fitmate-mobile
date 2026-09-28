@@ -1,4 +1,4 @@
-import { getAuthToken } from '@/services/secureStorage';
+import { sessionManager } from '@/services/session/sessionManager';
 
 const RAW_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8080/api/v1';
@@ -16,29 +16,61 @@ export class ApiError extends Error {
   }
 }
 
+interface RequestOptions extends RequestInit {
+  _isRetry?: boolean;
+}
+
 export async function apiClient<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestOptions = {}
 ): Promise<T> {
-  const token = await getAuthToken();
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
+  const url = API_BASE_URL + cleanEndpoint;
+
+  const token = sessionManager.getAccessToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
     ...(options.headers as Record<string, string>),
   };
 
-  if (token) {
+  if (token && !headers.Authorization) {
     headers.Authorization = 'Bearer ' + token;
   }
 
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
-  const url = API_BASE_URL + cleanEndpoint;
+  const signal = options.signal || sessionManager.getAbortSignal();
 
   try {
     const response = await fetch(url, {
       ...options,
       headers,
+      signal,
     });
+
+    // 401 Handling: Automatic single-flight refresh and retry
+    if (response.status === 401 && !options._isRetry) {
+      const isAuthEndpoint =
+        cleanEndpoint.startsWith('/auth/login') ||
+        cleanEndpoint.startsWith('/auth/refresh') ||
+        cleanEndpoint.startsWith('/auth/register');
+
+      if (!isAuthEndpoint) {
+        try {
+          const newToken = await sessionManager.refreshSession();
+          return await apiClient<T>(cleanEndpoint, {
+            ...options,
+            _isRetry: true,
+            headers: {
+              ...(options.headers as Record<string, string>),
+              Authorization: 'Bearer ' + newToken,
+            },
+          });
+        } catch {
+          // Refresh failed — fail-closed
+          throw new ApiError('Phiên đăng nhập đã hết hạn', 401);
+        }
+      }
+    }
 
     if (!response.ok) {
       let errorData: unknown;
