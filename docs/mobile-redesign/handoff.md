@@ -340,3 +340,105 @@ Documentation only: no application/backend code changes, build, tests, typecheck
 - Removed the empty `sample-preview` route and all zero-byte presentation/design-system/trainer/fixture stubs created by the incomplete conversion attempt. Existing prototype screens remain in place.
 - The representative Stitch batch remains **NOT IMPLEMENTED / NOT VERIFIED**. Next implementation must complete Member home (`b01`), trainer list (`e01`), trainer detail (`e02`), populate the mapping, and then create a guarded development preview.
 - Static cleanup only. No install, build, lint, typecheck, test, Expo, emulator, backend, commit, or push command was run by the agent.
+## 2026-09-30 - Hoan tat chuyen doi 52 man hinh Google Stitch sang React Native / Expo
+
+### Tom tat cong viec da thuc hien
+Da hoan thanh chuyen doi toan bo 52 man hinh thiet ke Google Stitch (design-reference/stitch-export/) sang ung dung Android React Native su dung Expo, TypeScript va Expo Router trong mobile/ tuan thu nghiem ngat nguyen tac kien truc tach biet (Decoupled API Contract):
+
+1. **Design System & Primitives (commit a60533f) [MOB-800]**:
+   - Hoan thien design tokens (colors, spacing, radius, typography, shadow) tai mobile/src/theme/designTokens.ts.
+   - Bo sung cac primitives chuan: Card, Avatar, ListRow, ModalShell, IconButton, PasswordInput.
+   - Unit test xac minh tokens (designTokens.test.ts - 4 passing).
+
+2. **Dinh duong - Nutrition (C01 - C07) (commit 84b1ff6) [MOB-801]**:
+   - C01: NutritionDiaryPresentation.tsx & route app/(tabs)/nutrition.tsx
+   - C02: ManualMealEntryPresentation.tsx & route app/nutrition/manual-entry.tsx
+   - C03: CameraScanPresentation.tsx & route app/nutrition/scan.tsx
+   - C04: CandidateReviewPresentation.tsx & route app/nutrition/candidates-review.tsx
+   - C05: MealDetailPresentation.tsx & route app/nutrition/[id].tsx
+   - C06: WeeklyMenuPresentation.tsx & route app/nutrition/weekly-menu.tsx
+   - C07: ReplaceMealPresentation.tsx & route app/nutrition/replace-meal.tsx
+   - Unit tests: nutritionLogic.test.ts (3 passing).
+
+3. **Luyen tap & Can nang - Workout & Weight (D01 - D10) (commit 9583318) [MOB-801]**:
+   - D01: app/(tabs)/workout.tsx
+   - D02: PlanDetailPresentation.tsx & route app/workout/[id].tsx
+   - D03: PlanEditorPresentation.tsx & route app/workout/editor.tsx
+   - D04: ActiveSessionPresentation.tsx & route app/workout/active-session.tsx
+   - D05: SessionModals.tsx (Pause/Resume/Cancel/Complete Early)
+   - D06: WorkoutSummaryPresentation.tsx & route app/workout/summary.tsx
+   - D07: WorkoutHistoryPresentation.tsx & route app/workout/history.tsx
+   - D08: SessionDetailPresentation.tsx & route app/workout/session/[id].tsx
+   - D09: WeightTrackerPresentation.tsx & route app/workout/weight.tsx
+   - D10: AiWorkoutAdjustPresentation.tsx & route app/workout/ai-adjust.tsx
+   - Unit tests: workoutFlow.test.ts & sessionEngine.test.ts (17 passing).
+
+4. **Kham pha PT, Dat lich & Hoan tien - Booking & Refund (E01 - E09) (commit 229302d) [MOB-801]**:
+   - E01: TrainerListPresentation.tsx & route app/(tabs)/marketplace.tsx
+   - E02: TrainerDetailPresentation.tsx & route app/(modals)/trainer/[id].tsx
+   - E03: SelectServiceSlotPresentation.tsx & route app/booking/select-slot.tsx
+   - E04: ConfirmHoldPresentation.tsx & route app/booking/confirm.tsx
+   - E05: PaymentReturnMatrixPresentation.tsx & route app/booking/payment-return.tsx
+   - E06: AppointmentDetailPresentation.tsx & route app/booking/[id].tsx
+   - E07: MyAppointmentsPresentation.tsx & route app/booking/my-appointments.tsx
+   - E08: CancelRefundTrackingPresentation.tsx & route app/booking/cancel-refund.tsx
+   - E09: ReviewPtPresentation.tsx & route app/booking/review.tsx
+   - Unit tests: bookingFlow.test.ts (3 passing).
+
+5. **Khong gian HLV - PT Space & Revenue (P01 - P07) (commits 17d4745, bd7ffb8) [MOB-801]**:
+   - P01: PtOverviewPresentation.tsx & route app/pt/index.tsx
+   - P02: ProfileServicesPresentation.tsx & route app/pt/profile-services.tsx
+   - P03: SchedulePresentation.tsx & route app/pt/schedule.tsx
+   - P04: CertificatesPresentation.tsx & route app/pt/certificates.tsx
+   - P05: PtSessionManagementPresentation.tsx & route app/pt/session/[id].tsx
+   - P06: PtRevenuePresentation.tsx & route app/pt/revenue.tsx
+   - P07: PtPayoutDetailPresentation.tsx & route app/pt/payout/[id].tsx
+   - Unit tests: ptSpaceFlow.test.ts & revenueCalculations.test.ts (36 passing).
+
+6. **Cong dong & Mang xa hoi - Community & Social (F01 - F06) (commit 6eabc44) [MOB-801]**:
+   - F01: CommunityFeedPresentation.tsx & route app/(tabs)/social.tsx
+   - F02: CreatePostPresentation.tsx & route app/community/create-post.tsx
+   - F03: PostDetailPresentation.tsx & route app/community/post/[id].tsx
+   - F04: ReportBlockModal.tsx
+   - F05: PublicProfilePresentation.tsx & route app/community/user/[id].tsx
+   - F06: FindFriendsPresentation.tsx & route app/community/friends.tsx
+   - Unit tests: communityFlow.test.ts (4 passing).
+
+7. **Tro chuyen & Hop thu - Chat & Messaging (F07 - F08) (commit 58c7393) [MOB-801]**:
+   - F07: ChatInboxPresentation.tsx & route app/chat/index.tsx
+   - F08: ConversationPresentation.tsx & route app/chat/[id].tsx
+   - Unit tests: chatFlow.test.ts (3 passing).
+
+8. **Tro ly AI & Ho tro / Thong bao (G01 - G02, H01 - H04) (commit d0e31ad) [MOB-801]**:
+   - G01: AiConversationListPresentation.tsx & route app/ai/index.tsx
+   - G02: AiChatInteractivePresentation.tsx & route app/ai/[id].tsx
+   - H01: NotificationsPresentation.tsx & route app/notifications/index.tsx
+   - H02: SupportTicketsPresentation.tsx & route app/support/index.tsx
+   - H03: CreateTicketPresentation.tsx & route app/support/create.tsx
+   - H04: TicketDetailPresentation.tsx & route app/support/[id].tsx
+   - Unit tests: aiFlow.test.ts & supportFlow.test.ts (4 passing).
+
+9. **Tai khoan, Ho so & Cai dat (A06 - A10) (commit 776fa6c) [MOB-801]**:
+   - A06: AccountHubPresentation.tsx & route app/account/index.tsx
+   - A07: EditProfilePresentation.tsx & route app/account/edit-profile.tsx
+   - A08: HealthProfilePresentation.tsx & route app/account/health-profile.tsx
+   - A09: SettingsPresentation.tsx & route app/account/settings.tsx
+   - A10: ChangePasswordPresentation.tsx & route app/account/change-password.tsx
+   - Unit tests: accountFlow.test.ts (3 passing).
+
+10. **Chao mung, Xac thuc (A01 - A05) & Trang chu (B01)**:
+    - A01: mobile/app/(auth)/welcome.tsx
+    - A02: mobile/app/(auth)/login.tsx
+    - A03: mobile/app/(auth)/register.tsx
+    - A04: mobile/app/(auth)/verify-email.tsx
+    - A05: mobile/app/(auth)/forgot-password.tsx
+    - B01: MemberHomePresentation.tsx & route app/(tabs)/dashboard.tsx
+
+### Ket qua kiem dinh chat luong:
+- **TypeScript**: npm run type-check dat 0 loi bien dich (tsc --noEmit).
+- **Unit Tests**: 15 test suites, 114 tests passing.
+- **Ranh gioi kien truc**:
+  - Khong fake so lieu tai chinh hoac so du.
+  - Khong fallback mock data khi API gap loi mang.
+  - Capability gating hien thi trung thuc cac tinh nang cho backend hoan thien contract.
+  - Giu nguyen 10 file dirty ban dau cua du an.
