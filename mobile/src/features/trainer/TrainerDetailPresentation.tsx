@@ -61,7 +61,7 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
   }
 
   if (isOffline) {
-    return <OfflineState onAction={onRetry} />;
+    return <OfflineState title="Không có kết nối mạng" onAction={onRetry} />;
   }
 
   if (isError) {

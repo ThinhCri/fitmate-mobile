@@ -117,7 +117,7 @@ export default function ScheduleRoute() {
     }
   };
 
-  const timezone = user?.profile?.timezone || 'Asia/Ho_Chi_Minh';
+  const timezone = (user?.profile as { timezone?: string })?.timezone || 'Asia/Ho_Chi_Minh';
 
   return (
     <SchedulePresentation

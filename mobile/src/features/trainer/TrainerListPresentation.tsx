@@ -69,7 +69,7 @@ export const TrainerListPresentation: React.FC<TrainerListPresentationProps> = (
       </View>
 
       {isOffline ? (
-        <OfflineState onAction={onRetry} />
+        <OfflineState title="Không có kết nối mạng" onAction={onRetry} />
       ) : isError ? (
         <ErrorState
           title="Không thể tải danh sách PT"

@@ -30,9 +30,7 @@ export function mapToDomainUser(
     }
   }
 
-  return {
-    id: summary.id,
-    role,
+  const mappedUser: User = {
     email: summary.email,
     password: '',
     profile: {
@@ -51,7 +49,7 @@ export function mapToDomainUser(
       trainingDays: profile?.training_days ?? [],
       trainingTime: '',
       trainingTimes: [],
-      timezone: profile?.timezone ?? 'Asia/Ho_Chi_Minh',
+      ...(profile?.timezone ? { timezone: profile.timezone } : {}),
       spec: profile?.specialty
         ? profile.specialty.split(',').map((s) => s.trim())
         : [],
@@ -79,4 +77,9 @@ export function mapToDomainUser(
     reviews: [],
     workoutHistory: [],
   };
+
+  (mappedUser as unknown as { id: string }).id = summary.id;
+  (mappedUser as unknown as { role: string }).role = role;
+
+  return mappedUser;
 }

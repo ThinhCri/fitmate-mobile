@@ -38,9 +38,10 @@ export default function ProfileServicesRoute() {
   }, []);
 
   const fetchTrainerDetail = useCallback(async () => {
-    if (!user?.id) return;
+    const userId = (user as { id?: string })?.id;
+    if (!userId) return;
     try {
-      const detail = await trainersService.getTrainer(user.id);
+      const detail = await trainersService.getTrainer(userId);
       setTrainerDetail(detail);
     } catch {
       // PT may be unverified (approved certificate required for public marketplace detail)

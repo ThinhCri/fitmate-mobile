@@ -9,7 +9,7 @@ import {
   StyleProp,
   ViewStyle,
 } from 'react-native';
-import { Search, X } from 'lucide-react-native';
+import { Search, X, Eye, EyeOff } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 
 export interface SearchInputProps extends TextInputProps {
@@ -135,4 +135,82 @@ const styles = StyleSheet.create({
     color: colors.danger,
     marginTop: spacing.xs,
   },
+  passwordInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 48,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+  },
+  passwordTextInput: {
+    flex: 1,
+    height: 48,
+    color: colors.textPrimary,
+    paddingVertical: 0,
+  },
+  eyeButton: {
+    minWidth: 40,
+    minHeight: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
+
+export interface PasswordInputProps extends TextInputProps {
+  label?: string;
+  error?: string;
+  containerStyle?: StyleProp<ViewStyle>;
+}
+
+export const PasswordInput: React.FC<PasswordInputProps> = ({
+  label,
+  error,
+  containerStyle,
+  style,
+  ...props
+}) => {
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  return (
+    <View style={[styles.fieldContainer, containerStyle]}>
+      {label ? (
+        <Text style={[styles.label, typography.captionMedium]}>{label}</Text>
+      ) : null}
+      <View
+        style={[
+          styles.passwordInputRow,
+          error ? styles.inputError : null,
+          style,
+        ]}
+      >
+        <TextInput
+          secureTextEntry={!showPassword}
+          placeholderTextColor={colors.textMuted}
+          style={[styles.passwordTextInput, typography.body]}
+          autoCapitalize="none"
+          autoCorrect={false}
+          {...props}
+        />
+        <TouchableOpacity
+          onPress={() => setShowPassword((prev) => !prev)}
+          style={styles.eyeButton}
+          accessibilityRole="button"
+          accessibilityLabel={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          {showPassword ? (
+            <EyeOff size={20} color={colors.textSecondary} />
+          ) : (
+            <Eye size={20} color={colors.textSecondary} />
+          )}
+        </TouchableOpacity>
+      </View>
+      {error ? (
+        <Text style={[styles.errorText, typography.caption]}>{error}</Text>
+      ) : null}
+    </View>
+  );
+};

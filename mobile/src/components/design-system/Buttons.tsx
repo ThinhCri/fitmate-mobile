@@ -205,4 +205,56 @@ const styles = StyleSheet.create({
   disabledGhost: {
     opacity: 0.5,
   },
+  iconButtonBase: {
+    minWidth: 48,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.full,
+  },
+  iconButtonFilled: {
+    backgroundColor: colors.surfaceSubtle,
+  },
+  iconButtonOutlined: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
 });
+
+export interface IconButtonProps {
+  icon: React.ReactNode;
+  onPress: () => void;
+  accessibilityLabel: string;
+  disabled?: boolean;
+  variant?: 'ghost' | 'filled' | 'outlined';
+  style?: StyleProp<ViewStyle>;
+}
+
+export const IconButton: React.FC<IconButtonProps> = ({
+  icon,
+  onPress,
+  accessibilityLabel,
+  disabled = false,
+  variant = 'ghost',
+  style,
+}) => {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      style={[
+        styles.iconButtonBase,
+        variant === 'filled' && styles.iconButtonFilled,
+        variant === 'outlined' && styles.iconButtonOutlined,
+        disabled && { opacity: 0.5 },
+        style,
+      ]}
+    >
+      {icon}
+    </TouchableOpacity>
+  );
+};

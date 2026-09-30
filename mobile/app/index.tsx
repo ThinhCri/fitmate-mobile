@@ -50,7 +50,7 @@ export default function Index() {
 
   // Admin guard: if user is Admin, disallow mobile access and clear session
   useEffect(() => {
-    if (user && user.role === 'admin') {
+    if (user && (user as { role?: string }).role === 'admin') {
       Alert.alert(
         'Không được hỗ trợ',
         'Tài khoản Quản trị viên (Admin) chỉ dùng trên Web Admin. Ứng dụng di động chỉ dành cho Hội viên và Huấn luyện viên.'
