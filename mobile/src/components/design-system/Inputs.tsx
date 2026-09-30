@@ -183,7 +183,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
         style={[
           styles.passwordInputRow,
           error ? styles.inputError : null,
-          style,
+          style as StyleProp<ViewStyle>,
         ]}
       >
         <TextInput

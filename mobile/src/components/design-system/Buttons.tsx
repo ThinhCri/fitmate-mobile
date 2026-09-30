@@ -159,6 +159,52 @@ export const GhostButton: React.FC<BaseButtonProps> = ({
   );
 };
 
+export const DestructiveButton: React.FC<BaseButtonProps> = ({
+  label,
+  onPress,
+  disabled = false,
+  loading = false,
+  fullWidth = false,
+  style,
+  labelStyle,
+  leftIcon,
+}) => {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.8}
+      style={[
+        styles.base,
+        styles.destructive,
+        fullWidth && styles.fullWidth,
+        disabled && styles.disabled,
+        style,
+      ]}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || loading }}
+    >
+      {loading ? (
+        <ActivityIndicator color={colors.white} size="small" />
+      ) : (
+        <>
+          {leftIcon}
+          <Text
+            style={[
+              typography.bodyBold,
+              styles.destructiveLabel,
+              leftIcon ? { marginLeft: spacing.sm } : null,
+              labelStyle,
+            ]}
+          >
+            {label}
+          </Text>
+        </>
+      )}
+    </TouchableOpacity>
+  );
+};
+
 const styles = StyleSheet.create({
   base: {
     minHeight: 48,
@@ -204,6 +250,13 @@ const styles = StyleSheet.create({
   },
   disabledGhost: {
     opacity: 0.5,
+  },
+  destructive: {
+    backgroundColor: colors.danger,
+  },
+  destructiveLabel: {
+    color: colors.white,
+    textAlign: 'center',
   },
   iconButtonBase: {
     minWidth: 48,
