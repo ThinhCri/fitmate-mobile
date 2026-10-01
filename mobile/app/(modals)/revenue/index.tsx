@@ -44,6 +44,7 @@ import {
 import { getBookingsForPT } from '@/features/pt-revenue/revenueFixtures';
 import { Card, Chip, Button, Input, Empty, BarChart } from '@/components/ui';
 import { ToastService } from '@/components/ui/Toast';
+import { isPreviewMode } from '@/repositories/repositoryTypes';
 
 const PERIODS: Array<{ key: RevenuePeriod; label: string }> = [
   { key: 'this_month', label: 'Tháng này' },
@@ -96,6 +97,27 @@ export default function RevenueScreen() {
                 ? `Tính năng Doanh thu chỉ hiển thị với tài khoản PT. Tài khoản hiện tại (${fallbackUser.profile.name}) là hội viên.`
                 : 'Tính năng Doanh thu chỉ hiển thị với tài khoản PT trong bản demo này.'
             }
+            actionLabel="Quay lại"
+            onAction={() => router.back()}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Production guard — không tính tiền giả / không dùng fixtures làm nguồn tiền trong production.
+  if (!isPreviewMode()) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top']}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={{ padding: 16, gap: 12 }}>
+          <Pressable onPress={() => router.back()} accessibilityRole="button">
+            <ArrowLeft color={resolveColor(theme, 'onSurface')} size={24} />
+          </Pressable>
+          <Empty
+            icon={<TrendingUp color={resolveColor(theme, 'primary')} size={32} />}
+            title="Dữ liệu doanh thu & đối soát"
+            description="Báo cáo tài chính và đối soát thu nhập PT sẽ được tự động tổng hợp từ hệ thống máy chủ Fitmate sau kỳ kết toán."
             actionLabel="Quay lại"
             onAction={() => router.back()}
           />

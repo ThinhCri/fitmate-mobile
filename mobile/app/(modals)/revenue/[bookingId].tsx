@@ -31,6 +31,7 @@ import {
 import { getBookingsForPT } from '@/features/pt-revenue/revenueFixtures';
 import { Card, Chip, Empty } from '@/components/ui';
 import { ToastService } from '@/components/ui/Toast';
+import { isPreviewMode } from '@/repositories/repositoryTypes';
 
 function formatVND(v: number): string {
   const sign = v < 0 ? '-' : '';
@@ -69,6 +70,27 @@ export default function RevenueDetailScreen() {
                 ? `Tính năng Doanh thu chỉ dành cho PT. Tài khoản ${fallbackUser.profile.name} là hội viên.`
                 : 'Vui lòng đăng nhập để tiếp tục.'
             }
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Production guard — không tính tiền giả / không dùng fixtures làm nguồn tiền trong production.
+  if (!isPreviewMode()) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top']}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={{ padding: 16, gap: 12 }}>
+          <Pressable onPress={() => router.back()} accessibilityRole="button">
+            <ArrowLeft color={resolveColor(theme, 'onSurface')} size={24} />
+          </Pressable>
+          <Empty
+            icon={<BarChart3 color={resolveColor(theme, 'primary')} size={32} />}
+            title="Chi tiết giao dịch"
+            description="Thông tin hạch toán chi tiết cho đơn đặt lịch này sẽ hiển thị sau khi máy chủ xác nhận giao dịch."
+            actionLabel="Quay lại"
+            onAction={() => router.back()}
           />
         </View>
       </SafeAreaView>

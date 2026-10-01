@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PtRevenuePresentation } from '../../src/features/pt/PtRevenuePresentation';
+import { isPreviewMode } from '@/repositories/repositoryTypes';
 
 const MOCK_REVENUE_BOOKINGS = [
   {
@@ -42,6 +43,17 @@ const MOCK_REVENUE_BOOKINGS = [
 export default function PtRevenueScreen() {
   const router = useRouter();
 
+  if (!isPreviewMode()) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <Text style={styles.title}>Doanh thu & Quyết toán PT</Text>
+        <Text style={styles.description}>
+          Dữ liệu doanh thu và đối soát hoa hồng 90% sẽ được tính toán và đồng bộ trực tiếp từ máy chủ sau mỗi kỳ đối soát.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <PtRevenuePresentation
@@ -62,5 +74,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
