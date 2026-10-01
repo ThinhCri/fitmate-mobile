@@ -85,7 +85,7 @@ export interface User {
   id: string; // Canonical user UUID
   role: 'member' | 'pt' | 'admin'; // Normalized user role
   email: string;
-  password: string; // mock-only; never store real password
+  password?: string; // Preview/mock only; omitted in production authenticated User
   profile: Profile;
   // Dashboard state
   streak: number;
@@ -235,4 +235,10 @@ export function isPt(user: User): boolean {
 export function isSelfOf(viewer: User | null, target: User): boolean {
   if (!viewer) return false;
   return viewer.email === target.email;
+}
+
+export interface PreviewAccountFixture {
+  email: string;
+  previewPassword: string;
+  user: User;
 }

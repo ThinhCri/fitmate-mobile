@@ -31,8 +31,9 @@ export function mapToDomainUser(
   }
 
   const mappedUser: User = {
+    id: summary.id,
+    role,
     email: summary.email,
-    password: '',
     profile: {
       avatar: profile?.avatar_url ?? summary.avatar_url ?? null,
       name: profile?.full_name ?? summary.full_name,
@@ -77,9 +78,6 @@ export function mapToDomainUser(
     reviews: [],
     workoutHistory: [],
   };
-
-  (mappedUser as unknown as { id: string }).id = summary.id;
-  (mappedUser as unknown as { role: string }).role = role;
 
   return mappedUser;
 }

@@ -16,7 +16,7 @@
  *  - KPI, chart, lịch sử khớp nhau.
  *  - PT không nhìn thấy dữ liệu PT khác.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeAll, afterAll, vi } from 'vitest';
 import {
   calcFeeAndPT,
   calcRefundAdjustment,
@@ -32,6 +32,15 @@ import {
   type RefundEvent,
 } from '../revenueCalculations';
 import { PT_REVENUE_FIXTURES, getBookingsForPT } from '../revenueFixtures';
+
+beforeAll(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-09-20T12:00:00.000Z'));
+});
+
+afterAll(() => {
+  vi.useRealTimers();
+});
 
 // Helper: ISO datetime trong ngay (today) theo Asia/Ho_Chi_Minh.
 function todayIso(): string {

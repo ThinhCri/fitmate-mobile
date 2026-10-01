@@ -78,10 +78,36 @@ export default function RevenueScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
 
-  const userEmail = user?.email ?? '';
+  // Access guard — chi cho PT.
+  if (!canAccessRevenue(user)) {
+    const fallbackUser = user;
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top']}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={{ padding: 16, gap: 12 }}>
+          <Pressable onPress={() => router.back()} accessibilityRole="button">
+            <ArrowLeft color={resolveColor(theme, 'onSurface')} size={24} />
+          </Pressable>
+          <Empty
+            icon={<Lock color={resolveColor(theme, 'onSurfaceVariant')} size={28} />}
+            title="Chỉ dành cho HLV (PT)"
+            description={
+              fallbackUser
+                ? `Tính năng Doanh thu chỉ hiển thị với tài khoản PT. Tài khoản hiện tại (${fallbackUser.profile.name}) là hội viên.`
+                : 'Tính năng Doanh thu chỉ hiển thị với tài khoản PT trong bản demo này.'
+            }
+            actionLabel="Quay lại"
+            onAction={() => router.back()}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const currentUser = user!; // canAccessRevenue da check o tren.
   const bookings = useMemo<BookingForPT[]>(
-    () => (userEmail ? getBookingsForPT(userEmail) : []),
-    [userEmail],
+    () => getBookingsForPT(currentUser.email),
+    [currentUser.email],
   );
 
   const kpi = useMemo(() => computeRevenueKPI(bookings, period), [bookings, period]);
@@ -122,33 +148,6 @@ export default function RevenueScreen() {
     }, 500);
   }, []);
 
-  // Access guard — chi cho PT.
-  if (!canAccessRevenue(user)) {
-    const fallbackUser = user;
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top']}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <View style={{ padding: 16, gap: 12 }}>
-          <Pressable onPress={() => router.back()} accessibilityRole="button">
-            <ArrowLeft color={resolveColor(theme, 'onSurface')} size={24} />
-          </Pressable>
-          <Empty
-            icon={<Lock color={resolveColor(theme, 'onSurfaceVariant')} size={28} />}
-            title="Chỉ dành cho HLV (PT)"
-            description={
-              fallbackUser
-                ? `Tính năng Doanh thu chỉ hiển thị với tài khoản PT. Tài khoản hiện tại (${fallbackUser.profile.name}) là hội viên.`
-                : 'Tính năng Doanh thu chỉ hiển thị với tài khoản PT trong bản demo này.'
-            }
-            actionLabel="Quay lại"
-            onAction={() => router.back()}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  const currentUser = user!;
   const periodLabel = PERIODS.find((p) => p.key === period)?.label ?? 'Tháng này';
 
   return (

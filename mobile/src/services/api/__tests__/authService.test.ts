@@ -92,13 +92,13 @@ describe('AuthService & ApiClient (MOB-800)', () => {
 
       const domainPt = mapToDomainUser(ptSummary);
 
-      expect((domainPt as unknown as { id: string }).id).toBe('pt-uuid-001');
-      expect((domainPt as unknown as { role: string }).role).toBe('pt');
+      expect(domainPt.id).toBe('pt-uuid-001');
+      expect(domainPt.role).toBe('pt');
       expect(domainPt.profile.isPt).toBe(true);
       expect(domainPt.profile.isVerified).toBe(false);
       expect(domainPt.profile.certificateStatus).toBe('pending');
-      // Password must not be persisted in domain user
-      expect(domainPt.password).toBe('');
+      // Password must not be persisted in production domain user
+      expect(domainPt.password).toBeUndefined();
     });
 
     it('ensures member registration maps to member role with unverified certificate status', () => {
@@ -111,8 +111,8 @@ describe('AuthService & ApiClient (MOB-800)', () => {
 
       const domainMember = mapToDomainUser(memberSummary);
 
-      expect((domainMember as unknown as { id: string }).id).toBe('member-uuid-002');
-      expect((domainMember as unknown as { role: string }).role).toBe('member');
+      expect(domainMember.id).toBe('member-uuid-002');
+      expect(domainMember.role).toBe('member');
       expect(domainMember.profile.isPt).toBe(false);
       expect(domainMember.profile.isVerified).toBe(false);
       expect(domainMember.profile.certificateStatus).toBe('unverified');

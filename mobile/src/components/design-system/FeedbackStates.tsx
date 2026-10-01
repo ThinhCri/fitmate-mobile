@@ -12,7 +12,7 @@ import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { PrimaryButton, SecondaryButton } from './Buttons';
 
 export interface FeedbackStateProps {
-  title?: string;
+  title: string;
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
@@ -46,7 +46,7 @@ export const LoadingSkeleton: React.FC<{
 };
 
 export const EmptyState: React.FC<FeedbackStateProps> = ({
-  title = 'Không có dữ liệu',
+  title,
   description,
   actionLabel,
   onAction,
@@ -75,7 +75,7 @@ export const EmptyState: React.FC<FeedbackStateProps> = ({
 };
 
 export const ErrorState: React.FC<FeedbackStateProps> = ({
-  title = 'Đã xảy ra lỗi',
+  title,
   description,
   actionLabel = 'Thử lại',
   onAction,
