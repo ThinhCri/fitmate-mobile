@@ -11,9 +11,7 @@ import { ArrowLeft, Gift, CreditCard } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
-import * as mockUserService from '@/services/mockUserService';
 import { Card, Button, Input, Chip } from '@/components/ui';
-import { ToastService } from '@/components/ui/Toast';
 import { formatVnd } from '@/utils/format';
 
 const VOUCHERS = [
@@ -26,7 +24,7 @@ const VOUCHERS = [
 type Segment = 'voucher' | 'withdraw';
 
 export default function WithdrawSheet() {
-  const { user, refresh } = useAuth();
+  const { user } = useAuth();
   const theme = useTheme();
   const [segment, setSegment] = useState<Segment>('voucher');
 
@@ -37,38 +35,7 @@ export default function WithdrawSheet() {
   const [amount, setAmount] = useState('');
 
   if (!user) return null;
-  const value = user.rewardPoints * 1000;
-
-  const redeemVoucher = async (voucherId: string, cost: number) => {
-    if (user.rewardPoints < cost) {
-      Alert.alert('Không đủ điểm', `Bạn cần ${cost} điểm để đổi voucher này.`);
-      return;
-    }
-    await mockUserService.saveUser({ ...user, rewardPoints: user.rewardPoints - cost });
-    await refresh();
-    ToastService.show({ message: `Đã đổi ${cost} điểm → voucher!`, tone: 'success' });
-  };
-
-  const submitWithdraw = async () => {
-    const numAmount = parseInt(amount, 10);
-    if (!bankName.trim() || !accountNumber.trim() || !accountName.trim()) {
-      Alert.alert('Thiếu thông tin', 'Vui lòng điền đầy đủ thông tin ngân hàng.');
-      return;
-    }
-    if (isNaN(numAmount) || numAmount < 50) {
-      Alert.alert('Số điểm không hợp lệ', 'Tối thiểu 50 điểm để rút.');
-      return;
-    }
-    if (numAmount > user.rewardPoints) {
-      Alert.alert('Vượt quá số dư', `Bạn chỉ có ${user.rewardPoints} điểm.`);
-      return;
-    }
-    await mockUserService.saveUser({ ...user, rewardPoints: user.rewardPoints - numAmount });
-    await refresh();
-    ToastService.show({ message: `Đã gửi yêu cầu rút ${numAmount} điểm!`, tone: 'success' });
-    setBankName(''); setAccountNumber(''); setAccountName(''); setAmount('');
-    router.back();
-  };
+  const value = (user.rewardPoints || 0) * 1000;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top', 'bottom']}>
@@ -108,7 +75,7 @@ export default function WithdrawSheet() {
                 <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 14, fontWeight: '700' }}>{v.label}</Text>
                 <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 12 }}>{v.cost} điểm</Text>
               </View>
-              <Button label="Đổi ngay" variant="primary" size="sm" onPress={() => redeemVoucher(v.id, v.cost)} />
+              <Button label="Sắp ra mắt" variant="secondary" size="sm" disabled />
             </View>
           </Card>
         ))}
@@ -120,9 +87,9 @@ export default function WithdrawSheet() {
               <Input label="Số tài khoản" value={accountNumber} onChangeText={setAccountNumber} placeholder="VD: 1234567890" keyboardType="numeric" />
               <Input label="Chủ tài khoản" value={accountName} onChangeText={setAccountName} placeholder="VD: NGUYEN VAN A" autoCapitalize="characters" />
               <Input label="Số điểm muốn rút (tối thiểu 50)" value={amount} onChangeText={setAmount} placeholder="VD: 100" keyboardType="numeric" />
-              <Button label="Gửi yêu cầu rút" variant="primary" fullWidth onPress={submitWithdraw} />
+              <Button label="Tính năng rút thưởng đang phát triển" variant="secondary" fullWidth disabled />
               <Text style={{ color: resolveColor(theme, 'onSurfaceDisabled'), fontSize: 11, textAlign: 'center' }}>
-                Đây là mô phỏng demo, không có giao dịch thật.
+                Tính năng quy đổi điểm thưởng sang tiền mặt chưa được kích hoạt trong phiên bản này.
               </Text>
             </View>
           </Card>

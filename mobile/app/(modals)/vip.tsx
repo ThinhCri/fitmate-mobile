@@ -11,9 +11,7 @@ import { ArrowLeft, Gem, Check } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
-import * as mockUserService from '@/services/mockUserService';
 import { Card, Button } from '@/components/ui';
-import { ToastService } from '@/components/ui/Toast';
 import { formatVnd } from '@/utils/format';
 
 const PLANS = [
@@ -34,20 +32,11 @@ const PLANS = [
 ];
 
 export default function VipSheet() {
-  const { user, refresh } = useAuth();
+  const { user } = useAuth();
   const theme = useTheme();
   const [selected, setSelected] = useState(PLANS[0].id);
 
   if (!user) return null;
-
-  const purchase = async () => {
-    const plan = PLANS.find((p) => p.id === selected);
-    if (!plan) return;
-    await mockUserService.saveUser({ ...user, profile: { ...user.profile, name: user.profile.name + ' (VIP)' } });
-    await refresh();
-    ToastService.show({ message: `Đã nâng cấp VIP — gói ${plan.label}!`, tone: 'achievement' });
-    router.back();
-  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top', 'bottom']}>
@@ -139,9 +128,9 @@ export default function VipSheet() {
           ))}
         </View>
 
-        <Button label="Mua ngay (demo)" variant="achievement" fullWidth onPress={purchase} />
+        <Button label="Tính năng VIP sắp ra mắt" variant="secondary" fullWidth disabled />
         <Text style={{ color: resolveColor(theme, 'onSurfaceDisabled'), fontSize: 11, textAlign: 'center' }}>
-          Mô phỏng demo — không có giao dịch thật.
+          Gói thành viên VIP đang được nâng cấp theo tiêu chuẩn xác thực thanh toán nền tảng.
         </Text>
       </ScrollView>
     </SafeAreaView>

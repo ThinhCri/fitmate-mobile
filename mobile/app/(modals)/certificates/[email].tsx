@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, View, Text, Pressable, Modal, TextInput, Image, Alert } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, BadgeCheck, Clock, X, Plus, ShieldCheck, RefreshCw } from 'lucide-react-native';
+import { ArrowLeft, BadgeCheck, Clock, X, Plus, ShieldCheck } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
 import * as mockUserService from '@/services/mockUserService';
@@ -57,26 +57,6 @@ export default function PTCertificatesScreen() {
     ToastService.show({ message: 'Đã gửi yêu cầu xét duyệt chứng chỉ!', tone: 'info' });
   };
 
-  const adminApprove = async () => {
-    await mockUserService.updateOtherUser(profile.email, (u) => ({
-      ...u,
-      profile: { ...u.profile, certificateStatus: 'verified', isVerified: true },
-    }));
-    const updated = await mockUserService.getUserByEmail(profile.email);
-    if (updated) setProfile(updated);
-    ToastService.show({ message: 'Admin: Đã duyệt chứng chỉ (simulation).', tone: 'success' });
-  };
-
-  const adminReset = async () => {
-    await mockUserService.updateOtherUser(profile.email, (u) => ({
-      ...u,
-      profile: { ...u.profile, certificateStatus: 'unverified', isVerified: false },
-    }));
-    const updated = await mockUserService.getUserByEmail(profile.email);
-    if (updated) setProfile(updated);
-    ToastService.show({ message: 'Admin: Đã reset (simulation).', tone: 'warning' });
-  };
-
   const saveNewCert = async () => {
     if (!certForm.name.trim() || !certForm.organization.trim()) {
       Alert.alert('Thiếu thông tin', 'Vui lòng điền tên chứng chỉ và tổ chức.');
@@ -124,17 +104,6 @@ export default function PTCertificatesScreen() {
           <Button label="+ Thêm chứng chỉ" variant="secondary" size="sm" onPress={() => setAddingCert(true)} iconLeft={<Plus size={12} color={resolveColor(theme, 'onSecondaryContainer')} />} />
         )}
       </View>
-
-      {/* Admin simulate panel (visible if self and has certs) */}
-      {isSelf && profile.profile.certificates.length > 0 && (
-        <Card variant="flat">
-          <Text style={{ color: resolveColor(theme, 'onSurfaceVariant'), fontSize: 11, fontWeight: '700' }}>ADMIN SIMULATE (demo)</Text>
-          <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
-            <Button label="Duyệt" variant="primary" size="sm" onPress={adminApprove} />
-            <Button label="Reset" variant="ghost" size="sm" onPress={adminReset} iconLeft={<RefreshCw size={12} color={resolveColor(theme, 'onSurface')} />} />
-          </View>
-        </Card>
-      )}
 
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         {profile.profile.certificates.length === 0 ? (
