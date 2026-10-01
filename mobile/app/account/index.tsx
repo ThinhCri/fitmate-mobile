@@ -1,23 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
   AccountHubPresentation,
   AccountHubViewModel,
 } from '@/features/account';
+import { getAccountRepository } from '@/repositories/accountRepository';
+import { sessionManager } from '@/services/session/sessionManager';
 
 export default function AccountHubScreen() {
-  const account: AccountHubViewModel = {
+  const [account, setAccount] = useState<AccountHubViewModel>({
     id: 'user-current',
-    name: 'Nguyễn Minh Anh',
-    email: 'minhanh.fit@gmail.com',
-    role: 'member', // Can switch to 'pt' to test PT space link
-    isVerified: true,
-    upcomingBookingCount: 1,
-    friendCount: 24,
-    unreadChatCount: 1,
-    unreadNotifCount: 2,
-  };
+    name: 'Đang tải...',
+    email: '',
+    role: 'member',
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    getAccountRepository()
+      .getAccountHub()
+      .then((data) => {
+        if (mounted) setAccount(data);
+      })
+      .catch((err) => {
+        console.warn('Could not load account hub:', err);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
@@ -32,8 +44,8 @@ export default function AccountHubScreen() {
         onHealthProfilePress={() => router.push('/account/health-profile' as any)}
         onSettingsPress={() => router.push('/account/settings' as any)}
         onSupportPress={() => router.push('/support' as any)}
-        onLogoutPress={() => {
-          // Handle clean logout and redirect to auth
+        onLogoutPress={async () => {
+          sessionManager.clearSession();
           router.replace('/(auth)/login' as any);
         }}
       />

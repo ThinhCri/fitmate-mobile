@@ -34,7 +34,7 @@ export function ChangePasswordPresentation({
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const hasMinLength = newPassword.length >= 8;
+  const hasMinLength = newPassword.length >= 12 && newPassword.length <= 128;
   const hasLetterAndNumber =
     /[a-zA-Z]/.test(newPassword) && /[0-9]/.test(newPassword);
   const passwordsMatch = newPassword === confirmPassword && newPassword.length > 0;
@@ -99,7 +99,7 @@ export function ChangePasswordPresentation({
             label="Mật khẩu mới"
             value={newPassword}
             onChangeText={setNewPassword}
-            placeholder="Tối thiểu 8 ký tự"
+            placeholder="Từ 12 đến 128 ký tự"
           />
 
           <PasswordInput
@@ -124,7 +124,7 @@ export function ChangePasswordPresentation({
                 hasMinLength && styles.checkTextValid,
               ]}
             >
-              Tối thiểu 8 ký tự
+              Độ dài từ 12 đến 128 ký tự
             </Text>
           </View>
           <View style={styles.checkItem}>

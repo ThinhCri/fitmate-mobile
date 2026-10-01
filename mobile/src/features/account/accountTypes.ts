@@ -41,3 +41,10 @@ export interface ChangePasswordFormData {
   newPassword: string;
   confirmPassword: string;
 }
+
+export interface SettingsViewModel {
+  notificationsEnabled: boolean;
+  emailAlertsEnabled: boolean;
+  language: string;
+  appVersion: string;
+}

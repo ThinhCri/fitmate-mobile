@@ -12,7 +12,7 @@ describe('Account Hub & Settings Presentation Logic (Stitch A06 - A10)', () => {
       newPassword: 'short',
       confirmPassword: 'short',
     };
-    expect(invalidForm.newPassword.length).toBeLessThan(8);
+    expect(invalidForm.newPassword.length).toBeLessThan(12);
 
     const validForm: ChangePasswordFormData = {
       currentPassword: 'oldpassword123',
@@ -20,7 +20,8 @@ describe('Account Hub & Settings Presentation Logic (Stitch A06 - A10)', () => {
       confirmPassword: 'SecurePassword2026',
     };
 
-    const hasMinLength = validForm.newPassword.length >= 8;
+    const hasMinLength =
+      validForm.newPassword.length >= 12 && validForm.newPassword.length <= 128;
     const hasAlphaNumeric =
       /[a-zA-Z]/.test(validForm.newPassword) &&
       /[0-9]/.test(validForm.newPassword);
