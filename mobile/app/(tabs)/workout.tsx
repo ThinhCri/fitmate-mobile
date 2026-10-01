@@ -10,7 +10,7 @@ import { Calendar, Dumbbell, Sparkles } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
-import { mockUserService } from '@/services/mockUserService';
+import { getWorkoutRepository } from '@/repositories/workoutRepository';
 import { ToastService } from '@/components/ui/Toast';
 import { Card, Chip, Button } from '@/components/ui';
 import { WorkoutItem, RestTimer, MedicalSurvey } from '@/features/workout';
@@ -170,23 +170,13 @@ export default function WorkoutScreen() {
     }, completed.length === 0 ? plannedSets : 0);
     const status: 'completed' | 'endedEarly' =
       completed.length >= currentWorkout.length ? 'completed' : 'endedEarly';
-    await mockUserService.saveUser({
-      ...user,
-      caloriesBurned: user.caloriesBurned + burned,
-      workoutHistory: [
-        ...user.workoutHistory,
-        {
-          id: `wh-${Date.now()}`,
-          date: new Date().toISOString().split('T')[0],
-          day,
-          durationMin: minutes,
-          caloriesBurned: burned,
-          exercises: currentWorkout.length,
-          status,
-          completedSets,
-          plannedSets,
-        },
-      ],
+    await getWorkoutRepository().recordWorkoutCompletion({
+      name: `Buổi tập ${day}`,
+      durationMinutes: minutes,
+      caloriesBurned: burned,
+      completedSets,
+      plannedSets,
+      status,
     });
     setStartedAt(null);
     setCompleted([]);
@@ -214,11 +204,7 @@ export default function WorkoutScreen() {
           defaultConditions={user.medicalConditions ?? []}
           defaultNotes={user.medicalNotes ?? ''}
           onSubmit={async ({ conditions, notes }) => {
-            await mockUserService.saveUser({
-              ...user,
-              medicalConditions: conditions,
-              medicalNotes: notes,
-            });
+            await getWorkoutRepository().saveMedicalSurvey(conditions, notes);
             await refresh();
             setShowSurvey(false);
             ToastService.show({ message: 'Đã lưu khảo sát y tế.', tone: 'success' });

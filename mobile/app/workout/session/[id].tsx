@@ -1,56 +1,53 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SessionDetailPresentation } from '../../../src/features/workout/SessionDetailPresentation';
 import { WorkoutSessionSummaryViewModel } from '../../../src/features/workout/workoutTypes';
-
-const MOCK_SESSION_DETAIL: WorkoutSessionSummaryViewModel = {
-  id: 'ses-20260928-098',
-  planId: 'plan-1',
-  planTitle: 'Upper Body A — Thể lực & Sức mạnh',
-  startedAt: 'Thứ Hai, 28/09/2026 • 18:00 - 18:42:15',
-  endedAt: '18:42:15',
-  durationSeconds: 2535,
-  caloriesBurned: 295,
-  totalExercises: 2,
-  completedExercises: 2,
-  totalSets: 7,
-  completedSets: 6,
-  syncStatus: 'pending',
-  records: [
-    {
-      exerciseId: 'ex-1',
-      exerciseName: 'Đẩy ngực tạ đòn (Barbell Bench Press)',
-      sets: [
-        { setNumber: 1, repsCompleted: 10, status: 'completed' },
-        { setNumber: 2, repsCompleted: 10, status: 'completed' },
-        { setNumber: 3, repsCompleted: 10, status: 'completed' },
-        { setNumber: 4, repsCompleted: 8, status: 'completed' },
-      ],
-    },
-    {
-      exerciseId: 'ex-2',
-      exerciseName: 'Đẩy tạ đơn dốc lên (Incline DB Press)',
-      sets: [
-        { setNumber: 1, repsCompleted: 12, status: 'completed' },
-        { setNumber: 2, repsCompleted: 10, status: 'completed' },
-        { setNumber: 3, status: 'skipped' },
-      ],
-    },
-  ],
-};
+import { getWorkoutRepository } from '@/repositories/workoutRepository';
 
 export default function SessionDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [session, setSession] = useState<WorkoutSessionSummaryViewModel | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    getWorkoutRepository()
+      .getSessionDetail(id)
+      .then((data) => {
+        setSession(data);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err?.message || 'Không thể tải chi tiết buổi tập');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#0F766E" />
+      </View>
+    );
+  }
+
+  if (error || !session) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <Text style={styles.errorText}>{error || 'Không tìm thấy buổi tập'}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <SessionDetailPresentation
-        session={{
-          ...MOCK_SESSION_DETAIL,
-          id: id || MOCK_SESSION_DETAIL.id,
-        }}
+        session={session}
         totalVolumeKg={3450}
         onBack={() => router.back()}
       />
@@ -62,5 +59,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#DC2626',
+    textAlign: 'center',
   },
 });

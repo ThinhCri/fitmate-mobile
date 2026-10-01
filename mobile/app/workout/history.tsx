@@ -1,69 +1,61 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { WorkoutHistoryPresentation } from '../../src/features/workout/WorkoutHistoryPresentation';
 import { WorkoutHistoryItemViewModel } from '../../src/features/workout/workoutTypes';
-
-const MOCK_SESSIONS: WorkoutHistoryItemViewModel[] = [
-  {
-    id: 'ses-1',
-    planId: 'plan-1',
-    planTitle: 'Upper Body A — Thể lực & Sức mạnh',
-    category: 'Thân trên',
-    completedAt: 'Hôm nay, 18:45',
-    durationSeconds: 2535,
-    totalVolumeKg: 3450,
-    caloriesBurned: 295,
-    completedSets: 6,
-    totalSets: 7,
-    syncStatus: 'pending',
-  },
-  {
-    id: 'ses-2',
-    planId: 'plan-2',
-    planTitle: 'Lower Body & Core B',
-    category: 'Thân dưới',
-    completedAt: 'Thứ Năm, 26/09/2026',
-    durationSeconds: 2700,
-    totalVolumeKg: 4200,
-    caloriesBurned: 350,
-    completedSets: 8,
-    totalSets: 8,
-    syncStatus: 'synced',
-  },
-  {
-    id: 'ses-3',
-    planId: 'plan-3',
-    planTitle: 'Cardio HIIT & Bụng',
-    category: 'Cardio',
-    completedAt: 'Thứ Ba, 24/09/2026',
-    durationSeconds: 1800,
-    totalVolumeKg: 0,
-    caloriesBurned: 280,
-    completedSets: 5,
-    totalSets: 5,
-    syncStatus: 'synced',
-  },
-];
-
-const MOCK_MONTHLY_STATS = {
-  monthYear: 'Tháng 9/2026',
-  completedCount: 24,
-  targetCount: 25,
-  totalVolumeKg: 38450,
-  caloriesBurned: 7200,
-  averageDurationMinutes: 45,
-};
+import { getWorkoutRepository, MonthlyWorkoutStats } from '@/repositories/workoutRepository';
 
 export default function WorkoutHistoryScreen() {
   const router = useRouter();
-  const [sessions] = useState<WorkoutHistoryItemViewModel[]>(MOCK_SESSIONS);
+  const [sessions, setSessions] = useState<WorkoutHistoryItemViewModel[]>([]);
+  const [monthlyStats, setMonthlyStats] = useState<MonthlyWorkoutStats>({
+    monthYear: 'Tháng này',
+    completedCount: 0,
+    targetCount: 0,
+    totalVolumeKg: 0,
+    caloriesBurned: 0,
+    averageDurationMinutes: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getWorkoutRepository()
+      .getHistory()
+      .then((data) => {
+        setSessions(data.sessions);
+        setMonthlyStats(data.stats);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err?.message || 'Không thể tải lịch sử tập luyện');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#0F766E" />
+      </View>
+    );
+  }
+
+  if (error && sessions.length === 0) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <WorkoutHistoryPresentation
         sessions={sessions}
-        monthlyStats={MOCK_MONTHLY_STATS}
+        monthlyStats={monthlyStats}
         onSelectSession={(id) => router.push(`/workout/session/${id}` as any)}
       />
     </View>
@@ -74,5 +66,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#DC2626',
+    textAlign: 'center',
   },
 });

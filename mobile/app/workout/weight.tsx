@@ -1,63 +1,77 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { WeightTrackerPresentation } from '../../src/features/workout/WeightTrackerPresentation';
 import { WeightRecordViewModel } from '../../src/features/workout/workoutTypes';
-
-const INITIAL_WEIGHT_RECORDS: WeightRecordViewModel[] = [
-  {
-    id: 'w-1',
-    weightKg: 67.8,
-    recordedAt: 'Hôm nay, 07:15',
-    notes: 'Đo sau khi thức dậy',
-    differenceFromPreviousKg: -0.1,
-  },
-  {
-    id: 'w-2',
-    weightKg: 67.9,
-    recordedAt: 'Hôm qua, 07:10',
-    notes: 'Sau khi chạy bộ',
-    differenceFromPreviousKg: -0.1,
-  },
-  {
-    id: 'w-3',
-    weightKg: 68.0,
-    recordedAt: '26/09/2026, 07:20',
-    differenceFromPreviousKg: -0.2,
-  },
-  {
-    id: 'w-4',
-    weightKg: 68.2,
-    recordedAt: '24/09/2026, 07:05',
-    differenceFromPreviousKg: -0.3,
-  },
-];
+import { getWorkoutRepository } from '@/repositories/workoutRepository';
 
 export default function WeightTrackerScreen() {
-  const [records, setRecords] = useState<WeightRecordViewModel[]>(INITIAL_WEIGHT_RECORDS);
+  const [records, setRecords] = useState<WeightRecordViewModel[]>([]);
+  const [currentWeight, setCurrentWeight] = useState(67.8);
+  const [goalWeight, setGoalWeight] = useState(65.0);
+  const [changeLast7Days, setChangeLast7Days] = useState(-0.4);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleAddRecord = (weightKg: number, notes?: string) => {
-    const prevWeight = records[0]?.weightKg ?? weightKg;
-    const newRecord: WeightRecordViewModel = {
-      id: `w-${Date.now()}`,
-      weightKg,
-      recordedAt: 'Vừa xong',
-      notes,
-      differenceFromPreviousKg: Number((weightKg - prevWeight).toFixed(1)),
-    };
-    setRecords([newRecord, ...records]);
+  useEffect(() => {
+    getWorkoutRepository()
+      .getWeightRecords()
+      .then((data) => {
+        setRecords(data.records);
+        setCurrentWeight(data.currentWeightKg);
+        setGoalWeight(data.goalWeightKg);
+        setChangeLast7Days(data.changeLast7DaysKg);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err?.message || 'Không thể tải lịch sử cân nặng');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const handleAddRecord = async (weightKg: number, notes?: string) => {
+    try {
+      const newRecord = await getWorkoutRepository().addWeightRecord(weightKg, notes);
+      setRecords((prev) => [newRecord, ...prev]);
+      setCurrentWeight(weightKg);
+    } catch (err: any) {
+      setError(err?.message || 'Không thể ghi nhận cân nặng');
+    }
   };
 
-  const handleDeleteRecord = (id: string) => {
-    setRecords(records.filter((r) => r.id !== id));
+  const handleDeleteRecord = async (id: string) => {
+    try {
+      await getWorkoutRepository().deleteWeightRecord(id);
+      setRecords((prev) => prev.filter((r) => r.id !== id));
+    } catch (err: any) {
+      setError(err?.message || 'Không thể xóa cân nặng');
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#0F766E" />
+      </View>
+    );
+  }
+
+  if (error && records.length === 0) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <WeightTrackerPresentation
-        currentWeightKg={records[0]?.weightKg ?? 67.8}
-        goalWeightKg={65.0}
-        changeLast7DaysKg={-0.4}
-        lastMeasuredText="Hôm nay, 07:15 • Đo sau khi thức dậy"
+        currentWeightKg={currentWeight}
+        goalWeightKg={goalWeight}
+        changeLast7DaysKg={changeLast7Days}
+        lastMeasuredText={records[0]?.recordedAt ? `${records[0].recordedAt} • ${records[0].notes || 'Gần đây'}` : 'Chưa có bản ghi'}
         records={records}
         onAddRecord={handleAddRecord}
         onDeleteRecord={handleDeleteRecord}
@@ -70,5 +84,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#DC2626',
+    textAlign: 'center',
   },
 });
