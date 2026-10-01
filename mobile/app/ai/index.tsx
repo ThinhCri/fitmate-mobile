@@ -5,26 +5,32 @@ import {
   AiConversationListPresentation,
   AiConversationSummaryViewModel,
 } from '@/features/ai';
+import { isPreviewMode } from '@/repositories/repositoryTypes';
 
 export default function AiConversationsScreen() {
-  const [conversations, setConversations] = useState<AiConversationSummaryViewModel[]>([
-    {
-      id: 'ai-1',
-      title: 'Tư vấn lượng protein cho người tập tăng cơ',
-      lastMessagePreview:
-        'Dựa trên cân nặng 67.8kg và cường độ tập của bạn, mức nạp khuyến nghị là...',
-      lastUpdatedAt: 'Hôm nay 09:15',
-      category: 'nutrition',
-    },
-    {
-      id: 'ai-2',
-      title: 'Điều chỉnh lịch tập ngực khi bị mỏi vai',
-      lastMessagePreview:
-        'Bạn nên hạ 10% mức tạ Bench Press và tăng bài khởi động Face Pull...',
-      lastUpdatedAt: '26/09/2026',
-      category: 'workout',
-    },
-  ]);
+  const isPreview = isPreviewMode();
+  const [conversations, setConversations] = useState<AiConversationSummaryViewModel[]>(
+    isPreview
+      ? [
+          {
+            id: 'ai-1',
+            title: 'Tư vấn lượng protein cho người tập tăng cơ',
+            lastMessagePreview:
+              'Dựa trên cân nặng 67.8kg và cường độ tập của bạn, mức nạp khuyến nghị là...',
+            lastUpdatedAt: 'Hôm nay 09:15',
+            category: 'nutrition',
+          },
+          {
+            id: 'ai-2',
+            title: 'Điều chỉnh lịch tập ngực khi bị mỏi vai',
+            lastMessagePreview:
+              'Bạn nên hạ 10% mức tạ Bench Press và tăng bài khởi động Face Pull...',
+            lastUpdatedAt: '26/09/2026',
+            category: 'workout',
+          },
+        ]
+      : []
+  );
 
   const handleDeleteConversation = (id: string) => {
     setConversations((prev) => prev.filter((c) => c.id !== id));
@@ -40,7 +46,7 @@ export default function AiConversationsScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <AiConversationListPresentation
         conversations={conversations}
-        isAiAvailable={true}
+        isAiAvailable={isPreview}
         onBack={() => router.back()}
         onSelectConversation={(id) => router.push(`/ai/${id}` as any)}
         onNewConversation={handleNewConversation}
