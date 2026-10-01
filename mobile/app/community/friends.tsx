@@ -1,89 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
   FindFriendsPresentation,
   FriendItemViewModel,
 } from '@/features/community';
+import { getSocialRepository } from '@/repositories/socialRepository';
 
 export default function FindFriendsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [friendsList, setFriendsList] = useState<FriendItemViewModel[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<FriendItemViewModel[]>([]);
+  const [sentRequests, setSentRequests] = useState<FriendItemViewModel[]>([]);
+  const [allUsers, setAllUsers] = useState<FriendItemViewModel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [friendsList, setFriendsList] = useState<FriendItemViewModel[]>([
-    {
-      id: 'user-101',
-      name: 'Lê Quốc Bảo',
-      role: 'member',
-      isOnline: true,
-      mutualFriendsCount: 4,
-      relationship: 'friend',
-      headline: 'Chung sở thích Calisthenics',
-    },
-    {
-      id: 'pt-202',
-      name: 'HLV Minh Tuấn',
-      role: 'pt',
-      isOnline: false,
-      mutualFriendsCount: 8,
-      relationship: 'friend',
-      headline: 'HLV Dinh dưỡng & Thể hình',
-    },
-  ]);
-
-  const [pendingRequests, setPendingRequests] = useState<FriendItemViewModel[]>([
-    {
-      id: 'user-303',
-      name: 'Đặng Thu Trang',
-      role: 'member',
-      isOnline: true,
-      mutualFriendsCount: 4,
-      relationship: 'received_request',
-      requestDate: '1 ngày trước',
-      headline: 'Cùng tập Pilates',
-    },
-  ]);
-
-  const [sentRequests, setSentRequests] = useState<FriendItemViewModel[]>([
-    {
-      id: 'user-404',
-      name: 'Nguyễn Văn Hùng',
-      role: 'member',
-      isOnline: false,
-      mutualFriendsCount: 2,
-      relationship: 'sent_request',
-      headline: 'Chạy bộ bán chuyên',
-    },
-  ]);
-
-  const [allUsers] = useState<FriendItemViewModel[]>([
-    {
-      id: 'user-505',
-      name: 'Hoàng Kim Ngân',
-      role: 'member',
-      mutualFriendsCount: 1,
-      relationship: 'sent_request',
-    },
-    {
-      id: 'pt-606',
-      name: 'HLV Phạm Đức Anh',
-      role: 'pt',
-      mutualFriendsCount: 5,
-      relationship: 'received_request',
-    },
-    {
-      id: 'user-707',
-      name: 'Trịnh Thảo Vy',
-      role: 'member',
-      mutualFriendsCount: 3,
-      relationship: 'friend',
-    },
-  ]);
+  useEffect(() => {
+    getSocialRepository()
+      .getFriends()
+      .then((data) => {
+        setFriendsList(data.friends);
+        setPendingRequests(data.pendingRequests);
+        setSentRequests(data.sentRequests);
+        setAllUsers([...data.friends, ...data.pendingRequests, ...data.sentRequests, ...data.discoverUsers]);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err?.message || 'Không thể tải danh sách bạn bè');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   const searchResults = allUsers.filter((u) =>
     u.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAcceptRequest = (friendId: string) => {
+  const handleAcceptRequest = async (friendId: string) => {
     const target = pendingRequests.find((r) => r.id === friendId);
     if (target) {
       setPendingRequests((prev) => prev.filter((r) => r.id !== friendId));
@@ -91,29 +47,64 @@ export default function FindFriendsScreen() {
         ...prev,
         { ...target, relationship: 'friend' },
       ]);
+      try {
+        await getSocialRepository().acceptFriendRequest(friendId);
+      } catch {
+        // Handled silently or reverted
+      }
     }
   };
 
-  const handleRejectRequest = (friendId: string) => {
+  const handleRejectRequest = async (friendId: string) => {
     setPendingRequests((prev) => prev.filter((r) => r.id !== friendId));
+    try {
+      await getSocialRepository().rejectFriendRequest(friendId);
+    } catch {
+      // Ignored
+    }
   };
 
   const handleCancelSentRequest = (friendId: string) => {
     setSentRequests((prev) => prev.filter((r) => r.id !== friendId));
   };
 
-  const handleSendRequest = (friendId: string) => {
+  const handleSendRequest = async (friendId: string) => {
     const user = allUsers.find((u) => u.id === friendId);
     if (user) {
       setSentRequests((prev) => [
         ...prev,
         { ...user, relationship: 'sent_request' },
       ]);
+      try {
+        await getSocialRepository().sendFriendRequest(friendId);
+      } catch {
+        // Ignored
+      }
     }
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#0F766E" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error && friendsList.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <SafeAreaView style={styles.container}>
       <FindFriendsPresentation
         friendsList={friendsList}
         pendingRequests={pendingRequests}
@@ -134,3 +125,21 @@ export default function FindFriendsScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#DC2626',
+    textAlign: 'center',
+  },
+});

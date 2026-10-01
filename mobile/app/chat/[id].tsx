@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
@@ -7,56 +8,37 @@ import {
   ChatMessageViewModel,
 } from '@/features/chat';
 import { ReportBlockModal, ReportRequest } from '@/features/community';
+import { getSocialRepository } from '@/repositories/socialRepository';
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-
-  const isRestrictedConversation = id === 'conv-3';
-
-  const [conversation, setConversation] = useState<ConversationDetailViewModel>({
-    id: id || 'conv-1',
-    participantId: 'pt-101',
-    participantName: isRestrictedConversation ? 'Bùi Tiến Dũng' : 'HLV Hoàng Nam',
-    participantRole: isRestrictedConversation ? 'member' : 'pt',
-    isOnline: !isRestrictedConversation,
-    isRestricted: isRestrictedConversation,
-    messages: [
-      {
-        id: 'm-1',
-        senderId: 'pt-101',
-        senderName: isRestrictedConversation ? 'Bùi Tiến Dũng' : 'HLV Hoàng Nam',
-        text: isRestrictedConversation
-          ? 'Chào bạn, tuần trước tập bài lưng xong cơ lưng xô phát triển tốt lắm!'
-          : 'Chào bạn, buổi tập tối nay 18:00 nhớ khởi động kỹ khớp vai nhé!',
-        timestamp: '17:45',
-        status: 'read',
-        isSelf: false,
-      },
-      {
-        id: 'm-2',
-        senderId: 'my-id',
-        senderName: 'Tôi',
-        text: 'Vâng ạ, em đã sẵn sàng rồi!',
-        timestamp: '17:46',
-        status: 'read',
-        isSelf: true,
-      },
-      {
-        id: 'm-3',
-        senderId: 'my-id',
-        senderName: 'Tôi',
-        text: 'Em có cần mang theo dây kháng lực không ạ?',
-        timestamp: '17:47',
-        status: 'sent',
-        isSelf: true,
-      },
-    ],
-  });
-
+  const [conversation, setConversation] = useState<ConversationDetailViewModel | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [reportModalVisible, setReportModalVisible] = useState(false);
 
-  const handleSendMessage = (text: string) => {
-    const newMsg: ChatMessageViewModel = {
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    getSocialRepository()
+      .getConversation(id)
+      .then((data) => {
+        setConversation(data);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err?.message || 'Không thể tải cuộc trò chuyện');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [id]);
+
+  const handleSendMessage = async (text: string) => {
+    if (!conversation) return;
+    const tempMsg: ChatMessageViewModel = {
       id: `m-${Date.now()}`,
       senderId: 'my-id',
       senderName: 'Tôi',
@@ -66,42 +48,84 @@ export default function ConversationScreen() {
       isSelf: true,
     };
 
-    setConversation((prev) => ({
-      ...prev,
-      messages: [...prev.messages, newMsg],
-    }));
+    setConversation((prev) =>
+      prev ? { ...prev, messages: [...prev.messages, tempMsg] } : prev
+    );
 
-    // Simulated status update to 'sent' after 400ms
-    setTimeout(() => {
-      setConversation((prev) => ({
-        ...prev,
-        messages: prev.messages.map((m) =>
-          m.id === newMsg.id ? { ...m, status: 'sent' } : m
-        ),
-      }));
-    }, 400);
+    try {
+      const sentMsg = await getSocialRepository().sendMessage(conversation.id, text);
+      setConversation((prev) =>
+        prev
+          ? {
+              ...prev,
+              messages: prev.messages.map((m) =>
+                m.id === tempMsg.id ? { ...sentMsg, status: 'sent' } : m
+              ),
+            }
+          : prev
+      );
+    } catch {
+      setConversation((prev) =>
+        prev
+          ? {
+              ...prev,
+              messages: prev.messages.map((m) =>
+                m.id === tempMsg.id ? { ...m, status: 'failed' } : m
+              ),
+            }
+          : prev
+      );
+    }
   };
 
   const handleRetryMessage = (messageId: string) => {
-    setConversation((prev) => ({
-      ...prev,
-      messages: prev.messages.map((m) =>
-        m.id === messageId ? { ...m, status: 'sent' } : m
-      ),
-    }));
+    setConversation((prev) =>
+      prev
+        ? {
+            ...prev,
+            messages: prev.messages.map((m) =>
+              m.id === messageId ? { ...m, status: 'sent' } : m
+            ),
+          }
+        : prev
+    );
   };
 
-  const handleSubmitReport = (report: ReportRequest) => {
-    console.log('Report submitted for conversation:', report);
+  const handleSubmitReport = async (report: ReportRequest): Promise<boolean> => {
+    try {
+      await getSocialRepository().reportOrBlockUser(report);
+      return true;
+    } catch {
+      return false;
+    }
   };
 
-  const handleConfirmBlock = (userId: string) => {
-    console.log('User blocked from conversation:', userId);
-    setConversation((prev) => ({ ...prev, isRestricted: true }));
+  const handleConfirmBlock = (_userId: string) => {
+    setConversation((prev) => (prev ? { ...prev, isRestricted: true } : prev));
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#0F766E" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !conversation) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <Text style={styles.errorText}>{error || 'Không tìm thấy cuộc trò chuyện'}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <SafeAreaView style={styles.container}>
       <ConversationPresentation
         conversation={conversation}
         onBack={() => router.back()}
@@ -127,3 +151,21 @@ export default function ConversationScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#DC2626',
+    textAlign: 'center',
+  },
+});
