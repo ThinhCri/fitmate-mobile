@@ -175,6 +175,8 @@ export default function RevenueScreen() {
     );
   }
 
+  const currentUser = user!;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
