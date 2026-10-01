@@ -159,7 +159,7 @@ export function ReportBlockModal({
           <Text style={styles.targetAuthor}>Tác giả: {targetAuthorName}</Text>
           {targetSummary && (
             <Text style={styles.targetSnippet} numberOfLines={2}>
-              "{targetSummary}"
+              {`"${targetSummary}"`}
             </Text>
           )}
         </View>
