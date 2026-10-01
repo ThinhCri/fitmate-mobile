@@ -265,19 +265,19 @@ Sau do verify tung FP-001..040 PASS theo `acceptance-checklist.md`. Neu PASS, se
 Moi thong tin trong docs tren day dua tren code that da doc truc tiep va nguon public da ghi ro URL. Tru cac muc ro rang "chua xac minh" trong `current-app-audit.md` va `design-research.md`.
 
 
-## Batch 9 (2026-09-18 20:00) — Visual pill + Homepage depth [MOB-413..417]
+## Batch 9 (2026-09-18 20:00) ï¿½ Visual pill + Homepage depth [MOB-413..417]
 
 User yeu cau chinh visual theo 2 anh tham khao: (1) floating pill tab bar, (2) homepage co chieu sau. Trang thai: IMPLEMENTED code done, can runtime verification.
 
 ### Files added/changed
-- mobile/src/components/ui/FloatingTabBar.tsx (new) — pill glass + active capsule.
-- mobile/src/components/ui/GlassCard.tsx (new) — BlurView primitive.
-- mobile/src/features/homepage/HomepageBackground.tsx (new) — 4 layers (solid + gradient + watermark + content).
-- mobile/src/theme/tokens.ts — bo warm cream, them gradient/glass/watermark tokens (DEC-023).
-- mobile/app/(tabs)/_layout.tsx — Tabs.Screen options.tabBar custom function.
-- mobile/app/(tabs)/dashboard.tsx — boc trong HomepageBackground + GlassCard cho StreakCard.
+- mobile/src/components/ui/FloatingTabBar.tsx (new) ï¿½ pill glass + active capsule.
+- mobile/src/components/ui/GlassCard.tsx (new) ï¿½ BlurView primitive.
+- mobile/src/features/homepage/HomepageBackground.tsx (new) ï¿½ 4 layers (solid + gradient + watermark + content).
+- mobile/src/theme/tokens.ts ï¿½ bo warm cream, them gradient/glass/watermark tokens (DEC-023).
+- mobile/app/(tabs)/_layout.tsx ï¿½ Tabs.Screen options.tabBar custom function.
+- mobile/app/(tabs)/dashboard.tsx ï¿½ boc trong HomepageBackground + GlassCard cho StreakCard.
 - 4 tab khac: ScrollView paddingBottom 24/32 ? 96 (cho pill + inset).
-- mobile/package.json — them expo-blur@~57.0.3, expo-linear-gradient@~57.0.2.
+- mobile/package.json ï¿½ them expo-blur@~57.0.3, expo-linear-gradient@~57.0.2.
 
 ### Decisions them
 - DEC-023: bo warm cream, cool white + mint teal tier.
@@ -296,7 +296,7 @@ px expo start: chua chay (can emulator).
 ### Commits local
 - 7948ebe feat(mobile): floating pill tab bar + cool tokens [MOB-413]
 - d0345b7 feat(mobile): cool white + mint teal tokens (DEC-023) [MOB-414] (gom package.json lock)
-- ca3e819 feat(mobile): homepage background — gradient + watermark + glass hero [MOB-416]
+- ca3e819 feat(mobile): homepage background ï¿½ gradient + watermark + glass hero [MOB-416]
 - ed9c2b0 fix(mobile): export GlassCard + safe bottom padding for floating pill [MOB-417]
 
 ### Chinh sach
@@ -309,7 +309,7 @@ px expo start: chua chay (can emulator).
 1. Runtime verification: 
 pm install, 
 px expo start tren emulator that + chup screenshot de xem pill + gradient + glass + watermark that.
-2. Verify contrast ratios (design-system.md) sau khi doi token cool — cap nhat bang so lieu that theo WebAIM tool.
+2. Verify contrast ratios (design-system.md) sau khi doi token cool ï¿½ cap nhat bang so lieu that theo WebAIM tool.
 3. Logo Fitmate PNG asset neu co ? swap text-style sang Image.
 4. Test safe area: gesture navigation (Pixel), 3-button nav (Galaxy), font scaling, man hinh nho (360x640).
 5. Neu BlurView tren Android that hien khong on (lag, nhap nhay) ? fallback surface dac van giu dep.
@@ -442,3 +442,48 @@ Da hoan thanh chuyen doi toan bo 52 man hinh thiet ke Google Stitch (design-refe
   - Khong fallback mock data khi API gap loi mang.
   - Capability gating hien thi trung thuc cac tinh nang cho backend hoan thien contract.
   - Giu nguyen 10 file dirty ban dau cua du an.
+
+## React Native UI Stabilization & Hardening (2026-10-01) [MOB-800, MOB-801, MOB-802, MOB-803, MOB-804, MOB-805, MOB-806, MOB-807]
+
+Trang thai: **UI_IMPLEMENTED / PREVIEW_READY** (Runtime Android: **BLOCKED_RUNTIME** - cho thiet bi/emulator kiem thu truc tiep).
+
+### 1. Phuc hoi domain invariants va permissions:
+- Phuc hoi `User.id` (UUID), `User.role` ('member' | 'pt' | 'admin'), `Profile.timezone`.
+- Loai bo password khoi production User type; dinh nghia fixture credentials rieng.
+- Phuc hoi day du 5/5 unit tests cho `imagePicker.test.ts` (gallery grant/deny/cancel, camera grant/deny).
+- Sua regression month-boundary trong `revenueCalculations.test.ts` bang fake timers.
+
+### 2. Co lap Presentation khoi Mock va API DTO (Repository Pattern):
+- Xay dung `mobile/src/repositories/repositoryTypes.ts` voi `AsyncData<T>`, `isPreviewMode()`, va `getDataSourceMode()` fail-closed.
+- Trien khai Repository interfaces va 2 adapter tach biet (ApiRepository + PreviewRepository):
+  - Account: `IAccountRepository`, `ApiAccountRepository`, `PreviewAccountRepository` (5 tests).
+  - Trainer: `ITrainerRepository`, `ApiTrainerRepository`, `PreviewTrainerRepository` (6 tests).
+  - Workout: `IWorkoutRepository`, `ApiWorkoutRepository`, `PreviewWorkoutRepository` (7 tests).
+  - Nutrition: `INutritionRepository`, `ApiNutritionRepository`, `PreviewNutritionRepository` (6 tests).
+  - Social: `ISocialRepository`, `ApiSocialRepository`, `PreviewSocialRepository` (6 tests).
+  - Support: `ISupportRepository`, `ApiSupportRepository`, `PreviewSupportRepository` (6 tests).
+- Chinh sach mat khau: bat buoc 12-128 ky tu (`ChangePasswordPresentation.tsx`).
+
+### 3. Loai bo toan bo mutation demo va tinh toan tai chinh gia phia client:
+- **VIP & Rewards**: vo hieu hoa mutation mua VIP, disable CTA voi disclaimer, khoa rut thuong (`vip.tsx`, `withdraw.tsx`).
+- **Certificates**: go bo hoan toan khoi `ADMIN SIMULATE` va cac nut duyet/reset gia khoi ung dung mobile.
+- **Revenue**: chan `revenueCalculations.ts` va `revenueFixtures.ts` trong production path (`!isPreviewMode()` guard); chi hien thi thong bao cho du lieu server.
+- **Payment**: loai bo logic client tu xac nhan `status = 'success'` (`payment-return.tsx`); giu o trang thai `verifying`, chuyen sang `uncertain` hoac `canceled`.
+- **AI**: khong tao streaming timer gia trong production; chan bang `isAiAvailable={isPreviewMode()}` kem thong bao yeu cau nang luc server.
+
+### 4. Thay the tuyen duong email bang Opaque/Stable ID:
+- Di chuyen va doi ten route:
+  - `profile/[userId].tsx` (thay the `profile/[email].tsx`)
+  - `edit-profile/[userId].tsx` (thay the `edit-profile/[email].tsx`)
+  - `booking/[appointmentId].tsx` (thay the `booking/[email].tsx`)
+  - `certificates/[certificateId].tsx` (thay the `certificates/[email].tsx`)
+  - `chat/[conversationId].tsx` (thay the `chat/[email].tsx`)
+- Cap nhat tat ca caller trong `drawer.tsx`, `search.tsx`, `friends.tsx`, `notifications.tsx`, `chat/index.tsx`.
+- Xu ly not-found than thien khi ID khong hop le, khong crash.
+
+### 5. Ket qua kiem dinh thuc te:
+- **Unit Tests**: **22 test suites, 155 tests passing** (Vitest).
+- **TypeScript**: **0 errors** (`npx tsc --noEmit`).
+- **ESLint**: **0 errors**, 174 warnings (`npm run lint` / `npx expo lint`).
+- **Expo Doctor**: **20/21 checks passing** (`npx expo-doctor`), da sua app config schema hop le cho Expo SDK 57.
+- **Android Runtime**: **BLOCKED_RUNTIME** (chua ket noi device/emulator that de chay `npx expo start --android`).
