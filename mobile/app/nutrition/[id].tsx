@@ -1,45 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { MealDetailPresentation } from '@/features/nutrition/MealDetailPresentation';
 import { FoodItemViewModel } from '@/features/nutrition/nutritionTypes';
+import { getNutritionRepository } from '@/repositories/nutritionRepository';
 
 export default function MealDetailRoute() {
   const params = useLocalSearchParams<{ id?: string; name?: string }>();
+  const [food, setFood] = useState<FoodItemViewModel | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const sampleFood: FoodItemViewModel = {
-    id: params.id ?? 'item-1',
-    name: params.name ?? 'Ức gà nướng mật ong',
-    portion: '1 khẩu phần (150g)',
-    calories: 247,
-    proteinGrams: 36,
-    carbsGrams: 8,
-    fatGrams: 5,
-    source: 'ai_confirmed',
-    mealSlot: 'lunch',
-    notes: 'Ướp sốt mật ong mù tạt, nướng nồi chiên không dầu',
-  };
+  useEffect(() => {
+    if (!params.id) {
+      setLoading(false);
+      return;
+    }
+    getNutritionRepository()
+      .getFoodItem(params.id)
+      .then((data) => {
+        setFood(data);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err?.message || 'Không tìm thấy thông tin món ăn');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [params.id]);
 
   const handleEdit = () => {
+    if (!food) return;
     router.push({
       pathname: '/nutrition/manual-entry' as any,
-      params: { id: sampleFood.id, name: sampleFood.name, slot: sampleFood.mealSlot },
+      params: { id: food.id, name: food.name, slot: food.mealSlot },
     });
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    if (!food) return;
     setDeleting(true);
-    setTimeout(() => {
-      setDeleting(false);
+    try {
+      await getNutritionRepository().deleteFoodItem(food.id);
       router.back();
-    }, 300);
+    } catch {
+      setDeleting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <ScreenContainer edges={['top', 'bottom']}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#0F766E" />
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  if (error || !food) {
+    return (
+      <ScreenContainer edges={['top', 'bottom']}>
+        <View style={styles.center}>
+          <Text style={styles.errorText}>{error || 'Không tìm thấy món ăn'}</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer edges={['top', 'bottom']}>
       <MealDetailPresentation
-        food={sampleFood}
+        food={food}
         onBack={() => router.back()}
         onEdit={handleEdit}
         onDelete={handleDelete}
@@ -48,3 +83,17 @@ export default function MealDetailRoute() {
     </ScreenContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#DC2626',
+    textAlign: 'center',
+  },
+});

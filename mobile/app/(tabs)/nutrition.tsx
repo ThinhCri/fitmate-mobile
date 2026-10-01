@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { AppTopBar } from '@/components/design-system/AppTopBar';
@@ -8,129 +9,31 @@ import {
   FoodItemViewModel,
   MealTimeSlot,
 } from '@/features/nutrition/nutritionTypes';
-
-const DEFAULT_SUMMARY: DayNutritionSummaryViewModel = {
-  dateString: '2026-09-28',
-  dateDisplay: 'Thứ Hai, 28/09/2026',
-  isToday: true,
-  calories: {
-    consumed: 1450,
-    target: 2000,
-    burnedExercise: 250,
-  },
-  macros: {
-    protein: { current: 110, target: 140 },
-    carbs: { current: 165, target: 220 },
-    fat: { current: 42, target: 65 },
-  },
-  meals: [
-    {
-      slot: 'breakfast',
-      title: 'Bữa sáng',
-      subtitle: 'Khởi đầu ngày mới',
-      totalCalories: 385,
-      items: [
-        {
-          id: 'b1',
-          name: 'Yến mạch nấu sữa hạnh nhân',
-          portion: '1 tô (250g)',
-          calories: 260,
-          proteinGrams: 9,
-          carbsGrams: 42,
-          fatGrams: 6,
-          source: 'manual',
-          mealSlot: 'breakfast',
-        },
-        {
-          id: 'b2',
-          name: 'Chuối già Nam Mỹ',
-          portion: '1 quả (120g)',
-          calories: 125,
-          proteinGrams: 1,
-          carbsGrams: 30,
-          fatGrams: 0,
-          source: 'ai_confirmed',
-          mealSlot: 'breakfast',
-        },
-      ],
-    },
-    {
-      slot: 'lunch',
-      title: 'Bữa trưa',
-      subtitle: 'Năng lượng chính trong ngày',
-      totalCalories: 650,
-      items: [
-        {
-          id: 'l1',
-          name: 'Ức gà nướng mật ong',
-          portion: '150g',
-          calories: 247,
-          proteinGrams: 36,
-          carbsGrams: 8,
-          fatGrams: 5,
-          source: 'ai_confirmed',
-          mealSlot: 'lunch',
-        },
-        {
-          id: 'l2',
-          name: 'Cơm gạo lứt hấp',
-          portion: '120g',
-          calories: 134,
-          proteinGrams: 3,
-          carbsGrams: 28,
-          fatGrams: 1,
-          source: 'ai_confirmed',
-          mealSlot: 'lunch',
-        },
-        {
-          id: 'l3',
-          name: 'Bông cải xanh luộc',
-          portion: '150g',
-          calories: 52,
-          proteinGrams: 4,
-          carbsGrams: 9,
-          fatGrams: 0,
-          source: 'manual',
-          mealSlot: 'lunch',
-        },
-      ],
-    },
-    {
-      slot: 'dinner',
-      title: 'Bữa tối',
-      subtitle: 'Nhẹ nhàng, phục hồi cơ',
-      totalCalories: 415,
-      items: [
-        {
-          id: 'd1',
-          name: 'Cá hồi áp chảo dầu ô liu',
-          portion: '160g',
-          calories: 320,
-          proteinGrams: 32,
-          carbsGrams: 0,
-          fatGrams: 18,
-          source: 'manual',
-          mealSlot: 'dinner',
-        },
-        {
-          id: 'd2',
-          name: 'Salad sốt chanh leo',
-          portion: '100g',
-          calories: 95,
-          proteinGrams: 2,
-          carbsGrams: 12,
-          fatGrams: 4,
-          source: 'manual',
-          mealSlot: 'dinner',
-        },
-      ],
-    },
-  ],
-};
+import { getNutritionRepository } from '@/repositories/nutritionRepository';
 
 export default function NutritionScreen() {
+  const [summary, setSummary] = useState<DayNutritionSummaryViewModel | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [segment, setSegment] = useState<'diary' | 'menu'>('diary');
   const [refreshing, setRefreshing] = useState(false);
+
+  const fetchSummary = async () => {
+    try {
+      const data = await getNutritionRepository().getDaySummary();
+      setSummary(data);
+      setError(null);
+    } catch (err: any) {
+      setError(err?.message || 'Không thể tải nhật ký dinh dưỡng');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSummary();
+  }, []);
 
   const handleSegmentChange = (newSegment: 'diary' | 'menu') => {
     if (newSegment === 'menu') {
@@ -142,17 +45,37 @@ export default function NutritionScreen() {
 
   const handleRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 600);
+    fetchSummary();
   };
+
+  if (loading) {
+    return (
+      <ScreenContainer edges={['top']}>
+        <AppTopBar title="Nhật ký dinh dưỡng" />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#0F766E" />
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  if (error || !summary) {
+    return (
+      <ScreenContainer edges={['top']}>
+        <AppTopBar title="Nhật ký dinh dưỡng" />
+        <View style={styles.center}>
+          <Text style={styles.errorText}>{error || 'Không có dữ liệu dinh dưỡng'}</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer edges={['top']}>
       <AppTopBar title="Nhật ký dinh dưỡng" />
 
       <NutritionDiaryPresentation
-        summary={DEFAULT_SUMMARY}
+        summary={summary}
         activeSegment={segment}
         onSegmentChange={handleSegmentChange}
         onPrevDay={() => {}}
@@ -177,3 +100,17 @@ export default function NutritionScreen() {
     </ScreenContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#DC2626',
+    textAlign: 'center',
+  },
+});

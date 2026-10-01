@@ -1,56 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { WeeklyMenuPresentation } from '@/features/nutrition/WeeklyMenuPresentation';
 import { PlannedMealSlotViewModel, MealTimeSlot } from '@/features/nutrition/nutritionTypes';
-
-const INITIAL_MENU: PlannedMealSlotViewModel[] = [
-  {
-    id: 'm1',
-    dayIndex: 0,
-    dayLabel: 'T2',
-    mealSlot: 'breakfast',
-    foodName: 'Cháo yến mạch sữa hạt & quả mọng',
-    calories: 320,
-    isCompleted: true,
-  },
-  {
-    id: 'm2',
-    dayIndex: 0,
-    dayLabel: 'T2',
-    mealSlot: 'lunch',
-    foodName: 'Cơm gạo lứt + ức gà áp chảo + rau củ luộc',
-    calories: 580,
-    isCompleted: true,
-  },
-  {
-    id: 'm3',
-    dayIndex: 0,
-    dayLabel: 'T2',
-    mealSlot: 'dinner',
-    foodName: 'Salad cá hồi áp chảo dầu ô liu',
-    calories: 420,
-    isCompleted: false,
-  },
-  {
-    id: 'm4',
-    dayIndex: 0,
-    dayLabel: 'T2',
-    mealSlot: 'snack',
-    foodName: 'Sữa chua Hy Lạp + hạnh nhân',
-    calories: 160,
-    isCompleted: false,
-  },
-];
+import { getNutritionRepository } from '@/repositories/nutritionRepository';
 
 export default function WeeklyMenuRoute() {
   const [selectedDay, setSelectedDay] = useState(0);
-  const [slots, setSlots] = useState(INITIAL_MENU);
+  const [slots, setSlots] = useState<PlannedMealSlotViewModel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleMarkConsumed = (slot: PlannedMealSlotViewModel) => {
+  useEffect(() => {
+    getNutritionRepository()
+      .getWeeklyMenu()
+      .then((data) => {
+        setSlots(data);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err?.message || 'Không thể tải thực đơn tuần');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const handleMarkConsumed = async (slot: PlannedMealSlotViewModel) => {
+    const nextCompleted = !slot.isCompleted;
     setSlots((prev) =>
-      prev.map((s) => (s.id === slot.id ? { ...s, isCompleted: !s.isCompleted } : s))
+      prev.map((s) => (s.id === slot.id ? { ...s, isCompleted: nextCompleted } : s))
     );
+    try {
+      await getNutritionRepository().updatePlannedSlot(slot.id, nextCompleted);
+    } catch {
+      // Revert if error
+      setSlots((prev) =>
+        prev.map((s) => (s.id === slot.id ? { ...s, isCompleted: !nextCompleted } : s))
+      );
+    }
   };
 
   const handleReplaceMeal = (slot: PlannedMealSlotViewModel) => {
@@ -59,6 +48,26 @@ export default function WeeklyMenuRoute() {
       params: { id: slot.id, name: slot.foodName, calories: slot.calories },
     });
   };
+
+  if (loading) {
+    return (
+      <ScreenContainer edges={['top', 'bottom']}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#0F766E" />
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  if (error && slots.length === 0) {
+    return (
+      <ScreenContainer edges={['top', 'bottom']}>
+        <View style={styles.center}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer edges={['top', 'bottom']}>
@@ -79,3 +88,17 @@ export default function WeeklyMenuRoute() {
     </ScreenContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#DC2626',
+    textAlign: 'center',
+  },
+});
