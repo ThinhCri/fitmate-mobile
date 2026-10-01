@@ -45,7 +45,7 @@ export default function DrawerModal() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surfaceContainerLowest') }} edges={['top', 'bottom']}>
       <View style={{ padding: 20, gap: 4 }}>
-        <Pressable onPress={() => { close(); router.push(`/(modals)/profile/${user.email}`); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Pressable onPress={() => { close(); router.push(`/(modals)/profile/${user.id}`); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Avatar name={user.profile.name} size={56} tone="primary" />
           <View style={{ flex: 1 }}>
             <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 16, fontWeight: '700' }}>{user.profile.name}</Text>
@@ -56,7 +56,7 @@ export default function DrawerModal() {
 
       <View style={{ height: 1, backgroundColor: resolveColor(theme, 'outlineVariant') }} />
 
-      {menuItem(<User color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Hồ sơ', () => { close(); router.push(`/(modals)/profile/${user.email}`); })}
+      {menuItem(<User color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Hồ sơ', () => { close(); router.push(`/(modals)/profile/${user.id}`); })}
       {menuItem(<Search color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Tìm kiếm', () => { close(); router.push('/(modals)/search'); })}
       {menuItem(<Users color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Bạn bè', () => { close(); router.push('/(modals)/friends'); })}
       {menuItem(<MessageCircle color={resolveColor(theme, 'onSurfaceVariant')} size={20} />, 'Tin nhắn', () => { close(); router.push('/(tabs)/social'); })}

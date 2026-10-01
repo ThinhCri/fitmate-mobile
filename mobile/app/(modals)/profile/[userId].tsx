@@ -1,5 +1,5 @@
 /**
- * Profile modal — route: /profile/[email]
+ * Profile modal — route: /profile/[userId]
  * Hien thi HV (Section 5.2) hoac PT (Section 5.3) tuy theo role.
  * Self view co nut Sua; other view co Dat lich/Nhan tin/Ket ban.
  */
@@ -18,21 +18,27 @@ import { FriendButton } from '@/features/profile';
 import { formatVnd, formatDate, formatStreak } from '@/utils/format';
 
 export default function ProfileModal() {
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { userId, email } = useLocalSearchParams<{ userId?: string; email?: string }>();
   const { user: viewer } = useAuth();
   const theme = useTheme();
   const [profile, setProfile] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'info' | 'posts' | 'reviews'>('info');
 
   useEffect(() => {
     (async () => {
-      if (!email) return;
-      const u = await mockUserService.getUserByEmail(email);
+      const queryId = userId || email;
+      if (!queryId) {
+        setLoading(false);
+        return;
+      }
+      const u = await mockUserService.getUserById(queryId);
       setProfile(u);
+      setLoading(false);
     })();
-  }, [email]);
+  }, [userId, email]);
 
-  if (!profile) {
+  if (loading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }}>
         <Text style={{ padding: 16, color: resolveColor(theme, 'onSurfaceVariant') }}>Đang tải hồ sơ...</Text>
@@ -40,7 +46,21 @@ export default function ProfileModal() {
     );
   }
 
-  const isSelf = viewer?.email === profile.email;
+  if (!profile) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface'), padding: 24, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: resolveColor(theme, 'onSurface'), marginBottom: 8 }}>
+          Không tìm thấy hồ sơ
+        </Text>
+        <Text style={{ fontSize: 14, color: resolveColor(theme, 'onSurfaceVariant'), textAlign: 'center', marginBottom: 16 }}>
+          Người dùng không tồn tại hoặc ID không hợp lệ.
+        </Text>
+        <Button label="Quay lại" variant="secondary" onPress={() => router.back()} />
+      </SafeAreaView>
+    );
+  }
+
+  const isSelf = (viewer?.id && profile.id && viewer.id === profile.id) || viewer?.email === profile.email;
   const isPt = profile.profile.isPt;
   const isVerified = isPt && profile.profile.isVerified;
 
@@ -95,7 +115,7 @@ export default function ProfileModal() {
               <FriendButton
                 targetEmail={profile.email}
                 isSelf={true}
-                onEditSelf={() => router.push(`/(modals)/edit-profile/${profile.email}`)}
+                onEditSelf={() => router.push(`/(modals)/edit-profile/${profile.id}` as any)}
               />
             ) : (
               <>
@@ -104,14 +124,14 @@ export default function ProfileModal() {
                   variant="primary"
                   size="md"
                   iconLeft={<Calendar color={resolveColor(theme, 'onPrimary')} size={16} />}
-                  onPress={() => router.push(`/(modals)/booking/${profile.email}`)}
+                  onPress={() => router.push(`/(modals)/booking/${profile.id}` as any)}
                 />
                 <Button
                   label="Nhắn tin"
                   variant="secondary"
                   size="md"
                   iconLeft={<MessageCircle color={resolveColor(theme, 'onSurface')} size={16} />}
-                  onPress={() => router.push(`/(modals)/chat/${profile.email}`)}
+                  onPress={() => router.push(`/(modals)/chat/${profile.id}` as any)}
                 />
                 <FriendButton targetEmail={profile.email} />
               </>

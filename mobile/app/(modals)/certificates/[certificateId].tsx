@@ -18,7 +18,7 @@ import { ToastService } from '@/components/ui/Toast';
 import { formatDate } from '@/utils/format';
 
 export default function PTCertificatesScreen() {
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { certificateId, email } = useLocalSearchParams<{ certificateId?: string; email?: string }>();
   const { user: viewer, refresh } = useAuth();
   const theme = useTheme();
   const [profile, setProfile] = useState<User | null>(null);
@@ -26,17 +26,28 @@ export default function PTCertificatesScreen() {
   const [addingCert, setAddingCert] = useState(false);
   const [certForm, setCertForm] = useState({ name: '', organization: '', code: '', type: 'Personal Training', issueDate: new Date().toISOString().slice(0, 10) });
 
-  const isSelf = viewer?.email === email;
+  const targetId = certificateId || email;
+  const isSelf = (viewer?.id && targetId && viewer.id === targetId) || viewer?.email === targetId || !targetId;
 
   useEffect(() => {
     (async () => {
-      if (!email) return;
-      const u = await mockUserService.getUserByEmail(email);
+      const u = targetId ? await mockUserService.getUserById(targetId) : viewer;
       setProfile(u);
     })();
-  }, [email]);
+  }, [targetId, viewer]);
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface'), padding: 24, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: resolveColor(theme, 'onSurface'), marginBottom: 8 }}>
+          Không tìm thấy chứng chỉ
+        </Text>
+        <Pressable accessibilityRole="button" onPress={() => router.back()} style={{ padding: 12 }}>
+          <Text style={{ color: resolveColor(theme, 'primary'), fontWeight: '600' }}>Quay lại</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
 
   const statusTone =
     profile.profile.certificateStatus === 'verified' ? 'success'

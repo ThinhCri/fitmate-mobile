@@ -2,7 +2,7 @@
  * BookingSheet — date picker + 6 time slot.
  * Member dat lich voi PT.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ScrollView, View, Text, Pressable } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,32 +13,72 @@ import { resolveColor } from '@/theme/ThemeProvider';
 import * as mockUserService from '@/services/mockUserService';
 import { Card, Button, Chip } from '@/components/ui';
 
+import type { User } from '@/types';
+
 const TIME_SLOTS = ['08:00', '10:00', '14:00', '16:00', '19:00', '21:00'];
 
 export default function BookingSheet() {
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { appointmentId, email } = useLocalSearchParams<{ appointmentId?: string; email?: string }>();
   const { user, refresh } = useAuth();
   const theme = useTheme();
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState(today);
   const [slot, setSlot] = useState<string | null>(null);
+  const [pt, setPt] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const targetId = appointmentId || email;
+
+  useEffect(() => {
+    (async () => {
+      if (!targetId) {
+        setLoading(false);
+        return;
+      }
+      const u = await mockUserService.getUserById(targetId);
+      setPt(u);
+      setLoading(false);
+    })();
+  }, [targetId]);
 
   const onConfirm = async () => {
-    if (!user || !email || !slot) return;
+    if (!user || !pt || !slot) return;
     const newApt = {
       id: `apt-${Date.now()}`,
       date,
       timeSlot: slot,
-      ptEmail: email,
+      ptEmail: pt.email,
       memberEmail: user.email,
       status: 'pending' as const,
       notes: '',
     };
     await mockUserService.saveUser({ ...user, appointments: [...user.appointments, newApt] });
-    await mockUserService.updateOtherUser(email, (u) => ({ ...u, appointments: [...u.appointments, newApt] }));
+    await mockUserService.updateOtherUser(pt.email, (u) => ({ ...u, appointments: [...u.appointments, newApt] }));
     await refresh();
     router.back();
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }}>
+        <Text style={{ padding: 16, color: resolveColor(theme, 'onSurfaceVariant') }}>Đang tải...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (!pt) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface'), padding: 24, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: resolveColor(theme, 'onSurface'), marginBottom: 8 }}>
+          Không tìm thấy thông tin
+        </Text>
+        <Text style={{ fontSize: 14, color: resolveColor(theme, 'onSurfaceVariant'), textAlign: 'center', marginBottom: 16 }}>
+          Mã đặt lịch hoặc huấn luyện viên không tồn tại.
+        </Text>
+        <Button label="Quay lại" variant="secondary" onPress={() => router.back()} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }} edges={['top', 'bottom']}>

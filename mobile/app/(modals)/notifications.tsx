@@ -80,7 +80,10 @@ export default function NotificationsScreen() {
                   {n.type === 'friend_request' && n.fromEmail && (
                     <Pressable
                       accessibilityRole="button"
-                      onPress={() => router.push(`/(modals)/profile/${n.fromEmail}`)}
+                      onPress={async () => {
+                        const u = await mockUserService.getUserById(n.fromEmail!);
+                        router.push(`/(modals)/profile/${u?.id || n.fromEmail}`);
+                      }}
                       style={{ marginTop: 8 }}
                     >
                       <Text style={{ color: resolveColor(theme, 'primary'), fontSize: 12, fontWeight: '600' }}>Xem hồ sơ →</Text>

@@ -70,9 +70,9 @@ export default function SearchScreen() {
         ) : (
           results.map((u) => (
             <Pressable
-              key={u.email}
+              key={u.id}
               accessibilityRole="button"
-              onPress={() => router.push(`/(modals)/profile/${u.email}`)}
+              onPress={() => router.push(`/(modals)/profile/${u.id}`)}
             >
               <Card variant="default">
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>

@@ -31,23 +31,49 @@ const CANNED_REPLIES = [
 ];
 
 export default function ChatScreen() {
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { conversationId, email } = useLocalSearchParams<{ conversationId?: string; email?: string }>();
   const { user: viewer, refresh } = useAuth();
   const theme = useTheme();
   const [other, setOther] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
   const [autoReplyCount, setAutoReplyCount] = useState(0);
   const scrollRef = useRef<ScrollView | null>(null);
 
+  const targetId = conversationId || email;
+
   useEffect(() => {
     (async () => {
-      if (!email) return;
-      const u = await mockUserService.getUserByEmail(email);
+      if (!targetId) {
+        setLoading(false);
+        return;
+      }
+      const u = await mockUserService.getUserById(targetId);
       setOther(u);
+      setLoading(false);
     })();
-  }, [email]);
+  }, [targetId]);
 
-  if (!viewer || !other) return null;
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface') }}>
+        <Text style={{ padding: 16, color: resolveColor(theme, 'onSurfaceVariant') }}>Đang tải...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (!viewer || !other) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface'), padding: 24, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: resolveColor(theme, 'onSurface'), marginBottom: 8 }}>
+          Không tìm thấy cuộc trò chuyện
+        </Text>
+        <Pressable accessibilityRole="button" onPress={() => router.back()} style={{ padding: 12 }}>
+          <Text style={{ color: resolveColor(theme, 'primary'), fontWeight: '600' }}>Quay lại</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
 
   const messages = viewer.conversations[other.email] ?? [];
 
@@ -138,7 +164,7 @@ export default function ChatScreen() {
         <Text style={{ color: resolveColor(theme, 'onSurface'), fontSize: 16, fontWeight: '700', flex: 1 }} numberOfLines={1}>
           {other.profile.name}
         </Text>
-        <Pressable accessibilityRole="button" onPress={() => router.push(`/(modals)/profile/${other.email}`)} hitSlop={12}>
+        <Pressable accessibilityRole="button" onPress={() => router.push(`/(modals)/profile/${other.id}`)} hitSlop={12}>
           <Info color={resolveColor(theme, 'onSurfaceVariant')} size={20} />
         </Pressable>
       </View>

@@ -16,7 +16,7 @@ import { Card, Button, Chip, Input, Avatar } from '@/components/ui';
 const GENDERS = ['Nam', 'Nữ', 'Khác'] as const;
 
 export default function EditProfileScreen() {
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { userId, email } = useLocalSearchParams<{ userId?: string; email?: string }>();
   const { user: viewer, refresh } = useAuth();
   const theme = useTheme();
   const [name, setName] = useState('');
@@ -40,7 +40,22 @@ export default function EditProfileScreen() {
     setWeight(String(viewer.profile.weight));
   }, [viewer]);
 
-  if (!viewer || viewer.email !== email) return null;
+  const targetId = userId || email;
+  const isOwner = viewer && (!targetId || viewer.id === targetId || viewer.email === targetId);
+
+  if (!viewer || !isOwner) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: resolveColor(theme, 'surface'), padding: 24, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: resolveColor(theme, 'onSurface'), marginBottom: 8 }}>
+          Không có quyền chỉnh sửa
+        </Text>
+        <Text style={{ fontSize: 14, color: resolveColor(theme, 'onSurfaceVariant'), textAlign: 'center', marginBottom: 16 }}>
+          Bạn chỉ có thể chỉnh sửa hồ sơ của chính mình.
+        </Text>
+        <Button label="Quay lại" variant="secondary" onPress={() => router.back()} />
+      </SafeAreaView>
+    );
+  }
 
   const onSave = async () => {
     await mockUserService.saveUser({

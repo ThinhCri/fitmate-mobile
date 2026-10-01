@@ -99,7 +99,7 @@ export default function FriendsScreen() {
         {segment === 'friends' && (
           friends.length === 0 ? <Empty text="Chưa có bạn bè nào." /> :
           friends.map((u) => (
-            <Pressable key={u.email} onPress={() => router.push(`/(modals)/profile/${u.email}`)}>
+            <Pressable key={u.id} onPress={() => router.push(`/(modals)/profile/${u.id}`)}>
               <Card variant="default">
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <Avatar name={u.profile.name} size={48} tone="primary" />

@@ -12,11 +12,17 @@ import { useAuth } from '@/services/AuthContext';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
 import { Card, Avatar, Input, Empty } from '@/components/ui';
+import * as mockUserService from '@/services/mockUserService';
 
 export default function MessengerListScreen() {
   const { user } = useAuth();
   const theme = useTheme();
   const [query, setQuery] = useState('');
+
+  const onSelectFriend = async (friendEmail: string) => {
+    const targetUser = await mockUserService.getUserById(friendEmail);
+    router.push(`/(modals)/chat/${targetUser?.id || encodeURIComponent(friendEmail)}`);
+  };
 
   const friendUsers = useMemo(() => user?.friendsList || [], [user?.friendsList]);
 
@@ -61,7 +67,7 @@ export default function MessengerListScreen() {
           filteredFriends.map((email) => {
             const lastMsg = user.conversations[email]?.[user.conversations[email].length - 1];
             return (
-              <Pressable key={email} onPress={() => router.push(`/(modals)/chat/${encodeURIComponent(email)}`)}>
+              <Pressable key={email} onPress={() => onSelectFriend(email)}>
                 <Card variant="default">
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                     <Avatar name={email.split('@')[0]} size={44} />

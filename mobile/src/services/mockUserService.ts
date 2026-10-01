@@ -47,6 +47,12 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   return u ? (JSON.parse(JSON.stringify(u)) as User) : null;
 }
 
+export async function getUserById(id: string): Promise<User | null> {
+  const cache = await ensureCache();
+  const found = Object.values(cache).find((u) => u.id === id || u.email === id);
+  return found ? (JSON.parse(JSON.stringify(found)) as User) : null;
+}
+
 export async function getCurrentUser(): Promise<User | null> {
   if (currentEmailCache) {
     return getUserByEmail(currentEmailCache);
@@ -166,6 +172,7 @@ export async function updateCurrentUser(patch: Partial<User>): Promise<User | nu
 export const mockUserService = {
   getAllUsers,
   getUserByEmail,
+  getUserById,
   getCurrentUser,
   login,
   logout,
