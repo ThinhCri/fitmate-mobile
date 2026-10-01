@@ -6,14 +6,12 @@
     "orientation": "portrait",
     "scheme": "fitmate",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "vn.fitmate.app"
     },
     "android": {
-      "package": "vn.fitmate.app",
-      "edgeToEdgeEnabled": true
+      "package": "vn.fitmate.app"
     },
     "web": {
       "bundler": "metro",
