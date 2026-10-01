@@ -1,39 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
   SupportTicketsPresentation,
   SupportTicketSummaryViewModel,
 } from '@/features/support';
+import { getSupportRepository } from '@/repositories/supportRepository';
 
 export default function SupportTicketsScreen() {
-  const [tickets] = useState<SupportTicketSummaryViewModel[]>([
-    {
-      id: 'tk-1',
-      ticketCode: '#TK-8291',
-      subject: 'Yêu cầu đối soát hoàn tiền lịch hẹn ngày 28/09 do PT có việc đột xuất',
-      category: 'booking_dispute',
-      categoryLabel: 'Tranh chấp lịch hẹn',
-      status: 'open',
-      statusLabel: 'Chờ phản hồi',
-      lastUpdatedAt: 'Hôm nay 10:20',
-      createdAt: '28/09/2026',
-    },
-    {
-      id: 'tk-2',
-      ticketCode: '#TK-7840',
-      subject: 'Lỗi đồng bộ dữ liệu nhật ký calo sau khi quét ảnh camera',
-      category: 'app_bug',
-      categoryLabel: 'Lỗi kỹ thuật',
-      status: 'resolved',
-      statusLabel: 'Đã giải quyết',
-      lastUpdatedAt: '24/09/2026',
-      createdAt: '23/09/2026',
-    },
-  ]);
+  const [tickets, setTickets] = useState<SupportTicketSummaryViewModel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getSupportRepository()
+      .getTickets()
+      .then((data) => {
+        setTickets(data);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err?.message || 'Không thể tải danh sách phiếu hỗ trợ');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#0F766E" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error && tickets.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <SafeAreaView style={styles.container}>
       <SupportTicketsPresentation
         tickets={tickets}
         onBack={() => router.back()}
@@ -43,3 +59,21 @@ export default function SupportTicketsScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#DC2626',
+    textAlign: 'center',
+  },
+});

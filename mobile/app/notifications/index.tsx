@@ -1,60 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Alert } from 'react-native';
 import {
   NotificationsPresentation,
   NotificationItemViewModel,
 } from '@/features/support';
+import { getSupportRepository } from '@/repositories/supportRepository';
 
 export default function NotificationsScreen() {
-  const [notifications, setNotifications] = useState<NotificationItemViewModel[]>([
-    {
-      id: 'notif-1',
-      title: 'Xác nhận lịch tập cùng PT',
-      body: 'HLV Hoàng Nam đã xác nhận lịch tập 18:00 hôm nay. Vui lòng có mặt trước 10 phút tại phòng tập.',
-      timestamp: '10 phút trước',
-      category: 'booking',
-      isRead: false,
-      targetType: 'booking',
-      targetId: 'book-101',
-    },
-    {
-      id: 'notif-2',
-      title: 'Lời mời kết bạn mới',
-      body: 'Đặng Thu Trang vừa gửi lời mời kết bạn kết nối tập luyện cùng bạn.',
-      timestamp: '45 phút trước',
-      category: 'social',
-      isRead: false,
-      targetType: 'friend_request',
-    },
-    {
-      id: 'notif-3',
-      title: 'Gợi ý từ Trợ lý Fitmate AI',
-      body: 'Trợ lý Fitmate AI đã chuẩn bị đề xuất tối ưu hóa bài tập Upper Body A dựa trên buổi trước.',
-      timestamp: '3 giờ trước',
-      category: 'ai',
-      isRead: true,
-      targetType: 'ai_plan',
-    },
-    {
-      id: 'notif-4',
-      title: 'Khảo sát chất lượng dịch vụ',
-      body: 'Sự kiện tập luyện chung tháng trước đã kết thúc và lưu trữ.',
-      timestamp: '2 ngày trước',
-      category: 'system',
-      isRead: true,
-      targetType: 'expired',
-    },
-  ]);
+  const [notifications, setNotifications] = useState<NotificationItemViewModel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSelectNotification = (item: NotificationItemViewModel) => {
-    // Mark read
+  useEffect(() => {
+    getSupportRepository()
+      .getNotifications()
+      .then((data) => {
+        setNotifications(data);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err?.message || 'Không thể tải thông báo');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const handleSelectNotification = async (item: NotificationItemViewModel) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n))
     );
 
-    // Controlled safe navigation
+    try {
+      await getSupportRepository().markNotificationRead(item.id);
+    } catch {
+      // Ignored
+    }
+
     switch (item.targetType) {
       case 'booking':
         router.push(`/booking/${item.targetId || 'book-101'}` as any);
@@ -77,8 +61,28 @@ export default function NotificationsScreen() {
     }
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#0F766E" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error && notifications.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <SafeAreaView style={styles.container}>
       <NotificationsPresentation
         notifications={notifications}
         onBack={() => router.back()}
@@ -87,3 +91,21 @@ export default function NotificationsScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#DC2626',
+    textAlign: 'center',
+  },
+});
