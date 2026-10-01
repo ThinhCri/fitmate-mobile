@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { trainersService } from '@/services/api/trainersService';
-import {
-  TrainerDetailViewModel,
-  mapPTPublicDetailToDetail,
-} from '@/services/api/types';
+import { TrainerDetailViewModel } from '@/services/api/types';
+import { getTrainerRepository } from '@/repositories/trainerRepository';
 import { TrainerDetailPresentation } from '@/features/trainer/TrainerDetailPresentation';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { AppTopBar } from '@/components/design-system/AppTopBar';
@@ -19,15 +16,15 @@ export default function TrainerDetailModal() {
   const [isError, setIsError] = useState(false);
 
   const fetchTrainer = useCallback((trainerId: string) => {
-    trainersService
+    getTrainerRepository()
       .getTrainer(trainerId)
       .then((data) => {
-        setTrainer(mapPTPublicDetailToDetail(data));
+        setTrainer(data);
         setIsNotFound(false);
         setIsError(false);
       })
       .catch((err) => {
-        if (err instanceof ApiError && err.status === 404) {
+        if ((err instanceof ApiError && err.status === 404) || (err as any)?.status === 404) {
           setIsNotFound(true);
         } else {
           setIsError(true);

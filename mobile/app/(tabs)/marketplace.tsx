@@ -3,11 +3,8 @@ import { router } from 'expo-router';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { AppTopBar } from '@/components/design-system/AppTopBar';
 import { TrainerListPresentation } from '@/features/trainer/TrainerListPresentation';
-import { trainersService } from '@/services/api/trainersService';
-import {
-  TrainerSummaryViewModel,
-  mapPTPublicProfileToSummary,
-} from '@/services/api/types';
+import { TrainerSummaryViewModel } from '@/services/api/types';
+import { getTrainerRepository } from '@/repositories/trainerRepository';
 
 const SPECIALTY_OPTIONS = [
   { id: 'all', label: 'Tất cả' },
@@ -20,12 +17,8 @@ const SPECIALTY_OPTIONS = [
 /**
  * MarketplaceScreen (Production Route)
  *
- * Strictly calls GET /trainers with server-side query filters.
+ * Uses getTrainerRepository() (isolated API in production, preview in explicit preview mode).
  * NEVER falls back to mock fixture upon API failure.
- *
- * NOTE (CONTRACT_GAP): The OpenAPI contract for GET /trainers does not expose
- * a full-text search parameter. Search query filters client-side across the
- * server-paginated items currently loaded.
  */
 export default function MarketplaceScreen() {
   const [trainers, setTrainers] = useState<TrainerSummaryViewModel[]>([]);
@@ -48,18 +41,17 @@ export default function MarketplaceScreen() {
       }
 
       try {
-        const response = await trainersService.listTrainers({
+        const repo = getTrainerRepository();
+        const response = await repo.listTrainers({
           specialty: selectedSpecialty !== 'all' ? selectedSpecialty : undefined,
           cursor: cursor || undefined,
           limit: 10,
         });
 
-        const mapped = (response.items || []).map(mapPTPublicProfileToSummary);
-
         if (cursor) {
-          setTrainers((prev) => [...prev, ...mapped]);
+          setTrainers((prev) => [...prev, ...response.items]);
         } else {
-          setTrainers(mapped);
+          setTrainers(response.items);
         }
 
         setNextCursor(response.nextCursor || null);
