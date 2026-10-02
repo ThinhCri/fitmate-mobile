@@ -35,24 +35,32 @@ describe('Workout Repository & Data Source Isolation', () => {
     expect(() => getWorkoutRepository()).toThrow('Cấu hình nguồn dữ liệu không hợp lệ');
   });
 
-  it('fails closed in API mode without falling back to preview repository', async () => {
+  it('fails closed in API mode without falling back to preview repository on 500 error', async () => {
     delete process.env.EXPO_PUBLIC_DATA_SOURCE;
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ detail: 'Internal Server Error' }),
+    });
     const previewSpy = vi.spyOn(previewWorkoutRepository, 'getPlan');
 
     await expect(apiWorkoutRepository.getPlan('plan-1')).rejects.toThrow(
-      'Workout plan API endpoint for plan-1 not available'
+      'Internal Server Error'
     );
     expect(previewSpy).not.toHaveBeenCalled();
+    global.fetch = originalFetch;
   });
 
-  it('fails closed on weight records in API mode without fallback', async () => {
+  it('fails closed on weight records in API mode without fallback on network error', async () => {
     delete process.env.EXPO_PUBLIC_DATA_SOURCE;
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
     const previewSpy = vi.spyOn(previewWorkoutRepository, 'getWeightRecords');
 
-    await expect(apiWorkoutRepository.getWeightRecords()).rejects.toThrow(
-      'Weight tracking API endpoint not available'
-    );
+    await expect(apiWorkoutRepository.getWeightRecords()).rejects.toThrow();
     expect(previewSpy).not.toHaveBeenCalled();
+    global.fetch = originalFetch;
   });
 
   it('returns preview plan and history when preview mode is explicitly active', async () => {
