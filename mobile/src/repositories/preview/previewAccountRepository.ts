@@ -4,7 +4,7 @@ import {
   HealthProfileData,
   SettingsViewModel,
 } from '@/features/account/accountTypes';
-import { IAccountRepository } from '../accountRepository';
+import { IAccountRepository, AccountDeletionStatusViewModel } from '../accountRepository';
 
 export class PreviewAccountRepository implements IAccountRepository {
   private profile: UserProfileFormData = {
@@ -26,6 +26,14 @@ export class PreviewAccountRepository implements IAccountRepository {
     workoutDays: ['mon', 'wed', 'fri'],
     preferredTimeSlots: ['18:00 - 19:30'],
     notes: 'Không có chấn thương nghiêm trọng.',
+  };
+
+  private deletionStatus: AccountDeletionStatusViewModel = {
+    userId: 'preview-usr-001',
+    status: 'active',
+    isPendingDeletion: false,
+    retentionDaysRemaining: 0,
+    hasActiveBookings: false,
   };
 
   async getAccountHub(): Promise<AccountHubViewModel> {
@@ -62,6 +70,38 @@ export class PreviewAccountRepository implements IAccountRepository {
       emailAlertsEnabled: false,
       language: 'vi',
       appVersion: '1.0.0-preview',
+    };
+  }
+
+  async requestAccountDeletion(_reason?: string): Promise<AccountDeletionStatusViewModel> {
+    this.deletionStatus = {
+      ...this.deletionStatus,
+      status: 'pending_deletion',
+      isPendingDeletion: true,
+      requestedAt: new Date().toISOString(),
+      retentionDaysRemaining: 30,
+    };
+    return { ...this.deletionStatus };
+  }
+
+  async getDeletionStatus(): Promise<AccountDeletionStatusViewModel> {
+    return { ...this.deletionStatus };
+  }
+
+  async cancelAccountDeletion(): Promise<AccountDeletionStatusViewModel> {
+    this.deletionStatus = {
+      ...this.deletionStatus,
+      status: 'active',
+      isPendingDeletion: false,
+      retentionDaysRemaining: 0,
+    };
+    return { ...this.deletionStatus };
+  }
+
+  async exportUserData(): Promise<{ downloadUrl?: string; requestedAt?: string }> {
+    return {
+      downloadUrl: 'https://example.com/export/preview-usr-001.zip',
+      requestedAt: new Date().toISOString(),
     };
   }
 }

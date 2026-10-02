@@ -4,9 +4,19 @@ import {
   HealthProfileData,
   SettingsViewModel,
 } from '@/features/account/accountTypes';
-import { isPreviewMode, getDataSourceMode } from './repositoryTypes';
+import { getDataSourceMode } from './repositoryTypes';
 import { apiAccountRepository } from './api/apiAccountRepository';
 import { previewAccountRepository } from './preview/previewAccountRepository';
+
+export interface AccountDeletionStatusViewModel {
+  userId: string;
+  status: string;
+  isPendingDeletion: boolean;
+  requestedAt?: string;
+  scheduledPermanentDeletionAt?: string;
+  retentionDaysRemaining: number;
+  hasActiveBookings: boolean;
+}
 
 export interface IAccountRepository {
   getAccountHub(): Promise<AccountHubViewModel>;
@@ -15,6 +25,10 @@ export interface IAccountRepository {
   updateHealthProfile(data: HealthProfileData): Promise<void>;
   changePassword(currentPassword: string, newPassword: string): Promise<void>;
   getSettings(): Promise<SettingsViewModel>;
+  requestAccountDeletion(reason?: string): Promise<AccountDeletionStatusViewModel>;
+  getDeletionStatus(): Promise<AccountDeletionStatusViewModel>;
+  cancelAccountDeletion(): Promise<AccountDeletionStatusViewModel>;
+  exportUserData(): Promise<{ downloadUrl?: string; requestedAt?: string }>;
 }
 
 /**

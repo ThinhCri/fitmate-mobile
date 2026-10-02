@@ -4,7 +4,7 @@ import {
   HealthProfileData,
   SettingsViewModel,
 } from '@/features/account/accountTypes';
-import { IAccountRepository } from '../accountRepository';
+import { IAccountRepository, AccountDeletionStatusViewModel } from '../accountRepository';
 import { authService } from '@/services/api/authService';
 import { apiClient } from '@/services/api/client';
 
@@ -73,6 +73,62 @@ export class ApiAccountRepository implements IAccountRepository {
       emailAlertsEnabled: true,
       language: 'vi',
       appVersion: '1.0.0',
+    };
+  }
+
+  async requestAccountDeletion(reason?: string): Promise<AccountDeletionStatusViewModel> {
+    const res = await apiClient<any>('/users/me/delete-request', {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+    return {
+      userId: res.user_id,
+      status: res.status,
+      isPendingDeletion: Boolean(res.is_pending_deletion),
+      requestedAt: res.requested_at,
+      scheduledPermanentDeletionAt: res.scheduled_permanent_deletion_at,
+      retentionDaysRemaining: res.retention_days_remaining ?? 30,
+      hasActiveBookings: Boolean(res.has_active_bookings),
+    };
+  }
+
+  async getDeletionStatus(): Promise<AccountDeletionStatusViewModel> {
+    const res = await apiClient<any>('/users/me/deletion-status', {
+      method: 'GET',
+    });
+    return {
+      userId: res.user_id,
+      status: res.status,
+      isPendingDeletion: Boolean(res.is_pending_deletion),
+      requestedAt: res.requested_at,
+      scheduledPermanentDeletionAt: res.scheduled_permanent_deletion_at,
+      retentionDaysRemaining: res.retention_days_remaining ?? 0,
+      hasActiveBookings: Boolean(res.has_active_bookings),
+    };
+  }
+
+  async cancelAccountDeletion(): Promise<AccountDeletionStatusViewModel> {
+    const res = await apiClient<any>('/users/me/cancel-deletion', {
+      method: 'POST',
+    });
+    return {
+      userId: res.user_id,
+      status: res.status,
+      isPendingDeletion: Boolean(res.is_pending_deletion),
+      requestedAt: res.requested_at,
+      scheduledPermanentDeletionAt: res.scheduled_permanent_deletion_at,
+      retentionDaysRemaining: res.retention_days_remaining ?? 0,
+      hasActiveBookings: Boolean(res.has_active_bookings),
+    };
+  }
+
+  async exportUserData(): Promise<{ downloadUrl?: string; requestedAt?: string }> {
+    const res = await apiClient<any>('/users/me/export', {
+      method: 'POST',
+    });
+    return {
+      downloadUrl: res.download_url || res.url,
+      requestedAt: res.requested_at || new Date().toISOString(),
     };
   }
 }
