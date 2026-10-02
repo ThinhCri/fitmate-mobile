@@ -20,6 +20,7 @@ import {
   Plus,
   ChevronRight,
   CheckCircle2,
+  CircleUserRound,
 } from 'lucide-react-native';
 import { colors, radius, shadow, spacing, typography } from '@/theme/designTokens';
 import { MemberDashboardSummary } from '@/services/api/types';
@@ -38,6 +39,7 @@ export interface MemberHomePresentationProps {
   onFindTrainerPress?: () => void;
   onWorkoutDetailPress?: (workoutId: string) => void;
   onNotificationPress?: () => void;
+  onAccountPress?: () => void;
   onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
@@ -51,6 +53,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
   onFindTrainerPress,
   onWorkoutDetailPress,
   onNotificationPress,
+  onAccountPress,
   onScroll: externalOnScroll,
 }) => {
   const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
@@ -87,16 +90,28 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           </Text>
         </View>
 
-        <TouchableOpacity
-          onPress={onNotificationPress}
-          style={styles.bellButton}
-          accessibilityRole="button"
-          accessibilityLabel="Thông báo"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Bell size={22} color={colors.textPrimary} />
-          <View style={styles.bellDot} />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            onPress={onNotificationPress}
+            style={styles.headerIconButton}
+            accessibilityRole="button"
+            accessibilityLabel="Thông báo"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Bell size={22} color={colors.textPrimary} />
+            <View style={styles.bellDot} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={onAccountPress}
+            style={styles.headerIconButton}
+            accessibilityRole="button"
+            accessibilityLabel="Mở tài khoản và cài đặt"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <CircleUserRound size={24} color={colors.primaryDark} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={[styles.mainCard, shadow.card]}>
@@ -392,7 +407,12 @@ const styles = StyleSheet.create({
   greetingText: {
     color: colors.textPrimary,
   },
-  bellButton: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  headerIconButton: {
     width: 48,
     height: 48,
     borderRadius: 24,

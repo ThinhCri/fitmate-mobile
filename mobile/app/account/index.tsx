@@ -6,9 +6,10 @@ import {
   AccountHubViewModel,
 } from '@/features/account';
 import { getAccountRepository } from '@/repositories/accountRepository';
-import { sessionManager } from '@/services/session/sessionManager';
+import { useAuth } from '@/services/AuthContext';
 
 export default function AccountHubScreen() {
+  const { logout } = useAuth();
   const [account, setAccount] = useState<AccountHubViewModel>({
     id: 'user-current',
     name: 'Đang tải...',
@@ -45,7 +46,7 @@ export default function AccountHubScreen() {
         onSettingsPress={() => router.push('/account/settings' as any)}
         onSupportPress={() => router.push('/support' as any)}
         onLogoutPress={async () => {
-          sessionManager.clearSession();
+          await logout();
           router.replace('/(auth)/login' as any);
         }}
       />

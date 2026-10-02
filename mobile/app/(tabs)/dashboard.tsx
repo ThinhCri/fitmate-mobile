@@ -29,7 +29,8 @@ export default function DashboardScreen() {
     onStartWorkoutPress={() => router.push('/(tabs)/workout' as never)}
     onFindTrainerPress={() => router.push('/(tabs)/marketplace' as never)}
     onWorkoutDetailPress={(id) => router.push(`/workout/plan/${id}` as never)}
-    onNotificationPress={() => router.push('/notifications' as never)} />;
+    onNotificationPress={() => router.push('/notifications' as never)}
+    onAccountPress={() => router.push('/account' as never)} />;
 }
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl, backgroundColor: colors.background },
