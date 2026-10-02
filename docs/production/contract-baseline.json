@@ -2,7 +2,7 @@
   "baseline": "PROD-2026-09-22-v1",
   "capturedAt": "2026-10-02",
   "backendRepository": "FitmateAI_BE",
-  "backendFrozenRevision": "3fb7ba96b39b2232551beaecab48e8345a6842c7",
+  "backendFrozenRevision": "e35bef1575bb4c0c7c9b9ce521a932682b3128b4",
   "openapiSource": "FitmateAI_BE/docs/backend-release/openapi/fitmate-v1.yaml",
   "openapiSha256": "80C6FFD943416761C62E69353A4C3AAF45E85237BBE4CE08EC4F642791AB0596",
   "contractStatus": "FROZEN-V1",
