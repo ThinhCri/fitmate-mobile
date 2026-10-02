@@ -19,7 +19,10 @@ export default function CertificatesRoute() {
     setError(null);
     try {
       const data = await ptService.getMyCertificates();
-      setCertificates(data?.items || []);
+      const items = data?.items || [];
+      setCertificates(items);
+      const hasApproved = items.some((item) => ['approved', '1'].includes(String(item.status).toLowerCase()));
+      if (hasApproved && user) setUser({ ...user, ptVerificationStatus: 'approved' });
     } catch (err) {
       setError(
         err instanceof Error
@@ -29,7 +32,7 @@ export default function CertificatesRoute() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setUser, user]);
 
   useEffect(() => {
     fetchCertificates();
