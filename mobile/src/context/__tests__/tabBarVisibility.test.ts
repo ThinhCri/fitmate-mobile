@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  computeScrollVisibilityAction,
-  type ScrollVisibilityAction,
-} from '../TabBarVisibilityContext';
+import { computeScrollVisibilityAction } from '../scrollVisibilityLogic';
 
 describe('TabBarVisibility Hide-on-Scroll Logic (Xanh SM style)', () => {
   it('1. Luôn hiển thị thanh menu khi người dùng ở đầu trang (currentY <= 15)', () => {
