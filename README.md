@@ -4,9 +4,11 @@
 
 Repo nay gom:
 
-- `src/` — frontend web (Vite + React). Day la **content baseline**: cac truong du lieu, validation, role, hanh dong giu nguyen de tham chieu khi migrate sang Android.
-- `mobile/` — ung dung Android moi (React Native + Expo + TypeScript + Expo Router).
+- `mobile/` — ung dung Android (React Native + Expo + TypeScript + Expo Router).
+- `design-reference/stitch-export/` — nguon tham chieu giao dien Stitch.
 - `docs/mobile-redesign/` — tai lieu thiet ke, parity matrix, decisions, tasks, handoff, audit.
+
+Frontend web prototype da duoc loai bo sau khi hoan tat chuyen giao giao dien. Khi can doi chieu noi dung cu, dung tai lieu migration hoac lich su Git; khong khoi phuc web runtime vao production tree.
 
 Xem `AGENTS.md` de biet quy tac lam viec cua moi AI agent tren repo nay.
 

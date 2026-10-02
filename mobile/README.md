@@ -1,6 +1,6 @@
 # Fitmate Android (React Native + Expo + TypeScript)
 
-> Phien ban Android cua Fitmate — `mobile/` folder, song song voi `src/` (web baseline content).
+> Ung dung Android chinh cua Fitmate. Giao dien duoc chuyen tu Stitch sang React Native.
 
 ## Stack
 
@@ -59,5 +59,6 @@ Chi tiet: `../docs/mobile-redesign/tasks.md`.
 ## Lien he
 
 - Docs plan: `../docs/mobile-redesign/`
-- Content baseline (web): `../src/` (KHONG sua khi code Android)
+- Visual baseline: `../design-reference/stitch-export/`
+- Content migration history: `../docs/mobile-redesign/` va lich su Git
 - AGENTS.md (rules): `../AGENTS.md`

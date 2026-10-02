@@ -19,16 +19,16 @@ Commit tiếng Anh <=72 ký tự, không Co-authored-by; không tự commit thay
 
 > Huong dan cho moi AI (Cursor Agent, Claude, ChatGPT, ...) khi lam viec tren repo nay.
 
-Repo nay chua mot frontend web React + Vite dang chuyen giao thanh **ung dung Android** (React Native + Expo + TypeScript + Expo Router).
+Repo nay chua **ung dung Android** (React Native + Expo + TypeScript + Expo Router). Frontend web prototype da duoc loai bo sau khi hoan tat chuyen giao giao dien sang mobile.
 
 ## Baseline ngon ngu: web KHONG phai baseline visual
 
-Frontend web hien tai chi la nguon chuẩn cho **kiem ke noi dung va chuc nang**:
+Tai lieu migration va lich su Git la nguon tham chieu cho **kiem ke noi dung va chuc nang**:
 - Truong du lieu, validation, role (member/PT).
 - Hanh dong, ket qua thao tac, y nghia nghiep vu.
-- Mock data dang co (default users, posts, certificates).
+- Cac fixture lich su chi duoc dung trong development preview explicit.
 
-Frontend web KHONG phai nguon chuẩn cho **theme, layout, navigation, components hay copy visual**. Do do:
+Prototype cu KHONG phai nguon chuẩn cho **theme, layout, navigation, components hay copy visual**. Do do:
 - Khong lay theme/mau/icon/font/layout/component cua web de thiet ke Android.
 - Khong copy CSS class names (`glass-card`, `btn-primary`, ...).
 - Neu mot quyet dinh thiet ke giong web → phai co ly do doc lap (e.g., "token X dat WCAG AAA"), khong phai "web dang lam vay".
@@ -50,7 +50,7 @@ Xem [docs/mobile-redesign/decisions.md](docs/mobile-redesign/decisions.md) DEC-0
 
 ## Nguyen tac khong duoc phep vi pham
 
-- **Khong tu xoa** code frontend web hien tai. Code web duoc giu nguyen de tham chieu content.
+- **Khong khoi phuc** code frontend web prototype da xoa. Dung tai lieu migration va lich su Git khi can doi chieu content.
 - **Khong copy token / CSS / component style tu web sang mobile**. Mobile tokens doc lap theo DEC-015.
 - **Khong tu y them tinh nang nghiep vu moi** (out of scope). Neu thay co y tuong, ghi vao tasks voi tag `out-of-scope` roi dung lai.
 - **Khong goi API production** hoac dich vu tra phi. Production implementation dùng backend local/staging đã cấu hình; fixture chỉ dùng trong preview `__DEV__`, không làm fallback khi API lỗi.
