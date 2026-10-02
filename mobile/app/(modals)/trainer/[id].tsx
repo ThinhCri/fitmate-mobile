@@ -60,9 +60,18 @@ export default function TrainerDetailModal() {
               fetchTrainer(id);
             }
           }}
-          onBack={() => router.back()}
-          bookingEnabled={false}
-          chatEnabled={false}
+          bookingEnabled={Boolean(trainer?.isVerified)}
+          chatEnabled={Boolean(trainer?.id)}
+          onBookPress={() => {
+            if (id) {
+              router.push(`/booking/select-slot?coachId=${id}` as any);
+            }
+          }}
+          onChatPress={() => {
+            if (id) {
+              router.push(`/chat/${id}` as any);
+            }
+          }}
         />
       </View>
     </ScreenContainer>

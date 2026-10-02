@@ -36,6 +36,8 @@ export interface TrainerDetailPresentationProps {
   onBack?: () => void;
   bookingEnabled?: boolean;
   chatEnabled?: boolean;
+  onBookPress?: () => void;
+  onChatPress?: () => void;
 }
 
 export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps> = ({
@@ -48,6 +50,8 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
   onBack,
   bookingEnabled = false,
   chatEnabled = false,
+  onBookPress,
+  onChatPress,
 }) => {
   if (isNotFound) {
     return (
@@ -242,13 +246,13 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
           <SecondaryButton
             label="Nhắn tin"
             leftIcon={<MessageSquare size={18} color={colors.textMuted} />}
-            onPress={() => {}}
+            onPress={onChatPress || (() => {})}
             disabled={!chatEnabled}
             style={styles.chatButton}
           />
           <PrimaryButton
             label="Đặt lịch"
-            onPress={() => {}}
+            onPress={onBookPress || (() => {})}
             disabled={!bookingEnabled}
             style={styles.bookButton}
           />
