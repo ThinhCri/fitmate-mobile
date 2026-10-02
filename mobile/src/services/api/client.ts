@@ -69,7 +69,8 @@ export async function apiClient<T>(
       const isAuthEndpoint =
         cleanEndpoint.startsWith('/auth/login') ||
         cleanEndpoint.startsWith('/auth/refresh') ||
-        cleanEndpoint.startsWith('/auth/register');
+        cleanEndpoint.startsWith('/auth/register') ||
+        cleanEndpoint.startsWith('/auth/email/');
 
       if (!isAuthEndpoint) {
         try {

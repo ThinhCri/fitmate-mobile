@@ -552,3 +552,31 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - `/sample-preview` van co guard `__DEV__` va redirect khoi production.
 - Verification: `npm run type-check` PASS; `npm test -- --run` PASS 188/188; `npm run lint` PASS 0 errors (warnings legacy con ton tai). Chua runtime smoke test tren Android theo yeu cau user.
 - Khong commit va khong push trong dot nay.
+
+## Stitch D01-D10 and F01-F08 completion follow-up
+
+- Da doi chieu inventory `design-reference/stitch-export`: du 18 cap `code.html` + `screen.png` cho D01-D10 va F01-F08; cac route production dung cac presentation React Native tuong ung.
+- D03 tao/sua va D02 xoa workout plan da noi `POST/PATCH/DELETE /me/workout/plans`; editor khong con khoi tao bai tap mau.
+- D10 khong con `MOCK_PROPOSAL`: fail-closed theo `/system/capabilities`; khi backend chua cong bo proposal/apply operation thi chuyen sang chinh sua thu cong.
+- F02 upload anh qua `/uploads` va tao bai qua `POST /social/posts`; khong con timer/anh Unsplash mau.
+- F03/F04 tai post + comments, comment, reaction, delete owner, report va block qua API that.
+- F05 tai public profile + relation status va thuc hien friend actions/report/block qua API; cac count/posts backend khong cap duoc hien rong/0 thay vi fixture.
+- F06 tim user qua `/users/search`; request IDs duoc tach khoi user IDs; accept/reject/cancel/send chi cap nhat sau khi API thanh cong.
+- F07/F08 tai conversation list/history va gui/retry/block qua API; khong con inbox fixture.
+- F05 self/public navigation dung UUID that; friend relation bo qua self-status request va khong con dung ten hien thi lam route identity.
+- Workout/chat side-effect client IDs da doi sang UUID dung format contract; khong con chuoi timestamp tuy y.
+- Da them route compatibility aliases: `/workout/log/[id]`, `/metrics/weight`, `/community/search`, `/messages`, `/appointments`; canonical routes hien tai van duoc giu de khong pha deep link cu.
+- AI companion ngoai nhom D/F cung da bo preview timer tren production path va noi `/chat/ai/*` sau capability gate.
+- Capability AI nay duoc kiem tra truoc khi goi danh sach thread/message; client khong con goi operation AI khi server dang disable.
+- Create post hien gioi han dung mot anh theo wire contract; upload ho tro URI Android va uu tien URI ben vung do server tra ve thay vi luu bat buoc signed URL.
+- Search user giu lai relationship/request ID tu danh sach friend request hien tai; preview friend mutations cung dung request ID rieng thay vi nham voi user ID.
+- Static checks: `git diff --check` PASS; scan trong production D/F routes khong con `MOCK_`, `setTimeout`, sample view model, console mutation hoac Unsplash placeholder.
+- Theo manual-execution rule, chua chay type-check/test/lint/Expo/Android va chua commit/push. Lenh user can chay: `cd mobile && npm run type-check && npm test -- --run && npm run lint`.
+# Email verification OTP integration — 2026-10-02
+
+- Registration now consumes `RegistrationPendingResponse`; it no longer stores an authenticated session before email ownership is verified.
+- Added API adapters for `/auth/email/verify` and `/auth/email/resend`, and excluded these anonymous auth operations from automatic refresh handling.
+- Replaced the unavailable-email notice with a production OTP screen: six-digit numeric input, Android one-time-code autofill hint, verify, resend, loading/error/success states, and navigation back to login after success.
+- Updated the pinned OpenAPI hash to `83CF757A4286258E1A026387B0A9FCD2A45513F17261DD3D190BC10D52EC79C8`; the Git revision field still points to the last committed backend baseline until the coordinated backend change is committed.
+- Mobile type-check/test/lint/Expo were NOT RUN under the repository manual-execution rule. User command: `cd mobile; npm run type-check; npm test -- --run; npm run lint`.
+- Recovery fix: login detects `FITMATE.AUTH.EMAIL_NOT_VERIFIED`, requests a fresh code best-effort, and routes back to the OTP screen; the explicit resend button remains available if delivery or rate limiting delays the automatic resend.

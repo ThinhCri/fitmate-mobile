@@ -5,6 +5,7 @@ import {
   ForgotPasswordRequest,
   LoginRequest,
   RegisterRequest,
+  RegistrationPendingResponse,
   ResetPasswordRequest,
   UserProfile,
   isAdminMfaResponse,
@@ -29,14 +30,28 @@ export const authService = {
    * - Password must be 12-128 characters.
    * - PT registration NEVER sets verified certificate status.
    */
-  async register(data: RegisterRequest): Promise<AuthResponse> {
+  async register(data: RegisterRequest): Promise<RegistrationPendingResponse> {
     if (!data.password || data.password.length < 12 || data.password.length > 128) {
       throw new Error('Mật khẩu phải có độ dài từ 12 đến 128 ký tự');
     }
 
-    return apiClient<AuthResponse>('/auth/register', {
+    return apiClient<RegistrationPendingResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  },
+
+  async verifyEmail(email: string, code: string): Promise<void> {
+    return apiClient<void>('/auth/email/verify', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+  },
+
+  async resendEmailVerification(email: string): Promise<void> {
+    return apiClient<void>('/auth/email/resend', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
     });
   },
 

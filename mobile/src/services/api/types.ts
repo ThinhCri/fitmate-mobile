@@ -65,6 +65,12 @@ export interface AuthResponse {
   user: UserSummary;
 }
 
+export interface RegistrationPendingResponse {
+  verification_required: true;
+  email: string;
+  expires_in_seconds: number;
+}
+
 export interface RefreshTokenRequest {
   refresh_token: string;
 }
@@ -85,6 +91,7 @@ export interface ProblemDetails {
   detail?: string;
   instance?: string;
   errors?: Record<string, string[]>;
+  code?: string;
 }
 
 export function isProblemDetails(data: unknown): data is ProblemDetails {

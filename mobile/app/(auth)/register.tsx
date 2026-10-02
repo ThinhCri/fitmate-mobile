@@ -18,7 +18,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
@@ -116,27 +115,17 @@ export default function RegisterScreen() {
 
     setSubmitting(true);
     try {
-      await register({
+      const result = await register({
         email: trimmedEmail,
         password,
         fullName: trimmedName,
         role,
       });
 
-      if (role === 'pt') {
-        Alert.alert(
-          'Đăng ký thành công',
-          'Tài khoản Huấn luyện viên đã được khởi tạo. Hồ sơ chứng chỉ đang ở trạng thái chờ xét duyệt trước khi có thể hiển thị dịch vụ.',
-          [
-            {
-              text: 'Bắt đầu',
-              onPress: () => router.replace('/(tabs)/dashboard'),
-            },
-          ]
-        );
-      } else {
-        router.replace('/(tabs)/dashboard');
-      }
+      router.replace({
+        pathname: '/(auth)/verify-email',
+        params: { email: result.email },
+      });
     } catch (err: any) {
       setLocalError(err?.message || 'Đăng ký không thành công. Vui lòng thử lại.');
     } finally {

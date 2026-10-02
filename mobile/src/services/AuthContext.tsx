@@ -30,6 +30,7 @@ import {
 } from '@/services/secureStorage';
 import {
   RegisterRequest,
+  RegistrationPendingResponse,
   UserProfile,
   UserSummary,
 } from '@/services/api/types';
@@ -60,7 +61,7 @@ export interface AuthContextValue {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (input: RegisterInput) => Promise<void>;
+  register: (input: RegisterInput) => Promise<RegistrationPendingResponse>;
   logout: () => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -227,38 +228,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         timezone: input.timezone,
       };
 
-      const authRes = await authService.register(req);
-
-      if (authRes.user.role === 'admin') {
-        await sessionManager.clearSession();
-        throw new Error(
-          'Tài khoản Quản trị viên (Admin) chỉ dùng trên Web Admin. Ứng dụng di động chỉ dành cho Hội viên và Huấn luyện viên.'
-        );
-      }
-
-      await sessionManager.setSession(
-        authRes.access_token,
-        authRes.refresh_token,
-        authRes.user
-      );
-
-      let profile: UserProfile | null = null;
-      try {
-        profile = await authService.getMe();
-      } catch (getMeErr) {
-        if (
-          getMeErr instanceof ApiError &&
-          (getMeErr.status === 401 ||
-            getMeErr.status === 403 ||
-            getMeErr.status === 404)
-        ) {
-          await sessionManager.clearSession();
-          setUser(null);
-          throw getMeErr;
-        }
-      }
-
-      setUser(mapToDomainUser(authRes.user, profile));
+      return await authService.register(req);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Đăng ký không thành công';

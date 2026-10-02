@@ -20,7 +20,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import {
   ArrowLeft,
   ArrowRight,
@@ -37,12 +37,15 @@ import {
 import { useAuth } from '@/services/AuthContext';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
+import { authService } from '@/services/api/authService';
+import { ApiError } from '@/services/api/client';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginScreen() {
   const { login, error, clearError } = useAuth();
-  const [email, setEmail] = useState('');
+  const params = useLocalSearchParams<{ email?: string }>();
+  const [email, setEmail] = useState(params.email || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -70,9 +73,21 @@ export default function LoginScreen() {
     try {
       await login(trimmedEmail, password);
       router.replace('/(tabs)/dashboard');
-    } catch (err: any) {
-      // Error message is set in AuthContext or local catch
-      setLocalError(err?.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin.');
+    } catch (err: unknown) {
+      const problem = err instanceof ApiError && typeof err.data === 'object' && err.data !== null
+        ? err.data as { code?: string }
+        : undefined;
+      if (problem?.code === 'FITMATE.AUTH.EMAIL_NOT_VERIFIED') {
+        clearError();
+        try {
+          await authService.resendEmailVerification(trimmedEmail);
+        } catch {
+          // The OTP screen still provides an explicit resend action.
+        }
+        router.replace({ pathname: '/(auth)/verify-email', params: { email: trimmedEmail } });
+        return;
+      }
+      setLocalError(err instanceof Error ? err.message : 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin.');
     } finally {
       setSubmitting(false);
     }
