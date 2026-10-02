@@ -1,4 +1,4 @@
-import { FriendItemViewModel, ReportRequest } from '@/features/community';
+import { CommunityPostViewModel, FriendItemViewModel, ReportRequest } from '@/features/community';
 import { ConversationDetailViewModel, ChatMessageViewModel } from '@/features/chat';
 import type { ISocialRepository } from '../socialRepository';
 import { apiClient } from '@/services/api/client';
@@ -40,8 +40,71 @@ interface ConversationWire {
   last_message?: ChatMessageWire | null;
 }
 
+interface PostWire {
+  id: string;
+  author_id: string;
+  author: {
+    id: string;
+    display_name: string;
+    avatar_url?: string | null;
+  };
+  content: string;
+  image_url?: string | null;
+  tags: string[];
+  visibility: 'public' | 'friends' | 'private';
+  is_knowledge: boolean;
+  reactions_count: number;
+  comments_count: number;
+  created_at: string;
+}
+
+function mapPost(wire: PostWire): CommunityPostViewModel {
+  const tags = wire.tags || [];
+  const category = tags.includes('nutrition_qa')
+    ? 'nutrition_qa'
+    : tags.includes('workout_exp')
+      ? 'workout_exp'
+      : 'all';
+
+  return {
+    id: wire.id,
+    authorId: wire.author_id,
+    authorName: wire.author.display_name,
+    authorRole: 'member',
+    content: wire.content,
+    mediaUrl: wire.image_url || undefined,
+    category,
+    visibility: wire.visibility,
+    createdAt: new Date(wire.created_at).toLocaleString('vi-VN'),
+    reactions: {
+      love: wire.reactions_count,
+      fire: 0,
+      smile: 0,
+    },
+    commentCount: wire.comments_count,
+    workoutTags: tags.filter((tag) => tag !== 'workout_exp' && tag !== 'nutrition_qa'),
+    isKnowledgeSharing: wire.is_knowledge,
+  };
+}
+
 export class ApiSocialRepository implements ISocialRepository {
   private convPeerCache = new Map<string, string>();
+
+  async listPosts(scope: 'public' | 'friends' = 'public'): Promise<CommunityPostViewModel[]> {
+    const response = await apiClient<{ items: PostWire[]; nextCursor?: string | null }>(
+      `/social/posts?scope=${scope}&limit=50`,
+      { method: 'GET' }
+    );
+    return (response.items || []).map(mapPost);
+  }
+
+  async reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<void> {
+    const wireType = type === 'love' ? 'heart' : type === 'fire' ? 'flame' : 'smile';
+    await apiClient(`/social/posts/${encodeURIComponent(postId)}/reactions`, {
+      method: 'POST',
+      body: JSON.stringify({ type: wireType }),
+    });
+  }
 
   async getFriends(): Promise<{
     friends: FriendItemViewModel[];

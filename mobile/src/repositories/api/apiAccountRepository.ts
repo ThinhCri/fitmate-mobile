@@ -9,6 +9,19 @@ import { authService } from '@/services/api/authService';
 import { apiClient } from '@/services/api/client';
 
 export class ApiAccountRepository implements IAccountRepository {
+  async getProfile(): Promise<UserProfileFormData> {
+    const me = await authService.getMe();
+    return {
+      name: me.full_name,
+      bio: '',
+      phone: me.phone || '',
+      gender: me.gender || 'other',
+      birthday: me.birthday || '',
+      heightCm: me.height_cm ?? 0,
+      weightKg: me.weight_kg ?? 0,
+      fitnessGoal: me.fitness_goal || '',
+    };
+  }
   async getAccountHub(): Promise<AccountHubViewModel> {
     const me = await authService.getMe();
     return {
@@ -23,10 +36,10 @@ export class ApiAccountRepository implements IAccountRepository {
   async getHealthProfile(): Promise<HealthProfileData> {
     const me = await authService.getMe();
     return {
-      medicalConditions: '',
-      hasNoMedicalConditions: false,
-      allergies: '',
-      hasNoAllergies: false,
+      medicalConditions: (me.medical_conditions || []).join(', '),
+      hasNoMedicalConditions: (me.medical_conditions || []).length === 0,
+      allergies: (me.allergies || []).join(', '),
+      hasNoAllergies: (me.allergies || []).length === 0,
       workoutDays: me.training_days || [],
       preferredTimeSlots: [],
       notes: '',
@@ -34,12 +47,15 @@ export class ApiAccountRepository implements IAccountRepository {
   }
 
   async updateProfile(data: UserProfileFormData): Promise<void> {
+    const current = await authService.getMe();
+    if ((data.bio && data.bio.trim()) || data.gender !== (current.gender || 'other') || data.birthday !== (current.birthday || '')) {
+      throw new Error('Máy chủ hiện chưa hỗ trợ cập nhật tiểu sử, giới tính hoặc ngày sinh. Các trường khác chưa được lưu.');
+    }
     await apiClient('/users/me', {
       method: 'PATCH',
       body: JSON.stringify({
         full_name: data.name,
         phone: data.phone,
-        birthday: data.birthday,
         height_cm: data.heightCm,
         weight_kg: data.weightKg,
         fitness_goal: data.fitnessGoal,
@@ -48,9 +64,16 @@ export class ApiAccountRepository implements IAccountRepository {
   }
 
   async updateHealthProfile(data: HealthProfileData): Promise<void> {
-    await apiClient('/users/me/health', {
-      method: 'PUT',
-      body: JSON.stringify(data),
+    if (data.preferredTimeSlots.length > 0 || data.notes.trim().length > 0) {
+      throw new Error('Máy chủ hiện chưa hỗ trợ lưu khung giờ ưu tiên hoặc ghi chú sức khỏe.');
+    }
+    await apiClient('/users/me', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        medical_conditions: data.hasNoMedicalConditions ? [] : data.medicalConditions.split(',').map((value) => value.trim()).filter(Boolean),
+        allergies: data.hasNoAllergies ? [] : data.allergies.split(',').map((value) => value.trim()).filter(Boolean),
+        training_days: data.workoutDays,
+      }),
     });
   }
 
@@ -128,7 +151,7 @@ export class ApiAccountRepository implements IAccountRepository {
     });
     return {
       downloadUrl: res.download_url || res.url,
-      requestedAt: res.requested_at || new Date().toISOString(),
+      requestedAt: res.requested_at,
     };
   }
 }

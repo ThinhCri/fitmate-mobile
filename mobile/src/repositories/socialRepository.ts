@@ -1,10 +1,12 @@
-import { FriendItemViewModel, ReportRequest } from '@/features/community';
+import { CommunityPostViewModel, FriendItemViewModel, ReportRequest } from '@/features/community';
 import { ConversationDetailViewModel, ChatMessageViewModel } from '@/features/chat';
 import { getDataSourceMode } from './repositoryTypes';
 import { apiSocialRepository } from './api/apiSocialRepository';
 import { previewSocialRepository } from './preview/previewSocialRepository';
 
 export interface ISocialRepository {
+  listPosts(scope?: 'public' | 'friends'): Promise<CommunityPostViewModel[]>;
+  reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<void>;
   getFriends(): Promise<{
     friends: FriendItemViewModel[];
     pendingRequests: FriendItemViewModel[];

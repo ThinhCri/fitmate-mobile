@@ -166,6 +166,39 @@ describe('Social Repository & Data Source Isolation', () => {
     expect(conv.messages[0].isSelf).toBe(false);
   });
 
+  it('fetches and maps the production community feed', async () => {
+    delete process.env.EXPO_PUBLIC_DATA_SOURCE;
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        items: [
+          {
+            id: 'post-uuid',
+            author_id: 'author-uuid',
+            author: { id: 'author-uuid', display_name: 'Minh Anh' },
+            content: 'Buổi tập hôm nay rất tốt.',
+            tags: ['workout_exp'],
+            visibility: 'public',
+            is_knowledge: false,
+            reactions_count: 3,
+            comments_count: 1,
+            created_at: '2026-10-02T08:00:00Z',
+          },
+        ],
+      }),
+    });
+
+    const posts = await apiSocialRepository.listPosts('public');
+    expect(posts).toHaveLength(1);
+    expect(posts[0]).toMatchObject({
+      id: 'post-uuid',
+      authorName: 'Minh Anh',
+      category: 'workout_exp',
+      commentCount: 1,
+    });
+  });
+
   it('sends message via API with idempotent client message id', async () => {
     delete process.env.EXPO_PUBLIC_DATA_SOURCE;
     const fetchSpy = vi.fn().mockResolvedValue({

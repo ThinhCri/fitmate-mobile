@@ -61,6 +61,7 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
   isError = false,
   isOffline = false,
 }) => {
+  const percent = (current: number, target: number) => target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   if (isOffline) {
     return (
       <View style={styles.centerFeedback}>
@@ -200,7 +201,7 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
                 {summary.calories.consumed.toLocaleString('vi-VN')}
               </Text>
               <Text style={[typography.body, styles.heroMetricTarget]}>
-                / {summary.calories.target.toLocaleString('vi-VN')} kcal
+                {summary.calories.target > 0 ? ` / ${summary.calories.target.toLocaleString('vi-VN')} kcal` : ' kcal'}
               </Text>
             </View>
           </View>
@@ -221,7 +222,7 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
             Đã nạp {calorieRatio}% mục tiêu ngày
           </Text>
           <Text style={[typography.caption, styles.progressCaption]}>
-            Mục tiêu: {summary.calories.target} kcal
+            {summary.calories.target > 0 ? `Mục tiêu: ${summary.calories.target} kcal` : 'Chưa thiết lập mục tiêu calo'}
           </Text>
         </View>
 
@@ -231,19 +232,19 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
             <View style={styles.macroColHeader}>
               <Text style={[typography.captionMedium, styles.macroTitle]}>Đạm</Text>
               <Text style={[typography.captionMedium, { color: colors.primary }]}>
-                {Math.round((summary.macros.protein.current / summary.macros.protein.target) * 100)}%
+                {percent(summary.macros.protein.current, summary.macros.protein.target)}%
               </Text>
             </View>
             <Text style={[typography.bodyBold, styles.macroValue]}>
               {summary.macros.protein.current}g{' '}
-              <Text style={[typography.caption, styles.macroTarget]}>/ {summary.macros.protein.target}g</Text>
+              <Text style={[typography.caption, styles.macroTarget]}>{summary.macros.protein.target > 0 ? `/ ${summary.macros.protein.target}g` : 'chưa có mục tiêu'}</Text>
             </Text>
             <View style={styles.macroMiniTrack}>
               <View
                 style={[
                   styles.macroMiniFill,
                   {
-                    width: `${Math.min(100, Math.round((summary.macros.protein.current / summary.macros.protein.target) * 100))}%`,
+                    width: `${percent(summary.macros.protein.current, summary.macros.protein.target)}%`,
                     backgroundColor: colors.primary,
                   },
                 ]}
@@ -255,19 +256,19 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
             <View style={styles.macroColHeader}>
               <Text style={[typography.captionMedium, styles.macroTitle]}>Tinh bột</Text>
               <Text style={[typography.captionMedium, { color: colors.secondary }]}>
-                {Math.round((summary.macros.carbs.current / summary.macros.carbs.target) * 100)}%
+                {percent(summary.macros.carbs.current, summary.macros.carbs.target)}%
               </Text>
             </View>
             <Text style={[typography.bodyBold, styles.macroValue]}>
               {summary.macros.carbs.current}g{' '}
-              <Text style={[typography.caption, styles.macroTarget]}>/ {summary.macros.carbs.target}g</Text>
+              <Text style={[typography.caption, styles.macroTarget]}>{summary.macros.carbs.target > 0 ? `/ ${summary.macros.carbs.target}g` : 'chưa có mục tiêu'}</Text>
             </Text>
             <View style={styles.macroMiniTrack}>
               <View
                 style={[
                   styles.macroMiniFill,
                   {
-                    width: `${Math.min(100, Math.round((summary.macros.carbs.current / summary.macros.carbs.target) * 100))}%`,
+                    width: `${percent(summary.macros.carbs.current, summary.macros.carbs.target)}%`,
                     backgroundColor: colors.secondary,
                   },
                 ]}
@@ -279,19 +280,19 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
             <View style={styles.macroColHeader}>
               <Text style={[typography.captionMedium, styles.macroTitle]}>Chất béo</Text>
               <Text style={[typography.captionMedium, { color: colors.warning }]}>
-                {Math.round((summary.macros.fat.current / summary.macros.fat.target) * 100)}%
+                {percent(summary.macros.fat.current, summary.macros.fat.target)}%
               </Text>
             </View>
             <Text style={[typography.bodyBold, styles.macroValue]}>
               {summary.macros.fat.current}g{' '}
-              <Text style={[typography.caption, styles.macroTarget]}>/ {summary.macros.fat.target}g</Text>
+              <Text style={[typography.caption, styles.macroTarget]}>{summary.macros.fat.target > 0 ? `/ ${summary.macros.fat.target}g` : 'chưa có mục tiêu'}</Text>
             </Text>
             <View style={styles.macroMiniTrack}>
               <View
                 style={[
                   styles.macroMiniFill,
                   {
-                    width: `${Math.min(100, Math.round((summary.macros.fat.current / summary.macros.fat.target) * 100))}%`,
+                    width: `${percent(summary.macros.fat.current, summary.macros.fat.target)}%`,
                     backgroundColor: colors.warning,
                   },
                 ]}

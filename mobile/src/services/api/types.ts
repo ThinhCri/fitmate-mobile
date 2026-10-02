@@ -31,6 +31,8 @@ export interface UserProfile {
   price_per_session_vnd?: number | null;
   certificate_status?: string | null;
   timezone?: string | null;
+  medical_conditions?: string[];
+  allergies?: string[];
 }
 
 export interface RegisterRequest {
@@ -363,7 +365,7 @@ export function mapAvailabilitySlotToViewModel(
 }
 
 // ==========================================
-// 4. Dashboard View Model (CONTRACT_GAP noted)
+// 4. Dashboard View Model
 // ==========================================
 
 export interface MemberDashboardSummary {
@@ -505,4 +507,3 @@ export interface BookingRescheduleResponseWire {
   responded_at_utc?: string | null;
   rejection_reason?: string | null;
 }
-

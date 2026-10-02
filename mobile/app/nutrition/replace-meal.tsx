@@ -1,73 +1,10 @@
-import React, { useState } from 'react';
-import { router, useLocalSearchParams } from 'expo-router';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { router } from 'expo-router';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
-import {
-  ReplaceMealPresentation,
-  ReplacementOption,
-} from '@/features/nutrition/ReplaceMealPresentation';
-import { PlannedMealSlotViewModel } from '@/features/nutrition/nutritionTypes';
-
-const SUGGESTIONS: ReplacementOption[] = [
-  {
-    id: 's1',
-    name: 'Bún bò Huế thanh vị (nạc)',
-    portion: '1 tô vừa (300g)',
-    calories: 480,
-    protein: 32,
-    carbs: 58,
-    fat: 12,
-  },
-  {
-    id: 's2',
-    name: 'Salad cá ngừ ngô ngọt',
-    portion: '1 đĩa lớn (250g)',
-    calories: 360,
-    protein: 34,
-    carbs: 22,
-    fat: 14,
-  },
-  {
-    id: 's3',
-    name: 'Cơm gạo lứt thịt bò xào ớt chuông',
-    portion: '1 phần (280g)',
-    calories: 520,
-    protein: 38,
-    carbs: 60,
-    fat: 13,
-  },
-];
+import { colors, spacing, typography } from '@/theme/designTokens';
 
 export default function ReplaceMealRoute() {
-  const params = useLocalSearchParams<{ id?: string; name?: string; calories?: string }>();
-  const [saving, setSaving] = useState(false);
-
-  const currentMeal: PlannedMealSlotViewModel = {
-    id: params.id ?? 'm1',
-    dayIndex: 0,
-    dayLabel: 'T2',
-    mealSlot: 'lunch',
-    foodName: params.name ?? 'Cơm gà xào nấm',
-    calories: params.calories ? Number(params.calories) : 550,
-    isCompleted: false,
-  };
-
-  const handleConfirm = (chosen: ReplacementOption) => {
-    setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      router.back();
-    }, 300);
-  };
-
-  return (
-    <ScreenContainer edges={['top', 'bottom']}>
-      <ReplaceMealPresentation
-        currentMeal={currentMeal}
-        suggestions={SUGGESTIONS}
-        onBack={() => router.back()}
-        onConfirmReplacement={handleConfirm}
-        isSaving={saving}
-      />
-    </ScreenContainer>
-  );
+  return <ScreenContainer edges={['top', 'bottom']}><View style={styles.center}><Text style={[typography.title2, styles.title]}>Chưa có gợi ý thay thế từ máy chủ</Text><Text style={[typography.body, styles.body]}>Bạn vẫn có thể ghi món ăn thực tế bằng biểu mẫu thủ công. Ứng dụng không tự tạo danh sách món giả.</Text><TouchableOpacity style={styles.button} onPress={() => router.replace('/nutrition/manual-entry' as never)}><Text style={styles.buttonText}>Nhập món thủ công</Text></TouchableOpacity><TouchableOpacity onPress={() => router.back()}><Text style={styles.back}>Quay lại</Text></TouchableOpacity></View></ScreenContainer>;
 }
+const styles = StyleSheet.create({ center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl }, title: { color: colors.textPrimary, textAlign: 'center' }, body: { color: colors.textSecondary, textAlign: 'center', marginVertical: spacing.lg }, button: { backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: spacing.xl, paddingVertical: spacing.md }, buttonText: { color: colors.white, fontWeight: '700' }, back: { color: colors.textSecondary, marginTop: spacing.lg } });

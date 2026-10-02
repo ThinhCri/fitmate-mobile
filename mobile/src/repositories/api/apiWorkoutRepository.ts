@@ -8,30 +8,51 @@ import type { IWorkoutRepository, MonthlyWorkoutStats } from '../workoutReposito
 import { apiClient } from '@/services/api/client';
 
 export class ApiWorkoutRepository implements IWorkoutRepository {
+  async listPlans(): Promise<WorkoutPlanViewModel[]> {
+    const raw = await apiClient<{
+      items: Array<{
+        id: string;
+        day_of_week: string;
+        workout_name: string;
+        duration_minutes: number;
+        target_calories_burn: number;
+        is_completed: boolean;
+        exercise_count: number;
+      }>;
+    }>('/me/workout/plans');
+
+    return (raw.items || []).map((plan) => ({
+      id: plan.id,
+      title: plan.workout_name,
+      category: plan.day_of_week,
+      description: `${plan.exercise_count} bài tập`,
+      durationMinutes: plan.duration_minutes,
+      caloriesEstimate: plan.target_calories_burn,
+      isActive: !plan.is_completed,
+      exercises: [],
+    }));
+  }
+
   async getPlan(id: string): Promise<WorkoutPlanViewModel> {
     const raw = await apiClient<any>('/me/workout/plans/' + encodeURIComponent(id));
     return {
       id: raw.id,
-      title: raw.name || raw.title || 'Giáo án tập luyện',
-      category: raw.category || 'Sức mạnh & Thể hình',
-      description: raw.description || '',
-      durationMinutes: raw.duration_minutes || 45,
-      caloriesEstimate: raw.target_calories_burn || 250,
-      isActive: Boolean(raw.is_active ?? true),
-      coachName: raw.coach_name,
-      coachVerified: true,
-      coachNotes: raw.coach_notes,
+      title: raw.workout_name,
+      category: raw.day_of_week,
+      description: `${(raw.exercises || []).length} bài tập`,
+      durationMinutes: raw.duration_minutes ?? 0,
+      caloriesEstimate: raw.target_calories_burn ?? 0,
+      isActive: !raw.is_completed,
       exercises: (raw.exercises || []).map((ex: any, idx: number) => ({
-        id: ex.id || `ex-${idx}`,
+        id: ex.id || `${id}-${idx}`,
         name: ex.name,
         type: ex.type === 'time' ? 'time' : 'reps',
-        sets: ex.sets || 3,
+        sets: ex.sets ?? 0,
         repsPerSet: ex.reps,
         durationSeconds: ex.duration_sec,
-        restSeconds: ex.rest_sec || 60,
-        caloriesEstimate: ex.calories || 50,
-        instructions: ex.instructions,
-        targetMuscle: ex.target_muscle,
+        restSeconds: ex.rest_sec ?? 0,
+        caloriesEstimate: ex.calories ?? 0,
+        instructions: ex.notes,
       })),
     };
   }
@@ -52,16 +73,15 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
       const cal = item.calories_burned || 0;
       totalCalories += cal;
       totalDuration += item.duration_min || 0;
-      totalVolume += (item.completed_sets || 0) * 50;
 
       return {
         id: item.id,
-        planId: item.plan_id || 'plan-default',
-        planTitle: item.day || 'Buổi tập toàn thân',
-        category: 'Thể lực & Sức mạnh',
-        completedAt: item.date || item.created_at || new Date().toISOString(),
+        planId: item.plan_id || '',
+        planTitle: item.plan_name || item.day || 'Buổi tập',
+        category: item.snapshot_plan_day_of_week || item.day || '',
+        completedAt: item.created_at || item.date,
         durationSeconds: durSec,
-        totalVolumeKg: (item.completed_sets || 0) * 50,
+        totalVolumeKg: 0,
         caloriesBurned: cal,
         completedSets: item.completed_sets || 0,
         totalSets: item.planned_sets || item.completed_sets || 0,
@@ -75,7 +95,7 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
     const stats: MonthlyWorkoutStats = {
       monthYear: 'Tháng này',
       completedCount: count,
-      targetCount: 16,
+      targetCount: 0,
       totalVolumeKg: totalVolume,
       caloriesBurned: totalCalories,
       averageDurationMinutes: avgDuration,
@@ -141,8 +161,8 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
       };
     });
 
-    const currentWeightKg = records.length > 0 ? records[0].weightKg : 67.8;
-    const goalWeightKg = 65.0;
+    const currentWeightKg = records.length > 0 ? records[0].weightKg : 0;
+    const goalWeightKg = 0;
     const changeLast7DaysKg =
       records.length > 1
         ? Math.round(
@@ -190,6 +210,7 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
   }
 
   async recordWorkoutCompletion(params: {
+    planId?: string;
     day?: string;
     name?: string;
     durationMinutes: number;
@@ -197,14 +218,15 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
     completedSets: number;
     plannedSets: number;
     status: 'completed' | 'endedEarly';
-  }): Promise<void> {
+  }): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10);
     const clientId =
       'c-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
-    await apiClient('/me/workout/sessions', {
+    const result = await apiClient<{ id: string }>('/me/workout/sessions', {
       method: 'POST',
       body: JSON.stringify({
         client_id: clientId,
+        plan_id: params.planId,
         date: dateStr,
         duration_min: params.durationMinutes,
         calories_burned: params.caloriesBurned,
@@ -214,6 +236,7 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
         planned_sets: params.plannedSets,
       }),
     });
+    return result.id;
   }
 
   async saveMedicalSurvey(conditions: string[], notes: string): Promise<void> {

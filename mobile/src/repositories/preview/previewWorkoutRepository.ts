@@ -170,6 +170,10 @@ let previewWeightRecords: WeightRecordViewModel[] = [
 ];
 
 export class PreviewWorkoutRepository implements IWorkoutRepository {
+  async listPlans(): Promise<WorkoutPlanViewModel[]> {
+    return [{ ...MOCK_PLAN, exercises: [...MOCK_PLAN.exercises] }];
+  }
+
   async getPlan(id: string): Promise<WorkoutPlanViewModel> {
     return {
       ...MOCK_PLAN,
@@ -226,6 +230,7 @@ export class PreviewWorkoutRepository implements IWorkoutRepository {
   }
 
   async recordWorkoutCompletion(params: {
+    planId?: string;
     day?: string;
     name?: string;
     durationMinutes: number;
@@ -233,7 +238,7 @@ export class PreviewWorkoutRepository implements IWorkoutRepository {
     completedSets: number;
     plannedSets: number;
     status: 'completed' | 'endedEarly';
-  }): Promise<void> {
+  }): Promise<string> {
     const user = await mockUserService.getCurrentUser();
     if (user) {
       await mockUserService.saveUser({
@@ -255,6 +260,7 @@ export class PreviewWorkoutRepository implements IWorkoutRepository {
         ],
       });
     }
+    return `preview-session-${Date.now()}`;
   }
 
   async saveMedicalSurvey(conditions: string[], notes: string): Promise<void> {

@@ -1,4 +1,4 @@
-import { FriendItemViewModel, ReportRequest } from '@/features/community';
+import { CommunityPostViewModel, FriendItemViewModel, ReportRequest } from '@/features/community';
 import { ConversationDetailViewModel, ChatMessageViewModel } from '@/features/chat';
 import type { ISocialRepository } from '../socialRepository';
 
@@ -60,7 +60,42 @@ let previewDiscover: FriendItemViewModel[] = [
   },
 ];
 
+let previewPosts: CommunityPostViewModel[] = [
+  {
+    id: 'post-preview-1',
+    authorId: 'user-101',
+    authorName: 'Lê Quốc Bảo',
+    authorRole: 'member',
+    content: 'Hôm nay mình đã hoàn thành buổi tập toàn thân. Cùng cố gắng nhé!',
+    category: 'workout_exp',
+    visibility: 'public',
+    createdAt: 'Vừa xong',
+    reactions: { love: 4, fire: 2, smile: 1 },
+    commentCount: 0,
+    isKnowledgeSharing: false,
+  },
+];
+
 export class PreviewSocialRepository implements ISocialRepository {
+  async listPosts(scope: 'public' | 'friends' = 'public'): Promise<CommunityPostViewModel[]> {
+    return previewPosts.filter((post) => scope === 'public' || post.visibility === 'friends');
+  }
+
+  async reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<void> {
+    previewPosts = previewPosts.map((post) =>
+      post.id === postId
+        ? {
+            ...post,
+            reactions: {
+              ...post.reactions,
+              [type]: post.reactions[type] + 1,
+              userReaction: type,
+            },
+          }
+        : post
+    );
+  }
+
   async getFriends(): Promise<{
     friends: FriendItemViewModel[];
     pendingRequests: FriendItemViewModel[];

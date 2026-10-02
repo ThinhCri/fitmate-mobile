@@ -76,6 +76,39 @@ describe('Workout Repository & Data Source Isolation', () => {
     expect(history.stats.completedCount).toBeGreaterThan(0);
   });
 
+  it('fetches and maps workout plan summaries from the API', async () => {
+    delete process.env.EXPO_PUBLIC_DATA_SOURCE;
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        items: [
+          {
+            id: 'plan-uuid',
+            day_of_week: 'Thứ Hai',
+            workout_name: 'Thân trên',
+            duration_minutes: 45,
+            target_calories_burn: 320,
+            is_completed: false,
+            exercise_count: 6,
+          },
+        ],
+      }),
+    });
+
+    const plans = await apiWorkoutRepository.listPlans();
+    expect(plans).toHaveLength(1);
+    expect(plans[0]).toMatchObject({
+      id: 'plan-uuid',
+      title: 'Thân trên',
+      category: 'Thứ Hai',
+      durationMinutes: 45,
+      caloriesEstimate: 320,
+    });
+    global.fetch = originalFetch;
+  });
+
   it('allows adding and deleting weight records in preview mode', async () => {
     process.env.EXPO_PUBLIC_DATA_SOURCE = 'preview';
     const repo = getWorkoutRepository();

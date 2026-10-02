@@ -1,52 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Alert } from 'react-native';
-import {
-  EditProfilePresentation,
-  UserProfileFormData,
-} from '@/features/account';
+import { EditProfilePresentation, UserProfileFormData } from '@/features/account';
+import { getAccountRepository } from '@/repositories/accountRepository';
 
 export default function EditProfileScreen() {
-  const [profile, setProfile] = useState<UserProfileFormData>({
-    name: 'Nguyễn Minh Anh',
-    bio: 'Học viên chăm chỉ, yêu thích các bài tập tạ tổng hợp và chạy bộ ngoài trời.',
-    phone: '0912 345 678',
-    gender: 'female',
-    birthday: '15/08/1998',
-    heightCm: 165,
-    weightKg: 55.4,
-    fitnessGoal: 'Tăng cơ, giảm mỡ & Tăng sức bền tim mạch',
-  });
-
+  const [profile, setProfile] = useState<UserProfileFormData | null>(null);
+  const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-
-  const handleSubmit = (values: UserProfileFormData) => {
+  useEffect(() => { getAccountRepository().getProfile().then(setProfile).catch((e) => setError(e instanceof Error ? e.message : 'Không thể tải hồ sơ.')); }, []);
+  const submit = async (values: UserProfileFormData) => {
     setIsSaving(true);
-    setTimeout(() => {
-      setProfile(values);
-      setIsSaving(false);
-      Alert.alert('Thành công', 'Hồ sơ cá nhân đã được cập nhật thành công.', [
-        { text: 'Xong', onPress: () => router.back() },
-      ]);
-    }, 600);
+    try { await getAccountRepository().updateProfile(values); setProfile(values); Alert.alert('Thành công', 'Hồ sơ cá nhân đã được cập nhật.', [{ text: 'Xong', onPress: () => router.back() }]); }
+    catch (e) { Alert.alert('Không thể cập nhật', e instanceof Error ? e.message : 'Vui lòng thử lại.'); }
+    finally { setIsSaving(false); }
   };
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <EditProfilePresentation
-        initialValues={profile}
-        isSaving={isSaving}
-        onBack={() => router.back()}
-        onSubmit={handleSubmit}
-        onPreviewPublicProfile={() =>
-          router.push('/community/user/user-current' as any)
-        }
-        onHealthProfilePress={() =>
-          router.push('/account/health-profile' as any)
-        }
-        onWeightHistoryPress={() => router.push('/workout/weight' as any)}
-      />
-    </SafeAreaView>
-  );
+  if (!profile) return <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>{error ? <Text>{error}</Text> : <ActivityIndicator />}</SafeAreaView>;
+  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><EditProfilePresentation initialValues={profile} isSaving={isSaving} onBack={() => router.back()} onSubmit={submit} onPreviewPublicProfile={() => router.push(`/community/user/${profile.name}` as never)} onHealthProfilePress={() => router.push('/account/health-profile' as never)} onWeightHistoryPress={() => router.push('/workout/weight' as never)} /></SafeAreaView>;
 }

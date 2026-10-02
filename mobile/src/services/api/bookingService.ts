@@ -100,6 +100,10 @@ export const bookingService = {
     });
   },
 
+  async getMyPayment(id: string): Promise<PaymentWire> {
+    return apiClient<PaymentWire>('/me/payments/' + encodeURIComponent(id));
+  },
+
   /**
    * PT confirms/accepts booking
    * Operation: confirmMyBooking

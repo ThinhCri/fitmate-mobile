@@ -20,6 +20,7 @@ export interface AccountDeletionStatusViewModel {
 
 export interface IAccountRepository {
   getAccountHub(): Promise<AccountHubViewModel>;
+  getProfile(): Promise<UserProfileFormData>;
   getHealthProfile(): Promise<HealthProfileData>;
   updateProfile(data: UserProfileFormData): Promise<void>;
   updateHealthProfile(data: HealthProfileData): Promise<void>;

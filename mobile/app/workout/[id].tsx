@@ -49,7 +49,7 @@ export default function PlanDetailScreen() {
       <PlanDetailPresentation
         plan={plan}
         onBack={() => router.back()}
-        onStartSession={() => router.push('/workout/active-session' as any)}
+        onStartSession={() => router.push(`/workout/active-session?planId=${encodeURIComponent(plan.id)}` as any)}
         onEditPlan={() => router.push('/workout/editor' as any)}
         onDeletePlan={() => router.back()}
       />

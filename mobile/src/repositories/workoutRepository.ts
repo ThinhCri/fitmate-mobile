@@ -18,6 +18,7 @@ export interface MonthlyWorkoutStats {
 }
 
 export interface IWorkoutRepository {
+  listPlans(): Promise<WorkoutPlanViewModel[]>;
   getPlan(id: string): Promise<WorkoutPlanViewModel>;
   getHistory(): Promise<{
     sessions: WorkoutHistoryItemViewModel[];
@@ -33,6 +34,7 @@ export interface IWorkoutRepository {
   addWeightRecord(weightKg: number, notes?: string): Promise<WeightRecordViewModel>;
   deleteWeightRecord(id: string): Promise<void>;
   recordWorkoutCompletion(params: {
+    planId?: string;
     day?: string;
     name?: string;
     durationMinutes: number;
@@ -40,7 +42,7 @@ export interface IWorkoutRepository {
     completedSets: number;
     plannedSets: number;
     status: 'completed' | 'endedEarly';
-  }): Promise<void>;
+  }): Promise<string>;
   saveMedicalSurvey(conditions: string[], notes: string): Promise<void>;
 }
 

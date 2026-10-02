@@ -1,96 +1,15 @@
-import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { PtRevenuePresentation } from '../../src/features/pt/PtRevenuePresentation';
-import { isPreviewMode } from '@/repositories/repositoryTypes';
+import { PtRevenuePresentation, PtRevenueBookingItemViewModel } from '@/features/pt/PtRevenuePresentation';
+import { ptDashboardService } from '@/services/api/ptDashboardService';
 
-const MOCK_REVENUE_BOOKINGS = [
-  {
-    bookingId: 'bk-1',
-    bookingCode: 'BK-20260928-8921',
-    clientName: 'Trần Văn Minh',
-    serviceName: 'Tập sức mạnh cá nhân 1-kèm-1',
-    completedDate: 'Hôm nay, 19:00',
-    grossAmountVnd: 300000,
-    platformFeeVnd: 30000,
-    ptShareVnd: 270000,
-    payoutStatus: 'approved' as const,
-  },
-  {
-    bookingId: 'bk-2',
-    bookingCode: 'BK-20260926-4431',
-    clientName: 'Nguyễn Thị Hoa',
-    serviceName: 'Cardio giảm mỡ chuyên sâu',
-    completedDate: '26/09/2026, 10:00',
-    grossAmountVnd: 350000,
-    platformFeeVnd: 35000,
-    ptShareVnd: 315000,
-    payoutStatus: 'paid_out' as const,
-  },
-  {
-    bookingId: 'bk-3',
-    bookingCode: 'BK-20260924-1102',
-    clientName: 'Lê Hoàng Long',
-    serviceName: 'Tập sức mạnh cá nhân 1-kèm-1',
-    completedDate: '24/09/2026, 18:00',
-    grossAmountVnd: 300000,
-    platformFeeVnd: 30000,
-    ptShareVnd: 270000,
-    payoutStatus: 'paid_out' as const,
-  },
-];
-
+interface RevenueData { overview: { total_gross_vnd: number; platform_fee_vnd: number; net_earnings_vnd: number; pending_payout_vnd: number; completed_payout_vnd: number }; bookings: PtRevenueBookingItemViewModel[] }
 export default function PtRevenueScreen() {
-  const router = useRouter();
-
-  if (!isPreviewMode()) {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <Text style={styles.title}>Doanh thu & Quyết toán PT</Text>
-        <Text style={styles.description}>
-          Dữ liệu doanh thu và đối soát hoa hồng 90% sẽ được tính toán và đồng bộ trực tiếp từ máy chủ sau mỗi kỳ đối soát.
-        </Text>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <PtRevenuePresentation
-        periodLabel="Tháng 9/2026"
-        grossGmvVnd={15000000}
-        platformFee10PercentVnd={1500000}
-        ptShare90PercentVnd={13500000}
-        refundsAdjustedVnd={0}
-        netPayoutVnd={13500000}
-        bookings={MOCK_REVENUE_BOOKINGS}
-        onSelectBookingPayout={(id) => router.push(`/pt/payout/${id}` as any)}
-      />
-    </View>
-  );
+  const router = useRouter(); const [data, setData] = useState<RevenueData | null>(null); const [error, setError] = useState('');
+  useEffect(() => { ptDashboardService.getRevenue().then(setData).catch((e) => setError(e instanceof Error ? e.message : 'Không thể tải doanh thu.')); }, []);
+  if (!data) return <View style={[styles.container, styles.center]}>{error ? <Text style={styles.error}>{error}</Text> : <ActivityIndicator />}</View>;
+  const { overview } = data;
+  return <View style={styles.container}><PtRevenuePresentation periodLabel="30 ngày" grossGmvVnd={overview.total_gross_vnd} platformFee10PercentVnd={overview.platform_fee_vnd} ptShare90PercentVnd={overview.net_earnings_vnd} refundsAdjustedVnd={Math.max(0, overview.total_gross_vnd - overview.platform_fee_vnd - overview.net_earnings_vnd)} netPayoutVnd={overview.net_earnings_vnd} bookings={data.bookings} onSelectBookingPayout={(id) => router.push(`/pt/payout/${id}` as never)} /></View>;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  center: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: 14,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-});
+const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#F8FAFC' }, center: { justifyContent: 'center', alignItems: 'center', padding: 24 }, error: { color: '#DC2626', textAlign: 'center' } });

@@ -47,10 +47,11 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
   onWorkoutDetailPress,
   onNotificationPress,
 }) => {
-  const caloriePercent = Math.min(
-    100,
-    Math.round((data.calories.consumed / data.calories.target) * 100)
-  );
+  const caloriePercent = data.calories.target > 0
+    ? Math.min(100, Math.round((data.calories.consumed / data.calories.target) * 100))
+    : 0;
+  const macroPercent = (current: number, target: number) =>
+    target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
 
   return (
     <ScrollView
@@ -112,7 +113,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           <View style={styles.calorieStatItem}>
             <Text style={[typography.caption, styles.statLabel]}>Mục tiêu</Text>
             <Text style={[typography.title1, styles.statValue]}>
-              {data.calories.target}
+              {data.calories.target > 0 ? data.calories.target : '—'}
             </Text>
             <Text style={[typography.caption, styles.statUnit]}>kcal</Text>
           </View>
@@ -137,21 +138,21 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           />
         </View>
         <Text style={[typography.caption, styles.progressCaption]}>
-          Đã đạt {caloriePercent}% mục tiêu năng lượng hàng ngày
+          {data.calories.target > 0 ? `Đã đạt ${caloriePercent}% mục tiêu năng lượng hàng ngày` : 'Chưa thiết lập mục tiêu năng lượng'}
         </Text>
 
         <View style={styles.macrosRow}>
           <View style={styles.macroCol}>
             <Text style={[typography.caption, styles.macroName]}>Đạm (Protein)</Text>
             <Text style={[typography.bodyBold, styles.macroVal]}>
-              {data.macros.protein.currentGrams} / {data.macros.protein.targetGrams}g
+              {data.macros.protein.currentGrams}g{data.macros.protein.targetGrams > 0 ? ` / ${data.macros.protein.targetGrams}g` : ''}
             </Text>
             <View style={styles.macroBarBg}>
               <View
                 style={[
                   styles.macroBarFill,
                   {
-                    width: `${Math.min(100, Math.round((data.macros.protein.currentGrams / data.macros.protein.targetGrams) * 100))}%`,
+                    width: `${macroPercent(data.macros.protein.currentGrams, data.macros.protein.targetGrams)}%`,
                     backgroundColor: colors.primary,
                   },
                 ]}
@@ -162,14 +163,14 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           <View style={styles.macroCol}>
             <Text style={[typography.caption, styles.macroName]}>Đường bột (Carbs)</Text>
             <Text style={[typography.bodyBold, styles.macroVal]}>
-              {data.macros.carbs.currentGrams} / {data.macros.carbs.targetGrams}g
+              {data.macros.carbs.currentGrams}g{data.macros.carbs.targetGrams > 0 ? ` / ${data.macros.carbs.targetGrams}g` : ''}
             </Text>
             <View style={styles.macroBarBg}>
               <View
                 style={[
                   styles.macroBarFill,
                   {
-                    width: `${Math.min(100, Math.round((data.macros.carbs.currentGrams / data.macros.carbs.targetGrams) * 100))}%`,
+                    width: `${macroPercent(data.macros.carbs.currentGrams, data.macros.carbs.targetGrams)}%`,
                     backgroundColor: colors.warning,
                   },
                 ]}
@@ -180,14 +181,14 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           <View style={styles.macroCol}>
             <Text style={[typography.caption, styles.macroName]}>Chất béo (Fat)</Text>
             <Text style={[typography.bodyBold, styles.macroVal]}>
-              {data.macros.fat.currentGrams} / {data.macros.fat.targetGrams}g
+              {data.macros.fat.currentGrams}g{data.macros.fat.targetGrams > 0 ? ` / ${data.macros.fat.targetGrams}g` : ''}
             </Text>
             <View style={styles.macroBarBg}>
               <View
                 style={[
                   styles.macroBarFill,
                   {
-                    width: `${Math.min(100, Math.round((data.macros.fat.currentGrams / data.macros.fat.targetGrams) * 100))}%`,
+                    width: `${macroPercent(data.macros.fat.currentGrams, data.macros.fat.targetGrams)}%`,
                     backgroundColor: colors.secondary,
                   },
                 ]}
@@ -297,7 +298,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
             <Text style={[typography.title3, styles.waterTitle]}>Nước uống trong ngày</Text>
           </View>
           <Text style={[typography.bodyBold, styles.waterAmount]}>
-            {data.water.consumedMl} / {data.water.targetMl} ml
+            {data.water.targetMl > 0 ? `${data.water.consumedMl} / ${data.water.targetMl} ml` : 'Chưa có dữ liệu'}
           </Text>
         </View>
 
@@ -306,13 +307,13 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
             style={[
               styles.waterProgressBarFill,
               {
-                width: `${Math.min(100, Math.round((data.water.consumedMl / data.water.targetMl) * 100))}%`,
+                width: `${data.water.targetMl > 0 ? Math.min(100, Math.round((data.water.consumedMl / data.water.targetMl) * 100)) : 0}%`,
               },
             ]}
           />
         </View>
 
-        <TouchableOpacity
+        {data.water.targetMl > 0 && <TouchableOpacity
           style={styles.addWaterButton}
           activeOpacity={0.7}
           accessibilityRole="button"
@@ -321,7 +322,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           <Text style={[typography.captionMedium, styles.addWaterText]}>
             +250ml nước vừa uống
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </View>
 
       <View style={styles.sectionMargin}>

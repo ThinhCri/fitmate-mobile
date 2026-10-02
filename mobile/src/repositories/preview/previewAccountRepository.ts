@@ -46,6 +46,10 @@ export class PreviewAccountRepository implements IAccountRepository {
     };
   }
 
+  async getProfile(): Promise<UserProfileFormData> {
+    return { ...this.profile };
+  }
+
   async getHealthProfile(): Promise<HealthProfileData> {
     return { ...this.healthProfile };
   }

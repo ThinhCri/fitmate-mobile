@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Linking } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ConfirmHoldPresentation } from '../../src/features/booking/ConfirmHoldPresentation';
 import { BookingHoldQuoteViewModel } from '../../src/features/booking/bookingTypes';
@@ -81,17 +81,18 @@ export default function ConfirmBookingScreen() {
     setIsProcessing(true);
     try {
       if (params.holdId) {
-        await bookingService.createPayment({
+        const payment = await bookingService.createPayment({
           hold_id: params.holdId,
           method: 'payos',
         });
+        router.replace({
+          pathname: '/booking/payment-return' as any,
+          params: { paymentId: payment.id, bookingCode: `BK-${payment.appointment_id.slice(0, 8).toUpperCase()}` },
+        });
+        if (payment.redirect_url) await Linking.openURL(payment.redirect_url);
+        return;
       }
-      router.replace({
-        pathname: '/booking/payment-return' as any,
-        params: {
-          bookingCode: `BK-${holdId.slice(0, 8).toUpperCase()}`,
-        },
-      });
+      throw new Error('Thiếu mã giữ chỗ để tạo thanh toán.');
     } catch (err) {
       Alert.alert(
         'Thanh toán chưa hoàn tất',

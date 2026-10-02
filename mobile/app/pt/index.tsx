@@ -1,70 +1,14 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { PtOverviewPresentation } from '../../src/features/pt/PtOverviewPresentation';
+import { PtOverviewPresentation, PtOverviewPresentationProps } from '@/features/pt/PtOverviewPresentation';
+import { ptDashboardService } from '@/services/api/ptDashboardService';
 
-const MOCK_TASKS = [
-  {
-    id: 't-1',
-    title: '1 chứng chỉ chờ cập nhật thời hạn',
-    type: 'warning' as const,
-    linkTarget: '/pt/certificates',
-  },
-  {
-    id: 't-2',
-    title: 'Cập nhật lịch rảnh tuần tới',
-    type: 'info' as const,
-    linkTarget: '/pt/schedule',
-  },
-];
-
-const MOCK_UPCOMING = [
-  {
-    id: 'ses-1',
-    clientName: 'Trần Văn Minh',
-    serviceName: 'Tập sức mạnh cá nhân 1-kèm-1',
-    timeString: '18:00 - 19:00 • Hôm nay',
-    location: 'Fitmate Gym Thảo Điền',
-  },
-  {
-    id: 'ses-2',
-    clientName: 'Nguyễn Thị Hoa',
-    serviceName: 'Cardio giảm mỡ chuyên sâu',
-    timeString: '09:00 - 10:00 • Ngày mai',
-    location: 'Fitmate Studio Quận 1',
-  },
-];
-
+type Overview = Pick<PtOverviewPresentationProps, 'ptName' | 'isVerified' | 'certificateName' | 'rating' | 'reviewCount' | 'isAcceptingClients' | 'pendingTasks' | 'upcomingSessions'>;
 export default function PtOverviewScreen() {
-  const router = useRouter();
-  const [isAccepting, setIsAccepting] = useState(true);
-
-  return (
-    <View style={styles.container}>
-      <PtOverviewPresentation
-        ptName="HLV Hoàng Nam"
-        isVerified={true}
-        certificateName="NASM-CPT • Đã kiểm định"
-        rating={4.95}
-        reviewCount={120}
-        isAcceptingClients={isAccepting}
-        pendingTasks={MOCK_TASKS}
-        upcomingSessions={MOCK_UPCOMING}
-        onToggleStatus={() => setIsAccepting(!isAccepting)}
-        onNavigateToServices={() => router.push('/pt/profile-services' as any)}
-        onNavigateToSchedule={() => router.push('/pt/schedule' as any)}
-        onNavigateToCertificates={() => router.push('/pt/certificates' as any)}
-        onNavigateToSessions={() => router.push('/pt/session/ses-1' as any)}
-        onNavigateToRevenue={() => router.push('/pt/revenue' as any)}
-        onSelectSession={(id) => router.push(`/pt/session/${id}` as any)}
-      />
-    </View>
-  );
+  const router = useRouter(); const [data, setData] = useState<Overview | null>(null); const [error, setError] = useState('');
+  useEffect(() => { ptDashboardService.getOverview().then(setData).catch((e) => setError(e instanceof Error ? e.message : 'Không thể tải tổng quan PT.')); }, []);
+  if (!data) return <View style={[styles.container, styles.center]}>{error ? <Text style={styles.error}>{error}</Text> : <ActivityIndicator />}</View>;
+  return <View style={styles.container}><PtOverviewPresentation {...data} onToggleStatus={() => Alert.alert('Chưa hỗ trợ', 'Máy chủ chưa có API bật/tắt nhận học viên. Hãy quản lý từng dịch vụ trong hồ sơ PT.')} onNavigateToServices={() => router.push('/pt/profile-services' as never)} onNavigateToSchedule={() => router.push('/pt/schedule' as never)} onNavigateToCertificates={() => router.push('/pt/certificates' as never)} onNavigateToSessions={() => data.upcomingSessions[0] ? router.push(`/pt/session/${data.upcomingSessions[0].id}` as never) : Alert.alert('Chưa có buổi tập', 'Hiện không có lịch hẹn sắp tới.')} onNavigateToRevenue={() => router.push('/pt/revenue' as never)} onSelectSession={(id) => router.push(`/pt/session/${id}` as never)} /></View>;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-});
+const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#F8FAFC' }, center: { justifyContent: 'center', alignItems: 'center', padding: 24 }, error: { color: '#DC2626', textAlign: 'center' } });

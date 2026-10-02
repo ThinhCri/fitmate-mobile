@@ -1,34 +1,12 @@
 import React, { useState } from 'react';
+import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Alert } from 'react-native';
-import {
-  ChangePasswordPresentation,
-  ChangePasswordFormData,
-} from '@/features/account';
+import { ChangePasswordPresentation, ChangePasswordFormData } from '@/features/account';
+import { getAccountRepository } from '@/repositories/accountRepository';
 
 export default function ChangePasswordScreen() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = (values: ChangePasswordFormData) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      Alert.alert(
-        'Đổi mật khẩu thành công',
-        'Mật khẩu mới đã được cập nhật. Bạn có thể tiếp tục sử dụng ứng dụng.',
-        [{ text: 'Đóng', onPress: () => router.back() }]
-      );
-    }, 600);
-  };
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <ChangePasswordPresentation
-        isSubmitting={isSubmitting}
-        onBack={() => router.back()}
-        onSubmit={handleSubmit}
-      />
-    </SafeAreaView>
-  );
+  const [submitting, setSubmitting] = useState(false);
+  const submit = async (values: ChangePasswordFormData) => { setSubmitting(true); try { await getAccountRepository().changePassword(values.currentPassword, values.newPassword); Alert.alert('Đổi mật khẩu thành công', 'Mật khẩu mới đã được cập nhật.', [{ text: 'Đóng', onPress: () => router.back() }]); } catch (e) { Alert.alert('Không thể đổi mật khẩu', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } finally { setSubmitting(false); } };
+  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><ChangePasswordPresentation isSubmitting={submitting} onBack={() => router.back()} onSubmit={submit} /></SafeAreaView>;
 }

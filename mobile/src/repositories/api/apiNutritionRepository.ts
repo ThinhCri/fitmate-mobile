@@ -14,9 +14,10 @@ export class ApiNutritionRepository implements INutritionRepository {
     const effectiveDateStr =
       dateString || today.toISOString().slice(0, 10);
 
-    const rawMeals = await apiClient<any[]>(
-      `/me/nutrition/meals?from=${effectiveDateStr}&to=${effectiveDateStr}`
-    );
+    const [rawMeals, dashboard] = await Promise.all([
+      apiClient<any[]>(`/me/nutrition/meals?from=${effectiveDateStr}&to=${effectiveDateStr}`),
+      apiClient<any>(`/me/dashboard?date=${effectiveDateStr}`),
+    ]);
 
     const mealsList = Array.isArray(rawMeals) ? rawMeals : [];
 
@@ -115,13 +116,13 @@ export class ApiNutritionRepository implements INutritionRepository {
       isToday,
       calories: {
         consumed: totalConsumed,
-        target: 2150,
-        burnedExercise: 380,
+        target: dashboard?.nutrition?.target_calories ?? 0,
+        burnedExercise: dashboard?.workout?.total_calories_burned ?? 0,
       },
       macros: {
-        protein: { current: totalProtein, target: 140 },
-        carbs: { current: totalCarbs, target: 220 },
-        fat: { current: totalFat, target: 65 },
+        protein: { current: totalProtein, target: 0 },
+        carbs: { current: totalCarbs, target: 0 },
+        fat: { current: totalFat, target: 0 },
       },
       meals: mealSections,
     };
@@ -129,16 +130,16 @@ export class ApiNutritionRepository implements INutritionRepository {
 
   async getWeeklyMenu(): Promise<PlannedMealSlotViewModel[]> {
     const raw = await apiClient<any>('/me/nutrition/schedule');
-    if (!raw || !Array.isArray(raw.slots)) {
-      return [];
-    }
-    return raw.slots.map((s: any, idx: number) => ({
-      id: s.id || `slot-${idx}`,
-      dayOfWeek: s.day_of_week || 0,
-      slot: s.meal_slot || 'lunch',
-      mealName: s.name || s.meal_name || 'Bữa ăn theo kế hoạch',
-      targetCalories: s.target_calories || 500,
-      isCompleted: Boolean(s.is_completed),
+    if (!raw) return [];
+    const slots: MealTimeSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'];
+    return slots.filter((slot) => typeof raw[slot] === 'string' && raw[slot].trim()).map((slot) => ({
+      id: `${raw.id || 'schedule'}-${slot}`,
+      dayIndex: 0,
+      dayLabel: 'Hôm nay',
+      mealSlot: slot,
+      foodName: raw[slot],
+      calories: 0,
+      isCompleted: false,
     }));
   }
 
@@ -193,10 +194,25 @@ export class ApiNutritionRepository implements INutritionRepository {
   }
 
   async updatePlannedSlot(slotId: string, isCompleted: boolean): Promise<void> {
-    await apiClient('/me/nutrition/schedule/' + encodeURIComponent(slotId), {
-      method: 'PATCH',
-      body: JSON.stringify({ is_completed: isCompleted }),
-    });
+    if (isCompleted) return;
+    throw new Error('Máy chủ chưa hỗ trợ trạng thái hoàn thành cho thực đơn.');
+  }
+
+  async scanMealImage(uri: string) {
+    const form = new FormData();
+    const filename = uri.split('/').pop() || 'meal.jpg';
+    form.append('file', { uri, name: filename, type: 'image/jpeg' } as unknown as Blob);
+    const raw = await apiClient<{ items?: Array<{ name?: string; calories?: number; protein_g?: number; carbs_g?: number; fat_g?: number }> }>('/me/nutrition/scan', { method: 'POST', body: form });
+    return (raw.items || []).map((item, index) => ({
+      id: `scan-${index}`,
+      name: item.name || 'Món ăn nhận diện',
+      portionDescription: 'Khẩu phần trong ảnh',
+      calories: item.calories ?? 0,
+      protein: item.protein_g ?? 0,
+      carbs: item.carbs_g ?? 0,
+      fat: item.fat_g ?? 0,
+      selected: true,
+    }));
   }
 }
 

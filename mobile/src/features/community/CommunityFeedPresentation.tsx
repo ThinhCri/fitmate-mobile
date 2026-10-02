@@ -15,6 +15,7 @@ import {
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
+import { EmptyState } from '@/components/design-system/FeedbackStates';
 import { CommunityPostViewModel } from './communityTypes';
 
 export interface CommunityFeedPresentationProps {
@@ -148,7 +149,14 @@ export function CommunityFeedPresentation({
 
       {/* Posts Feed */}
       <View style={styles.postsList}>
-        {posts.map((post) => (
+        {posts.length === 0 ? (
+          <EmptyState
+            title="Chưa có bài viết"
+            description="Bảng tin này chưa có nội dung phù hợp. Hãy chia sẻ bài viết đầu tiên."
+            actionLabel="Tạo bài viết"
+            onAction={onCreatePostPress}
+          />
+        ) : posts.map((post) => (
           <Card key={post.id} style={styles.postCard}>
             {/* Header: Author & Options */}
             <View style={styles.postHeader}>

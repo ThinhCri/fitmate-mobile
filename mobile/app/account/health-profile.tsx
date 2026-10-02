@@ -1,44 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Alert } from 'react-native';
-import {
-  HealthProfilePresentation,
-  HealthProfileData,
-} from '@/features/account';
+import { HealthProfilePresentation, HealthProfileData } from '@/features/account';
+import { getAccountRepository } from '@/repositories/accountRepository';
 
 export default function HealthProfileScreen() {
-  const [healthData, setHealthData] = useState<HealthProfileData>({
-    medicalConditions: '',
-    hasNoMedicalConditions: true,
-    allergies: '',
-    hasNoAllergies: true,
-    workoutDays: ['mon', 'wed', 'fri'],
-    preferredTimeSlots: ['06:30 - 07:30', '18:00 - 19:30'],
-    notes: 'Ưu tiên các bài tập tác động ngực và cơ lõi (core).',
-  });
-
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleSubmit = (values: HealthProfileData) => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setHealthData(values);
-      setIsSaving(false);
-      Alert.alert('Thành công', 'Hồ sơ sức khỏe & lịch tập đã được cập nhật.', [
-        { text: 'Xong', onPress: () => router.back() },
-      ]);
-    }, 600);
-  };
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <HealthProfilePresentation
-        initialValues={healthData}
-        isSaving={isSaving}
-        onBack={() => router.back()}
-        onSubmit={handleSubmit}
-      />
-    </SafeAreaView>
-  );
+  const [data, setData] = useState<HealthProfileData | null>(null);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { getAccountRepository().getHealthProfile().then(setData).catch((e) => setError(e instanceof Error ? e.message : 'Không thể tải hồ sơ sức khỏe.')); }, []);
+  const submit = async (values: HealthProfileData) => { setSaving(true); try { await getAccountRepository().updateHealthProfile(values); setData(values); Alert.alert('Thành công', 'Hồ sơ sức khỏe đã được cập nhật.', [{ text: 'Xong', onPress: () => router.back() }]); } catch (e) { Alert.alert('Không thể cập nhật', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } finally { setSaving(false); } };
+  if (!data) return <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>{error ? <Text>{error}</Text> : <ActivityIndicator />}</SafeAreaView>;
+  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><HealthProfilePresentation initialValues={data} isSaving={saving} onBack={() => router.back()} onSubmit={submit} /></SafeAreaView>;
 }

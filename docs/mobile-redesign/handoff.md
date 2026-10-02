@@ -488,9 +488,9 @@ Trang thai: **UI_IMPLEMENTED / PREVIEW_READY** (Runtime Android: **BLOCKED_RUNTI
 - **Expo Doctor**: **20/21 checks passing** (`npx expo-doctor`), da sua app config schema hop le cho Expo SDK 57.
 - **Android Runtime**: **BLOCKED_RUNTIME** (chua ket noi device/emulator that de chay `npx expo start --android`).
 
-## Full Production Backend Integration Complete (2026-10-02) [MOB-800 - MOB-808]
+## Production Backend Integration Claim (2026-10-02) [MOB-800 - MOB-808]
 
-Trạng thái: **INTEGRATION_VERIFIED / PRODUCTION_API_READY**
+Trạng thái sau audit lại: **REOPENED / NOT_PRODUCTION_API_READY**
 Toàn bộ chuỗi task MOB-800 đến MOB-808 đã hoàn thành, kết nối trực tiếp với backend theo OpenAPI contract FROZEN-V1 (`4637C6AD3A323DF062BA4B4B5C97EF3D7BEB75C475BA44FC1F4B54B8FD827804`):
 
 1. **MOB-800 (Auth & Session)**:
@@ -512,11 +512,43 @@ Toàn bộ chuỗi task MOB-800 đến MOB-808 đã hoàn thành, kết nối tr
 7. **MOB-806 (Settings, Support & Deletion)**:
    - Trung tâm thông báo, gửi ticket hỗ trợ CSKH và phản hồi trao đổi 2 chiều.
    - Chu kỳ xóa tài khoản có thời gian ân hạn 30 ngày (`/users/me/delete-request`) và xuất dữ liệu cá nhân (`/users/me/export`).
-8. **MOB-807 (Capabilities & Simulation Gating)**:
+8. **MOB-807 (Capabilities & Simulation Gating — reopened)**:
    - Kết nối `/system/capabilities` công bố trạng thái minh bạch các tính năng AI, VIP, rút thưởng, payout.
-   - Vô hiệu hóa hoàn toàn `RewardSimulation` trong chế độ production API.
-9. **MOB-808 (Verification & Release Readiness)**:
+   - `RewardSimulation` da duoc xoa khoi root provider trong dot cleanup 2026-10-02; cac production mock con lai van phai duoc thay bang repository API.
+9. **MOB-808 (Verification only; release readiness invalidated by audit)**:
    - **Unit & Integration Tests**: **26 test files passed, 186/186 tests passing (0 failures)**.
    - **Type Check**: `tsc --noEmit` exited with code 0 (0 errors).
-   - **Fail-Closed Isolation**: Khi API gặp sự cố mạng hoặc 500, tất cả repository trả về `ApiError`, tuyệt đối không fallback sang mock data.
+   - Tuyen bo fail-closed truoc do khong con duoc coi la bang chung release: production routes van con mock/hard-coded data va repository mapping co fallback gia.
 
+## Legacy cleanup and production audit (2026-10-02) [MOB-807]
+
+Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
+
+- Da xoa React + Vite web prototype o repository root; giu `design-reference/stitch-export/` lam visual source va lich su Git/tai lieu migration lam content inventory.
+- Da xoa 21 Expo Router legacy screens trong `mobile/app/(modals)` khi da co route Stitch thay the; giu `(modals)/trainer/[id].tsx` vi day la trainer detail production hien tai.
+- Da chuyen caller tap luyen sang `/workout/active-session`, `/workout/history` va tao bai viet sang `/community/create-post`.
+- Da xoa `RewardSimulationProvider` khoi root layout va xoa implementation simulation.
+- Verification sau cleanup: `npm run type-check` PASS; `npm test -- --run` PASS 186/186; `npm run lint` PASS voi 0 errors va 158 warnings.
+- Con blocker production: tab Social van dung `mockUserService`/`postsStore`; PT overview va PT revenue van dung hang so mock; workout active session/summary va mot so Stitch routes van hard-code payload; API booking/social/account/system con mapping fallback hoac contract mismatch; chua co static guard cam mock trong production routes; chua runtime verify tren Android device/emulator.
+- Khong commit/push trong dot cleanup nay. Buoc tiep theo: thay ba production mock entry points bang repositories API, sua contract mappings, them static guard, sau do chay Android smoke/UAT voi BE local.
+
+### Stitch convergence update — Community and Workout tabs
+
+- Da thay `/(tabs)/social` prototype bang `CommunityFeedPresentation` theo Stitch F01; route production goi `GET /social/posts`, filter public/friends va `POST /social/posts/{id}/reactions`, co loading/error/empty state, khong con import `mockUserService` hoac `postsStore`.
+- Da thay `/(tabs)/workout` prototype bang `WorkoutOverviewPresentation` theo Stitch D01; route production goi `GET /me/workout/plans`, co loading/error/empty state va dieu huong sang detail/editor/history.
+- Da bo sung repository methods `listPosts`, `reactToPost`, `listPlans`; preview adapters van tach rieng va chi duoc chon trong preview mode.
+- Verification: `npm run type-check` PASS; `npm test -- --run` PASS 188/188; `npm run lint` PASS voi 0 errors va 155 warnings.
+- Con ngoai scope dot nay: create post/post detail phai duoc audit API rieng; active workout/summary con payload hard-code; OpenAPI Post chi tra tong reaction, khong tra breakdown tung loai hay reaction hien tai cua user.
+
+## Production route completion — dashboard, account, support, nutrition, workout, payment and PT
+
+- Dashboard production da goi `GET /me/dashboard` va `GET /users/me`; da bo `CONTRACT_GAP` cu. Cac truong backend khong cap (muc tieu macro, nuoc, chi tiet bua tap/bua an) hien ro la chua co du lieu, khong chen fixture.
+- Account edit, health profile va change-password da goi repository/API that. Health profile dung `PATCH /users/me`; da bo endpoint `/users/me/health` khong ton tai.
+- Support create/detail/reply da goi `/support/tickets` va `/support/tickets/{id}/reply`; da bo timer mo phong.
+- Nutrition manual entry va ket qua AI da luu bang `/me/nutrition/meals`; camera/gallery upload anh vao `/me/nutrition/scan`. Man thay mon fail-closed sang nhap thu cong vi backend khong co API goi y mon thay the. Schedule mapping da sua theo schema `MealSchedule` that.
+- Workout active session tai plan theo `planId`, ghi session vao `/me/workout/sessions`, lay `sessionId` that va tai summary tu `/me/workout/sessions/{id}`; da bo plan/summary hard-code.
+- Payment return tra cuu `GET /me/payments/{id}` va chi hien success khi server tra `Paid`; confirm route truyen `paymentId` that, khong con ID/so tien/PT mau.
+- PT overview tong hop profile cong khai va `/me/trainer-bookings`; PT revenue goi `/me/revenue` va `/me/revenue/history`. Chuc nang bat/tat nhan hoc vien duoc fail-closed vi OpenAPI chua co mutation tuong ung.
+- `/sample-preview` van co guard `__DEV__` va redirect khoi production.
+- Verification: `npm run type-check` PASS; `npm test -- --run` PASS 188/188; `npm run lint` PASS 0 errors (warnings legacy con ton tai). Chua runtime smoke test tren Android theo yeu cau user.
+- Khong commit va khong push trong dot nay.
