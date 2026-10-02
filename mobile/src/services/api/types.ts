@@ -399,3 +399,110 @@ export interface MemberDashboardSummary {
     time: string;
   }[];
 }
+
+// ==========================================
+// 5. Booking, Payment, & Reschedule Wire DTOs
+// ==========================================
+
+export type AppointmentStatusWire =
+  | 'Held'
+  | 'Pending'
+  | 'Confirmed'
+  | 'InProgress'
+  | 'Completed'
+  | 'Cancelled'
+  | 'Expired';
+
+export type PaymentStatusWire =
+  | 'Pending'
+  | 'Paid'
+  | 'Failed'
+  | 'Refunded'
+  | 'PartialRefunded';
+
+export type RefundStatusWire = 'Pending' | 'Succeeded' | 'Failed';
+
+export type RescheduleRequestStatusWire =
+  | 'Pending'
+  | 'Accepted'
+  | 'Rejected'
+  | 'Expired'
+  | 'Cancelled';
+
+export interface AppointmentWire {
+  id: string;
+  member_id: string;
+  pt_user_id: string;
+  service_id: string;
+  slot_start_utc: string;
+  duration_minutes: number;
+  status: AppointmentStatusWire;
+  hold_expires_at_utc?: string | null;
+  acceptance_deadline_utc?: string | null;
+  confirmed_at_utc?: string | null;
+  started_at_utc?: string | null;
+  completed_at_utc?: string | null;
+  cancelled_at_utc?: string | null;
+  rescheduled_count: number;
+  price_listed_vnd: number;
+  discount_vnd: number;
+  actual_paid_vnd: number;
+  platform_fee_rate_bps: number;
+  platform_fee_vnd: number;
+  trainer_share_vnd: number;
+  policy_version: string;
+  payment_id?: string | null;
+}
+
+export interface ListAppointmentsResponse {
+  items: AppointmentWire[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface CreateBookingHoldResponseWire {
+  hold_id: string;
+  hold_expires_at: string;
+  appointment_id: string;
+  appointment_status: AppointmentStatusWire;
+}
+
+export interface BookingHoldStatusResponseWire {
+  hold_id: string;
+  expires_at: string;
+  is_active: boolean;
+}
+
+export interface PaymentWire {
+  id: string;
+  appointment_id: string;
+  method: 'vnpay' | 'payos';
+  status: PaymentStatusWire;
+  amount_vnd: number;
+  redirect_url?: string | null;
+  provider_txn_ref?: string | null;
+  created_at: string;
+  completed_at?: string | null;
+}
+
+export interface CreateRescheduleRequestBodyWire {
+  new_slot_start_utc: string;
+  reason: string;
+}
+
+export interface BookingRescheduleResponseWire {
+  id: string;
+  appointment_id: string;
+  requested_by_user_id: string;
+  old_slot_start_utc: string;
+  new_slot_start_utc: string;
+  duration_minutes: number;
+  status: RescheduleRequestStatusWire;
+  reason: string;
+  deadline_utc: string;
+  created_at_utc: string;
+  responded_at_utc?: string | null;
+  rejection_reason?: string | null;
+}
+

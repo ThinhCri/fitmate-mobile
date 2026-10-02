@@ -1,50 +1,76 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AppointmentDetailPresentation } from '../../src/features/booking/AppointmentDetailPresentation';
 import { BookingAppointmentViewModel } from '../../src/features/booking/bookingTypes';
-
-const MOCK_APPOINTMENT: BookingAppointmentViewModel = {
-  id: 'bk-1',
-  bookingCode: 'BK-20260928-8921',
-  coach: {
-    id: 'coach-1',
-    name: 'HLV Hoàng Nam',
-    title: 'Pro PT',
-    specialty: 'Thể hình & Dinh dưỡng',
-    rating: 4.95,
-    reviewCount: 48,
-    isVerified: true,
-  },
-  serviceName: 'Tập sức mạnh cá nhân 1-kèm-1',
-  scheduledDate: 'Thứ Hai, 28/09/2026',
-  scheduledTime: '18:00 - 19:00 (60 phút)',
-  location: 'Fitmate Gym Thảo Điền (P. Thảo Điền, TP. Thủ Đức)',
-  bookingStatus: 'confirmed',
-  paymentStatus: 'paid',
-  paidAmountVnd: 300000,
-  createdAt: '2026-09-28T10:00:00Z',
-  canCancel: true,
-  canReschedule: true,
-  canReview: false,
-};
+import { getBookingRepository } from '@/repositories/bookingRepository';
+import { colors, spacing, typography } from '@/theme/designTokens';
 
 export default function AppointmentDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [appointment, setAppointment] = useState<BookingAppointmentViewModel | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchAppointment = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const repo = getBookingRepository();
+      const data = await repo.getAppointmentDetail(id);
+      setAppointment(data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Không thể tải chi tiết lịch hẹn.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchAppointment();
+  }, [fetchAppointment]);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[typography.body, styles.loadingText]}>
+          Đang tải thông tin lịch hẹn...
+        </Text>
+      </View>
+    );
+  }
+
+  if (error || !appointment) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <Text style={[typography.body, styles.errorText]}>
+          {error || 'Không tìm thấy lịch hẹn.'}
+        </Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={fetchAppointment}
+          accessibilityRole="button"
+        >
+          <Text style={[typography.bodyBold, styles.retryText]}>Thử lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <AppointmentDetailPresentation
-        appointment={{
-          ...MOCK_APPOINTMENT,
-          id: id || MOCK_APPOINTMENT.id,
-        }}
-        onCancelBooking={() => router.push('/booking/cancel-refund' as any)}
-        onReschedule={() => router.push('/booking/select-slot' as any)}
-        onReviewPt={() => router.push('/booking/review' as any)}
-        onMessageCoach={() => router.push('/chat/coach-1' as any)}
-        onContactSupport={() => router.push('/support/new' as any)}
+        appointment={appointment}
+        onCancelBooking={() => router.push(`/booking/cancel-refund?id=${appointment.id}` as any)}
+        onReschedule={() => router.push(`/booking/select-slot?coachId=${appointment.coach.id}&rescheduleBookingId=${appointment.id}` as any)}
+        onReviewPt={() => router.push(`/booking/review?bookingId=${appointment.id}&ptId=${appointment.coach.id}&coachName=${encodeURIComponent(appointment.coach.name)}` as any)}
+        onMessageCoach={() => router.push(`/chat/${appointment.coach.id}` as any)}
+        onContactSupport={() => router.push(`/support/create?bookingId=${appointment.id}` as any)}
       />
     </View>
   );
@@ -54,5 +80,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  loadingText: {
+    marginTop: spacing.md,
+    color: colors.textMuted,
+  },
+  errorText: {
+    color: colors.danger,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: '#FFFFFF',
   },
 });

@@ -1,69 +1,69 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MyAppointmentsPresentation } from '../../src/features/booking/MyAppointmentsPresentation';
 import { BookingAppointmentViewModel } from '../../src/features/booking/bookingTypes';
-
-const MOCK_MY_APPOINTMENTS: BookingAppointmentViewModel[] = [
-  {
-    id: 'bk-1',
-    bookingCode: 'BK-20260928-8921',
-    coach: {
-      id: 'coach-1',
-      name: 'HLV Hoàng Nam',
-      title: 'Pro PT',
-      specialty: 'Thể hình & Sức mạnh',
-      rating: 4.9,
-      reviewCount: 48,
-      isVerified: true,
-    },
-    serviceName: 'Tập sức mạnh cá nhân 1-kèm-1',
-    scheduledDate: 'Thứ Hai, 28/09/2026',
-    scheduledTime: '18:00 - 19:00',
-    location: 'Fitmate Gym Thảo Điền',
-    bookingStatus: 'confirmed',
-    paymentStatus: 'paid',
-    paidAmountVnd: 300000,
-    createdAt: '2026-09-28T10:00:00Z',
-    canCancel: true,
-    canReschedule: true,
-    canReview: false,
-  },
-  {
-    id: 'bk-2',
-    bookingCode: 'BK-20260920-1120',
-    coach: {
-      id: 'coach-2',
-      name: 'HLV Minh Trang',
-      title: 'Senior Yoga PT',
-      specialty: 'Yoga phục hồi & Căng cơ',
-      rating: 5.0,
-      reviewCount: 65,
-      isVerified: true,
-    },
-    serviceName: 'Yoga trị liệu cá nhân 1-1',
-    scheduledDate: '20/09/2026',
-    scheduledTime: '07:30 - 08:30',
-    location: 'Fitmate Studio Quận 3',
-    bookingStatus: 'completed',
-    paymentStatus: 'paid',
-    paidAmountVnd: 350000,
-    createdAt: '2026-09-18T14:00:00Z',
-    canCancel: false,
-    canReschedule: false,
-    canReview: true,
-  },
-];
+import { getBookingRepository } from '@/repositories/bookingRepository';
+import { colors, spacing, typography } from '@/theme/designTokens';
 
 export default function MyAppointmentsScreen() {
   const router = useRouter();
+  const [appointments, setAppointments] = useState<BookingAppointmentViewModel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchAppointments = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const repo = getBookingRepository();
+      const list = await repo.listMyAppointments();
+      setAppointments(list);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Không thể tải danh sách lịch hẹn.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[typography.body, styles.loadingText]}>
+          Đang tải lịch hẹn...
+        </Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <Text style={[typography.body, styles.errorText]}>{error}</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={fetchAppointments}
+          accessibilityRole="button"
+        >
+          <Text style={[typography.bodyBold, styles.retryText]}>Thử lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <MyAppointmentsPresentation
-        appointments={MOCK_MY_APPOINTMENTS}
+        appointments={appointments}
         onSelectAppointment={(id) => router.push(`/booking/${id}` as any)}
-        onExploreTrainers={() => router.push('/(tabs)/trainers' as any)}
+        onExploreTrainers={() => router.push('/(tabs)/marketplace' as any)}
       />
     </View>
   );
@@ -73,5 +73,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  loadingText: {
+    marginTop: spacing.md,
+    color: colors.textMuted,
+  },
+  errorText: {
+    color: colors.danger,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: '#FFFFFF',
   },
 });
