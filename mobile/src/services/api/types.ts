@@ -12,6 +12,7 @@ export interface UserSummary {
   full_name: string;
   role: 'member' | 'pt' | 'admin';
   avatar_url?: string | null;
+  bio?: string | null;
 }
 
 export interface UserProfile {
@@ -33,6 +34,9 @@ export interface UserProfile {
   timezone?: string | null;
   medical_conditions?: string[];
   allergies?: string[];
+  preferred_time_slots?: string[];
+  health_notes?: string | null;
+  role: 'member' | 'pt' | 'admin';
 }
 
 export interface RegisterRequest {
@@ -204,12 +208,17 @@ export interface UserProfileUpdate {
   full_name?: string;
   avatar_url?: string;
   phone?: string;
+  bio?: string;
+  gender?: 'male' | 'female' | 'other';
+  birthday?: string;
   height_cm?: number;
   weight_kg?: number;
   fitness_goal?: string;
   training_days?: string[];
   medical_conditions?: string[];
   allergies?: string[];
+  preferred_time_slots?: string[];
+  health_notes?: string;
   timezone?: string;
 }
 

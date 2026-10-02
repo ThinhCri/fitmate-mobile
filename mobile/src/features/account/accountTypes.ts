@@ -16,6 +16,7 @@ export interface AccountHubViewModel {
 }
 
 export interface UserProfileFormData {
+  avatarUrl?: string;
   name: string;
   bio: string;
   phone: string;
@@ -45,6 +46,10 @@ export interface ChangePasswordFormData {
 export interface SettingsViewModel {
   notificationsEnabled: boolean;
   emailAlertsEnabled: boolean;
+  pushNotificationsEnabled: boolean;
   language: string;
+  theme: string;
   appVersion: string;
+  termsUrl?: string;
+  privacyUrl?: string;
 }

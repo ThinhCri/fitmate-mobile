@@ -7,13 +7,19 @@ import {
 import { IAccountRepository, AccountDeletionStatusViewModel } from '../accountRepository';
 import { authService } from '@/services/api/authService';
 import { apiClient } from '@/services/api/client';
+import Constants from 'expo-constants';
+import { bookingService } from '@/services/api/bookingService';
+import { apiSocialRepository } from './apiSocialRepository';
+import { apiSupportRepository } from './apiSupportRepository';
+import { systemService } from '@/services/api/systemService';
 
 export class ApiAccountRepository implements IAccountRepository {
   async getProfile(): Promise<UserProfileFormData> {
     const me = await authService.getMe();
     return {
       name: me.full_name,
-      bio: '',
+      avatarUrl: me.avatar_url || undefined,
+      bio: me.bio || '',
       phone: me.phone || '',
       gender: me.gender || 'other',
       birthday: me.birthday || '',
@@ -24,12 +30,22 @@ export class ApiAccountRepository implements IAccountRepository {
   }
   async getAccountHub(): Promise<AccountHubViewModel> {
     const me = await authService.getMe();
+    const [bookings, social, conversations, notifications] = await Promise.all([
+      (me.role === 'pt' ? bookingService.listMyTrainerBookings({ page: 1, pageSize: 100 }) : bookingService.listMyBookings({ page: 1, pageSize: 100 })).catch(() => ({ items: [] } as any)),
+      apiSocialRepository.getFriends().catch(() => ({ friends: [], pendingRequests: [], sentRequests: [], discoverUsers: [] })),
+      apiSocialRepository.listConversations().catch(() => []),
+      apiSupportRepository.getNotifications().catch(() => []),
+    ]);
     return {
       id: me.id,
       name: me.full_name || 'Người dùng',
       email: me.email,
-      role: me.specialty || me.certificate_status ? 'pt' : 'member',
+      role: me.role === 'pt' ? 'pt' : 'member',
       avatarUrl: me.avatar_url ?? undefined,
+      upcomingBookingCount: (bookings.items || []).filter((item: any) => !['Completed', 'Cancelled', 'Rejected', 'Expired'].includes(item.status)).length,
+      friendCount: social.friends.length,
+      unreadChatCount: conversations.reduce((sum, item) => sum + item.unreadCount, 0),
+      unreadNotifCount: notifications.filter((item) => !item.isRead).length,
     };
   }
 
@@ -41,21 +57,21 @@ export class ApiAccountRepository implements IAccountRepository {
       allergies: (me.allergies || []).join(', '),
       hasNoAllergies: (me.allergies || []).length === 0,
       workoutDays: me.training_days || [],
-      preferredTimeSlots: [],
-      notes: '',
+      preferredTimeSlots: me.preferred_time_slots || [],
+      notes: me.health_notes || '',
     };
   }
 
   async updateProfile(data: UserProfileFormData): Promise<void> {
-    const current = await authService.getMe();
-    if ((data.bio && data.bio.trim()) || data.gender !== (current.gender || 'other') || data.birthday !== (current.birthday || '')) {
-      throw new Error('Máy chủ hiện chưa hỗ trợ cập nhật tiểu sử, giới tính hoặc ngày sinh. Các trường khác chưa được lưu.');
-    }
     await apiClient('/users/me', {
       method: 'PATCH',
       body: JSON.stringify({
         full_name: data.name,
+        bio: data.bio,
+        avatar_url: data.avatarUrl || null,
         phone: data.phone,
+        gender: data.gender,
+        birthday: data.birthday || null,
         height_cm: data.heightCm,
         weight_kg: data.weightKg,
         fitness_goal: data.fitnessGoal,
@@ -63,16 +79,26 @@ export class ApiAccountRepository implements IAccountRepository {
     });
   }
 
+  async updateAvatar(image: { uri: string; fileName?: string | null; mimeType?: string | null }): Promise<string> {
+    const form = new FormData();
+    form.append('file', { uri: image.uri, name: image.fileName || 'avatar.jpg', type: image.mimeType || 'image/jpeg' } as any);
+    form.append('category', 'avatars');
+    const upload = await apiClient<{ uri?: string; signedUrl?: string }>('/uploads', { method: 'POST', body: form });
+    const avatarUrl = upload.uri || upload.signedUrl;
+    if (!avatarUrl) throw new Error('Máy chủ không trả về địa chỉ ảnh đại diện.');
+    await apiClient('/users/me', { method: 'PATCH', body: JSON.stringify({ avatar_url: avatarUrl }) });
+    return avatarUrl;
+  }
+
   async updateHealthProfile(data: HealthProfileData): Promise<void> {
-    if (data.preferredTimeSlots.length > 0 || data.notes.trim().length > 0) {
-      throw new Error('Máy chủ hiện chưa hỗ trợ lưu khung giờ ưu tiên hoặc ghi chú sức khỏe.');
-    }
     await apiClient('/users/me', {
       method: 'PATCH',
       body: JSON.stringify({
         medical_conditions: data.hasNoMedicalConditions ? [] : data.medicalConditions.split(',').map((value) => value.trim()).filter(Boolean),
         allergies: data.hasNoAllergies ? [] : data.allergies.split(',').map((value) => value.trim()).filter(Boolean),
         training_days: data.workoutDays,
+        preferred_time_slots: data.preferredTimeSlots,
+        health_notes: data.notes,
       }),
     });
   }
@@ -91,12 +117,31 @@ export class ApiAccountRepository implements IAccountRepository {
   }
 
   async getSettings(): Promise<SettingsViewModel> {
+    const [preference, capabilities] = await Promise.all([
+      apiClient<any>('/users/me/preferences'),
+      systemService.getCapabilities(),
+    ]);
     return {
-      notificationsEnabled: true,
-      emailAlertsEnabled: true,
-      language: 'vi',
-      appVersion: '1.0.0',
+      notificationsEnabled: Boolean(preference.notifications_enabled),
+      emailAlertsEnabled: Boolean(preference.email_notifications),
+      pushNotificationsEnabled: Boolean(preference.push_notifications),
+      language: preference.language || 'vi',
+      theme: preference.theme || 'light',
+      appVersion: `${Constants.expoConfig?.version || '0.1.0'}${Constants.nativeBuildVersion ? ` (${Constants.nativeBuildVersion})` : ''}`,
+      termsUrl: capabilities.contact?.terms_url,
+      privacyUrl: capabilities.contact?.privacy_url,
     };
+  }
+
+  async updateSettings(values: Partial<Pick<SettingsViewModel, 'notificationsEnabled' | 'emailAlertsEnabled' | 'pushNotificationsEnabled' | 'language' | 'theme'>>): Promise<SettingsViewModel> {
+    await apiClient('/users/me/preferences', { method: 'PUT', body: JSON.stringify({
+      notifications_enabled: values.notificationsEnabled,
+      email_notifications: values.emailAlertsEnabled,
+      push_notifications: values.pushNotificationsEnabled,
+      language: values.language,
+      theme: values.theme,
+    }) });
+    return this.getSettings();
   }
 
   async requestAccountDeletion(reason?: string): Promise<AccountDeletionStatusViewModel> {

@@ -31,6 +31,9 @@ export interface SystemCapabilities {
   contact?: {
     support_email?: string;
     hotline?: string;
+    terms_url?: string;
+    privacy_url?: string;
+    deletion_policy_url?: string;
   };
 }
 

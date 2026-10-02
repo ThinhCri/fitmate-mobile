@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Switch,
 } from 'react-native';
 import {
   ChevronLeft,
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
+import { SettingsViewModel } from './accountTypes';
 
 export interface SettingsPresentationProps {
   onBack: () => void;
@@ -26,6 +28,13 @@ export interface SettingsPresentationProps {
   onNotificationSettingsPress: () => void;
   onPrivacyPress: () => void;
   onTermsPress: () => void;
+  settings: SettingsViewModel;
+  onNotificationsChange: (value: boolean) => void;
+  onEmailAlertsChange: (value: boolean) => void;
+  onExportPress: () => void;
+  onDeleteAccountPress: () => void;
+  onCancelDeletionPress: () => void;
+  isDeletionPending?: boolean;
 }
 
 export function SettingsPresentation({
@@ -34,6 +43,13 @@ export function SettingsPresentation({
   onNotificationSettingsPress,
   onPrivacyPress,
   onTermsPress,
+  settings,
+  onNotificationsChange,
+  onEmailAlertsChange,
+  onExportPress,
+  onDeleteAccountPress,
+  onCancelDeletionPress,
+  isDeletionPending = false,
 }: SettingsPresentationProps) {
   return (
     <View style={styles.container}>
@@ -68,6 +84,17 @@ export function SettingsPresentation({
             </TouchableOpacity>
 
             <View style={styles.divider} />
+            <TouchableOpacity style={styles.row} onPress={onExportPress}>
+              <Text style={styles.rowTitle}>Xuất dữ liệu cá nhân</Text>
+              <ChevronRight size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity style={styles.row} onPress={isDeletionPending ? onCancelDeletionPress : onDeleteAccountPress}>
+              <Text style={[styles.rowTitle, { color: isDeletionPending ? colors.primary : colors.danger }]}>{isDeletionPending ? 'Hủy yêu cầu xóa tài khoản' : 'Yêu cầu xóa tài khoản'}</Text>
+              <ChevronRight size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
 
             <TouchableOpacity style={styles.row} onPress={onPrivacyPress}>
               <View style={styles.rowLeft}>
@@ -95,13 +122,24 @@ export function SettingsPresentation({
             </TouchableOpacity>
 
             <View style={styles.divider} />
+            <View style={styles.row}>
+              <Text style={styles.rowTitle}>Nhận thông báo</Text>
+              <Switch value={settings.notificationsEnabled} onValueChange={onNotificationsChange} />
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.row}>
+              <Text style={styles.rowTitle}>Thông báo qua email</Text>
+              <Switch value={settings.emailAlertsEnabled} onValueChange={onEmailAlertsChange} />
+            </View>
+
+            <View style={styles.divider} />
 
             <View style={styles.row}>
               <View style={styles.rowLeft}>
                 <Globe size={18} color={colors.textSecondary} />
                 <Text style={styles.rowTitle}>Ngôn ngữ hiển thị</Text>
               </View>
-              <Text style={styles.rowValue}>Tiếng Việt (Mặc định)</Text>
+              <Text style={styles.rowValue}>{settings.language === 'vi' ? 'Tiếng Việt' : settings.language}</Text>
             </View>
 
             <View style={styles.divider} />
@@ -111,7 +149,7 @@ export function SettingsPresentation({
                 <Sun size={18} color={colors.warning} />
                 <Text style={styles.rowTitle}>Giao diện</Text>
               </View>
-              <Text style={styles.rowValue}>Light Theme</Text>
+              <Text style={styles.rowValue}>{settings.theme === 'light' ? 'Giao diện sáng' : settings.theme}</Text>
             </View>
           </Card>
           <Text style={styles.themeNote}>
@@ -138,7 +176,7 @@ export function SettingsPresentation({
                 <Info size={18} color={colors.textSecondary} />
                 <Text style={styles.rowTitle}>Phiên bản</Text>
               </View>
-              <Text style={styles.rowValue}>1.0.0 (Build 20260930)</Text>
+              <Text style={styles.rowValue}>{settings.appVersion}</Text>
             </View>
           </Card>
         </View>

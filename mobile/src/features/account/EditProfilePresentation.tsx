@@ -33,6 +33,7 @@ export interface EditProfilePresentationProps {
   onPreviewPublicProfile: () => void;
   onHealthProfilePress: () => void;
   onWeightHistoryPress: () => void;
+  onAvatarPress: () => void;
 }
 
 export function EditProfilePresentation({
@@ -43,6 +44,7 @@ export function EditProfilePresentation({
   onPreviewPublicProfile,
   onHealthProfilePress,
   onWeightHistoryPress,
+  onAvatarPress,
 }: EditProfilePresentationProps) {
   const [formData, setFormData] = useState<UserProfileFormData>(initialValues);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -93,10 +95,10 @@ export function EditProfilePresentation({
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarWrapper}>
-            <Avatar name={formData.name} size="lg" />
+            <Avatar uri={formData.avatarUrl} name={formData.name} size="lg" />
             <TouchableOpacity
               style={styles.cameraIconBtn}
-              onPress={() => Alert.alert('Đổi ảnh', 'Tính năng chọn ảnh đại diện')}
+              onPress={onAvatarPress}
               accessibilityLabel="Thay đổi ảnh đại diện"
             >
               <Camera size={14} color="#FFFFFF" />

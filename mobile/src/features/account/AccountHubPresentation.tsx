@@ -68,7 +68,7 @@ export function AccountHubPresentation({
       {/* Header Profile Card */}
       <Card style={styles.profileHeaderCard}>
         <View style={styles.userRow}>
-          <Avatar name={account.name} size="lg" />
+          <Avatar uri={account.avatarUrl} name={account.name} size="lg" />
           <View style={styles.userInfo}>
             <View style={styles.nameRow}>
               <Text style={styles.userName}>{account.name}</Text>

@@ -23,9 +23,11 @@ export interface IAccountRepository {
   getProfile(): Promise<UserProfileFormData>;
   getHealthProfile(): Promise<HealthProfileData>;
   updateProfile(data: UserProfileFormData): Promise<void>;
+  updateAvatar(image: { uri: string; fileName?: string | null; mimeType?: string | null }): Promise<string>;
   updateHealthProfile(data: HealthProfileData): Promise<void>;
   changePassword(currentPassword: string, newPassword: string): Promise<void>;
   getSettings(): Promise<SettingsViewModel>;
+  updateSettings(values: Partial<Pick<SettingsViewModel, 'notificationsEnabled' | 'emailAlertsEnabled' | 'pushNotificationsEnabled' | 'language' | 'theme'>>): Promise<SettingsViewModel>;
   requestAccountDeletion(reason?: string): Promise<AccountDeletionStatusViewModel>;
   getDeletionStatus(): Promise<AccountDeletionStatusViewModel>;
   cancelAccountDeletion(): Promise<AccountDeletionStatusViewModel>;

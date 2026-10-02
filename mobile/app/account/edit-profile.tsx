@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { EditProfilePresentation, UserProfileFormData } from '@/features/account';
 import { getAccountRepository } from '@/repositories/accountRepository';
+import { ImagePickerService } from '@/services/imagePicker';
 
 export default function EditProfileScreen() {
   const [profile, setProfile] = useState<UserProfileFormData | null>(null);
@@ -18,5 +19,10 @@ export default function EditProfileScreen() {
     finally { setIsSaving(false); }
   };
   if (!profile) return <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>{error ? <Text>{error}</Text> : <ActivityIndicator />}</SafeAreaView>;
-  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><EditProfilePresentation initialValues={profile} isSaving={isSaving} onBack={() => router.back()} onSubmit={submit} onPreviewPublicProfile={() => userId && router.push(`/community/user/${userId}` as never)} onHealthProfilePress={() => router.push('/account/health-profile' as never)} onWeightHistoryPress={() => router.push('/workout/weight' as never)} /></SafeAreaView>;
+  const chooseAvatar = () => Alert.alert('Đổi ảnh đại diện', 'Chọn nguồn ảnh', [
+    { text: 'Máy ảnh', onPress: async () => { const image = await ImagePickerService.pickFromCamera({ allowsEditing: true, aspect: [1, 1] }); if (image) setProfile({ ...profile, avatarUrl: await getAccountRepository().updateAvatar(image) }); } },
+    { text: 'Thư viện', onPress: async () => { const image = await ImagePickerService.pickFromLibrary({ allowsEditing: true, aspect: [1, 1] }); if (image) setProfile({ ...profile, avatarUrl: await getAccountRepository().updateAvatar(image) }); } },
+    { text: 'Hủy', style: 'cancel' },
+  ]);
+  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><EditProfilePresentation initialValues={profile} isSaving={isSaving} onBack={() => router.back()} onSubmit={submit} onAvatarPress={chooseAvatar} onPreviewPublicProfile={() => userId && router.push(`/community/user/${userId}` as never)} onHealthProfilePress={() => router.push('/account/health-profile' as never)} onWeightHistoryPress={() => router.push('/workout/weight' as never)} /></SafeAreaView>;
 }

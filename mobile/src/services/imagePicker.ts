@@ -5,7 +5,14 @@
  * and preserves original image aspect ratio for certificate uploads.
  */
 import * as ImagePicker from 'expo-image-picker';
-import { Alert } from 'react-native';
+import { Alert, Linking } from 'react-native';
+
+function showPermissionAlert(title: string, message: string) {
+  Alert.alert(title, message, [
+    { text: 'Để sau', style: 'cancel' },
+    { text: 'Mở Cài đặt', onPress: () => void Linking.openSettings() },
+  ]);
+}
 
 export interface PickedImage {
   uri: string;
@@ -27,7 +34,7 @@ export const ImagePickerService = {
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
+        showPermissionAlert(
           'Cần quyền truy cập thư viện ảnh',
           'Vui lòng cấp quyền truy cập thư viện hình ảnh trong Cài đặt thiết bị để tiếp tục.'
         );
@@ -59,7 +66,7 @@ export const ImagePickerService = {
     try {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
+        showPermissionAlert(
           'Cần quyền máy ảnh',
           'Vui lòng cấp quyền sử dụng máy ảnh trong Cài đặt thiết bị để tiếp tục.'
         );

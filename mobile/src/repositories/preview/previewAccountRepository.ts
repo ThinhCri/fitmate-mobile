@@ -7,6 +7,7 @@ import {
 import { IAccountRepository, AccountDeletionStatusViewModel } from '../accountRepository';
 
 export class PreviewAccountRepository implements IAccountRepository {
+  private settings: SettingsViewModel = { notificationsEnabled: true, emailAlertsEnabled: false, pushNotificationsEnabled: true, language: 'vi', theme: 'light', appVersion: '0.1.0-preview' };
   private profile: UserProfileFormData = {
     name: 'Nguyễn Văn Minh',
     bio: 'Đam mê tập gym, rèn luyện sức khỏe mỗi ngày.',
@@ -58,6 +59,11 @@ export class PreviewAccountRepository implements IAccountRepository {
     this.profile = { ...data };
   }
 
+  async updateAvatar(image: { uri: string }): Promise<string> {
+    this.profile = { ...this.profile, avatarUrl: image.uri };
+    return image.uri;
+  }
+
   async updateHealthProfile(data: HealthProfileData): Promise<void> {
     this.healthProfile = { ...data };
   }
@@ -69,12 +75,12 @@ export class PreviewAccountRepository implements IAccountRepository {
   }
 
   async getSettings(): Promise<SettingsViewModel> {
-    return {
-      notificationsEnabled: true,
-      emailAlertsEnabled: false,
-      language: 'vi',
-      appVersion: '1.0.0-preview',
-    };
+    return { ...this.settings };
+  }
+
+  async updateSettings(values: Partial<SettingsViewModel>): Promise<SettingsViewModel> {
+    this.settings = { ...this.settings, ...values };
+    return { ...this.settings };
   }
 
   async requestAccountDeletion(_reason?: string): Promise<AccountDeletionStatusViewModel> {
