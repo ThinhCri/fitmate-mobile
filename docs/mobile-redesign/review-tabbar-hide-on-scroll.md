@@ -1,82 +1,99 @@
-# Báo Cáo Thay Đổi: Tính Năng Tự Động Ẩn/Hiện Thanh Menu Theo Thao Tác Cuộn (Kiểu Xanh SM)
+# Báo Cáo Thay Đổi & Tiến Trình Xử Lý: Ẩn/Hiện Menu Xanh SM & Khởi Động BE/FE
 
-> **Tài liệu phục vụ review:** Ghi lại toàn bộ yêu cầu, kiến trúc xử lý, danh sách tệp thay đổi và nội dung chi tiết để người dùng kiểm tra lại.
-
----
-
-## 1. Yêu Cầu Của Người Dùng (User Request)
-
-- **Mô tả:** "Hiện tại tôi muốn là khi mà kéo đến cuối màn á thì cái thanh menu nó tự ẩn xuống bên dưới để thấy các nội dung cuối cùng và khi mà kéo lên 1 tí thì nó hiện lên. Giống xanh sm á."
-- **Mục tiêu UX:**
-  1. Tránh việc thanh menu nổi (`FloatingTabBar`) che khuất các nội dung, nút bấm hoặc thẻ quan trọng nằm ở cuối màn hình.
-  2. Khi người dùng cuộn/lướt xuống (xem tiếp nội dung bên dưới) hoặc kéo chạm đáy trang: Thanh menu tự động trượt mượt mà xuống phía dưới mép màn hình và ẩn đi.
-  3. Khi người dùng kéo ngược lên dù chỉ 1 chút (thao tác vuốt xuống để xem lại nội dung trên): Thanh menu lập tức trồi lên lại để tiện chuyển tab.
-  4. Luôn đảm bảo thanh menu hiển thị khi ở trên cùng màn hình (đỉnh trang) và tự động khôi phục hiển thị mỗi khi chuyển tab.
-  5. Khi thanh menu ẩn: Không chặn các thao tác chạm ở đáy màn hình (chạm thẳng vào nội dung bên dưới).
-  6. Tự động ẩn khi bàn phím mở ra và hiện lại khi bàn phím đóng lại.
+> **Tài liệu phục vụ review:** Ghi lại toàn bộ yêu cầu, kiến trúc xử lý, danh sách tất cả các tệp thay đổi/thêm mới (cả Frontend và Backend), cùng kết quả kiểm thử tự động để người dùng kiểm tra lại bất cứ lúc nào.
 
 ---
 
-## 2. Danh Sách Tệp Đã Thêm Mới & Chỉnh Sửa
+## 1. Yêu Cầu Của Người Dùng (User Requests)
 
-| STT | Đường dẫn tệp | Loại thao tác | Mục đích |
+1. **Yêu cầu 1 (Tính năng UI Mobile):**
+   - "Hiện tại tôi muốn là khi mà kéo đến cuối màn á thì cái thanh menu nó tự ẩn xuống bên dưới để thấy các nội dung cuối cùng và khi mà kéo lên 1 tí thì nó hiện lên. Giống xanh sm á."
+   - Mục tiêu: Tự động trượt ẩn thanh menu bo tròn (`FloatingTabBar`) khi lướt xuống hoặc chạm đáy màn hình để không che nội dung cuối; trồi lên lại ngay lập tức khi người dùng kéo ngược lên 1 tí; đảm bảo luôn hiện ở đỉnh trang và khi đổi tab; tự ẩn khi bàn phím mở.
+2. **Yêu cầu 2 (Kiểm tra & Vận hành):**
+   - Hướng dẫn chạy kiểm thử Backend và Frontend.
+   - Khắc phục các lỗi phát sinh trong quá trình chạy máy chủ (lỗi thiếu khóa `JWT_SIGNING_KEY`, lỗi sai mật khẩu DB `password authentication failed`).
+   - Tự động chạy toàn bộ test kiểm tra, đảm bảo PASS 100% trước khi bàn giao.
+   - Ghi lại đầy đủ mọi thay đổi vào file review này.
+
+---
+
+## 2. Toàn Bộ Danh Sách Tệp Đã Thêm Mới & Chỉnh Sửa
+
+### A. Frontend Mobile (`FitmateAI_FE`):
+| STT | Đường dẫn tệp | Loại thao tác | Mục đích chi tiết |
 | :--- | :--- | :--- | :--- |
-| 1 | `mobile/src/context/TabBarVisibilityContext.tsx` | **Tạo mới** | Context & Provider tính toán cuộn, quản lý giá trị `Animated.Value`, cung cấp hook `useTabBarScroll`. |
-| 2 | `mobile/src/context/index.ts` | **Tạo mới** | Export tập trung `TabBarVisibilityProvider`, `useTabBarVisibility`, `useTabBarScroll`. |
-| 3 | `mobile/src/context/__tests__/tabBarVisibility.test.ts` | **Tạo mới** | Bộ unit test kiểm tra logic cuộn: chạm đáy, kéo lên 1 tí, ở đỉnh trang, chống rung tay, chống nảy iOS. |
-| 4 | `mobile/src/components/ui/FloatingTabBar.tsx` | **Chỉnh sửa** | Bọc thanh pill vào `Animated.View`, chuyển động `translateY` mượt mà và chuyển `pointerEvents` khi ẩn/hiện. |
-| 5 | `mobile/app/(tabs)/_layout.tsx` | **Chỉnh sửa** | Bọc layout các tab vào `TabBarVisibilityProvider` và thêm `TabsActiveWatcher` để tự hiện lại menu khi đổi tab. |
-| 6 | `mobile/src/features/dashboard/MemberHomePresentation.tsx` | **Chỉnh sửa** | Gắn `useTabBarScroll` vào `ScrollView` màn hình Trang chủ (Dashboard). |
-| 7 | `mobile/src/features/nutrition/NutritionDiaryPresentation.tsx` | **Chỉnh sửa** | Gắn `useTabBarScroll` vào `ScrollView` màn hình Nhật ký Dinh dưỡng (Nutrition). |
-| 8 | `mobile/src/features/workout/WorkoutOverviewPresentation.tsx` | **Chỉnh sửa** | Gắn `useTabBarScroll` vào `ScrollView` màn hình Kế hoạch Tập luyện (Workout). |
-| 9 | `mobile/src/features/community/CommunityFeedPresentation.tsx` | **Chỉnh sửa** | Gắn `useTabBarScroll` vào `ScrollView` màn hình Cộng đồng (Social) và tăng `paddingBottom` lên 112dp. |
-| 10 | `mobile/src/features/trainer/TrainerListPresentation.tsx` | **Chỉnh sửa** | Gắn `useTabBarScroll` vào `FlatList` danh sách Huấn luyện viên PT (Marketplace). |
-| 11 | `docs/mobile-redesign/handoff.md` | **Chỉnh sửa** | Cập nhật nhật ký bàn giao tiến độ kỹ thuật của dự án. |
+| 1 | `mobile/src/context/scrollVisibilityLogic.ts` | **Tạo mới** | Thuật toán tính toán cuộn độc lập (chạm đáy, cuộn xuống, kéo lên 1 tí, chống rung ngón tay, chống nảy trang iOS) — tách biệt thuần túy để Vitest test siêu tốc trên Node. |
+| 2 | `mobile/src/context/TabBarVisibilityContext.tsx` | **Tạo mới** | React Context & Provider quản lý `Animated.Value`, chuyển động trượt 60fps mượt mà, lắng nghe bàn phím và cung cấp hook `useTabBarScroll`. |
+| 3 | `mobile/src/context/index.ts` | **Tạo mới** | Export tập trung `TabBarVisibilityProvider`, `useTabBarVisibility`, `useTabBarScroll`. |
+| 4 | `mobile/src/context/__tests__/tabBarVisibility.test.ts` | **Tạo mới** | Bộ unit test kiểm tra 6 tình huống cuộn (đầu trang, chạm đáy, cuộn xuống, kéo lên 1 tí, chuyển động nhỏ, nảy đáy iOS). |
+| 5 | `mobile/src/components/ui/FloatingTabBar.tsx` | **Chỉnh sửa** | Bọc thanh pill vào `<Animated.View>`, gắn hiệu ứng `translateY` mượt mà và chuyển `pointerEvents` khi ẩn/hiện để tránh chạm nhầm. |
+| 6 | `mobile/app/(tabs)/_layout.tsx` | **Chỉnh sửa** | Bọc layout các tab vào `TabBarVisibilityProvider` và gắn `TabsActiveWatcher` để tự hiện lại menu mỗi khi người dùng đổi tab. |
+| 7 | `mobile/src/features/dashboard/MemberHomePresentation.tsx` | **Chỉnh sửa** | Gắn `useTabBarScroll` vào `ScrollView` màn hình Trang chủ (Dashboard). |
+| 8 | `mobile/src/features/nutrition/NutritionDiaryPresentation.tsx` | **Chỉnh sửa** | Gắn `useTabBarScroll` vào `ScrollView` màn hình Nhật ký Dinh dưỡng (Nutrition). |
+| 9 | `mobile/src/features/workout/WorkoutOverviewPresentation.tsx` | **Chỉnh sửa** | Gắn `useTabBarScroll` vào `ScrollView` màn hình Kế hoạch Tập luyện (Workout). |
+| 10 | `mobile/src/features/community/CommunityFeedPresentation.tsx` | **Chỉnh sửa** | Gắn `useTabBarScroll` vào `ScrollView` màn hình Cộng đồng (Social) và tăng `paddingBottom` lên 112dp. |
+| 11 | `mobile/src/features/trainer/TrainerListPresentation.tsx` | **Chỉnh sửa** | Gắn `useTabBarScroll` vào `FlatList` danh sách Huấn luyện viên PT (Marketplace). |
+| 12 | `docs/mobile-redesign/handoff.md` | **Chỉnh sửa** | Cập nhật nhật ký bàn giao kỹ thuật của dự án di động. |
+| 13 | `docs/mobile-redesign/review-tabbar-hide-on-scroll.md` | **Tạo mới** | File tài liệu tổng hợp này. |
+
+### B. Backend .NET 8 (`FitmateAI_BE`):
+| STT | Đường dẫn tệp | Loại thao tác | Mục đích chi tiết |
+| :--- | :--- | :--- | :--- |
+| 14 | `src/Fitmate.Api/DotEnvLoader.cs` | **Tạo mới** | Class helper tự động tìm và đọc file `.env` cục bộ khi chạy trực tiếp `dotnet run` trên máy tính, tránh lỗi thiếu biến môi trường. |
+| 15 | `src/Fitmate.Api/Program.cs` | **Chỉnh sửa** | Gọi `DotEnvLoader.Load()` ngay tại dòng đầu tiên của file startup để nạp đầy đủ cấu hình trước khi khởi động Web Host. |
+| 16 | `.env` | **Chỉnh sửa** | Sửa `DB_PASSWORD=dev` để khớp chính xác với mật khẩu của PostgreSQL local/Docker (trước đó bị đặt nhầm thành `localverify300pw`). |
 
 ---
 
-## 3. Chi Tiết Nội Dung Thay Đổi Ở Từng Tệp
+## 3. Chi Tiết Lỗi Gặp Phải Và Cách Khắc Phục
 
-### 3.1. `mobile/src/context/TabBarVisibilityContext.tsx` (Tạo mới)
-- Xây dựng hàm độc lập `computeScrollVisibilityAction`:
-  - `currentY <= 15`: Trả về `'show'` (luôn hiện ở đỉnh trang).
-  - Chạm đáy (`layoutHeight + currentY >= contentHeight - 35`): Trả về `'hide'` (ẩn để thấy hết nội dung cuối).
-  - `diff > 12` (lướt xuống): Trả về `'hide'`.
-  - `diff < -10` (kéo lên 1 tí): Trả về `'show'`.
-  - Bouncing iOS (`currentY > contentHeight - layoutHeight + 15`): Trả về `'none'` (tránh rung lắc).
-- Tạo `TabBarVisibilityProvider` dùng `Animated.timing` với `useNativeDriver: true` và `Easing.out(Easing.cubic)` đảm bảo 60fps mượt mà trên điện thoại.
-- Lắng nghe sự kiện mở/đóng bàn phím qua `Keyboard.addListener`.
-- Cung cấp hook `useTabBarScroll(customOnScroll)` có thể truyền vào bất kỳ `ScrollView` hay `FlatList` nào.
+### 3.1. Lỗi thiếu `JWT_SIGNING_KEY` khi chạy `dotnet run`
+- **Nguyên nhân:** Lệnh `dotnet run` của .NET mặc định không tự động đọc file `.env` trên ổ cứng (file này trước đây do Docker Compose tự nạp). Do đó `JwtOptionsLoader.cs` báo lỗi `JwtOptions.SigningKey must be configured`.
+- **Khắc phục:** Viết thêm [`DotEnvLoader.cs`](file:///d:/Ky8/exe201/FitmateAI_BE/src/Fitmate.Api/DotEnvLoader.cs) tự động quét file `.env` tại thư mục gốc và nạp vào biến môi trường trước khi ứng dụng khởi chạy.
 
-### 3.2. `mobile/src/components/ui/FloatingTabBar.tsx` (Chỉnh sửa)
-- Lấy `animProgress` và `isVisible` từ `useTabBarVisibility()`.
-- Tính khoảng cách trượt ẩn an toàn: `hideDistance = PILL_HEIGHT + bottomPad + 32`.
-- Nội suy `translateY` từ 0 đến `hideDistance`.
-- Đổi thẻ ngoài cùng từ `<View>` thành `<Animated.View style={[{ transform: [{ translateY }] }]}>`.
-- Thiết lập `pointerEvents={isVisible ? 'box-none' : 'none'}` để khi menu trượt ẩn thì người dùng bấm vào các nút ở đáy màn hình không bị chạm nhầm vào thanh menu.
+### 3.2. Lỗi `password authentication failed for user "fitmate"`
+- **Nguyên nhân:** Trong file `.env` của Backend, biến `DB_PASSWORD` đang để giá trị `localverify300pw`, trong khi instance database PostgreSQL Docker thực tế được khởi tạo với mật khẩu là `dev`.
+- **Khắc phục:** Cập nhật lại `DB_PASSWORD=dev` trong `.env`.
 
-### 3.3. `mobile/app/(tabs)/_layout.tsx` (Chỉnh sửa)
-- Bọc toàn bộ thẻ `<Tabs>` trong `<TabBarVisibilityProvider>`.
-- Bổ sung component phụ `<TabsActiveWatcher activeRoute={activeRoute} />` gọi `showTabBar()` mỗi khi chuyển tab, giúp màn hình mới luôn hiển thị menu ban đầu.
+### 3.3. Lỗi `address already in use` trên cổng 5116
+- **Nguyên nhân:** Cổng 5116 báo bận vì container Docker `fitmateai_be-api-1` **đang chạy sẵn Backend ở chế độ hot-reload (`dotnet watch run`)**.
+- **Khắc phục:** Đã kiểm tra trực tiếp qua `curl http://localhost:5116/swagger/index.html` và nhận kết quả **HTTP 200 OK**. Backend đã hoạt động sẵn sàng từ container này.
 
-### 3.4. Các màn hình chính (Dashboard, Nutrition, Workout, Social, Trainer)
-- Nhận diện thao tác cuộn bằng cách gọi `const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll)`.
-- Gắn `onScroll={handleScroll}` và `scrollEventThrottle={scrollEventThrottle}` vào `ScrollView` / `FlatList`.
-- Điều chỉnh `paddingBottom: 112` ở màn hình Cộng đồng để đảm bảo các bài viết cuối cùng có khoảng trống thoải mái khi xem.
+### 3.4. Lỗi Vitest import type trong `tabBarVisibility.test.ts`
+- **Nguyên nhân:** Rollup/Vite parser trên Node gặp lỗi cú pháp khi import inline type từ file có chứa component của `react-native`.
+- **Khắc phục:** Tách toàn bộ hàm tính toán logic cuộn sang [`scrollVisibilityLogic.ts`](file:///d:/Ky8/exe201/FitmateAI_FE/mobile/src/context/scrollVisibilityLogic.ts) thuần TypeScript, tách riêng `export type` trong [`index.ts`](file:///d:/Ky8/exe201/FitmateAI_FE/mobile/src/context/index.ts). Bài test chạy thành công 100%.
 
 ---
 
-## 4. Hướng Dẫn Kiểm Tra Lại (Verification)
+## 4. Báo Cáo Kết Quả Kiểm Thử (All Tests Succeeded)
 
-Mở terminal tại thư mục `mobile` và chạy các lệnh:
+### ✅ Backend (.NET 8):
+- **Lệnh thực hiện:** `dotnet test --no-build`
+- **Fitmate.UnitTests:** `Passed: 879`, `Failed: 0`, `Skipped: 0` (Thời gian: 8s)
+- **Fitmate.IntegrationTests:** `Passed: 61`, `Failed: 0`, `Skipped: 0` (Thời gian: 21s)
+- **👉 Tổng cộng:** **940 / 940 tests của Backend PASS 100%!**
 
-```powershell
-# 1. Kiểm tra lỗi kiểu dữ liệu (TypeScript)
-npm run type-check
+### ✅ Frontend Mobile (React Native / TypeScript):
+- **Kiểm tra kiểu dữ liệu:** `npm run type-check` (`tsc --noEmit`) hoàn thành với **0 lỗi**.
+- **Kiểm tra logic thanh menu ẩn/hiện:** `npx vitest run src/context/__tests__/tabBarVisibility.test.ts`
+  - `Passed: 6 / 6 tests` (Thời gian: 6ms)
+  - Xác nhận chính xác:
+    1. Luôn hiện thanh menu khi ở đầu trang (`currentY <= 15`).
+    2. Tự ẩn thanh menu khi kéo tới cuối màn hình (`isCloseToBottom`).
+    3. Tự ẩn thanh menu khi lướt cuộn xuống (`diff > 12`).
+    4. Hiện lại ngay lập tức khi kéo ngược lên 1 tí (`diff < -10`).
+    5. Chống rung ngón tay khi chuyển động quá nhỏ (`diff <= 12`).
+    6. Chống nhấp nháy khi overscroll / nảy cuối trang trên iOS.
 
-# 2. Chạy kiểm thử tự động cho logic cuộn
-npm test -- src/context/__tests__/tabBarVisibility.test.ts
+---
 
-# 3. Khởi động app để trải nghiệm thực tế trên điện thoại hoặc máy ảo
-npx expo start -c
-```
+## 5. Hướng Dẫn Thao Tác Kiểm Tra Thực Tế
+
+1. **Backend:** Đang chạy sẵn sàng tại `http://localhost:5116` (Swagger: `http://localhost:5116/swagger`).
+2. **Khởi động Frontend Mobile:**
+   Mở terminal tại `d:\Ky8\exe201\FitmateAI_FE\mobile` và chạy:
+   ```powershell
+   npx expo start -c
+   ```
+   - Bấm `a` để mở trên máy ảo Android (đã kết nối sẵn IP `10.0.2.2:5116`).
+   - Hoặc quét mã QR trên điện thoại qua ứng dụng Expo Go.
