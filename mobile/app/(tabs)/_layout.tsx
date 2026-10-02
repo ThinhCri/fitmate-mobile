@@ -98,13 +98,14 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      tabBar={() => <FloatingTabBar tabs={tabs} />}
       screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true } as never}
     >
-      <Tabs.Screen name="dashboard" options={{ tabBar: () => <FloatingTabBar tabs={tabs} /> } as never} />
-      <Tabs.Screen name="nutrition" options={{ tabBar: () => <FloatingTabBar tabs={tabs} /> } as never} />
-      <Tabs.Screen name="workout" options={{ tabBar: () => <FloatingTabBar tabs={tabs} /> } as never} />
-      <Tabs.Screen name="social" options={{ tabBar: () => <FloatingTabBar tabs={tabs} /> } as never} />
-      <Tabs.Screen name="marketplace" options={{ tabBar: () => <FloatingTabBar tabs={tabs} /> } as never} />
+      <Tabs.Screen name="dashboard" />
+      <Tabs.Screen name="nutrition" />
+      <Tabs.Screen name="workout" />
+      <Tabs.Screen name="social" />
+      <Tabs.Screen name="marketplace" />
     </Tabs>
   );
 }

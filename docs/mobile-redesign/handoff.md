@@ -587,3 +587,8 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Added Vietnamese messages for validation, authentication, permission, missing data, conflicts, oversized uploads, rate limits, server outages, and timeouts; known useful Vietnamese backend details are preserved.
 - Raw response data remains attached to `ApiError.data` for programmatic error-code handling and diagnostics without exposing it to users.
 - Added coverage for HTTP 429 translation, HTTP 500 fallback, and preservation of Vietnamese business messages.
+
+# Android tab bar runtime fix — 2026-10-02
+
+- Fixed the custom `FloatingTabBar` registration at the `Tabs` navigator level. The previous per-screen `tabBar` option was ignored by Expo Router, which exposed the default tab bar without configured icons and rendered missing-glyph boxes on Android.
+- Runtime verification remains required after restarting Metro with a cleared cache.
