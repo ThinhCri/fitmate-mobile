@@ -35,14 +35,21 @@ describe('Nutrition Repository & Data Source Isolation', () => {
     expect(() => getNutritionRepository()).toThrow('Cấu hình nguồn dữ liệu không hợp lệ');
   });
 
-  it('fails closed in API mode without falling back to preview repository', async () => {
+  it('fails closed in API mode without falling back to preview repository on 500 error', async () => {
     delete process.env.EXPO_PUBLIC_DATA_SOURCE;
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ detail: 'Internal Server Error' }),
+    });
     const previewSpy = vi.spyOn(previewNutritionRepository, 'getDaySummary');
 
     await expect(apiNutritionRepository.getDaySummary()).rejects.toThrow(
-      'Nutrition diary API endpoint not available'
+      'Internal Server Error'
     );
     expect(previewSpy).not.toHaveBeenCalled();
+    global.fetch = originalFetch;
   });
 
   it('returns preview summary and weekly menu in preview mode', async () => {
