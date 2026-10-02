@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 import {
   Bell,
@@ -23,6 +25,7 @@ import { colors, radius, shadow, spacing, typography } from '@/theme/designToken
 import { MemberDashboardSummary } from '@/services/api/types';
 import { SectionHeader } from '@/components/design-system/SectionHeader';
 import { PrimaryButton } from '@/components/design-system/Buttons';
+import { useTabBarScroll } from '@/context/TabBarVisibilityContext';
 
 export interface MemberHomePresentationProps {
   data: MemberDashboardSummary;
@@ -34,6 +37,7 @@ export interface MemberHomePresentationProps {
   onFindTrainerPress?: () => void;
   onWorkoutDetailPress?: (workoutId: string) => void;
   onNotificationPress?: () => void;
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
 export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
@@ -46,7 +50,10 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
   onFindTrainerPress,
   onWorkoutDetailPress,
   onNotificationPress,
+  onScroll: externalOnScroll,
 }) => {
+  const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
+
   const caloriePercent = data.calories.target > 0
     ? Math.min(100, Math.round((data.calories.consumed / data.calories.target) * 100))
     : 0;
@@ -58,6 +65,8 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
+      onScroll={handleScroll}
+      scrollEventThrottle={scrollEventThrottle}
       refreshControl={
         onRefresh ? (
           <RefreshControl

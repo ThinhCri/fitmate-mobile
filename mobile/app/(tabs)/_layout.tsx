@@ -21,6 +21,18 @@ import { useEffect, useState } from 'react';
 import { Tabs, useRouter, useSegments } from 'expo-router';
 import { Home, Apple, Dumbbell, Users, Briefcase } from 'lucide-react-native';
 import { FloatingTabBar, type TabItem } from '@/components/ui';
+import {
+  TabBarVisibilityProvider,
+  useTabBarVisibility,
+} from '@/context/TabBarVisibilityContext';
+
+function TabsActiveWatcher({ activeRoute }: { activeRoute: string }) {
+  const { showTabBar } = useTabBarVisibility();
+  useEffect(() => {
+    showTabBar();
+  }, [activeRoute, showTabBar]);
+  return null;
+}
 
 export default function TabsLayout() {
   const router = useRouter();
@@ -97,15 +109,18 @@ export default function TabsLayout() {
   ];
 
   return (
-    <Tabs
-      tabBar={() => <FloatingTabBar tabs={tabs} />}
-      screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true } as never}
-    >
-      <Tabs.Screen name="dashboard" />
-      <Tabs.Screen name="nutrition" />
-      <Tabs.Screen name="workout" />
-      <Tabs.Screen name="social" />
-      <Tabs.Screen name="marketplace" />
-    </Tabs>
+    <TabBarVisibilityProvider>
+      <TabsActiveWatcher activeRoute={activeRoute} />
+      <Tabs
+        tabBar={() => <FloatingTabBar tabs={tabs} />}
+        screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true } as never}
+      >
+        <Tabs.Screen name="dashboard" />
+        <Tabs.Screen name="nutrition" />
+        <Tabs.Screen name="workout" />
+        <Tabs.Screen name="social" />
+        <Tabs.Screen name="marketplace" />
+      </Tabs>
+    </TabBarVisibilityProvider>
   );
 }

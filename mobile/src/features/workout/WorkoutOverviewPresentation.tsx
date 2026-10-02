@@ -1,22 +1,44 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+} from 'react-native';
 import { CalendarDays, ChevronRight, Clock3, Dumbbell, Flame, History, Plus } from 'lucide-react-native';
 import { Card } from '@/components/design-system/Card';
 import { EmptyState } from '@/components/design-system/FeedbackStates';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { WorkoutPlanViewModel } from './workoutTypes';
+import { useTabBarScroll } from '@/context/TabBarVisibilityContext';
 
 export interface WorkoutOverviewPresentationProps {
   plans: WorkoutPlanViewModel[];
   onSelectPlan: (id: string) => void;
   onCreatePlan: () => void;
   onOpenHistory: () => void;
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
-export function WorkoutOverviewPresentation({ plans, onSelectPlan, onCreatePlan, onOpenHistory }: WorkoutOverviewPresentationProps) {
+export function WorkoutOverviewPresentation({
+  plans,
+  onSelectPlan,
+  onCreatePlan,
+  onOpenHistory,
+  onScroll: externalOnScroll,
+}: WorkoutOverviewPresentationProps) {
+  const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
   const currentDayIndex = (new Date().getDay() + 6) % 7;
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      onScroll={handleScroll}
+      scrollEventThrottle={scrollEventThrottle}
+    >
       <View style={styles.weekStrip}>
         {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((day, index) => (
           <View key={day} style={[styles.dayCell, index === currentDayIndex && styles.dayCellActive]}>

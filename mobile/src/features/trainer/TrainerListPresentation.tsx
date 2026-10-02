@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, StyleSheet, FlatList, ActivityIndicator, Text } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  Text,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+} from 'react-native';
 import { colors, spacing, typography } from '@/theme/designTokens';
 import { TrainerSummaryViewModel } from '@/services/api/types';
 import { SearchInput } from '@/components/design-system/Inputs';
@@ -11,6 +19,7 @@ import {
   LoadingSkeleton,
   OfflineState,
 } from '@/components/design-system/FeedbackStates';
+import { useTabBarScroll } from '@/context/TabBarVisibilityContext';
 
 export interface TrainerListPresentationProps {
   trainers: TrainerSummaryViewModel[];
@@ -29,6 +38,7 @@ export interface TrainerListPresentationProps {
   onRefresh?: () => void;
   refreshing?: boolean;
   onEndReached?: () => void;
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
 export const TrainerListPresentation: React.FC<TrainerListPresentationProps> = ({
@@ -48,7 +58,9 @@ export const TrainerListPresentation: React.FC<TrainerListPresentationProps> = (
   onRefresh,
   refreshing = false,
   onEndReached,
+  onScroll: externalOnScroll,
 }) => {
+  const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
   return (
     <View style={styles.container}>
       <View style={styles.searchFilterHeader}>
@@ -105,6 +117,8 @@ export const TrainerListPresentation: React.FC<TrainerListPresentationProps> = (
           )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={scrollEventThrottle}
           onRefresh={onRefresh}
           refreshing={refreshing}
           onEndReached={onEndReached}

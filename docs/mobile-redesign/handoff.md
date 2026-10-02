@@ -592,3 +592,15 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 
 - Fixed the custom `FloatingTabBar` registration at the `Tabs` navigator level. The previous per-screen `tabBar` option was ignored by Expo Router, which exposed the default tab bar without configured icons and rendered missing-glyph boxes on Android.
 - Runtime verification remains required after restarting Metro with a cleared cache.
+
+# FloatingTabBar hide-on-scroll (Xanh SM style) — 2026-10-02
+
+- Added `TabBarVisibilityContext` & `useTabBarScroll` hook in `mobile/src/context/`:
+  - Automatically slides down the floating tab bar out of the screen when the user scrolls down or reaches the end of the page, ensuring full visibility of the bottom-most content.
+  - Automatically slides the floating tab bar back up when the user pulls/scrolls up slightly ("kéo lên 1 tí").
+  - Guaranteed visible at the top of screens (offset <= 15) and resets visibility when switching tabs.
+  - Toggles `pointerEvents` so hidden tab bar never blocks touches to bottom content.
+  - Handles keyboard visibility: automatically hides on keyboard open and restores on keyboard hide.
+- Connected scroll handlers to all 5 primary tab screens: Dashboard (`MemberHomePresentation`), Nutrition (`NutritionDiaryPresentation`), Workout (`WorkoutOverviewPresentation`), Social (`CommunityFeedPresentation`), and Marketplace (`TrainerListPresentation`).
+- Added unit tests in `mobile/src/context/__tests__/tabBarVisibility.test.ts`.
+

@@ -17,11 +17,13 @@ import {
   Pressable,
   StyleSheet,
   Platform,
+  Animated,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme';
 import { resolveColor } from '@/theme/ThemeProvider';
+import { useTabBarVisibility } from '@/context/TabBarVisibilityContext';
 
 export interface TabItem {
   key: string;
@@ -45,6 +47,7 @@ export function FloatingTabBar({ tabs }: FloatingTabBarProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const [blurSupported, setBlurSupported] = useState(true);
+  const { animProgress, isVisible } = useTabBarVisibility();
 
   useEffect(() => {
     // BlurView on Android often falls back; we test mount to decide on fallback.
@@ -56,10 +59,25 @@ export function FloatingTabBar({ tabs }: FloatingTabBarProps) {
   const baseSurface = resolveColor(theme, 'glassSurface');
   const borderColor = resolveColor(theme, 'outlineVariant');
 
+  // Khoang cach truot xuong duoi mep man hinh de an hoan toan (chieu cao pill + padding an toan)
+  const hideDistance = PILL_HEIGHT + bottomPad + 32;
+  const translateY = animProgress
+    ? animProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, hideDistance],
+      })
+    : 0;
+
   return (
-    <View
-      pointerEvents="box-none"
-      style={[styles.container, { paddingBottom: bottomPad }]}
+    <Animated.View
+      pointerEvents={isVisible ? 'box-none' : 'none'}
+      style={[
+        styles.container,
+        {
+          paddingBottom: bottomPad,
+          transform: [{ translateY }],
+        },
+      ]}
     >
       <View
         style={[
@@ -94,7 +112,7 @@ export function FloatingTabBar({ tabs }: FloatingTabBarProps) {
           ))}
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

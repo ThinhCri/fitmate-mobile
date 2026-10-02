@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+} from 'react-native';
 import {
   Users,
   Search,
@@ -17,6 +25,7 @@ import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
 import { EmptyState } from '@/components/design-system/FeedbackStates';
 import { CommunityPostViewModel } from './communityTypes';
+import { useTabBarScroll } from '@/context/TabBarVisibilityContext';
 
 export interface CommunityFeedPresentationProps {
   posts: CommunityPostViewModel[];
@@ -31,6 +40,7 @@ export interface CommunityFeedPresentationProps {
   onChatInboxPress: () => void;
   onReportPress: (postId: string) => void;
   onAuthorPress: (authorId: string) => void;
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
 export function CommunityFeedPresentation({
@@ -46,7 +56,9 @@ export function CommunityFeedPresentation({
   onChatInboxPress,
   onReportPress,
   onAuthorPress,
+  onScroll: externalOnScroll,
 }: CommunityFeedPresentationProps) {
+  const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
   const categories = [
     { key: 'all', label: 'Tất cả' },
     { key: 'friends', label: 'Bạn bè' },
@@ -55,7 +67,12 @@ export function CommunityFeedPresentation({
   ] as const;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      onScroll={handleScroll}
+      scrollEventThrottle={scrollEventThrottle}
+    >
       {/* Top Segmented Controls: Feed vs AI Assistant */}
       <View style={styles.segmentedContainer}>
         <View style={styles.segmentedTrack}>
@@ -281,7 +298,7 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.md,
     gap: spacing.md,
-    paddingBottom: spacing.xl,
+    paddingBottom: 112,
   },
   segmentedContainer: {
     gap: spacing.sm,

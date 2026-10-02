@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 import {
   ChevronLeft,
@@ -27,6 +29,7 @@ import { DayNutritionSummaryViewModel, FoodItemViewModel, MealTimeSlot } from '.
 import { Card } from '@/components/design-system/Card';
 import { Badge } from '@/components/design-system/BadgesAndChips';
 import { LoadingSkeleton, EmptyState, ErrorState, OfflineState } from '@/components/design-system/FeedbackStates';
+import { useTabBarScroll } from '@/context/TabBarVisibilityContext';
 
 export interface NutritionDiaryPresentationProps {
   summary: DayNutritionSummaryViewModel;
@@ -43,6 +46,7 @@ export interface NutritionDiaryPresentationProps {
   isLoading?: boolean;
   isError?: boolean;
   isOffline?: boolean;
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
 export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProps> = ({
@@ -60,7 +64,9 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
   isLoading = false,
   isError = false,
   isOffline = false,
+  onScroll: externalOnScroll,
 }) => {
+  const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
   const percent = (current: number, target: number) => target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   if (isOffline) {
     return (
@@ -115,6 +121,8 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
+      onScroll={handleScroll}
+      scrollEventThrottle={scrollEventThrottle}
       refreshControl={
         onRefresh ? (
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
