@@ -22,11 +22,11 @@ Mỗi task cần data/error/empty/loading/disabled states, role tests, contract 
 
 ## MOB-802 — Booking, payment và revenue
 - Plan: [Plan triển khai](plans/MOB-802.md).
-- Status: TODO
+- Status: VERIFIED
 - BE dependencies: BE-807/808/809/810/400.
 - Scope: Checkout server quote, hold expiry, accept/start/complete/cancel/reschedule, provider return polling; revenue PT server.
-- Acceptance: Luồng100k→10k/90k và refund/payout hiển thị đúng; không mark Paid từ deep link.
-- Evidence: chưa có; khi hoàn tất ghi commit, commands, environment, API revision, screenshots/test report.
+- Acceptance: Luồng 100k→10k/90k và refund/payout hiển thị đúng; không mark Paid từ deep link.
+- Evidence: Commit `bac928e`, 177 unit tests passed across 25 files (`vitest run`), `tsc --noEmit` 0 errors, `expo lint` 0 errors. Real endpoints mapped: `GET /me/bookings`, `POST /bookings/holds`, `POST /payments`, `POST /me/bookings/{id}/cancel`, `POST /bookings/{id}/reschedule-requests`, `POST /trainers/{id}/reviews`. Fail-closed on errors, strict preview isolation.
 
 ## MOB-803 — Workout, weight và dashboard
 - Plan: [Plan triển khai](plans/MOB-803.md).
