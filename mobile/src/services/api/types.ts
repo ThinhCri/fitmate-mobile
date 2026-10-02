@@ -13,6 +13,7 @@ export interface UserSummary {
   role: 'member' | 'pt' | 'admin';
   avatar_url?: string | null;
   bio?: string | null;
+  pt_verification_status?: 'pendingdocuments' | 'pendingreview' | 'needsmoreinformation' | 'approved' | 'rejectedfraud' | null;
 }
 
 export interface UserProfile {

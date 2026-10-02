@@ -85,6 +85,7 @@ export interface User {
   id: string; // Canonical user UUID
   role: 'member' | 'pt' | 'admin'; // Normalized user role
   email: string;
+  ptVerificationStatus?: 'pendingdocuments' | 'pendingreview' | 'needsmoreinformation' | 'approved' | 'rejectedfraud';
   password?: string; // Preview/mock only; omitted in production authenticated User
   profile: Profile;
   // Dashboard state

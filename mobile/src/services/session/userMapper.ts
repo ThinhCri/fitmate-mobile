@@ -34,6 +34,7 @@ export function mapToDomainUser(
     id: summary.id,
     role,
     email: summary.email,
+    ...(summary.pt_verification_status ? { ptVerificationStatus: summary.pt_verification_status } : {}),
     profile: {
       avatar: profile?.avatar_url ?? summary.avatar_url ?? null,
       name: profile?.full_name ?? summary.full_name,

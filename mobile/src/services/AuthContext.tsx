@@ -60,7 +60,7 @@ export interface AuthContextValue {
   user: User | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (input: RegisterInput) => Promise<RegistrationPendingResponse>;
   logout: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -192,7 +192,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       }
 
-      setUser(mapToDomainUser(authRes.user, profile));
+      const mapped = mapToDomainUser(authRes.user, profile);
+      setUser(mapped);
+      return mapped;
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Đăng nhập không thành công';

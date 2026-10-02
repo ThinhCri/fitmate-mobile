@@ -41,6 +41,7 @@ export interface CertificatesPresentationProps {
     issue_date: string;
     file: UploadFilePayload;
   }) => Promise<void>;
+  verificationStatus?: string;
 }
 
 export function CertificatesPresentation({
@@ -51,6 +52,7 @@ export function CertificatesPresentation({
   onRefresh,
   onBack,
   onSubmitCertificate,
+  verificationStatus,
 }: CertificatesPresentationProps) {
   // Form state for adding new certificate
   const [title, setTitle] = useState('');
@@ -191,6 +193,15 @@ export function CertificatesPresentation({
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {verificationStatus && verificationStatus !== 'approved' && (
+          <View style={styles.auditBanner}>
+            <Clock size={22} color={colors.warning} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.auditBannerTitle}>{verificationStatus === 'needsmoreinformation' ? 'Hồ sơ cần bổ sung' : verificationStatus === 'pendingreview' ? 'Hồ sơ đang chờ xét duyệt' : 'Hoàn thiện hồ sơ xác minh PT'}</Text>
+              <Text style={styles.auditBannerText}>{verificationStatus === 'needsmoreinformation' ? 'Vui lòng xem lý do từ chối ở chứng chỉ và gửi lại ảnh hoặc thông tin chính xác.' : verificationStatus === 'pendingreview' ? 'Bạn chưa thể sử dụng chức năng PT cho đến khi Admin kiểm tra và duyệt hồ sơ.' : 'Hãy gửi ít nhất một chứng chỉ có ảnh rõ ràng. Sau đó hệ thống sẽ chuyển hồ sơ sang chờ duyệt.'}</Text>
+            </View>
+          </View>
+        )}
         {/* Fitmate Audit Standards Banner */}
         <View style={styles.auditBanner}>
           <View style={styles.auditIconBox}>
@@ -199,7 +210,7 @@ export function CertificatesPresentation({
           <View style={{ flex: 1 }}>
             <Text style={styles.auditBannerTitle}>Tiêu chuẩn kiểm duyệt Fitmate</Text>
             <Text style={styles.auditBannerText}>
-              Hồ sơ chứng chỉ được kiểm duyệt độc lập bởi đội ngũ chuyên môn Fitmate để đảm bảo an toàn tập luyện cho học viên. Ảnh chứng chỉ gốc được bảo mật tuyệt đối, chỉ hiển thị thông tin trích xuất công khai.
+              Admin Fitmate sẽ xem thông tin, ảnh chứng chỉ và đối chiếu thủ công trước khi quyết định duyệt tài khoản PT.
             </Text>
           </View>
         </View>
@@ -214,7 +225,7 @@ export function CertificatesPresentation({
           </View>
           <View style={styles.securityRow}>
             <Lock size={14} color={colors.primary} style={{ marginRight: 4 }} />
-            <Text style={styles.securityText}>Bảo mật 2 lớp</Text>
+            <Text style={styles.securityText}>Chỉ Admin được xem ảnh gốc</Text>
           </View>
         </View>
 

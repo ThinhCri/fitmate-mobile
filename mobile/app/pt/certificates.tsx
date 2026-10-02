@@ -3,9 +3,11 @@ import { useRouter } from 'expo-router';
 import { ptService, SubmitCertificateInput } from '@/services/api/ptService';
 import type { PtCertificate } from '@/services/api/types';
 import { CertificatesPresentation } from '@/features/pt/CertificatesPresentation';
+import { useAuth } from '@/services/AuthContext';
 
 export default function CertificatesRoute() {
   const router = useRouter();
+  const { user, logout, setUser } = useAuth();
 
   const [certificates, setCertificates] = useState<PtCertificate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,7 @@ export default function CertificatesRoute() {
     try {
       const created = await ptService.submitCertificate(data);
       setCertificates((prev) => [created, ...prev]);
+      if (user) setUser({ ...user, ptVerificationStatus: 'pendingreview' });
     } finally {
       setSubmitting(false);
     }
@@ -51,6 +54,10 @@ export default function CertificatesRoute() {
       error={error}
       onRefresh={fetchCertificates}
       onBack={() => {
+        if (user?.role === 'pt' && user.ptVerificationStatus !== 'approved') {
+          void logout().then(() => router.replace('/(auth)/login'));
+          return;
+        }
         if (router.canGoBack()) {
           router.back();
         } else {
@@ -58,6 +65,7 @@ export default function CertificatesRoute() {
         }
       }}
       onSubmitCertificate={handleSubmitCertificate}
+      verificationStatus={user?.ptVerificationStatus}
     />
   );
 }

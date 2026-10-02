@@ -72,9 +72,13 @@ export default function LoginScreen() {
 
     setSubmitting(true);
     try {
-      await login(trimmedEmail, password);
+      const authenticatedUser = await login(trimmedEmail, password);
       await requestInitialPermissionsOnce(trimmedEmail).catch(() => {});
-      router.replace('/(tabs)/dashboard');
+      if (authenticatedUser.role === 'pt' && authenticatedUser.ptVerificationStatus !== 'approved') {
+        router.replace('/pt/certificates');
+      } else {
+        router.replace('/(tabs)/dashboard');
+      }
     } catch (err: unknown) {
       const problem = err instanceof ApiError && typeof err.data === 'object' && err.data !== null
         ? err.data as { code?: string }
