@@ -580,3 +580,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Updated the pinned OpenAPI hash to `83CF757A4286258E1A026387B0A9FCD2A45513F17261DD3D190BC10D52EC79C8`; the Git revision field still points to the last committed backend baseline until the coordinated backend change is committed.
 - Mobile type-check/test/lint/Expo were NOT RUN under the repository manual-execution rule. User command: `cd mobile; npm run type-check; npm test -- --run; npm run lint`.
 - Recovery fix: login detects `FITMATE.AUTH.EMAIL_NOT_VERIFIED`, requests a fresh code best-effort, and routes back to the OTP screen; the explicit resend button remains available if delivery or rate limiting delays the automatic resend.
+
+# Vietnamese API error copy — 2026-10-02
+
+- Centralized user-facing API error messages in the mobile API client so backend English or technical details are no longer rendered directly in screens, alerts, and toasts.
+- Added Vietnamese messages for validation, authentication, permission, missing data, conflicts, oversized uploads, rate limits, server outages, and timeouts; known useful Vietnamese backend details are preserved.
+- Raw response data remains attached to `ApiError.data` for programmatic error-code handling and diagnostics without exposing it to users.
+- Added coverage for HTTP 429 translation, HTTP 500 fallback, and preservation of Vietnamese business messages.

@@ -341,7 +341,35 @@ describe('AuthService & ApiClient (MOB-800)', () => {
 
       expect(caughtErr).toBeInstanceOf(ApiError);
       expect((caughtErr as ApiError).status).toBe(500);
-      expect((caughtErr as ApiError).message).toBe('Internal Server Error');
+      expect((caughtErr as ApiError).message).toBe(
+        'Hệ thống đang gặp sự cố. Vui lòng thử lại sau.'
+      );
+    });
+
+    it('translates rate-limit responses into understandable Vietnamese', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        json: async () => ({ detail: 'Rate limit exceeded. Please try again later.' }),
+      } as unknown as Response);
+
+      await expect(apiClient('/auth/email/resend')).rejects.toMatchObject({
+        status: 429,
+        message: 'Bạn thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.',
+      });
+    });
+
+    it('keeps useful Vietnamese backend messages', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 409,
+        json: async () => ({ detail: 'Khung giờ này vừa được người khác đặt.' }),
+      } as unknown as Response);
+
+      await expect(apiClient('/booking-holds')).rejects.toMatchObject({
+        status: 409,
+        message: 'Khung giờ này vừa được người khác đặt.',
+      });
     });
   });
 });

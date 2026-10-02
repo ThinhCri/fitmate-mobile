@@ -1,5 +1,5 @@
 import { sessionManager } from '@/services/session/sessionManager';
-import { isProblemDetails } from './types';
+import { getUserFacingApiErrorMessage } from './errorMessages';
 
 const RAW_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8080/api/v1';
@@ -101,30 +101,11 @@ export async function apiClient<T>(
         errorData = await response.text();
       }
 
-      let message: string;
-      if (isProblemDetails(errorData)) {
-        message =
-          errorData.detail ||
-          errorData.title ||
-          'API request failed with status ' + response.status;
-      } else if (
-        typeof errorData === 'object' &&
-        errorData !== null &&
-        'message' in errorData &&
-        typeof (errorData as Record<string, unknown>).message === 'string'
-      ) {
-        message = (errorData as Record<string, unknown>).message as string;
-      } else if (
-        typeof errorData === 'string' &&
-        errorData.trim().length > 0 &&
-        errorData.length < 300
-      ) {
-        message = errorData;
-      } else {
-        message = 'API request failed with status ' + response.status;
-      }
-
-      throw new ApiError(message, response.status, errorData);
+      throw new ApiError(
+        getUserFacingApiErrorMessage(response.status, errorData),
+        response.status,
+        errorData
+      );
     }
 
     if (response.status === 204) {
