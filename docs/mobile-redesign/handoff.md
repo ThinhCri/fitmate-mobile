@@ -487,3 +487,36 @@ Trang thai: **UI_IMPLEMENTED / PREVIEW_READY** (Runtime Android: **BLOCKED_RUNTI
 - **ESLint**: **0 errors**, 174 warnings (`npm run lint` / `npx expo lint`).
 - **Expo Doctor**: **20/21 checks passing** (`npx expo-doctor`), da sua app config schema hop le cho Expo SDK 57.
 - **Android Runtime**: **BLOCKED_RUNTIME** (chua ket noi device/emulator that de chay `npx expo start --android`).
+
+## Full Production Backend Integration Complete (2026-10-02) [MOB-800 - MOB-808]
+
+Trạng thái: **INTEGRATION_VERIFIED / PRODUCTION_API_READY**
+Toàn bộ chuỗi task MOB-800 đến MOB-808 đã hoàn thành, kết nối trực tiếp với backend theo OpenAPI contract FROZEN-V1 (`4637C6AD3A323DF062BA4B4B5C97EF3D7BEB75C475BA44FC1F4B54B8FD827804`):
+
+1. **MOB-800 (Auth & Session)**:
+   - SessionManager quản lý token đơn nguyên, tự động single-flight refresh token khi nhận 401.
+   - Pinned frozen contract SHA256; kiểm tra chống drift bằng unit test.
+2. **MOB-801 (Trainer Marketplace & Services)**:
+   - Dịch vụ PT (CRUD), tải ảnh chứng chỉ chuyên môn, lịch dạy khả dụng theo UTC query bounds.
+   - Chỉ cho phép hội viên đặt lịch với các huấn luyện viên đã được nền tảng kiểm duyệt (`isVerified = true`).
+3. **MOB-802 (Booking & Payments)**:
+   - Vòng đời đặt lịch và giữ chỗ (5 phút TTL hold).
+   - Tích hợp cổng thanh toán PayOS; xử lý trạng thái thanh toán verifying / uncertain theo DEC-033.
+   - Luồng đề xuất dời lịch (reschedule), hủy lịch kèm lý do và theo dõi tiến độ hoàn tiền.
+4. **MOB-803 (Workout & Dashboard)**:
+   - Ghi nhận nhật ký buổi tập, lịch sử tập luyện và chỉ số cân nặng hàng ngày (`/me/weight`, `/me/workout/sessions`).
+5. **MOB-804 (Nutrition & Meals)**:
+   - Ghi nhận bữa ăn theo khung giờ, tính toán tự động calories và 3 chỉ số macro (protein, carbs, fat), thời khóa biểu dinh dưỡng (`/me/nutrition/meals`, `/me/nutrition/schedule`).
+6. **MOB-805 (Social, Friends & Chat)**:
+   - Danh sách bạn bè, gửi/nhận lời mời kết bạn, nhắn tin trực tiếp có `client_message_id` chống gửi trùng lặp, báo cáo vi phạm nội dung và chặn người dùng (`/social/friends`, `/chat/friends/messages`, `/social/reports`, `/social/blocks`).
+7. **MOB-806 (Settings, Support & Deletion)**:
+   - Trung tâm thông báo, gửi ticket hỗ trợ CSKH và phản hồi trao đổi 2 chiều.
+   - Chu kỳ xóa tài khoản có thời gian ân hạn 30 ngày (`/users/me/delete-request`) và xuất dữ liệu cá nhân (`/users/me/export`).
+8. **MOB-807 (Capabilities & Simulation Gating)**:
+   - Kết nối `/system/capabilities` công bố trạng thái minh bạch các tính năng AI, VIP, rút thưởng, payout.
+   - Vô hiệu hóa hoàn toàn `RewardSimulation` trong chế độ production API.
+9. **MOB-808 (Verification & Release Readiness)**:
+   - **Unit & Integration Tests**: **26 test files passed, 186/186 tests passing (0 failures)**.
+   - **Type Check**: `tsc --noEmit` exited with code 0 (0 errors).
+   - **Fail-Closed Isolation**: Khi API gặp sự cố mạng hoặc 500, tất cả repository trả về `ApiError`, tuyệt đối không fallback sang mock data.
+
