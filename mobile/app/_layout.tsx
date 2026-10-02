@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@/theme';
 import { AuthProvider } from '@/services/AuthContext';
+import { PtVerificationGate } from '@/services/PtVerificationGate';
 import { ToastHost } from '@/components/ui';
 
 export default function RootLayout() {
@@ -16,6 +17,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <AuthProvider>
+            <PtVerificationGate />
             <StatusBar style="dark" />
             <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#FAFAF7' } }}>
               <Stack.Screen name="index" />
