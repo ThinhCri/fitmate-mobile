@@ -1,17 +1,15 @@
 {
   "baseline": "PROD-2026-09-22-v1",
-  "capturedAt": "2026-09-28",
+  "capturedAt": "2026-10-02",
   "backendRepository": "FitmateAI_BE",
-  "backendObservedHead": "12b9bcab53d24aceb70e7934a406c51a0658f21d",
+  "backendFrozenRevision": "74b223497f2a075f295644afcf5f9bcad897b66e",
   "openapiSource": "FitmateAI_BE/docs/backend-release/openapi/fitmate-v1.yaml",
-  "openapiSha256": "E294D297B5A010DC5CAEF690B99EBA33EA402B55053BE3BE2A370129C7BB8BF9",
-  "domainRulesSha256": "C2C770858138FA7BB2CBDFAAD8A556CEFF1DD2DB0C8FA5E24A78A649FCA0DC71",
-  "hashEncoding": "UTF-8 text with CRLF normalized to LF",
-  "status": "CORE_VERIFIED_PAYMENT_UAT_RELEASE_GATES_OPEN",
-  "refreshWhen": "The backend OpenAPI, domain rules, or relevant BE task status changes; regenerate wire types and record the exact hash before integration.",
-  "contractMeaning": "OpenAPI is the wire source of truth, not proof that every operation is released. Check backend tasks and evidence per feature.",
-  "verifiedCore": "BE-801..807, BE-811..816, and BE-819 are recorded VERIFIED in backend tasks.md.",
-  "openGates": "BE-808..810 and BE-400 payment/payOS re-verification; BE-817 capability readiness; BE-826 three-repo UAT; BE-827 release approval.",
-  "paymentContractUpdate": "payOS is the intended new checkout provider and VNPay remains historical; runtime/live enablement is still gated.",
-  "backendWorkingTreeDirty": true
+  "openapiSha256": "4637C6AD3A323DF062BA4B4B5C97EF3D7BEB75C475BA44FC1F4B54B8FD827804",
+  "contractStatus": "FROZEN-V1",
+  "hashEncoding": "raw file bytes (no normalization)",
+  "refreshWhen": "The backend OpenAPI revision changes; recalculate SHA256 and update this file before integration.",
+  "contractMeaning": "OpenAPI is the wire source of truth. 159 operations in contract; 155 have runtime; 4 AI companion operations have contract but no runtime (disabled).",
+  "verifiedCore": "BE-801..807, BE-811..816, and BE-819 recorded VERIFIED. Release build 0 errors, 879/879 unit tests, 99/99 contract tests, 61/61 HTTP integration tests pass.",
+  "openGates": "BE-808..810 and BE-400 payment/payOS re-verification; BE-817 AI capability readiness; BE-826 three-repo UAT; BE-827 release approval.",
+  "disabledCapabilities": ["ai.companion_chat", "ai.workout_adjust", "ai.food_scan (runtime gated)", "vip_purchase", "reward_cashout", "pt_automatic_payout"]
 }

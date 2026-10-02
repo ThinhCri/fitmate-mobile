@@ -1,35 +1,47 @@
 # Mobile API readiness — contract versus runtime
 
-Observed: 2026-09-28  
-Backend HEAD: `12b9bcab53d24aceb70e7934a406c51a0658f21d`  
-OpenAPI SHA-256 (LF normalized): `E294D297B5A010DC5CAEF690B99EBA33EA402B55053BE3BE2A370129C7BB8BF9`
+Observed: 2026-10-02  
+Backend frozen revision: `74b223497f2a075f295644afcf5f9bcad897b66e`  
+OpenAPI SHA-256 (raw file bytes): `4637C6AD3A323DF062BA4B4B5C97EF3D7BEB75C475BA44FC1F4B54B8FD827804`  
+Contract status: `FROZEN-V1`
 
-This is a static integration gate, not runtime evidence. The OpenAPI currently contains 93 path entries and is the only allowed source for generated mobile wire types. Controller discovery does not authorize the mobile app to invent DTOs or call undocumented operations.
+This is a static integration gate, not runtime evidence. The frozen OpenAPI contains 159 operations (155 with runtime, 4 AI companion contract-only) and is the only allowed source for generated mobile wire types. Controller discovery does not authorize the mobile app to invent DTOs or call undocumented operations.
 
 ## Readiness rule
 
-- `CONTRACT_READY`: operation exists in OpenAPI and its owning BE task is eligible for integration.
-- `CONTRACT_GAP`: runtime controller appears to exist, but OpenAPI does not describe the operation. Mobile may design the unavailable/loading UI but must not implement a guessed request.
-- `BACKEND_GAP`: product requires the flow but neither the observed OpenAPI nor controller audit proved it exists.
+- `CONTRACT_READY`: operation exists in frozen OpenAPI and verified in backend tests.
 - `GATED`: contract exists, but provider/UAT/operator/release evidence is still open.
+- `DISABLED`: contract exists, but runtime is intentionally disabled (capability flag).
 
-## Known contract gaps found by static comparison
+## Contract-ready operations (available for mobile integration)
 
-| Capability | Runtime evidence observed | OpenAPI status | Mobile action |
-|---|---|---|---|
-| Dashboard aggregate | `DashboardController`, `GET /api/v1/me/dashboard` | Missing | `CONTRACT_GAP`; do not compose fake totals from unrelated endpoints. |
-| User preferences | `UserPreferencesController`, GET/PUT `/api/v1/users/me/preferences` | Missing | `CONTRACT_GAP`; retain settings UI unavailable until schema is added. |
-| Account deletion/export/status/cancel | `AccountDeletionController` routes | Missing | `CONTRACT_GAP`; never promise deletion/export completion from guessed DTOs. |
-| User support tickets | `SupportTicketsController` list/detail/reply/close | Missing | `CONTRACT_GAP`; do not post free-form data to an invented route. |
-| Upload | `UploadsController`, `POST /api/v1/uploads` | Missing | `CONTRACT_GAP`; do not submit arbitrary storage keys/URLs. |
-| Trainer reviews | `TrainerReviewsController`, GET/POST `/api/v1/trainers/{id}/reviews` | Missing | `CONTRACT_GAP`; do not show fabricated ratings/reviews. |
-| Booking hold/detail/start | `BookingsController` exposes hold lookup, booking detail and start | Missing or mismatched | `CONTRACT_GAP`; do not infer body/status transition. |
-| Booking confirm | Runtime exposes ID routes; OpenAPI currently has `/bookings/confirm` | Route mismatch | `CONTRACT_GAP`; backend must reconcile one canonical operation. |
-| Workout plan delete and other CRUD detail | Runtime includes additional plan operations | Incomplete | `CONTRACT_GAP`; generate only documented operations. |
-| Meal delete | Runtime exposes DELETE | Not observed as an OpenAPI operation | `CONTRACT_GAP`. |
-| Verify/resend email | Required by BR-01 | Not observed in current OpenAPI/controller audit | `BACKEND_GAP`; onboarding must not fake verified status. |
+All core domains are now represented in the frozen OpenAPI:
 
-This list is intentionally conservative and not exhaustive. Before each MOB task, compare its required operations against the exact OpenAPI revision and update this table.
+| Domain | Key operations | Status |
+|---|---|---|
+| Auth | register, login, refreshToken, logout, forgotPassword, resetPassword, authChangePassword | `CONTRACT_READY` |
+| Users/Profile | getMe, updateMe, putMe, deleteMe, getPublicProfile, searchUsers, getUserPreferences, updateUserPreferences | `CONTRACT_READY` |
+| Account lifecycle | requestAccountDeletion, getAccountDeletionStatus, cancelAccountDeletion, exportUserData | `CONTRACT_READY` |
+| Devices | registerDevice, revokeDevice | `CONTRACT_READY` |
+| Trainers | listTrainers, getTrainer, getTrainerAvailability, submitTrainerReview, getTrainerReviews | `CONTRACT_READY` |
+| PT self-service | getMyAvailability, setMyAvailability, listMyCertificates, submitCertificate, listMyServices, createService, getMyService, updateService, deleteService | `CONTRACT_READY` |
+| Bookings | createBookingHold, getBookingHold, confirmBookingById, getMyBookingDetail, confirmMyBooking, startMyBooking, listMyBookings, listMyTrainerBookings, cancelMyBooking, completeMyBooking | `CONTRACT_READY` |
+| Reschedule | createRescheduleRequest, acceptRescheduleRequest, rejectRescheduleRequest, cancelRescheduleRequest | `CONTRACT_READY` |
+| Dashboard | getMyDashboard | `CONTRACT_READY` |
+| Payments | createPayment, getMyPayment | `GATED` (payOS re-verification) |
+| Revenue | getMyRevenue, getMyRevenueHistory | `CONTRACT_READY` |
+| Workout | listMyWorkoutPlans, createWorkoutPlan, getMyWorkoutPlan, updateMyWorkoutPlan, deleteMyWorkoutPlan, listMyWorkoutSessions, logWorkoutSession, getMyWorkoutSession, listMyWeight, logWeight | `CONTRACT_READY` |
+| Nutrition | listMyMeals, logMeal, updateMeal, deleteMeal, getMyMealSchedule, setMyMealSchedule | `CONTRACT_READY` |
+| Nutrition AI scan | scanMeal | `GATED` (AI capability) |
+| Social | listPosts, createPost, getPost, deletePost, listPostComments, createComment, reactToPost, createReport | `CONTRACT_READY` |
+| Friends | listPendingFriendRequests, sendFriendRequest, respondFriendRequest, listFriends, unfriend, friendRelationStatus | `CONTRACT_READY` |
+| Block | blockUser, listBlocked, unblockUser | `CONTRACT_READY` |
+| Chat | sendFriendMessage, listConversations, getConversation, listFriendMessages, markFriendMessagesRead | `CONTRACT_READY` |
+| AI companion | listAiThreads, createAiThread, listAiMessages, sendAiMessage | `DISABLED` |
+| Notifications | listMyNotifications, markNotificationRead | `CONTRACT_READY` |
+| Support | listMySupportTickets, createSupportTicket, getSupportTicket, replySupportTicket, closeSupportTicket | `CONTRACT_READY` |
+| Upload | uploadFile | `CONTRACT_READY` |
+| System | liveness, getSystemCapabilities | `CONTRACT_READY` |
 
 ## Operations with additional release gates
 
