@@ -108,10 +108,11 @@ export class PreviewAccountRepository implements IAccountRepository {
     return { ...this.deletionStatus };
   }
 
-  async exportUserData(): Promise<{ downloadUrl?: string; requestedAt?: string }> {
+  async exportUserData(): Promise<{ downloadUrl?: string; requestedAt?: string; data?: unknown }> {
     return {
       downloadUrl: 'https://example.com/export/preview-usr-001.zip',
       requestedAt: new Date().toISOString(),
+      data: { user_id: 'preview-usr-001', profile: this.profile },
     };
   }
 }

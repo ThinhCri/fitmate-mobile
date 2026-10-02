@@ -31,7 +31,7 @@ export interface IAccountRepository {
   requestAccountDeletion(reason?: string): Promise<AccountDeletionStatusViewModel>;
   getDeletionStatus(): Promise<AccountDeletionStatusViewModel>;
   cancelAccountDeletion(): Promise<AccountDeletionStatusViewModel>;
-  exportUserData(): Promise<{ downloadUrl?: string; requestedAt?: string }>;
+  exportUserData(): Promise<{ downloadUrl?: string; requestedAt?: string; data?: unknown }>;
 }
 
 /**

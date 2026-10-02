@@ -190,13 +190,14 @@ export class ApiAccountRepository implements IAccountRepository {
     };
   }
 
-  async exportUserData(): Promise<{ downloadUrl?: string; requestedAt?: string }> {
+  async exportUserData(): Promise<{ downloadUrl?: string; requestedAt?: string; data?: unknown }> {
     const res = await apiClient<any>('/users/me/export', {
       method: 'POST',
     });
     return {
       downloadUrl: res.download_url || res.url,
       requestedAt: res.requested_at,
+      data: res,
     };
   }
 }

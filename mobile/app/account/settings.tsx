@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ActivityIndicator, Alert, Linking, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Share, View } from 'react-native';
 import { SettingsPresentation } from '@/features/account';
 import { SettingsViewModel } from '@/features/account/accountTypes';
 import { getAccountRepository } from '@/repositories/accountRepository';
@@ -29,7 +29,7 @@ export default function SettingsScreen() {
         onTermsPress={() => void openPolicy(settings.termsUrl, 'Điều khoản dịch vụ')}
         onNotificationsChange={(value) => void save({ notificationsEnabled: value, pushNotificationsEnabled: value })}
         onEmailAlertsChange={(value) => void save({ emailAlertsEnabled: value })}
-        onExportPress={() => void repository.exportUserData().then((result) => Alert.alert('Đã tiếp nhận', result.downloadUrl ? 'Dữ liệu đã sẵn sàng để tải xuống.' : 'Máy chủ đang chuẩn bị tệp và sẽ thông báo cho bạn.')).catch((e) => Alert.alert('Không thể xuất dữ liệu', e.message))}
+        onExportPress={() => void repository.exportUserData().then(async (result) => { if (result.downloadUrl) await Linking.openURL(result.downloadUrl); else await Share.share({ title: 'Dữ liệu Fitmate của tôi', message: JSON.stringify(result.data, null, 2) }); }).catch((e) => Alert.alert('Không thể xuất dữ liệu', e.message))}
         isDeletionPending={deletionPending}
         onDeleteAccountPress={() => Alert.alert('Yêu cầu xóa tài khoản', 'Tài khoản sẽ vào thời gian chờ xóa. Bạn có thể hủy yêu cầu trong thời gian này.', [{ text: 'Hủy', style: 'cancel' }, { text: 'Tiếp tục', style: 'destructive', onPress: () => void repository.requestAccountDeletion().then(() => setDeletionPending(true)).catch((e) => Alert.alert('Không thể gửi yêu cầu', e.message)) }])}
         onCancelDeletionPress={() => void repository.cancelAccountDeletion().then(() => setDeletionPending(false)).catch((e) => Alert.alert('Không thể hủy yêu cầu', e.message))}
