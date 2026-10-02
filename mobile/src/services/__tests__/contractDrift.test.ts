@@ -68,7 +68,7 @@ describe('Contract drift guard', () => {
     const raw = fs.readFileSync(BASELINE_PATH, 'utf-8');
     const baseline = JSON.parse(raw);
     expect(baseline.backendFrozenRevision).toBe(
-      '848a0455061382f1866fde1814ddbec13bf02fac'
+      'd0f13d2ea976e1e679a394ce74a28d73df4907c4'
     );
   });
 });
