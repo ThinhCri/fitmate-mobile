@@ -30,6 +30,7 @@ import { Card } from '@/components/design-system/Card';
 import { Badge } from '@/components/design-system/BadgesAndChips';
 import { LoadingSkeleton, EmptyState, ErrorState, OfflineState } from '@/components/design-system/FeedbackStates';
 import { useTabBarScroll } from '@/context/TabBarVisibilityContext';
+import { GradientBackground } from '@/components/design-system/GradientBackground';
 
 export interface NutritionDiaryPresentationProps {
   summary: DayNutritionSummaryViewModel;
@@ -117,6 +118,7 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
   };
 
   return (
+    <GradientBackground>
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
@@ -424,13 +426,14 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
         ))
       )}
     </ScrollView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   content: {
     padding: spacing.lg,

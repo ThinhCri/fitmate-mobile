@@ -26,6 +26,7 @@ import { Card } from '@/components/design-system/Card';
 import { EmptyState } from '@/components/design-system/FeedbackStates';
 import { CommunityPostViewModel } from './communityTypes';
 import { useTabBarScroll } from '@/context/TabBarVisibilityContext';
+import { GradientBackground } from '@/components/design-system/GradientBackground';
 
 export interface CommunityFeedPresentationProps {
   posts: CommunityPostViewModel[];
@@ -67,6 +68,7 @@ export function CommunityFeedPresentation({
   ] as const;
 
   return (
+    <GradientBackground>
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
@@ -287,13 +289,14 @@ export function CommunityFeedPresentation({
         ))}
       </View>
     </ScrollView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
   },
   content: {
     padding: spacing.md,

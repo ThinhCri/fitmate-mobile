@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/design-system/FeedbackStates';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { WorkoutPlanViewModel } from './workoutTypes';
 import { useTabBarScroll } from '@/context/TabBarVisibilityContext';
+import { GradientBackground } from '@/components/design-system/GradientBackground';
 
 export interface WorkoutOverviewPresentationProps {
   plans: WorkoutPlanViewModel[];
@@ -33,6 +34,7 @@ export function WorkoutOverviewPresentation({
   const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
   const currentDayIndex = (new Date().getDay() + 6) % 7;
   return (
+    <GradientBackground>
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
@@ -88,11 +90,12 @@ export function WorkoutOverviewPresentation({
         <Text style={styles.createButtonText}>Tạo kế hoạch mới</Text>
       </TouchableOpacity>
     </ScrollView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: spacing.lg, paddingBottom: 112 },
   weekStrip: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.xxl },
   dayCell: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },

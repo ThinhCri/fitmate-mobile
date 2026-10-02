@@ -20,6 +20,7 @@ import {
   OfflineState,
 } from '@/components/design-system/FeedbackStates';
 import { useTabBarScroll } from '@/context/TabBarVisibilityContext';
+import { GradientBackground } from '@/components/design-system/GradientBackground';
 
 export interface TrainerListPresentationProps {
   trainers: TrainerSummaryViewModel[];
@@ -62,6 +63,7 @@ export const TrainerListPresentation: React.FC<TrainerListPresentationProps> = (
 }) => {
   const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
   return (
+    <GradientBackground>
     <View style={styles.container}>
       <View style={styles.searchFilterHeader}>
         <SearchInput
@@ -136,13 +138,14 @@ export const TrainerListPresentation: React.FC<TrainerListPresentationProps> = (
         />
       )}
     </View>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   searchFilterHeader: {
     paddingHorizontal: spacing.lg,

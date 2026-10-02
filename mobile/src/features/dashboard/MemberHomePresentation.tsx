@@ -26,6 +26,7 @@ import { MemberDashboardSummary } from '@/services/api/types';
 import { SectionHeader } from '@/components/design-system/SectionHeader';
 import { PrimaryButton } from '@/components/design-system/Buttons';
 import { useTabBarScroll } from '@/context/TabBarVisibilityContext';
+import { GradientBackground } from '@/components/design-system/GradientBackground';
 
 export interface MemberHomePresentationProps {
   data: MemberDashboardSummary;
@@ -61,6 +62,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
     target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
 
   return (
+    <GradientBackground>
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
@@ -360,13 +362,14 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
         ))}
       </View>
     </ScrollView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   contentContainer: {
     paddingHorizontal: spacing.lg,

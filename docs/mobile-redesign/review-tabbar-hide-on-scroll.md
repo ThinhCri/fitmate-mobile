@@ -97,3 +97,29 @@
    ```
    - Bấm `a` để mở trên máy ảo Android (đã kết nối sẵn IP `10.0.2.2:5116`).
    - Hoặc quét mã QR trên điện thoại qua ứng dụng Expo Go.
+
+---
+
+## 6. Yêu Cầu Bổ Sung: Nền Gradient Glass Feel + Card Trắng Nổi
+
+### 6.1. Yêu cầu
+- "Cho tôi màu nền như đó đi (giống FloatingTabBar — nhìn xuyên, nhạt nhạt đẹp), mấy cái có nội dung thì màu bọc mấy nó trắng trắng và sắp xếp như nó."
+- Phạm vi: Tất cả 5 tab trong Mobile App (Dashboard, Workout, Nutrition, Social, Marketplace).
+
+### 6.2. Giải pháp
+- Tạo component `GradientBackground` sử dụng `expo-linear-gradient` (đã có sẵn trong `package.json`).
+- Gradient dọc từ mint nhạt `#E8FAF0` → `#F0FDF8` → `#F8FCFA` → `#FFFFFF` (trắng).
+- Card giữ nguyên nền trắng `#FFFFFF` với viền + shadow nhẹ → nổi lên trên nền gradient, tạo cảm giác "glass feel".
+
+### 6.3. Tệp thay đổi
+
+| STT | Đường dẫn tệp | Loại thao tác | Mục đích chi tiết |
+| :--- | :--- | :--- | :--- |
+| 17 | `mobile/src/components/design-system/GradientBackground.tsx` | **Tạo mới** | Component nền gradient mint-to-white, hỗ trợ 3 preset (default / warm / cool), dùng `expo-linear-gradient`. |
+| 18 | `mobile/src/features/dashboard/MemberHomePresentation.tsx` | **Chỉnh sửa** | Bọc `ScrollView` trong `GradientBackground`, đổi container bg → transparent. |
+| 19 | `mobile/src/features/workout/WorkoutOverviewPresentation.tsx` | **Chỉnh sửa** | Bọc `ScrollView` trong `GradientBackground`, đổi container bg → transparent. |
+| 20 | `mobile/src/features/nutrition/NutritionDiaryPresentation.tsx` | **Chỉnh sửa** | Bọc `ScrollView` trong `GradientBackground`, đổi container bg → transparent. |
+| 21 | `mobile/src/features/community/CommunityFeedPresentation.tsx` | **Chỉnh sửa** | Bọc `ScrollView` trong `GradientBackground`, đổi container bg → transparent. |
+| 22 | `mobile/src/features/trainer/TrainerListPresentation.tsx` | **Chỉnh sửa** | Bọc `View` + `FlatList` trong `GradientBackground`, đổi container bg → transparent. |
+| 23 | `mobile/src/components/design-system/Card.tsx` | **Chỉnh sửa** | Tăng shadow offset/radius cho variant `surface` để card nổi rõ hơn trên nền gradient. |
+
