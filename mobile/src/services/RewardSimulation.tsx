@@ -20,6 +20,7 @@ import { useAuth } from './AuthContext';
 import { bumpRandomKnowledgeReaction, getAllPostsSync, toggleReaction } from './postsStore';
 import { mockUserService } from './mockUserService';
 import { ToastService } from '@/components/ui/Toast';
+import { isPreviewMode } from '@/repositories/repositoryTypes';
 
 const TICK_INTERVAL_MS = 4000;
 
@@ -28,7 +29,9 @@ export function RewardSimulationProvider({ children }: { children: React.ReactNo
   const knownQualityPostsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!user) return;
+    // MOB-807: RewardSimulation is strictly isolated to preview mode.
+    // In production API mode, no synthetic points or reactions may be minted.
+    if (!user || !isPreviewMode()) return;
     const appStateListener = AppState.addEventListener('change', () => {
       // No-op for now; interval continues in background but React Native pauses timers.
     });
