@@ -47,6 +47,7 @@ type RoleType = 'member' | 'pt';
 
 export default function RegisterScreen() {
   const { register, error, clearError } = useAuth();
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [role, setRole] = useState<RoleType>('member');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -57,6 +58,12 @@ export default function RegisterScreen() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [specialty, setSpecialty] = useState('');
+  const [experienceYears, setExperienceYears] = useState('');
+  const [pricePerSessionVnd, setPricePerSessionVnd] = useState('');
+  const [heightCm, setHeightCm] = useState('');
+  const [weightKg, setWeightKg] = useState('');
+  const [fitnessGoal, setFitnessGoal] = useState('');
 
   // Password strength calculation
   const passwordStrength = useMemo(() => {
@@ -113,6 +120,40 @@ export default function RegisterScreen() {
       return;
     }
 
+    if (currentStep === 1) {
+      setCurrentStep(2);
+      return;
+    }
+
+    const parsedExperience = experienceYears.trim() === '' ? undefined : Number(experienceYears);
+    const parsedPrice = pricePerSessionVnd.trim() === '' ? undefined : Number(pricePerSessionVnd);
+    const parsedHeight = heightCm.trim() === '' ? undefined : Number(heightCm);
+    const parsedWeight = weightKg.trim() === '' ? undefined : Number(weightKg);
+
+    if (role === 'pt') {
+      if (!specialty.trim()) {
+        setLocalError('Vui lòng nhập chuyên môn của huấn luyện viên');
+        return;
+      }
+      if (!Number.isInteger(parsedExperience) || parsedExperience! < 0 || parsedExperience! > 70) {
+        setLocalError('Số năm kinh nghiệm phải là số nguyên từ 0 đến 70');
+        return;
+      }
+      if (!Number.isSafeInteger(parsedPrice) || parsedPrice! < 0) {
+        setLocalError('Giá mỗi buổi phải là số tiền VNĐ hợp lệ');
+        return;
+      }
+    } else {
+      if (parsedHeight !== undefined && (!Number.isFinite(parsedHeight) || parsedHeight <= 0 || parsedHeight > 300)) {
+        setLocalError('Chiều cao phải từ 1 đến 300 cm');
+        return;
+      }
+      if (parsedWeight !== undefined && (!Number.isFinite(parsedWeight) || parsedWeight <= 0 || parsedWeight > 500)) {
+        setLocalError('Cân nặng phải từ 1 đến 500 kg');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const result = await register({
@@ -120,6 +161,12 @@ export default function RegisterScreen() {
         password,
         fullName: trimmedName,
         role,
+        specialty: role === 'pt' ? specialty.trim() : undefined,
+        experienceYears: role === 'pt' ? parsedExperience : undefined,
+        pricePerSessionVnd: role === 'pt' ? parsedPrice : undefined,
+        heightCm: role === 'member' ? parsedHeight : undefined,
+        weightKg: role === 'member' ? parsedWeight : undefined,
+        fitnessGoal: role === 'member' ? fitnessGoal.trim() || undefined : undefined,
       });
 
       router.replace({
@@ -141,6 +188,11 @@ export default function RegisterScreen() {
       <View style={styles.topBar}>
         <TouchableOpacity
           onPress={() => {
+            if (currentStep === 2) {
+              setCurrentStep(1);
+              setLocalError(null);
+              return;
+            }
             if (router.canGoBack()) {
               router.back();
             } else {
@@ -165,28 +217,28 @@ export default function RegisterScreen() {
         {/* Stepper Indicator */}
         <View style={styles.stepperCard}>
           <View style={styles.stepperTrack}>
-            <View style={styles.stepperProgress} />
+            <View style={[styles.stepperProgress, currentStep === 2 && styles.stepperProgressComplete]} />
           </View>
           <View style={styles.stepperRow}>
             {/* Step 1 */}
             <View style={styles.stepItem}>
               <View style={[styles.stepCircle, styles.stepCircleActive]}>
-                <Text style={styles.stepCircleTextActive}>1</Text>
+                <Text style={styles.stepCircleTextActive}>{currentStep === 2 ? '✓' : '1'}</Text>
               </View>
               <Text style={styles.stepLabelActive}>Tài khoản</Text>
             </View>
             {/* Step 2 */}
             <View style={styles.stepItem}>
-              <View style={styles.stepCircle}>
-                <Text style={styles.stepCircleText}>2</Text>
+              <View style={[styles.stepCircle, currentStep === 2 && styles.stepCircleActive]}>
+                <Text style={currentStep === 2 ? styles.stepCircleTextActive : styles.stepCircleText}>2</Text>
               </View>
-              <Text style={styles.stepLabel}>Hồ sơ cá nhân</Text>
+              <Text style={currentStep === 2 ? styles.stepLabelActive : styles.stepLabel}>Hồ sơ cá nhân</Text>
             </View>
           </View>
         </View>
 
         {/* Role Selector (Choice Chips) */}
-        <View style={styles.roleSection}>
+        <View style={[styles.roleSection, currentStep !== 1 && styles.hidden]}>
           <Text style={styles.sectionTitle}>Vai trò tham gia của bạn</Text>
           <View style={styles.roleSelectorGrid}>
             {/* Option 1: Member */}
@@ -265,7 +317,7 @@ export default function RegisterScreen() {
             <View style={styles.ptNoticeBanner}>
               <ShieldAlert size={20} color={colors.warning} style={{ marginTop: 2, flexShrink: 0 }} />
               <Text style={styles.ptNoticeText}>
-                Tài khoản HLV cần tải chứng chỉ tại bước kế tiếp và qua quy trình xét duyệt hồ sơ trước khi chính thức hiển thị dịch vụ.
+                Sau khi xác minh email, HLV cần tải chứng chỉ trong Không gian PT và chờ xét duyệt trước khi hiển thị dịch vụ.
               </Text>
             </View>
           )}
@@ -280,7 +332,7 @@ export default function RegisterScreen() {
         ) : null}
 
         {/* Registration Form */}
-        <View style={styles.form}>
+        <View style={[styles.form, currentStep !== 1 && styles.hidden]}>
           {/* Full Name */}
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>
@@ -468,6 +520,51 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
 
+        {currentStep === 2 && (
+          <View style={styles.form}>
+            <View style={styles.profileStepHeader}>
+              <Text style={styles.profileStepTitle}>{role === 'pt' ? 'Thông tin nghề nghiệp PT' : 'Hồ sơ sức khỏe cơ bản'}</Text>
+              <Text style={styles.profileStepSubtitle}>{role === 'pt' ? 'Các trường dưới đây là bắt buộc để tạo hồ sơ huấn luyện viên.' : 'Bạn có thể bổ sung các thông tin này ngay bây giờ hoặc cập nhật sau.'}</Text>
+            </View>
+
+            {role === 'pt' ? (
+              <>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Chuyên môn <Text style={styles.requiredAsterisk}>*</Text></Text>
+                  <View style={styles.inputWrapper}><TextInput style={styles.input} value={specialty} onChangeText={(value) => { setSpecialty(value); setLocalError(null); }} placeholder="Ví dụ: Tăng cơ, giảm mỡ" placeholderTextColor={colors.textMuted} maxLength={200} /></View>
+                </View>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Số năm kinh nghiệm <Text style={styles.requiredAsterisk}>*</Text></Text>
+                  <View style={styles.inputWrapper}><TextInput style={styles.input} value={experienceYears} onChangeText={(value) => { setExperienceYears(value.replace(/[^0-9]/g, '')); setLocalError(null); }} placeholder="Ví dụ: 3" placeholderTextColor={colors.textMuted} keyboardType="number-pad" maxLength={2} /></View>
+                </View>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Giá mỗi buổi (VNĐ) <Text style={styles.requiredAsterisk}>*</Text></Text>
+                  <View style={styles.inputWrapper}><TextInput style={styles.input} value={pricePerSessionVnd} onChangeText={(value) => { setPricePerSessionVnd(value.replace(/[^0-9]/g, '')); setLocalError(null); }} placeholder="Ví dụ: 300000" placeholderTextColor={colors.textMuted} keyboardType="number-pad" maxLength={12} /></View>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Chiều cao (cm)</Text>
+                  <View style={styles.inputWrapper}><TextInput style={styles.input} value={heightCm} onChangeText={(value) => setHeightCm(value.replace(/[^0-9.]/g, ''))} placeholder="Ví dụ: 170" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" /></View>
+                </View>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Cân nặng (kg)</Text>
+                  <View style={styles.inputWrapper}><TextInput style={styles.input} value={weightKg} onChangeText={(value) => setWeightKg(value.replace(/[^0-9.]/g, ''))} placeholder="Ví dụ: 65" placeholderTextColor={colors.textMuted} keyboardType="decimal-pad" /></View>
+                </View>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Mục tiêu tập luyện</Text>
+                  <View style={styles.inputWrapper}><TextInput style={styles.input} value={fitnessGoal} onChangeText={setFitnessGoal} placeholder="Ví dụ: Tăng cơ và cải thiện sức bền" placeholderTextColor={colors.textMuted} /></View>
+                </View>
+              </>
+            )}
+
+            <TouchableOpacity style={[styles.submitButton, submitting && styles.submitButtonDisabled]} activeOpacity={0.85} onPress={handleSubmit} disabled={submitting} accessibilityRole="button" accessibilityLabel="Hoàn tất đăng ký">
+              {submitting ? <ActivityIndicator color={colors.white} size="small" /> : <><Text style={styles.submitButtonText}>Hoàn tất đăng ký</Text><ArrowRight size={20} color={colors.white} /></>}
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Login Link Alternative */}
         <View style={styles.loginRow}>
           <Text style={styles.loginRowPrompt}>Đã có tài khoản?</Text>
@@ -537,6 +634,9 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: colors.primary,
     borderRadius: radius.full,
+  },
+  stepperProgressComplete: {
+    width: '100%',
   },
   stepperRow: {
     flexDirection: 'row',
@@ -670,6 +770,22 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: spacing.md,
+  },
+  hidden: {
+    display: 'none',
+  },
+  profileStepHeader: {
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  profileStepTitle: {
+    ...typography.title2,
+    color: colors.textPrimary,
+    fontWeight: '700',
+  },
+  profileStepSubtitle: {
+    ...typography.body,
+    color: colors.textSecondary,
   },
   fieldGroup: {
     gap: spacing.xs,
