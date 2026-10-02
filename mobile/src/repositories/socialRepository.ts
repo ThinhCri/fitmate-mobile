@@ -1,11 +1,19 @@
-import { CommunityPostViewModel, FriendItemViewModel, ReportRequest } from '@/features/community';
-import { ConversationDetailViewModel, ChatMessageViewModel } from '@/features/chat';
+import { CommunityPostViewModel, CreatePostFormValues, FriendItemViewModel, PostCommentViewModel, ReportRequest, UserPublicProfileViewModel } from '@/features/community';
+import { ConversationDetailViewModel, ConversationItemViewModel, ChatMessageViewModel } from '@/features/chat';
 import { getDataSourceMode } from './repositoryTypes';
 import { apiSocialRepository } from './api/apiSocialRepository';
 import { previewSocialRepository } from './preview/previewSocialRepository';
 
 export interface ISocialRepository {
   listPosts(scope?: 'public' | 'friends'): Promise<CommunityPostViewModel[]>;
+  getPost(id: string): Promise<CommunityPostViewModel>;
+  createPost(values: CreatePostFormValues): Promise<CommunityPostViewModel>;
+  addComment(postId: string, text: string): Promise<PostCommentViewModel>;
+  deletePost(postId: string): Promise<void>;
+  blockUser(userId: string): Promise<void>;
+  getPublicProfile(userId: string): Promise<{ profile: UserPublicProfileViewModel; requestId?: string }>;
+  searchUsers(query: string): Promise<FriendItemViewModel[]>;
+  listConversations(): Promise<ConversationItemViewModel[]>;
   reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<void>;
   getFriends(): Promise<{
     friends: FriendItemViewModel[];
@@ -16,6 +24,7 @@ export interface ISocialRepository {
   sendFriendRequest(targetUserId: string): Promise<void>;
   acceptFriendRequest(requestId: string): Promise<void>;
   rejectFriendRequest(requestId: string): Promise<void>;
+  cancelFriendRequest(requestId: string): Promise<void>;
   unfriend(targetUserId: string): Promise<void>;
   getConversation(id: string): Promise<ConversationDetailViewModel>;
   sendMessage(conversationId: string, text: string): Promise<ChatMessageViewModel>;

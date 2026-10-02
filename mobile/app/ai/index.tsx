@@ -1,59 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import {
-  AiConversationListPresentation,
-  AiConversationSummaryViewModel,
-} from '@/features/ai';
-import { isPreviewMode } from '@/repositories/repositoryTypes';
+import { AiConversationListPresentation, AiConversationSummaryViewModel } from '@/features/ai';
+import { aiService } from '@/services/api/aiService';
+import { systemService } from '@/services/api/systemService';
 
 export default function AiConversationsScreen() {
-  const isPreview = isPreviewMode();
-  const [conversations, setConversations] = useState<AiConversationSummaryViewModel[]>(
-    isPreview
-      ? [
-          {
-            id: 'ai-1',
-            title: 'Tư vấn lượng protein cho người tập tăng cơ',
-            lastMessagePreview:
-              'Dựa trên cân nặng 67.8kg và cường độ tập của bạn, mức nạp khuyến nghị là...',
-            lastUpdatedAt: 'Hôm nay 09:15',
-            category: 'nutrition',
-          },
-          {
-            id: 'ai-2',
-            title: 'Điều chỉnh lịch tập ngực khi bị mỏi vai',
-            lastMessagePreview:
-              'Bạn nên hạ 10% mức tạ Bench Press và tăng bài khởi động Face Pull...',
-            lastUpdatedAt: '26/09/2026',
-            category: 'workout',
-          },
-        ]
-      : []
-  );
-
-  const handleDeleteConversation = (id: string) => {
-    setConversations((prev) => prev.filter((c) => c.id !== id));
-  };
-
-  const handleNewConversation = (initialPrompt?: string) => {
-    const newId = `ai-${Date.now()}`;
-    const query = initialPrompt ? `?prompt=${encodeURIComponent(initialPrompt)}` : '';
-    router.push(`/ai/${newId}${query}` as any);
-  };
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <AiConversationListPresentation
-        conversations={conversations}
-        isAiAvailable={isPreview}
-        onBack={() => router.back()}
-        onSelectConversation={(id) => router.push(`/ai/${id}` as any)}
-        onNewConversation={handleNewConversation}
-        onDeleteConversation={handleDeleteConversation}
-        onManualWorkoutNavigation={() => router.push('/(tabs)/workout' as any)}
-        onManualNutritionNavigation={() => router.push('/(tabs)/nutrition' as any)}
-      />
-    </SafeAreaView>
-  );
+  const [items, setItems] = useState<AiConversationSummaryViewModel[]>([]); const [available, setAvailable] = useState(false); const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const caps = await systemService.getCapabilities();
+        const enabled = caps.ai.enabled && caps.ai.companion_chat;
+        setAvailable(enabled);
+        setItems(enabled ? await aiService.listThreads() : []);
+      } catch {
+        setAvailable(false);
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+  const create = async (prompt?: string) => { try { const id = await aiService.createThread(prompt ? prompt.slice(0, 80) : 'Cuộc trò chuyện mới'); router.push({ pathname: '/ai/[id]' as never, params: { id, ...(prompt ? { prompt } : {}) } }); } catch (e) { Alert.alert('Không thể tạo cuộc trò chuyện', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } };
+  if (loading) return <SafeAreaView style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator /></SafeAreaView>;
+  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><AiConversationListPresentation conversations={items} isAiAvailable={available} onBack={() => router.back()} onSelectConversation={(id) => router.push(`/ai/${id}` as never)} onNewConversation={(prompt) => void create(prompt)} onDeleteConversation={() => Alert.alert('Chưa hỗ trợ', 'Backend chưa có API xóa cuộc trò chuyện AI.')} onManualWorkoutNavigation={() => router.push('/(tabs)/workout' as never)} onManualNutritionNavigation={() => router.push('/(tabs)/nutrition' as never)} /></SafeAreaView>;
 }

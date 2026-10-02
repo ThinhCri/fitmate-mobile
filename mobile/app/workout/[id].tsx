@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { PlanDetailPresentation } from '../../src/features/workout/PlanDetailPresentation';
 import { WorkoutPlanViewModel } from '../../src/features/workout/workoutTypes';
@@ -50,8 +50,8 @@ export default function PlanDetailScreen() {
         plan={plan}
         onBack={() => router.back()}
         onStartSession={() => router.push(`/workout/active-session?planId=${encodeURIComponent(plan.id)}` as any)}
-        onEditPlan={() => router.push('/workout/editor' as any)}
-        onDeletePlan={() => router.back()}
+        onEditPlan={() => router.push(`/workout/editor?id=${encodeURIComponent(plan.id)}` as any)}
+        onDeletePlan={async () => { try { await getWorkoutRepository().deletePlan(plan.id); router.replace('/(tabs)/workout' as never); } catch (err) { Alert.alert('Không thể xóa giáo án', err instanceof Error ? err.message : 'Vui lòng thử lại.'); } }}
       />
     </View>
   );

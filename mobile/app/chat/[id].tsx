@@ -79,16 +79,10 @@ export default function ConversationScreen() {
   };
 
   const handleRetryMessage = (messageId: string) => {
-    setConversation((prev) =>
-      prev
-        ? {
-            ...prev,
-            messages: prev.messages.map((m) =>
-              m.id === messageId ? { ...m, status: 'sent' } : m
-            ),
-          }
-        : prev
-    );
+    const message = conversation?.messages.find((item) => item.id === messageId);
+    if (!message) return;
+    setConversation((prev) => prev ? { ...prev, messages: prev.messages.filter((item) => item.id !== messageId) } : prev);
+    void handleSendMessage(message.text);
   };
 
   const handleSubmitReport = async (report: ReportRequest): Promise<boolean> => {
@@ -100,8 +94,9 @@ export default function ConversationScreen() {
     }
   };
 
-  const handleConfirmBlock = (_userId: string) => {
-    setConversation((prev) => (prev ? { ...prev, isRestricted: true } : prev));
+  const handleConfirmBlock = async (userId: string): Promise<boolean> => {
+    try { await getSocialRepository().blockUser(userId); setConversation((prev) => (prev ? { ...prev, isRestricted: true } : prev)); return true; }
+    catch { return false; }
   };
 
   if (loading) {

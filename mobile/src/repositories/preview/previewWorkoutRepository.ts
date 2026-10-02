@@ -170,6 +170,9 @@ let previewWeightRecords: WeightRecordViewModel[] = [
 ];
 
 export class PreviewWorkoutRepository implements IWorkoutRepository {
+  async createPlan(_plan: Partial<WorkoutPlanViewModel>): Promise<string> { return `preview-plan-${Date.now()}`; }
+  async updatePlan(_id: string, _plan: Partial<WorkoutPlanViewModel>): Promise<void> {}
+  async deletePlan(_id: string): Promise<void> {}
   async listPlans(): Promise<WorkoutPlanViewModel[]> {
     return [{ ...MOCK_PLAN, exercises: [...MOCK_PLAN.exercises] }];
   }

@@ -35,6 +35,7 @@ export interface CreatePostPresentationProps {
   onSubmit: (values: CreatePostFormValues) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  onPickImage?: () => Promise<string | undefined>;
 }
 
 const AVAILABLE_WORKOUT_TAGS = [
@@ -58,6 +59,7 @@ export function CreatePostPresentation({
   onSubmit,
   onCancel,
   isSubmitting = false,
+  onPickImage,
 }: CreatePostPresentationProps) {
   const [content, setContent] = useState(initialValues?.content || '');
   const [visibility, setVisibility] = useState<'public' | 'friends' | 'private'>(
@@ -102,14 +104,14 @@ export function CreatePostPresentation({
     );
   };
 
-  const handleAddSampleImage = () => {
-    if (images.length >= 4) {
-      Alert.alert('Giới hạn', 'Bạn chỉ có thể đính kèm tối đa 4 hình ảnh.');
+  const handleAddImage = async () => {
+    if (images.length >= 1) {
+      Alert.alert('Giới hạn', 'Phiên bản hiện tại hỗ trợ một hình ảnh cho mỗi bài viết.');
       return;
     }
-    // Simulation / stub image uri for client testing
-    const placeholder = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600';
-    setImages((prev) => [...prev, placeholder]);
+    if (!onPickImage) return;
+    const uri = await onPickImage();
+    if (uri) setImages((prev) => [...prev, uri]);
   };
 
   const handleRemoveImage = (index: number) => {
@@ -246,7 +248,7 @@ export function CreatePostPresentation({
 
         {/* Media Preview & Upload */}
         <View style={styles.sectionBlock}>
-          <Text style={styles.sectionHeader}>Hình ảnh đính kèm ({images.length}/4)</Text>
+          <Text style={styles.sectionHeader}>Hình ảnh đính kèm ({images.length}/1)</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaRow}>
             {images.map((imgUri, idx) => (
               <View key={idx} style={styles.imageThumbnailWrapper}>
@@ -261,10 +263,10 @@ export function CreatePostPresentation({
               </View>
             ))}
 
-            {images.length < 4 && (
+            {images.length < 1 && (
               <TouchableOpacity
                 style={styles.addPhotoCard}
-                onPress={handleAddSampleImage}
+                onPress={() => void handleAddImage()}
                 accessibilityRole="button"
                 accessibilityLabel="Thêm ảnh"
               >

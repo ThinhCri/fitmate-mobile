@@ -35,6 +35,22 @@ export default function FindFriendsScreen() {
       });
   }, []);
 
+  useEffect(() => {
+    if (!searchQuery.trim()) return;
+    let active = true;
+    getSocialRepository().searchUsers(searchQuery).then((items) => {
+      if (!active) return;
+      const relationships = new Map(
+        [...friendsList, ...pendingRequests, ...sentRequests].map((item) => [item.id, item])
+      );
+      setAllUsers(items.map((item) => relationships.has(item.id)
+        ? { ...item, ...relationships.get(item.id) }
+        : item));
+      setError(null);
+    }).catch((err) => { if (active) setError(err instanceof Error ? err.message : 'Không thể tìm người dùng'); });
+    return () => { active = false; };
+  }, [friendsList, pendingRequests, searchQuery, sentRequests]);
+
   const searchResults = allUsers.filter((u) =>
     u.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -48,37 +64,43 @@ export default function FindFriendsScreen() {
         { ...target, relationship: 'friend' },
       ]);
       try {
-        await getSocialRepository().acceptFriendRequest(friendId);
-      } catch {
-        // Handled silently or reverted
+        if (!target.requestId) throw new Error('Thiếu mã lời mời kết bạn.');
+        await getSocialRepository().acceptFriendRequest(target.requestId);
+      } catch (err) {
+        setPendingRequests((prev) => [...prev, target]);
+        setFriendsList((prev) => prev.filter((item) => item.id !== target.id));
+        setError(err instanceof Error ? err.message : 'Không thể chấp nhận lời mời');
       }
     }
   };
 
   const handleRejectRequest = async (friendId: string) => {
-    setPendingRequests((prev) => prev.filter((r) => r.id !== friendId));
+    const target = pendingRequests.find((item) => item.id === friendId);
+    if (!target?.requestId) return;
     try {
-      await getSocialRepository().rejectFriendRequest(friendId);
-    } catch {
-      // Ignored
+      await getSocialRepository().rejectFriendRequest(target.requestId);
+      setPendingRequests((prev) => prev.filter((r) => r.id !== friendId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể từ chối lời mời');
     }
   };
 
-  const handleCancelSentRequest = (friendId: string) => {
-    setSentRequests((prev) => prev.filter((r) => r.id !== friendId));
+  const handleCancelSentRequest = async (friendId: string) => {
+    const target = sentRequests.find((item) => item.id === friendId);
+    if (!target?.requestId) return;
+    try { await getSocialRepository().cancelFriendRequest(target.requestId); setSentRequests((prev) => prev.filter((r) => r.id !== friendId)); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Không thể hủy lời mời'); }
   };
 
   const handleSendRequest = async (friendId: string) => {
     const user = allUsers.find((u) => u.id === friendId);
     if (user) {
-      setSentRequests((prev) => [
-        ...prev,
-        { ...user, relationship: 'sent_request' },
-      ]);
       try {
         await getSocialRepository().sendFriendRequest(friendId);
-      } catch {
-        // Ignored
+        const refreshed = await getSocialRepository().getFriends();
+        setSentRequests(refreshed.sentRequests);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Không thể gửi lời mời');
       }
     }
   };

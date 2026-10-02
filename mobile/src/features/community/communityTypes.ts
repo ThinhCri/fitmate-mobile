@@ -75,11 +75,12 @@ export interface UserPublicProfileViewModel {
 
 export interface FriendItemViewModel {
   id: string;
+  requestId?: string;
   name: string;
   role: 'member' | 'pt';
   isOnline?: boolean;
   mutualFriendsCount?: number;
-  relationship: 'friend' | 'received_request' | 'sent_request';
+  relationship: 'friend' | 'received_request' | 'sent_request' | 'none';
   requestDate?: string;
   headline?: string;
 }

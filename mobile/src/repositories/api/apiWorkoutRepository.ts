@@ -6,8 +6,31 @@ import {
 } from '@/features/workout/workoutTypes';
 import type { IWorkoutRepository, MonthlyWorkoutStats } from '../workoutRepository';
 import { apiClient } from '@/services/api/client';
+import { createUuid } from '@/utils/uuid';
 
 export class ApiWorkoutRepository implements IWorkoutRepository {
+  private toPlanPayload(plan: Partial<WorkoutPlanViewModel>) {
+    return {
+      day_of_week: plan.category,
+      workout_name: plan.title,
+      duration_minutes: plan.durationMinutes,
+      target_calories_burn: plan.caloriesEstimate ?? 0,
+      exercises: (plan.exercises || []).map((item) => ({ name: item.name, type: item.type, sets: item.sets, reps: item.repsPerSet, duration_sec: item.durationSeconds, rest_sec: item.restSeconds, calories: item.caloriesEstimate, notes: item.instructions })),
+    };
+  }
+
+  async createPlan(plan: Partial<WorkoutPlanViewModel>): Promise<string> {
+    const result = await apiClient<{ id: string }>('/me/workout/plans', { method: 'POST', body: JSON.stringify(this.toPlanPayload(plan)) });
+    return result.id;
+  }
+
+  async updatePlan(id: string, plan: Partial<WorkoutPlanViewModel>): Promise<void> {
+    await apiClient(`/me/workout/plans/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(this.toPlanPayload(plan)) });
+  }
+
+  async deletePlan(id: string): Promise<void> {
+    await apiClient(`/me/workout/plans/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  }
   async listPlans(): Promise<WorkoutPlanViewModel[]> {
     const raw = await apiClient<{
       items: Array<{
@@ -220,8 +243,7 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
     status: 'completed' | 'endedEarly';
   }): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10);
-    const clientId =
-      'c-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+    const clientId = createUuid();
     const result = await apiClient<{ id: string }>('/me/workout/sessions', {
       method: 'POST',
       body: JSON.stringify({

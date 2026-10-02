@@ -20,6 +20,9 @@ export interface MonthlyWorkoutStats {
 export interface IWorkoutRepository {
   listPlans(): Promise<WorkoutPlanViewModel[]>;
   getPlan(id: string): Promise<WorkoutPlanViewModel>;
+  createPlan(plan: Partial<WorkoutPlanViewModel>): Promise<string>;
+  updatePlan(id: string, plan: Partial<WorkoutPlanViewModel>): Promise<void>;
+  deletePlan(id: string): Promise<void>;
   getHistory(): Promise<{
     sessions: WorkoutHistoryItemViewModel[];
     stats: MonthlyWorkoutStats;

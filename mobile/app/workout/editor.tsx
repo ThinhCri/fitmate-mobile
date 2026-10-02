@@ -1,58 +1,15 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { PlanEditorPresentation } from '../../src/features/workout/PlanEditorPresentation';
-import { WorkoutPlanViewModel } from '../../src/features/workout/workoutTypes';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { PlanEditorPresentation } from '@/features/workout/PlanEditorPresentation';
+import { WorkoutPlanViewModel } from '@/features/workout/workoutTypes';
+import { getWorkoutRepository } from '@/repositories/workoutRepository';
 
-const INITIAL_PLAN: WorkoutPlanViewModel = {
-  id: 'new-plan',
-  title: 'Giáo án mới',
-  category: 'Toàn thân',
-  description: 'Giáo án tự thiết kế cho mục tiêu cá nhân.',
-  durationMinutes: 40,
-  caloriesEstimate: 280,
-  isActive: true,
-  exercises: [
-    {
-      id: 'ex-1',
-      name: 'Hít đất (Push-up)',
-      type: 'reps',
-      sets: 3,
-      repsPerSet: 15,
-      restSeconds: 60,
-      caloriesEstimate: 50,
-      targetMuscle: 'Ngực & Tay sau',
-    },
-    {
-      id: 'ex-2',
-      name: 'Squat thể trọng',
-      type: 'reps',
-      sets: 4,
-      repsPerSet: 20,
-      restSeconds: 60,
-      caloriesEstimate: 80,
-      targetMuscle: 'Chân & Đùi',
-    },
-  ],
-};
-
+const EMPTY_PLAN: Partial<WorkoutPlanViewModel> = { title: '', category: 'Toàn thân', description: '', durationMinutes: 45, caloriesEstimate: 0, isActive: true, exercises: [] };
 export default function PlanEditorScreen() {
-  const router = useRouter();
-
-  return (
-    <View style={styles.container}>
-      <PlanEditorPresentation
-        initialPlan={INITIAL_PLAN}
-        onSave={(_updated) => router.back()}
-        onBack={() => router.back()}
-      />
-    </View>
-  );
+  const router = useRouter(); const { id } = useLocalSearchParams<{ id?: string }>(); const [plan, setPlan] = useState<Partial<WorkoutPlanViewModel> | null>(id ? null : EMPTY_PLAN); const [saving, setSaving] = useState(false);
+  useEffect(() => { if (!id) return; getWorkoutRepository().getPlan(id).then(setPlan).catch((e) => Alert.alert('Không thể tải giáo án', e instanceof Error ? e.message : 'Vui lòng thử lại.', [{ text: 'Quay lại', onPress: () => router.back() }])); }, [id, router]);
+  const save = async (value: Partial<WorkoutPlanViewModel>) => { setSaving(true); try { if (id) { await getWorkoutRepository().updatePlan(id, value); router.replace(`/workout/${id}` as never); } else { const createdId = await getWorkoutRepository().createPlan(value); router.replace(`/workout/${createdId}` as never); } } catch (e) { Alert.alert('Không thể lưu giáo án', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } finally { setSaving(false); } };
+  return <View style={styles.container}>{plan ? <PlanEditorPresentation initialPlan={plan} onSave={(value) => void save(value)} onBack={() => router.back()} isSaving={saving} /> : <ActivityIndicator />}</View>;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-});
+const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#F8FAFC', justifyContent: 'center' } });
