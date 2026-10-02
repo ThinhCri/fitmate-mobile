@@ -35,6 +35,7 @@ import {
   Award,
 } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
+import { requestInitialPermissionsOnce } from '@/services/initialPermissions';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { authService } from '@/services/api/authService';
@@ -72,6 +73,7 @@ export default function LoginScreen() {
     setSubmitting(true);
     try {
       await login(trimmedEmail, password);
+      await requestInitialPermissionsOnce(trimmedEmail).catch(() => {});
       router.replace('/(tabs)/dashboard');
     } catch (err: unknown) {
       const problem = err instanceof ApiError && typeof err.data === 'object' && err.data !== null

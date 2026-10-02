@@ -11,7 +11,8 @@
       "bundleIdentifier": "vn.fitmate.app"
     },
     "android": {
-      "package": "vn.fitmate.app"
+      "package": "vn.fitmate.app",
+      "permissions": ["android.permission.POST_NOTIFICATIONS"]
     },
     "web": {
       "bundler": "metro",
