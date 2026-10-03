@@ -49,8 +49,10 @@ export type BookingStatus =
   | 'hold_pending_payment'
   | 'confirmed'
   | 'in_progress'
+  | 'awaiting_member_confirmation'
   | 'completed'
   | 'cancelled'
+  | 'disputed'
   | 'no_show';
 
 export type PaymentStatus =
@@ -76,6 +78,9 @@ export interface BookingAppointmentViewModel {
   canCancel: boolean;
   canReschedule: boolean;
   canReview: boolean;
+  canConfirmCompletion: boolean;
+  canDispute: boolean;
+  memberConfirmationDeadlineUtc?: string;
   notes?: string;
 }
 

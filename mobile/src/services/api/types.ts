@@ -12,7 +12,6 @@ export interface UserSummary {
   full_name: string;
   role: 'member' | 'pt' | 'admin';
   avatar_url?: string | null;
-  bio?: string | null;
   pt_verification_status?: 'pendingdocuments' | 'pendingreview' | 'needsmoreinformation' | 'approved' | 'rejectedfraud' | null;
 }
 
@@ -21,6 +20,7 @@ export interface UserProfile {
   email: string;
   full_name: string;
   avatar_url?: string | null;
+  bio?: string | null;
   phone?: string | null;
   gender?: 'male' | 'female' | 'other';
   birthday?: string | null;
@@ -430,7 +430,10 @@ export type AppointmentStatusWire =
   | 'InProgress'
   | 'Completed'
   | 'Cancelled'
-  | 'Expired';
+  | 'Expired'
+  | 'AwaitingMemberConfirmation'
+  | 'Disputed'
+  | 'NoShow';
 
 export type PaymentStatusWire =
   | 'Pending'
@@ -462,6 +465,9 @@ export interface AppointmentWire {
   started_at_utc?: string | null;
   completed_at_utc?: string | null;
   cancelled_at_utc?: string | null;
+  completion_submitted_at_utc?: string | null;
+  member_confirmation_deadline_utc?: string | null;
+  disputed_at_utc?: string | null;
   rescheduled_count: number;
   price_listed_vnd: number;
   discount_vnd: number;

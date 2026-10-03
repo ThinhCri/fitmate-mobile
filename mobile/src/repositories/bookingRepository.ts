@@ -10,6 +10,8 @@ export interface IBookingRepository {
   listMyAppointments(filter?: { status?: string }): Promise<BookingAppointmentViewModel[]>;
   getAppointmentDetail(id: string): Promise<BookingAppointmentViewModel>;
   cancelAppointment(id: string, reason: string): Promise<BookingAppointmentViewModel>;
+  confirmCompletion(id: string): Promise<BookingAppointmentViewModel>;
+  disputeCompletion(id: string, reason: string): Promise<BookingAppointmentViewModel>;
   rescheduleAppointment(id: string, newSlotStartUtc: string, reason: string): Promise<void>;
   createHold(params: {
     ptId: string;

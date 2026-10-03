@@ -59,7 +59,7 @@ export const bookingService = {
   },
 
   /**
-   * Create temporary hold (TTL 5 minutes)
+   * Create temporary hold (TTL 10 minutes)
    * Operation: createBookingHold
    * Endpoint: POST /bookings/holds
    */
@@ -137,6 +137,20 @@ export const bookingService = {
     return apiClient<AppointmentWire>(
       '/me/bookings/' + encodeURIComponent(id) + '/complete',
       { method: 'POST' }
+    );
+  },
+
+  async confirmCompletion(id: string): Promise<AppointmentWire> {
+    return apiClient<AppointmentWire>(
+      '/me/bookings/' + encodeURIComponent(id) + '/confirm-completion',
+      { method: 'POST' }
+    );
+  },
+
+  async disputeCompletion(id: string, reason: string): Promise<AppointmentWire> {
+    return apiClient<AppointmentWire>(
+      '/me/bookings/' + encodeURIComponent(id) + '/dispute',
+      { method: 'POST', body: JSON.stringify({ reason }) }
     );
   },
 

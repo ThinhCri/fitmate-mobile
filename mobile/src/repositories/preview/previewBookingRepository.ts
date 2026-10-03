@@ -28,6 +28,8 @@ const PREVIEW_APPOINTMENTS: BookingAppointmentViewModel[] = [
     canCancel: true,
     canReschedule: true,
     canReview: false,
+    canConfirmCompletion: false,
+    canDispute: false,
   },
   {
     id: 'bk-2',
@@ -52,6 +54,8 @@ const PREVIEW_APPOINTMENTS: BookingAppointmentViewModel[] = [
     canCancel: false,
     canReschedule: false,
     canReview: true,
+    canConfirmCompletion: false,
+    canDispute: false,
   },
 ];
 
@@ -86,6 +90,20 @@ export class PreviewBookingRepository implements IBookingRepository {
     return updated;
   }
 
+  async confirmCompletion(id: string): Promise<BookingAppointmentViewModel> {
+    const item = await this.getAppointmentDetail(id);
+    const updated = { ...item, bookingStatus: 'completed' as const, canConfirmCompletion: false, canDispute: false, canReview: true };
+    this.appointments = this.appointments.map((a) => (a.id === id ? updated : a));
+    return updated;
+  }
+
+  async disputeCompletion(id: string, _reason: string): Promise<BookingAppointmentViewModel> {
+    const item = await this.getAppointmentDetail(id);
+    const updated = { ...item, bookingStatus: 'disputed' as const, canConfirmCompletion: false, canDispute: false };
+    this.appointments = this.appointments.map((a) => (a.id === id ? updated : a));
+    return updated;
+  }
+
   async rescheduleAppointment(_id: string, _newSlotStartUtc: string, _reason: string): Promise<void> {
     // preview no-op
   }
@@ -101,7 +119,7 @@ export class PreviewBookingRepository implements IBookingRepository {
   }> {
     return {
       holdId: 'preview-hold-1',
-      expiresAtUtc: new Date(Date.now() + 300000).toISOString(),
+      expiresAtUtc: new Date(Date.now() + 600000).toISOString(),
       appointmentId: 'preview-apt-1',
     };
   }
@@ -111,7 +129,7 @@ export class PreviewBookingRepository implements IBookingRepository {
   ): Promise<{ holdId: string; expiresAt: string; isActive: boolean }> {
     return {
       holdId,
-      expiresAt: new Date(Date.now() + 300000).toISOString(),
+      expiresAt: new Date(Date.now() + 600000).toISOString(),
       isActive: true,
     };
   }
@@ -128,9 +146,9 @@ export class PreviewBookingRepository implements IBookingRepository {
       requestedAmountVnd: 300000,
       refundAmountVnd: 300000,
       requestedAt: '2026-09-28T14:30:00Z',
-      reason: 'Hủy lịch hẹn trước 12h theo chính sách hoàn tiền 100%.',
+      reason: 'Hủy lịch hẹn trước 24 giờ theo chính sách hoàn tiền 100%.',
       cancellationPolicyNotice:
-        'Hoàn trả 100% khi hủy trước ít nhất 12 giờ theo chính sách Fitmate.',
+        'Hoàn trả 100% khi hủy trước ít nhất 24 giờ theo chính sách Fitmate.',
     };
   }
 }

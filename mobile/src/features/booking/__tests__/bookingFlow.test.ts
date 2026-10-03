@@ -66,7 +66,9 @@ describe('Booking Flow & Appointment Logic (Stitch E03 - E09)', () => {
       createdAt: '2026-09-28T10:00:00Z',
       canCancel: true,
       canReschedule: true,
-      canReview: false,
+    canReview: false,
+    canConfirmCompletion: false,
+    canDispute: false,
     };
 
     expect(appointment.bookingStatus).toBe('confirmed');

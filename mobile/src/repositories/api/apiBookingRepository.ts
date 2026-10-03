@@ -54,12 +54,21 @@ export function mapAppointmentWireToViewModel(
     case 'InProgress':
       bookingStatus = 'in_progress';
       break;
+    case 'AwaitingMemberConfirmation':
+      bookingStatus = 'awaiting_member_confirmation';
+      break;
     case 'Completed':
       bookingStatus = 'completed';
       break;
     case 'Cancelled':
     case 'Expired':
       bookingStatus = 'cancelled';
+      break;
+    case 'Disputed':
+      bookingStatus = 'disputed';
+      break;
+    case 'NoShow':
+      bookingStatus = 'no_show';
       break;
     default:
       bookingStatus = 'confirmed';
@@ -94,9 +103,14 @@ export function mapAppointmentWireToViewModel(
     paymentStatus,
     paidAmountVnd: wire.actual_paid_vnd,
     createdAt: wire.slot_start_utc,
-    canCancel: wire.status === 'Confirmed' || wire.status === 'Pending',
+    canCancel:
+      (wire.status === 'Confirmed' || wire.status === 'Pending') &&
+      slotDate.getTime() - Date.now() >= 24 * 60 * 60 * 1000,
     canReschedule: wire.status === 'Confirmed' && wire.rescheduled_count < 1,
     canReview: wire.status === 'Completed',
+    canConfirmCompletion: wire.status === 'AwaitingMemberConfirmation',
+    canDispute: wire.status === 'AwaitingMemberConfirmation',
+    memberConfirmationDeadlineUtc: wire.member_confirmation_deadline_utc ?? undefined,
   };
 }
 
@@ -156,6 +170,18 @@ export class ApiBookingRepository implements IBookingRepository {
 
   async cancelAppointment(id: string, reason: string): Promise<BookingAppointmentViewModel> {
     const wire = await bookingService.cancelMyBooking(id, reason);
+    const coach = await this.getCoachSummary(wire.pt_user_id);
+    return mapAppointmentWireToViewModel(wire, coach);
+  }
+
+  async confirmCompletion(id: string): Promise<BookingAppointmentViewModel> {
+    const wire = await bookingService.confirmCompletion(id);
+    const coach = await this.getCoachSummary(wire.pt_user_id);
+    return mapAppointmentWireToViewModel(wire, coach);
+  }
+
+  async disputeCompletion(id: string, reason: string): Promise<BookingAppointmentViewModel> {
+    const wire = await bookingService.disputeCompletion(id, reason);
     const coach = await this.getCoachSummary(wire.pt_user_id);
     return mapAppointmentWireToViewModel(wire, coach);
   }
@@ -221,7 +247,7 @@ export class ApiBookingRepository implements IBookingRepository {
       requestedAt: wire.cancelled_at_utc || new Date().toISOString(),
       reason: 'Hủy lịch hẹn trước giờ tập theo chính sách hoàn tiền 100%.',
       cancellationPolicyNotice:
-        'Hoàn trả 100% khi hủy trước ít nhất 12 giờ theo chính sách nền tảng Fitmate.',
+        'Hoàn trả 100% khi hội viên hủy trước ít nhất 24 giờ theo chính sách nền tảng Fitmate.',
     };
   }
 }

@@ -1,14 +1,14 @@
 {
   "baseline": "PROD-2026-09-22-v1",
-  "capturedAt": "2026-10-02",
+  "capturedAt": "2026-10-03",
   "backendRepository": "FitmateAI_BE",
   "backendFrozenRevision": "e35bef1575bb4c0c7c9b9ce521a932682b3128b4",
   "openapiSource": "FitmateAI_BE/docs/backend-release/openapi/fitmate-v1.yaml",
-  "openapiSha256": "80C6FFD943416761C62E69353A4C3AAF45E85237BBE4CE08EC4F642791AB0596",
+  "openapiSha256": "C3500F5D8436BABDAE9180847A7D1FEEF1694235572EA0C87FEB45AC450B9568",
   "contractStatus": "FROZEN-V1",
   "hashEncoding": "raw file bytes (no normalization)",
   "refreshWhen": "The backend OpenAPI revision changes; recalculate SHA256 and update this file before integration.",
-  "contractMeaning": "OpenAPI is the wire source of truth. PT registration exposes account-level verification status and fraud rejection locks the account.",
+  "contractMeaning": "OpenAPI is the wire source of truth. Verified payment auto-confirms a published PT slot; members self-cancel at least 24 hours before start; PT completion awaits member confirmation or dispute for 24 hours; payout remains blocked for another 24 hours after final completion.",
   "verifiedCore": "BE-801..807, BE-811..816, and BE-819 recorded VERIFIED. Release build 0 errors, 879/879 unit tests, 99/99 contract tests, 61/61 HTTP integration tests pass.",
   "openGates": "BE-808..810 and BE-400 payment/payOS re-verification; BE-817 AI capability readiness; BE-826 three-repo UAT; BE-827 release approval.",
   "disabledCapabilities": ["ai.companion_chat", "ai.workout_adjust", "ai.food_scan (runtime gated)", "vip_purchase", "reward_cashout", "pt_automatic_payout"]

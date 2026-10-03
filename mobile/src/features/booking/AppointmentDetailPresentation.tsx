@@ -22,6 +22,8 @@ export interface AppointmentDetailPresentationProps {
   onReviewPt?: () => void;
   onMessageCoach?: () => void;
   onContactSupport?: () => void;
+  onConfirmCompletion?: () => void;
+  onDisputeCompletion?: () => void;
 }
 
 export function AppointmentDetailPresentation({
@@ -31,6 +33,8 @@ export function AppointmentDetailPresentation({
   onReviewPt,
   onMessageCoach,
   onContactSupport,
+  onConfirmCompletion,
+  onDisputeCompletion,
 }: AppointmentDetailPresentationProps) {
   const getBookingStatusBadge = (status: BookingAppointmentViewModel['bookingStatus']) => {
     switch (status) {
@@ -40,6 +44,10 @@ export function AppointmentDetailPresentation({
         return { label: 'Đang diễn ra', bg: '#E6F4F1', text: colors.primary };
       case 'completed':
         return { label: 'Đã hoàn thành', bg: '#DCFCE7', text: '#16A34A' };
+      case 'awaiting_member_confirmation':
+        return { label: 'Chờ bạn xác nhận', bg: '#FEF3C7', text: '#D97706' };
+      case 'disputed':
+        return { label: 'Đang xử lý khiếu nại', bg: '#FEE2E2', text: '#DC2626' };
       case 'cancelled':
         return { label: 'Đã hủy', bg: '#FEE2E2', text: '#DC2626' };
       case 'hold_pending_payment':
@@ -168,6 +176,13 @@ export function AppointmentDetailPresentation({
 
       {/* Actions */}
       <View style={styles.actions}>
+        {appointment.canConfirmCompletion && onConfirmCompletion && (
+          <PrimaryButton label="Xác nhận buổi tập đã hoàn thành" onPress={onConfirmCompletion} />
+        )}
+
+        {appointment.canDispute && onDisputeCompletion && (
+          <SecondaryButton label="Báo cáo vấn đề với buổi tập" onPress={onDisputeCompletion} />
+        )}
         {appointment.canReview && onReviewPt && (
           <PrimaryButton label="Đánh giá huấn luyện viên" onPress={onReviewPt} />
         )}

@@ -113,8 +113,8 @@ export function CancelRefundTrackingPresentation({
               <View style={styles.warningTextCol}>
                 <Text style={styles.warningTitle}>Chính sách hoàn tiền Fitmate</Text>
                 <Text style={styles.warningDesc}>
-                  Hủy trước 24 giờ được hoàn 100% số tiền thực trả. Hủy sau 24 giờ áp dụng chính
-                  sách bồi hoàn một phần theo quy định nền tảng.
+                  Hội viên chỉ có thể tự hủy trước giờ bắt đầu ít nhất 24 giờ và được hoàn 100%
+                  số tiền thực trả. Khi còn dưới 24 giờ, vui lòng gửi yêu cầu hỗ trợ.
                 </Text>
               </View>
             </View>
