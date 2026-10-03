@@ -18,12 +18,18 @@ export interface AccountDeletionStatusViewModel {
   hasActiveBookings: boolean;
 }
 
+export interface UploadedAvatar {
+  storageKey: string;
+  previewUrl: string;
+}
+
 export interface IAccountRepository {
   getAccountHub(): Promise<AccountHubViewModel>;
   getProfile(): Promise<UserProfileFormData>;
   getHealthProfile(): Promise<HealthProfileData>;
   updateProfile(data: UserProfileFormData): Promise<void>;
-  updateAvatar(image: { uri: string; fileName?: string | null; mimeType?: string | null; fileSize?: number }): Promise<string>;
+  updateAvatar(image: { uri: string; fileName?: string | null; mimeType?: string | null; fileSize?: number }): Promise<UploadedAvatar>;
+  attachAvatar(storageKey: string): Promise<string>;
   updateHealthProfile(data: HealthProfileData): Promise<void>;
   changePassword(currentPassword: string, newPassword: string): Promise<void>;
   getSettings(): Promise<SettingsViewModel>;

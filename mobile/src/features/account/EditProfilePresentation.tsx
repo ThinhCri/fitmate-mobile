@@ -34,6 +34,8 @@ export interface EditProfilePresentationProps {
   onHealthProfilePress: () => void;
   onWeightHistoryPress: () => void;
   onAvatarPress: () => void;
+  avatarPreviewUrl?: string;
+  hasPendingAvatar?: boolean;
 }
 
 export function EditProfilePresentation({
@@ -45,11 +47,13 @@ export function EditProfilePresentation({
   onHealthProfilePress,
   onWeightHistoryPress,
   onAvatarPress,
+  avatarPreviewUrl,
+  hasPendingAvatar = false,
 }: EditProfilePresentationProps) {
   const [formData, setFormData] = useState<UserProfileFormData>(initialValues);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  const isDirty = JSON.stringify(formData) !== JSON.stringify(initialValues);
+  const isDirty = hasPendingAvatar || JSON.stringify(formData) !== JSON.stringify(initialValues);
 
   const handleBack = () => {
     if (isDirty && !isSaving) {
@@ -95,7 +99,7 @@ export function EditProfilePresentation({
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarWrapper}>
-            <Avatar uri={formData.avatarUrl} name={formData.name} size="lg" />
+            <Avatar uri={avatarPreviewUrl ?? formData.avatarUrl} name={formData.name} size="lg" />
             <TouchableOpacity
               style={styles.cameraIconBtn}
               onPress={onAvatarPress}

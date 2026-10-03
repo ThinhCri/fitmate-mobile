@@ -11,10 +11,20 @@ export default function EditProfileScreen() {
   const [userId, setUserId] = useState('');
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingAvatar, setPendingAvatar] = useState<{ storageKey: string; previewUrl: string } | null>(null);
   useEffect(() => { const repository = getAccountRepository(); Promise.all([repository.getProfile(), repository.getAccountHub()]).then(([data, hub]) => { setProfile(data); setUserId(hub.id); }).catch((e) => setError(e instanceof Error ? e.message : 'Không thể tải hồ sơ.')); }, []);
   const submit = async (values: UserProfileFormData) => {
     setIsSaving(true);
-    try { await getAccountRepository().updateProfile(values); setProfile(values); Alert.alert('Thành công', 'Hồ sơ cá nhân đã được cập nhật.', [{ text: 'Xong', onPress: () => router.back() }]); }
+    try {
+      const repository = getAccountRepository();
+      await repository.updateProfile(values);
+      const avatarUrl = pendingAvatar
+        ? await repository.attachAvatar(pendingAvatar.storageKey)
+        : values.avatarUrl;
+      setProfile({ ...values, avatarUrl });
+      setPendingAvatar(null);
+      Alert.alert('Thành công', 'Hồ sơ cá nhân đã được cập nhật.', [{ text: 'Xong', onPress: () => router.back() }]);
+    }
     catch (e) { Alert.alert('Không thể cập nhật', e instanceof Error ? e.message : 'Vui lòng thử lại.'); }
     finally { setIsSaving(false); }
   };
@@ -27,9 +37,9 @@ export default function EditProfileScreen() {
 
     setIsSaving(true);
     try {
-      const avatarUrl = await getAccountRepository().updateAvatar(image);
-      setProfile((current) => current ? { ...current, avatarUrl } : current);
-      Alert.alert('Đã cập nhật', 'Ảnh đại diện của bạn đã được thay đổi.');
+      const uploaded = await getAccountRepository().updateAvatar(image);
+      setPendingAvatar(uploaded);
+      Alert.alert('Ảnh đã sẵn sàng', 'Hãy nhấn Lưu để cập nhật ảnh đại diện.');
     } catch (e) {
       Alert.alert(
         'Không thể cập nhật ảnh đại diện',
@@ -45,5 +55,5 @@ export default function EditProfileScreen() {
     { text: 'Thư viện', onPress: () => void uploadAvatar('library') },
     { text: 'Hủy', style: 'cancel' },
   ]);
-  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><EditProfilePresentation initialValues={profile} isSaving={isSaving} onBack={() => router.back()} onSubmit={submit} onAvatarPress={chooseAvatar} onPreviewPublicProfile={() => userId && router.push(`/community/user/${userId}` as never)} onHealthProfilePress={() => router.push('/account/health-profile' as never)} onWeightHistoryPress={() => router.push('/workout/weight' as never)} /></SafeAreaView>;
+  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><EditProfilePresentation initialValues={profile} avatarPreviewUrl={pendingAvatar?.previewUrl} hasPendingAvatar={Boolean(pendingAvatar)} isSaving={isSaving} onBack={() => router.back()} onSubmit={submit} onAvatarPress={chooseAvatar} onPreviewPublicProfile={() => userId && router.push(`/community/user/${userId}` as never)} onHealthProfilePress={() => router.push('/account/health-profile' as never)} onWeightHistoryPress={() => router.push('/workout/weight' as never)} /></SafeAreaView>;
 }

@@ -4,7 +4,7 @@ import {
   HealthProfileData,
   SettingsViewModel,
 } from '@/features/account/accountTypes';
-import { IAccountRepository, AccountDeletionStatusViewModel } from '../accountRepository';
+import { IAccountRepository, AccountDeletionStatusViewModel, UploadedAvatar } from '../accountRepository';
 import { authService } from '@/services/api/authService';
 import { apiClient, apiUploadFile, resolveApiResourceUrl } from '@/services/api/client';
 import Constants from 'expo-constants';
@@ -70,15 +70,15 @@ export class ApiAccountRepository implements IAccountRepository {
         bio: data.bio,
         phone: data.phone,
         gender: data.gender,
-        birthday: data.birthday || null,
-        height_cm: data.heightCm,
-        weight_kg: data.weightKg,
+        birthday: normalizeBirthday(data.birthday),
+        height_cm: data.heightCm > 0 ? data.heightCm : null,
+        weight_kg: data.weightKg > 0 ? data.weightKg : null,
         fitness_goal: data.fitnessGoal,
       }),
     });
   }
 
-  async updateAvatar(image: { uri: string; fileName?: string | null; mimeType?: string | null; fileSize?: number }): Promise<string> {
+  async updateAvatar(image: { uri: string; fileName?: string | null; mimeType?: string | null; fileSize?: number }): Promise<UploadedAvatar> {
     const mimeType = image.mimeType?.toLowerCase() || 'image/jpeg';
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(mimeType)) {
       throw new Error('Ảnh đại diện phải có định dạng JPG, PNG hoặc WebP.');
@@ -99,9 +99,15 @@ export class ApiAccountRepository implements IAccountRepository {
       { category: 'avatars', fileName }
     );
     if (!upload.storageKey) throw new Error('Máy chủ không trả về mã lưu trữ ảnh đại diện.');
+    const previewUrl = upload.signedUrl || upload.uri;
+    if (!previewUrl) throw new Error('Máy chủ không trả về ảnh xem trước.');
+    return { storageKey: upload.storageKey, previewUrl: resolveApiResourceUrl(previewUrl) };
+  }
+
+  async attachAvatar(storageKey: string): Promise<string> {
     const profile = await apiClient<{ avatar_url?: string | null }>('/users/me/avatar', {
       method: 'PUT',
-      body: JSON.stringify({ storage_key: upload.storageKey }),
+      body: JSON.stringify({ storage_key: storageKey }),
     });
     if (!profile.avatar_url) throw new Error('Máy chủ không trả về địa chỉ ảnh đại diện.');
     return resolveApiResourceUrl(profile.avatar_url);
@@ -217,6 +223,15 @@ export class ApiAccountRepository implements IAccountRepository {
       data: res,
     };
   }
+}
+
+function normalizeBirthday(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmed);
+  if (!match) throw new Error('Ngày sinh phải có định dạng DD/MM/YYYY.');
+  return `${match[3]}-${match[2]}-${match[1]}`;
 }
 
 export const apiAccountRepository = new ApiAccountRepository();

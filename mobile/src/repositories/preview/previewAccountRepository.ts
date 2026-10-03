@@ -59,9 +59,12 @@ export class PreviewAccountRepository implements IAccountRepository {
     this.profile = { ...data };
   }
 
-  async updateAvatar(image: { uri: string }): Promise<string> {
-    this.profile = { ...this.profile, avatarUrl: image.uri };
-    return image.uri;
+  async updateAvatar(image: { uri: string }): Promise<{ storageKey: string; previewUrl: string }> {
+    return { storageKey: 'preview/avatar', previewUrl: image.uri };
+  }
+
+  async attachAvatar(_storageKey: string): Promise<string> {
+    return this.profile.avatarUrl || '';
   }
 
   async updateHealthProfile(data: HealthProfileData): Promise<void> {
