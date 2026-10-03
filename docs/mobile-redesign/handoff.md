@@ -632,3 +632,9 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Opening Nutrition Scan also checks camera access immediately instead of waiting for Capture. Requests are single-flight so Dashboard/feature effects cannot stack camera dialogs.
 - Account Settings now has separate Notification and Camera permission actions. Each requests again when Android permits it and opens system app settings when Android reports that it cannot ask again.
 - Added source coverage support for the camera permission preflight. Automated commands were not run under the repository manual-execution rule; changes were not committed.
+
+# Dashboard status-bar safe area — 2026-10-03
+
+- Wrapped Dashboard scroll content in a top `SafeAreaView` while keeping the ambient gradient behind the system bar. Greeting and header actions no longer render underneath Android/iOS status-bar content.
+- The other four primary tabs already use `ScreenContainer` with the top edge and required no change.
+- Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule and changes were not committed.

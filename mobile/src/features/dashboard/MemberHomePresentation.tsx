@@ -9,6 +9,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Bell,
   Utensils,
@@ -66,22 +67,23 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
 
   return (
     <GradientBackground>
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false}
-      onScroll={handleScroll}
-      scrollEventThrottle={scrollEventThrottle}
-      refreshControl={
-        onRefresh ? (
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[colors.primary]}
-          />
-        ) : undefined
-      }
-    >
+    <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={scrollEventThrottle}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[colors.primary]}
+            />
+          ) : undefined
+        }
+      >
       <View style={styles.headerRow}>
         <View style={styles.greetingCol}>
           <Text style={[typography.caption, styles.dateLabel]}>{data.dateLabel}</Text>
@@ -376,12 +378,17 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           </View>
         ))}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
     </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
   container: {
     flex: 1,
     backgroundColor: 'transparent',
