@@ -5,6 +5,25 @@ const RAW_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8080/api/v1';
 const API_BASE_URL = RAW_BASE_URL.replace(/\/+$/, '');
 
+/**
+ * Rewrites loopback URLs returned by a local Docker API to the same origin the
+ * device already uses for API calls. A physical phone cannot resolve the
+ * backend container's `localhost` address.
+ */
+export function resolveApiResourceUrl(value: string): string {
+  try {
+    const resource = new URL(value);
+    if (!['localhost', '127.0.0.1', '10.0.2.2'].includes(resource.hostname)) {
+      return value;
+    }
+
+    const apiOrigin = new URL(API_BASE_URL).origin;
+    return apiOrigin + resource.pathname + resource.search + resource.hash;
+  } catch {
+    return value;
+  }
+}
+
 export class ApiError extends Error {
   status: number;
   data?: unknown;

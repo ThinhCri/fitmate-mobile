@@ -676,3 +676,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - The badge is hidden at zero, displays the exact count from 1 through 99 and caps larger values at `99+`.
 - Refreshes the unread count whenever Dashboard regains focus (including after reading notifications) and during pull-to-refresh. Notification-count failure does not block core Dashboard data.
 - Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
+
+# Physical-device avatar upload recovery — 2026-10-03
+
+- Avatar upload no longer persists the backend container's internal `file://` URI. It prefers the readable upload URL and rewrites local loopback hosts to the API origin already configured for the physical device/emulator.
+- Added client-side JPG/PNG/WebP and 5 MB validation, normalized multipart filename/MIME metadata, reduced avatar picker quality to 0.7 and added a guarded loading/error/success flow with Vietnamese copy.
+- Remaining contract gap: profile `avatar_url` still stores an expiring signed URL rather than a stable `storageKey`; backend needs an attach/renew projection before this path is production-durable. The current change restores local physical-device upload/testing without disguising that gap.
+- Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.

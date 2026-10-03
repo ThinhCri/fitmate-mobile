@@ -18,10 +18,31 @@ export default function EditProfileScreen() {
     catch (e) { Alert.alert('Không thể cập nhật', e instanceof Error ? e.message : 'Vui lòng thử lại.'); }
     finally { setIsSaving(false); }
   };
+  const uploadAvatar = async (source: 'camera' | 'library') => {
+    if (isSaving) return;
+    const image = source === 'camera'
+      ? await ImagePickerService.pickFromCamera({ allowsEditing: true, aspect: [1, 1], quality: 0.7 })
+      : await ImagePickerService.pickFromLibrary({ allowsEditing: true, aspect: [1, 1], quality: 0.7 });
+    if (!image) return;
+
+    setIsSaving(true);
+    try {
+      const avatarUrl = await getAccountRepository().updateAvatar(image);
+      setProfile((current) => current ? { ...current, avatarUrl } : current);
+      Alert.alert('Đã cập nhật', 'Ảnh đại diện của bạn đã được thay đổi.');
+    } catch (e) {
+      Alert.alert(
+        'Không thể cập nhật ảnh đại diện',
+        e instanceof Error ? e.message : 'Vui lòng chọn ảnh khác và thử lại.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
   if (!profile) return <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>{error ? <Text>{error}</Text> : <ActivityIndicator />}</SafeAreaView>;
   const chooseAvatar = () => Alert.alert('Đổi ảnh đại diện', 'Chọn nguồn ảnh', [
-    { text: 'Máy ảnh', onPress: async () => { const image = await ImagePickerService.pickFromCamera({ allowsEditing: true, aspect: [1, 1] }); if (image) setProfile({ ...profile, avatarUrl: await getAccountRepository().updateAvatar(image) }); } },
-    { text: 'Thư viện', onPress: async () => { const image = await ImagePickerService.pickFromLibrary({ allowsEditing: true, aspect: [1, 1] }); if (image) setProfile({ ...profile, avatarUrl: await getAccountRepository().updateAvatar(image) }); } },
+    { text: 'Máy ảnh', onPress: () => void uploadAvatar('camera') },
+    { text: 'Thư viện', onPress: () => void uploadAvatar('library') },
     { text: 'Hủy', style: 'cancel' },
   ]);
   return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><EditProfilePresentation initialValues={profile} isSaving={isSaving} onBack={() => router.back()} onSubmit={submit} onAvatarPress={chooseAvatar} onPreviewPublicProfile={() => userId && router.push(`/community/user/${userId}` as never)} onHealthProfilePress={() => router.push('/account/health-profile' as never)} onWeightHistoryPress={() => router.push('/workout/weight' as never)} /></SafeAreaView>;

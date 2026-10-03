@@ -23,7 +23,7 @@ export interface IAccountRepository {
   getProfile(): Promise<UserProfileFormData>;
   getHealthProfile(): Promise<HealthProfileData>;
   updateProfile(data: UserProfileFormData): Promise<void>;
-  updateAvatar(image: { uri: string; fileName?: string | null; mimeType?: string | null }): Promise<string>;
+  updateAvatar(image: { uri: string; fileName?: string | null; mimeType?: string | null; fileSize?: number }): Promise<string>;
   updateHealthProfile(data: HealthProfileData): Promise<void>;
   changePassword(currentPassword: string, newPassword: string): Promise<void>;
   getSettings(): Promise<SettingsViewModel>;

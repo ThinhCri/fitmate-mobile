@@ -6,7 +6,7 @@ import {
 } from '@/features/account/accountTypes';
 import { IAccountRepository, AccountDeletionStatusViewModel } from '../accountRepository';
 import { authService } from '@/services/api/authService';
-import { apiClient } from '@/services/api/client';
+import { apiClient, resolveApiResourceUrl } from '@/services/api/client';
 import Constants from 'expo-constants';
 import { bookingService } from '@/services/api/bookingService';
 import { apiSocialRepository } from './apiSocialRepository';
@@ -79,12 +79,26 @@ export class ApiAccountRepository implements IAccountRepository {
     });
   }
 
-  async updateAvatar(image: { uri: string; fileName?: string | null; mimeType?: string | null }): Promise<string> {
+  async updateAvatar(image: { uri: string; fileName?: string | null; mimeType?: string | null; fileSize?: number }): Promise<string> {
+    const mimeType = image.mimeType?.toLowerCase() || 'image/jpeg';
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(mimeType)) {
+      throw new Error('Ảnh đại diện phải có định dạng JPG, PNG hoặc WebP.');
+    }
+    if (image.fileSize && image.fileSize > 5 * 1024 * 1024) {
+      throw new Error('Ảnh đại diện không được lớn hơn 5 MB.');
+    }
+
+    const extension = mimeType === 'image/png' ? '.png' : mimeType === 'image/webp' ? '.webp' : '.jpg';
+    const originalName = image.fileName?.trim();
+    const fileName = originalName && /\.(jpe?g|png|webp)$/i.test(originalName)
+      ? originalName
+      : `avatar${extension}`;
     const form = new FormData();
-    form.append('file', { uri: image.uri, name: image.fileName || 'avatar.jpg', type: image.mimeType || 'image/jpeg' } as any);
+    form.append('file', { uri: image.uri, name: fileName, type: mimeType } as any);
     form.append('category', 'avatars');
-    const upload = await apiClient<{ uri?: string; signedUrl?: string }>('/uploads', { method: 'POST', body: form });
-    const avatarUrl = upload.uri || upload.signedUrl;
+    const upload = await apiClient<{ storageKey?: string; uri?: string; signedUrl?: string }>('/uploads', { method: 'POST', body: form });
+    const readableUrl = upload.signedUrl || upload.uri;
+    const avatarUrl = readableUrl ? resolveApiResourceUrl(readableUrl) : undefined;
     if (!avatarUrl) throw new Error('Máy chủ không trả về địa chỉ ảnh đại diện.');
     await apiClient('/users/me', { method: 'PATCH', body: JSON.stringify({ avatar_url: avatarUrl }) });
     return avatarUrl;
