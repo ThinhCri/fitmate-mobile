@@ -2,6 +2,8 @@
 
 > **Tài liệu phục vụ review:** Ghi lại toàn bộ yêu cầu, kiến trúc xử lý, danh sách tất cả các tệp thay đổi/thêm mới (cả Frontend và Backend), cùng kết quả kiểm thử tự động để người dùng kiểm tra lại bất cứ lúc nào.
 
+> **Lưu ý sau review 2026-10-03:** Các số test, cổng server và trạng thái tiến trình bên dưới chỉ là bằng chứng tại thời điểm thực hiện, không phải trạng thái hiện tại. Không lưu hoặc hướng dẫn thay mật khẩu thật trong tài liệu UI. Backend và Mobile phải đọc `.env` riêng, không commit secret.
+
 ---
 
 ## 1. Yêu Cầu Của Người Dùng (User Requests)
@@ -41,7 +43,7 @@
 | :--- | :--- | :--- | :--- |
 | 14 | `src/Fitmate.Api/DotEnvLoader.cs` | **Tạo mới** | Class helper tự động tìm và đọc file `.env` cục bộ khi chạy trực tiếp `dotnet run` trên máy tính, tránh lỗi thiếu biến môi trường. |
 | 15 | `src/Fitmate.Api/Program.cs` | **Chỉnh sửa** | Gọi `DotEnvLoader.Load()` ngay tại dòng đầu tiên của file startup để nạp đầy đủ cấu hình trước khi khởi động Web Host. |
-| 16 | `.env` | **Chỉnh sửa** | Sửa `DB_PASSWORD=dev` để khớp chính xác với mật khẩu của PostgreSQL local/Docker (trước đó bị đặt nhầm thành `localverify300pw`). |
+| 16 | `.env` | **Cấu hình local, không commit** | Người vận hành tự đặt credentials khớp với PostgreSQL local. Giá trị thật không được ghi trong tài liệu hoặc Git. |
 
 ---
 
@@ -52,8 +54,8 @@
 - **Khắc phục:** Viết thêm [`DotEnvLoader.cs`](file:///d:/Ky8/exe201/FitmateAI_BE/src/Fitmate.Api/DotEnvLoader.cs) tự động quét file `.env` tại thư mục gốc và nạp vào biến môi trường trước khi ứng dụng khởi chạy.
 
 ### 3.2. Lỗi `password authentication failed for user "fitmate"`
-- **Nguyên nhân:** Trong file `.env` của Backend, biến `DB_PASSWORD` đang để giá trị `localverify300pw`, trong khi instance database PostgreSQL Docker thực tế được khởi tạo với mật khẩu là `dev`.
-- **Khắc phục:** Cập nhật lại `DB_PASSWORD=dev` trong `.env`.
+- **Nguyên nhân:** Credentials trong `.env` không khớp PostgreSQL đang chạy. Named volume có thể giữ mật khẩu được tạo từ lần khởi tạo đầu tiên.
+- **Khắc phục:** Đối chiếu đúng cấu hình của database local hiện tại. Không ghi mật khẩu thật vào tài liệu và không xóa volume có dữ liệu người dùng để chữa lỗi.
 
 ### 3.3. Lỗi `address already in use` trên cổng 5116
 - **Nguyên nhân:** Cổng 5116 báo bận vì container Docker `fitmateai_be-api-1` **đang chạy sẵn Backend ở chế độ hot-reload (`dotnet watch run`)**.
@@ -89,7 +91,7 @@
 
 ## 5. Hướng Dẫn Thao Tác Kiểm Tra Thực Tế
 
-1. **Backend:** Đang chạy sẵn sàng tại `http://localhost:5116` (Swagger: `http://localhost:5116/swagger`).
+1. **Backend:** Kiểm tra cổng thực tế từ output `dotnet run` hoặc mapping Docker hiện tại; không giả định tiến trình cũ vẫn chạy ở `5116`.
 2. **Khởi động Frontend Mobile:**
    Mở terminal tại `d:\Ky8\exe201\FitmateAI_FE\mobile` và chạy:
    ```powershell
@@ -123,3 +125,13 @@
 | 22 | `mobile/src/features/trainer/TrainerListPresentation.tsx` | **Chỉnh sửa** | Bọc `View` + `FlatList` trong `GradientBackground`, đổi container bg → transparent. |
 | 23 | `mobile/src/components/design-system/Card.tsx` | **Chỉnh sửa** | Tăng shadow offset/radius cho variant `surface` để card nổi rõ hơn trên nền gradient. |
 
+---
+
+## 7. Kết quả review và sửa bổ sung — 2026-10-03
+
+- Nền gradient phẳng được bổ sung ba lớp màu môi trường và watermark mờ nằm phía sau nội dung. Nhờ vậy card/tab bar bán trong suốt có chi tiết nền để tạo cảm giác chiều sâu thay vì chỉ đổi màu nền.
+- Card chuẩn chuyển sang trắng gần đục, viền trắng nhẹ, bo góc lớn và bóng mềm. Không làm card chứa nhiều chữ quá trong vì sẽ giảm khả năng đọc.
+- `BlurView` trên Android trước đây không chỉ định blur method nên thường chỉ hiện tint. Bản sửa dùng `dimezisBlurViewSdk31Plus` trên Android 12 trở lên và giữ fallback bán trong suốt trên thiết bị cũ.
+- Thanh tab dùng margin ngang 16dp thật thay vì công thức phần trăm phụ thuộc giả định chiều rộng màn hình.
+- Offset cuộn được reset khi đổi tab; sự kiện cuộn đầu tiên của tab mới không còn so với offset của tab trước.
+- Chưa chạy command kiểm thử tự động trong lượt này theo quy tắc hiện hành của repository. Cần kiểm tra trên Android thật vì mức blur và hiệu năng phụ thuộc phiên bản hệ điều hành/GPU.

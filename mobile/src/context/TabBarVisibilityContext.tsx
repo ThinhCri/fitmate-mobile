@@ -34,6 +34,8 @@ export interface TabBarVisibilityContextType {
   showTabBar: () => void;
   /** Buộc ẩn thanh menu xuống dưới */
   hideTabBar: () => void;
+  /** Reset mốc cuộn khi đổi tab để sự kiện đầu tiên không dùng offset của tab cũ. */
+  resetScrollTracking: () => void;
   /** Callback xử lý sự kiện cuộn từ ScrollView / FlatList */
   handleScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
@@ -45,6 +47,7 @@ const TabBarVisibilityContext = createContext<TabBarVisibilityContextType>({
   isVisible: true,
   showTabBar: () => {},
   hideTabBar: () => {},
+  resetScrollTracking: () => {},
   handleScroll: () => {},
 });
 
@@ -89,6 +92,11 @@ export function TabBarVisibilityProvider({ children }: TabBarVisibilityProviderP
       }).start();
     }
   }, [animProgress]);
+
+  const resetScrollTracking = useCallback(() => {
+    lastOffsetY.current = 0;
+    showTabBar();
+  }, [showTabBar]);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -141,6 +149,7 @@ export function TabBarVisibilityProvider({ children }: TabBarVisibilityProviderP
         isVisible,
         showTabBar,
         hideTabBar,
+        resetScrollTracking,
         handleScroll,
       }}
     >

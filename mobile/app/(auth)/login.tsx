@@ -35,7 +35,6 @@ import {
   Award,
 } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
-import { requestInitialPermissionsOnce } from '@/services/initialPermissions';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { authService } from '@/services/api/authService';
@@ -73,7 +72,6 @@ export default function LoginScreen() {
     setSubmitting(true);
     try {
       const authenticatedUser = await login(trimmedEmail, password);
-      await requestInitialPermissionsOnce(trimmedEmail).catch(() => {});
       if (authenticatedUser.role === 'pt' && authenticatedUser.ptVerificationStatus !== 'approved') {
         router.replace('/pt/certificates');
       } else {

@@ -61,6 +61,8 @@ export function GlassCard({
         <BlurView
           intensity={22}
           tint={tint}
+          blurMethod={Platform.OS === 'android' ? 'dimezisBlurViewSdk31Plus' : undefined}
+          blurReductionFactor={Platform.OS === 'android' ? 3 : undefined}
           style={[StyleSheet.absoluteFill, { borderRadius: radius }]}
         />
       ) : null}

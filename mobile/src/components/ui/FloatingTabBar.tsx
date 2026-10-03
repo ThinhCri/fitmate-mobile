@@ -46,7 +46,7 @@ const PILL_PADDING = 6;
 export function FloatingTabBar({ tabs }: FloatingTabBarProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const [blurSupported, setBlurSupported] = useState(true);
+  const [blurSupported, setBlurSupported] = useState(Platform.OS !== 'web');
   const { animProgress, isVisible } = useTabBarVisibility();
 
   useEffect(() => {
@@ -93,6 +93,8 @@ export function FloatingTabBar({ tabs }: FloatingTabBarProps) {
           <BlurView
             intensity={Platform.OS === 'android' ? 28 : 30}
             tint="light"
+            blurMethod={Platform.OS === 'android' ? 'dimezisBlurViewSdk31Plus' : undefined}
+            blurReductionFactor={Platform.OS === 'android' ? 3 : undefined}
             style={StyleSheet.absoluteFill}
           />
         ) : null}
@@ -183,7 +185,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pill: {
-    width: `${100 - (HORIZONTAL_MARGIN * 2 / 4) * 1}%`, // explicit width below
+    alignSelf: 'stretch',
+    marginHorizontal: HORIZONTAL_MARGIN,
     borderRadius: PILL_HEIGHT / 2,
     borderWidth: 1,
     overflow: 'hidden',

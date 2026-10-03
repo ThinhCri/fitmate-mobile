@@ -27,10 +27,10 @@ import {
 } from '@/context/TabBarVisibilityContext';
 
 function TabsActiveWatcher({ activeRoute }: { activeRoute: string }) {
-  const { showTabBar } = useTabBarVisibility();
+  const { resetScrollTracking } = useTabBarVisibility();
   useEffect(() => {
-    showTabBar();
-  }, [activeRoute, showTabBar]);
+    resetScrollTracking();
+  }, [activeRoute, resetScrollTracking]);
   return null;
 }
 

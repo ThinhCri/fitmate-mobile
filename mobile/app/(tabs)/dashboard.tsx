@@ -1,12 +1,22 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  InteractionManager,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { router } from 'expo-router';
 import { MemberHomePresentation } from '@/features/dashboard/MemberHomePresentation';
 import { dashboardService } from '@/services/api/dashboardService';
 import type { MemberDashboardSummary } from '@/services/api/types';
+import { useAuth } from '@/services/AuthContext';
+import { requestInitialPermissionsOnce } from '@/services/initialPermissions';
 import { colors, spacing, typography } from '@/theme/designTokens';
 
 export default function DashboardScreen() {
+  const { user } = useAuth();
   const [data, setData] = useState<MemberDashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -20,6 +30,20 @@ export default function DashboardScreen() {
     finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { void load(); }, [load]);
+
+  useEffect(() => {
+    if (!data || !user) return;
+
+    // Permission dialogs must never block login or appear on an auth screen.
+    // Wait until the authenticated dashboard has rendered and its navigation
+    // transition/initial interactions have completed.
+    const interaction = InteractionManager.runAfterInteractions(() => {
+      void requestInitialPermissionsOnce(user.email).catch(() => {});
+    });
+
+    return () => interaction.cancel();
+  }, [data, user]);
+
   if (loading && !data) return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
   if (error && !data) return <View style={styles.center}><Text style={[typography.body, styles.error]}>{error}</Text><TouchableOpacity onPress={() => void load()} style={styles.retry}><Text style={styles.retryText}>Thử lại</Text></TouchableOpacity></View>;
   if (!data) return null;

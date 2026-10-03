@@ -593,6 +593,15 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Fixed the custom `FloatingTabBar` registration at the `Tabs` navigator level. The previous per-screen `tabBar` option was ignored by Expo Router, which exposed the default tab bar without configured icons and rendered missing-glyph boxes on Android.
 - Runtime verification remains required after restarting Metro with a cleared cache.
 
+# Glass background and tab bar review — 2026-10-03
+
+- Reviewed `review-tabbar-hide-on-scroll.md` and corrected stale operational claims: server ports/test counts are point-in-time evidence, while local database secrets must never be documented or committed.
+- Reworked `GradientBackground` into a layered ambient background with subtle teal, warm and blue forms plus a low-opacity Fitmate watermark so translucent surfaces have visible depth behind them.
+- Updated design-system cards to a near-opaque white glass surface with larger radius, soft white border and restrained shadow; dense content remains readable.
+- Enabled the supported Android native blur method for `GlassCard` and `FloatingTabBar` on Android 12+ with a translucent fallback on older devices/web.
+- Replaced the tab bar percentage-width formula with exact 16dp horizontal margins and reset scroll tracking whenever the active tab changes.
+- Source review completed; per repository instruction, automated commands were not run and changes were not committed.
+
 # Account navigation and logout wiring — 2026-10-02
 
 - Added an accessible account button beside notifications on the member Dashboard; it opens the existing `/account` hub containing profile, appointments, connections, settings, support, and logout.
@@ -608,3 +617,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
   - Handles keyboard visibility: automatically hides on keyboard open and restores on keyboard hide.
 - Connected scroll handlers to all 5 primary tab screens: Dashboard (`MemberHomePresentation`), Nutrition (`NutritionDiaryPresentation`), Workout (`WorkoutOverviewPresentation`), Social (`CommunityFeedPresentation`), and Marketplace (`TrainerListPresentation`).
 - Added unit tests in `mobile/src/context/__tests__/tabBarVisibility.test.ts`.
+
+# Post-login permission timing fix — 2026-10-03
+
+- Removed notification/camera permission requests from the Login submit handler; successful authentication is no longer held on the Login screen while Android permission dialogs are open.
+- The app now navigates to the authenticated Dashboard first, waits for dashboard data and initial UI interactions, then requests the initial Android permissions once per account.
+- Login validation/API failures still clear the local submitting state in `finally`, so the button cannot remain spinning after a completed error response.
+- Source review and `git diff --check` only; per repository instruction, type-check/test/lint/Expo/Android were not run and changes were not committed.
