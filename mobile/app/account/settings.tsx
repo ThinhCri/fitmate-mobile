@@ -5,6 +5,8 @@ import { ActivityIndicator, Alert, Linking, Share, View } from 'react-native';
 import { SettingsPresentation } from '@/features/account';
 import { SettingsViewModel } from '@/features/account/accountTypes';
 import { getAccountRepository } from '@/repositories/accountRepository';
+import { requestNotificationPermission } from '@/services/initialPermissions';
+import { ImagePickerService } from '@/services/imagePicker';
 
 export default function SettingsScreen() {
   const repository = getAccountRepository();
@@ -23,7 +25,10 @@ export default function SettingsScreen() {
           router.push('/account/change-password' as any)
         }
         onNotificationSettingsPress={() => {
-          void Linking.openSettings();
+          void requestNotificationPermission(true);
+        }}
+        onCameraSettingsPress={() => {
+          void ImagePickerService.requestCameraPermission(true);
         }}
         onPrivacyPress={() => void openPolicy(settings.privacyUrl, 'Dữ liệu & Quyền riêng tư')}
         onTermsPress={() => void openPolicy(settings.termsUrl, 'Điều khoản dịch vụ')}

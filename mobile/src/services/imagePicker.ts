@@ -7,6 +7,8 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Alert, Linking } from 'react-native';
 
+let cameraPermissionRequest: Promise<boolean> | null = null;
+
 function showPermissionAlert(title: string, message: string) {
   Alert.alert(title, message, [
     { text: 'Để sau', style: 'cancel' },
@@ -30,6 +32,37 @@ export interface PickImageOptions {
 }
 
 export const ImagePickerService = {
+  async requestCameraPermission(openSettingsWhenBlocked = false): Promise<boolean> {
+    if (cameraPermissionRequest) return cameraPermissionRequest;
+
+    cameraPermissionRequest = (async () => {
+      try {
+        const current = await ImagePicker.getCameraPermissionsAsync();
+        if (current.granted) return true;
+        if (!current.canAskAgain) {
+          if (openSettingsWhenBlocked) await Linking.openSettings();
+          return false;
+        }
+
+        const requested = await ImagePicker.requestCameraPermissionsAsync();
+        return requested.granted;
+      } catch {
+        return false;
+      }
+    })().finally(() => {
+      cameraPermissionRequest = null;
+    });
+
+    return cameraPermissionRequest;
+  },
+
+  showCameraPermissionSettingsAlert(): void {
+    showPermissionAlert(
+      'Cần quyền máy ảnh',
+      'Vui lòng cấp quyền sử dụng máy ảnh trong Cài đặt thiết bị để tiếp tục.'
+    );
+  },
+
   async pickFromLibrary(options?: PickImageOptions): Promise<PickedImage | null> {
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -64,12 +97,9 @@ export const ImagePickerService = {
 
   async pickFromCamera(options?: PickImageOptions): Promise<PickedImage | null> {
     try {
-      const perm = await ImagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) {
-        showPermissionAlert(
-          'Cần quyền máy ảnh',
-          'Vui lòng cấp quyền sử dụng máy ảnh trong Cài đặt thiết bị để tiếp tục.'
-        );
+      const granted = await this.requestCameraPermission();
+      if (!granted) {
+        this.showCameraPermissionSettingsAlert();
         return null;
       }
       const res = await ImagePicker.launchCameraAsync({

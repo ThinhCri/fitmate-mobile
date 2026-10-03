@@ -624,3 +624,11 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - The app now navigates to the authenticated Dashboard first, waits for dashboard data and initial UI interactions, then requests the initial Android permissions once per account.
 - Login validation/API failures still clear the local submitting state in `finally`, so the button cannot remain spinning after a completed error response.
 - Source review and `git diff --check` only; per repository instruction, type-check/test/lint/Expo/Android were not run and changes were not committed.
+
+# Android permission onboarding and recovery — 2026-10-03
+
+- The first authenticated Dashboard visit now requests notification and camera permissions sequentially once per account, after the main UI is visible. Notification bootstrap has a per-account single-flight guard and persists its marker before opening Android UI, preventing duplicate dialogs.
+- Removed the React Native notification rationale dialog; denial no longer causes an app explanation dialog followed by another Android permission prompt.
+- Opening Nutrition Scan also checks camera access immediately instead of waiting for Capture. Requests are single-flight so Dashboard/feature effects cannot stack camera dialogs.
+- Account Settings now has separate Notification and Camera permission actions. Each requests again when Android permits it and opens system app settings when Android reports that it cannot ask again.
+- Added source coverage support for the camera permission preflight. Automated commands were not run under the repository manual-execution rule; changes were not committed.

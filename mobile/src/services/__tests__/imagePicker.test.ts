@@ -11,6 +11,7 @@ vi.mock('expo-image-picker', () => ({
   },
   requestMediaLibraryPermissionsAsync: vi.fn(),
   launchImageLibraryAsync: vi.fn(),
+  getCameraPermissionsAsync: vi.fn(),
   requestCameraPermissionsAsync: vi.fn(),
   launchCameraAsync: vi.fn(),
 }));
@@ -105,6 +106,12 @@ describe('ImagePickerService', () => {
 
   describe('pickFromCamera', () => {
     it('returns captured image when camera permission is granted', async () => {
+      vi.mocked(ImagePicker.getCameraPermissionsAsync).mockResolvedValue({
+        granted: true,
+        status: ImagePicker.PermissionStatus.GRANTED,
+        expires: 'never',
+        canAskAgain: true,
+      });
       vi.mocked(ImagePicker.requestCameraPermissionsAsync).mockResolvedValue({
         granted: true,
         status: ImagePicker.PermissionStatus.GRANTED,
@@ -139,6 +146,12 @@ describe('ImagePickerService', () => {
     });
 
     it('fails closed and alerts user when camera permission is denied', async () => {
+      vi.mocked(ImagePicker.getCameraPermissionsAsync).mockResolvedValue({
+        granted: false,
+        status: ImagePicker.PermissionStatus.DENIED,
+        expires: 'never',
+        canAskAgain: false,
+      });
       vi.mocked(ImagePicker.requestCameraPermissionsAsync).mockResolvedValue({
         granted: false,
         status: ImagePicker.PermissionStatus.DENIED,

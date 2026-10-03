@@ -13,6 +13,7 @@ import {
   KeyRound,
   Shield,
   Bell,
+  Camera,
   Globe,
   Sun,
   FileText,
@@ -26,6 +27,7 @@ export interface SettingsPresentationProps {
   onBack: () => void;
   onChangePasswordPress: () => void;
   onNotificationSettingsPress: () => void;
+  onCameraSettingsPress: () => void;
   onPrivacyPress: () => void;
   onTermsPress: () => void;
   settings: SettingsViewModel;
@@ -41,6 +43,7 @@ export function SettingsPresentation({
   onBack,
   onChangePasswordPress,
   onNotificationSettingsPress,
+  onCameraSettingsPress,
   onPrivacyPress,
   onTermsPress,
   settings,
@@ -117,6 +120,15 @@ export function SettingsPresentation({
               <View style={styles.rowLeft}>
                 <Bell size={18} color={colors.textSecondary} />
                 <Text style={styles.rowTitle}>Quyền thông báo</Text>
+              </View>
+              <ChevronRight size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+            <TouchableOpacity style={styles.row} onPress={onCameraSettingsPress}>
+              <View style={styles.rowLeft}>
+                <Camera size={18} color={colors.textSecondary} />
+                <Text style={styles.rowTitle}>Quyền máy ảnh</Text>
               </View>
               <ChevronRight size={18} color={colors.textMuted} />
             </TouchableOpacity>
