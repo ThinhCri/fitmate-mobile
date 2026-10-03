@@ -68,7 +68,6 @@ export class ApiAccountRepository implements IAccountRepository {
       body: JSON.stringify({
         full_name: data.name,
         bio: data.bio,
-        avatar_url: data.avatarUrl || null,
         phone: data.phone,
         gender: data.gender,
         birthday: data.birthday || null,
@@ -97,11 +96,13 @@ export class ApiAccountRepository implements IAccountRepository {
     form.append('file', { uri: image.uri, name: fileName, type: mimeType } as any);
     form.append('category', 'avatars');
     const upload = await apiClient<{ storageKey?: string; uri?: string; signedUrl?: string }>('/uploads', { method: 'POST', body: form });
-    const readableUrl = upload.signedUrl || upload.uri;
-    const avatarUrl = readableUrl ? resolveApiResourceUrl(readableUrl) : undefined;
-    if (!avatarUrl) throw new Error('Máy chủ không trả về địa chỉ ảnh đại diện.');
-    await apiClient('/users/me', { method: 'PATCH', body: JSON.stringify({ avatar_url: avatarUrl }) });
-    return avatarUrl;
+    if (!upload.storageKey) throw new Error('Máy chủ không trả về mã lưu trữ ảnh đại diện.');
+    const profile = await apiClient<{ avatar_url?: string | null }>('/users/me/avatar', {
+      method: 'PUT',
+      body: JSON.stringify({ storage_key: upload.storageKey }),
+    });
+    if (!profile.avatar_url) throw new Error('Máy chủ không trả về địa chỉ ảnh đại diện.');
+    return resolveApiResourceUrl(profile.avatar_url);
   }
 
   async updateHealthProfile(data: HealthProfileData): Promise<void> {
