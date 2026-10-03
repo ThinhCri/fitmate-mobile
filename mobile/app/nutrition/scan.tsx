@@ -1,52 +1,44 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Alert } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Alert, View } from 'react-native';
 import { router } from 'expo-router';
 import { ImagePickerService } from '@/services/imagePicker';
-import { ScreenContainer } from '@/components/design-system/ScreenContainer';
-import { CameraScanPresentation } from '@/features/nutrition/CameraScanPresentation';
 import { getNutritionRepository } from '@/repositories/nutritionRepository';
+import { colors } from '@/theme/designTokens';
 
 export default function CameraScanRoute() {
-  const [busy, setBusy] = useState(false);
-  const cameraPermissionRequest = useRef<Promise<boolean> | null>(null);
+  const started = useRef(false);
 
   useEffect(() => {
-    cameraPermissionRequest.current = ImagePickerService.requestCameraPermission();
-  }, []);
+    if (started.current) return;
+    started.current = true;
 
-  const pick = async (camera: boolean) => {
-    if (busy) return;
-
-    if (camera) {
-      const granted = await (
-        cameraPermissionRequest.current ?? ImagePickerService.requestCameraPermission()
-      );
-      if (!granted) {
-        ImagePickerService.showCameraPermissionSettingsAlert();
+    const captureAndScan = async () => {
+      const image = await ImagePickerService.pickFromCamera({ quality: 0.8 });
+      if (!image) {
+        if (router.canGoBack()) router.back();
         return;
       }
-    }
 
-    const image = camera
-      ? await ImagePickerService.pickFromCamera({ quality: 0.8 })
-      : await ImagePickerService.pickFromLibrary({ quality: 0.8 });
-    if (!image) return;
+      try {
+        const candidates = await getNutritionRepository().scanMealImage(image.uri);
+        router.replace({
+          pathname: '/nutrition/candidates-review' as never,
+          params: { candidates: JSON.stringify(candidates) },
+        });
+      } catch (error) {
+        Alert.alert(
+          'Không thể nhận diện món ăn',
+          error instanceof Error ? error.message : 'Vui lòng thử lại hoặc nhập thủ công.',
+          [
+            { text: 'Nhập thủ công', onPress: () => router.replace('/nutrition/manual-entry' as never) },
+            { text: 'Quay lại', style: 'cancel', onPress: () => router.back() },
+          ]
+        );
+      }
+    };
 
-    setBusy(true);
-    try {
-      const candidates = await getNutritionRepository().scanMealImage(image.uri);
-      router.push({
-        pathname: '/nutrition/candidates-review' as never,
-        params: { candidates: JSON.stringify(candidates) },
-      });
-    } catch (e) {
-      Alert.alert(
-        'Không thể nhận diện món ăn',
-        e instanceof Error ? e.message : 'Vui lòng thử lại hoặc nhập thủ công.'
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
-  return <ScreenContainer edges={['top', 'bottom']}><CameraScanPresentation onBack={() => router.back()} onCapture={() => void pick(true)} onPickGallery={() => void pick(false)} onManualEntryPress={() => router.push('/nutrition/manual-entry' as never)} isAiAvailable={!busy} /></ScreenContainer>;
+    void captureAndScan();
+  }, []);
+
+  return <View style={{ flex: 1, backgroundColor: colors.background }} />;
 }
