@@ -593,6 +593,11 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Fixed the custom `FloatingTabBar` registration at the `Tabs` navigator level. The previous per-screen `tabBar` option was ignored by Expo Router, which exposed the default tab bar without configured icons and rendered missing-glyph boxes on Android.
 - Runtime verification remains required after restarting Metro with a cleared cache.
 
+# Account navigation and logout wiring — 2026-10-02
+
+- Added an accessible account button beside notifications on the member Dashboard; it opens the existing `/account` hub containing profile, appointments, connections, settings, support, and logout.
+- Rewired Account logout through `AuthContext.logout()` so account-scoped requests and local session state are cleared immediately while backend session revocation runs best-effort, then navigation returns to Login.
+
 # FloatingTabBar hide-on-scroll (Xanh SM style) — 2026-10-02
 
 - Added `TabBarVisibilityContext` & `useTabBarScroll` hook in `mobile/src/context/`:
@@ -603,4 +608,3 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
   - Handles keyboard visibility: automatically hides on keyboard open and restores on keyboard hide.
 - Connected scroll handlers to all 5 primary tab screens: Dashboard (`MemberHomePresentation`), Nutrition (`NutritionDiaryPresentation`), Workout (`WorkoutOverviewPresentation`), Social (`CommunityFeedPresentation`), and Marketplace (`TrainerListPresentation`).
 - Added unit tests in `mobile/src/context/__tests__/tabBarVisibility.test.ts`.
-
