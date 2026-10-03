@@ -68,9 +68,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   surface: {
-    backgroundColor: 'rgba(255,255,255,0.88)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.78)',
+    borderColor: colors.surface,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.08,
@@ -78,12 +78,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   subtle: {
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
   },
   outlined: {
-    backgroundColor: 'rgba(255,255,255,0.78)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },

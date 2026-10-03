@@ -662,3 +662,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Removed duplicate Friends, Messages and System Notifications shortcuts from Account. Those destinations remain owned by Community and the Dashboard notification action; Account keeps profile, appointments, health, settings, support and logout.
 - Renamed the remaining first section to `Lịch biểu` to match its single appointment entry.
 - Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
+
+# Android card rendering and quick-action alignment — 2026-10-03
+
+- Replaced semi-transparent content-card fills with opaque white surfaces in the shared Card component and Dashboard custom cards. This avoids Android elevation compositing that rendered a grey outer slab with a rectangular white inner layer.
+- Kept depth in the page background and restrained shadow rather than inside card opacity. Surface, subtle and outlined Card variants now render on white, with their existing border semantics retained where applicable.
+- Centered icons, labels and supporting copy in all four Dashboard quick-action tiles for a balanced two-column grid.
+- Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
