@@ -8,12 +8,9 @@ import {
   Alert,
 } from 'react-native';
 import {
-  User,
+  ArrowLeft,
   ChevronRight,
   Calendar,
-  Users,
-  MessageCircle,
-  Bell,
   Briefcase,
   HeartPulse,
   Settings,
@@ -29,11 +26,9 @@ import { AccountHubViewModel } from './accountTypes';
 
 export interface AccountHubPresentationProps {
   account: AccountHubViewModel;
+  onBack: () => void;
   onEditProfilePress: () => void;
   onAppointmentsPress: () => void;
-  onFriendsPress: () => void;
-  onChatPress: () => void;
-  onNotificationsPress: () => void;
   onPtSpacePress?: () => void;
   onHealthProfilePress: () => void;
   onSettingsPress: () => void;
@@ -43,11 +38,9 @@ export interface AccountHubPresentationProps {
 
 export function AccountHubPresentation({
   account,
+  onBack,
   onEditProfilePress,
   onAppointmentsPress,
-  onFriendsPress,
-  onChatPress,
-  onNotificationsPress,
   onPtSpacePress,
   onHealthProfilePress,
   onSettingsPress,
@@ -64,7 +57,21 @@ export function AccountHubPresentation({
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <View style={styles.screen}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel="Quay lại Trang chủ"
+        >
+          <ArrowLeft size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Tài khoản</Text>
+        <View style={styles.headerPlaceholder} />
+      </View>
+
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header Profile Card */}
       <Card style={styles.profileHeaderCard}>
         <View style={styles.userRow}>
@@ -114,9 +121,9 @@ export function AccountHubPresentation({
         </TouchableOpacity>
       )}
 
-      {/* Section 1: Activities & Connections */}
+      {/* Section 1: Schedule */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Kết nối &amp; Lịch biểu</Text>
+        <Text style={styles.sectionTitle}>Lịch biểu</Text>
         <Card style={styles.menuCard}>
           <TouchableOpacity style={styles.menuItem} onPress={onAppointmentsPress}>
             <View style={styles.menuItemLeft}>
@@ -130,55 +137,6 @@ export function AccountHubPresentation({
                     <Text style={styles.badgeText}>{account.upcomingBookingCount}</Text>
                   </View>
                 )}
-              <ChevronRight size={18} color={colors.textMuted} />
-            </View>
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          <TouchableOpacity style={styles.menuItem} onPress={onFriendsPress}>
-            <View style={styles.menuItemLeft}>
-              <Users size={18} color="#3B82F6" />
-              <Text style={styles.menuItemText}>Bạn bè &amp; Kết nối</Text>
-            </View>
-            <View style={styles.menuItemRight}>
-              {account.friendCount !== undefined && account.friendCount > 0 && (
-                <Text style={styles.counterText}>{account.friendCount}</Text>
-              )}
-              <ChevronRight size={18} color={colors.textMuted} />
-            </View>
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          <TouchableOpacity style={styles.menuItem} onPress={onChatPress}>
-            <View style={styles.menuItemLeft}>
-              <MessageCircle size={18} color="#10B981" />
-              <Text style={styles.menuItemText}>Hộp thư tin nhắn</Text>
-            </View>
-            <View style={styles.menuItemRight}>
-              {account.unreadChatCount !== undefined && account.unreadChatCount > 0 && (
-                <View style={styles.badgePill}>
-                  <Text style={styles.badgeText}>{account.unreadChatCount}</Text>
-                </View>
-              )}
-              <ChevronRight size={18} color={colors.textMuted} />
-            </View>
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          <TouchableOpacity style={styles.menuItem} onPress={onNotificationsPress}>
-            <View style={styles.menuItemLeft}>
-              <Bell size={18} color="#F59E0B" />
-              <Text style={styles.menuItemText}>Thông báo hệ thống</Text>
-            </View>
-            <View style={styles.menuItemRight}>
-              {account.unreadNotifCount !== undefined && account.unreadNotifCount > 0 && (
-                <View style={styles.badgePillWarning}>
-                  <Text style={styles.badgeText}>{account.unreadNotifCount}</Text>
-                </View>
-              )}
               <ChevronRight size={18} color={colors.textMuted} />
             </View>
           </TouchableOpacity>
@@ -242,11 +200,41 @@ export function AccountHubPresentation({
         <LogOut size={18} color={colors.danger} />
         <Text style={styles.logoutText}>Đăng xuất</Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    minHeight: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderSubtle,
+    backgroundColor: colors.surface,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.full,
+  },
+  headerTitle: {
+    ...typography.title2,
+    color: colors.textPrimary,
+    fontWeight: '700',
+  },
+  headerPlaceholder: {
+    width: 40,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -386,20 +374,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 1,
   },
-  badgePillWarning: {
-    backgroundColor: colors.warning,
-    borderRadius: radius.full,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-  },
   badgeText: {
     fontSize: 11,
     fontWeight: '700',
     color: '#FFFFFF',
-  },
-  counterText: {
-    fontSize: 12,
-    color: colors.textSecondary,
   },
   perkCard: {
     padding: spacing.md,

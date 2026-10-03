@@ -655,3 +655,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Aligned all custom Dashboard surfaces with the shared soft-glass card direction: energy summary, workout, rest state, hydration, meal rows and circular header actions now share the same translucent white surface and white edge treatment.
 - Standardized content-card radii and applied the restrained shared card shadow to previously flat empty/meal cards; semantic badges, progress tracks and action controls retain their distinct colors.
 - Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
+
+# Account navigation and information architecture cleanup — 2026-10-03
+
+- Added a fixed Account header with an explicit back action and a Dashboard fallback, so leaving Account no longer depends on the Android system Back button.
+- Removed duplicate Friends, Messages and System Notifications shortcuts from Account. Those destinations remain owned by Community and the Dashboard notification action; Account keeps profile, appointments, health, settings, support and logout.
+- Renamed the remaining first section to `Lịch biểu` to match its single appointment entry.
+- Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.

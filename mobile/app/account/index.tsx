@@ -36,11 +36,12 @@ export default function AccountHubScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <AccountHubPresentation
         account={account}
+        onBack={() => {
+          if (router.canGoBack()) router.back();
+          else router.replace('/(tabs)/dashboard' as any);
+        }}
         onEditProfilePress={() => router.push('/account/edit-profile' as any)}
         onAppointmentsPress={() => router.push('/booking/my-appointments' as any)}
-        onFriendsPress={() => router.push('/community/friends' as any)}
-        onChatPress={() => router.push('/chat' as any)}
-        onNotificationsPress={() => router.push('/notifications' as any)}
         onPtSpacePress={() => router.push('/pt' as any)}
         onHealthProfilePress={() => router.push('/account/health-profile' as any)}
         onSettingsPress={() => router.push('/account/settings' as any)}
