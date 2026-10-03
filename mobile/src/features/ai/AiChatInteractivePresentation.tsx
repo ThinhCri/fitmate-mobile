@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
+  Animated,
   View,
   Text,
   StyleSheet,
@@ -51,6 +52,9 @@ export function AiChatInteractivePresentation({
 }: AiChatInteractivePresentationProps) {
   const [inputText, setInputText] = useState('');
   const scrollRef = useRef<ScrollView>(null);
+  const showThinking = isProcessing && !messages.some(
+    (message) => message.sender === 'assistant' && message.isProcessing
+  );
 
   const handleSend = () => {
     if (!inputText.trim() || isProcessing) return;
@@ -123,6 +127,7 @@ export function AiChatInteractivePresentation({
                   ]}
                 >
                   {msg.text}
+                  {isAssistant && msg.isProcessing ? ' ▍' : ''}
                 </Text>
 
                 {/* Structured Suggestion Card (Stitch G02 Core) */}
@@ -196,13 +201,13 @@ export function AiChatInteractivePresentation({
         })}
 
         {/* Processing Indicator */}
-        {isProcessing && (
+        {showThinking && (
           <View style={[styles.messageRow, styles.messageRowAssistant]}>
             <View style={styles.assistantAvatar}>
               <Bot size={16} color={colors.primary} />
             </View>
             <View style={[styles.bubbleContainer, styles.bubbleAssistant, styles.typingBubble]}>
-              <Text style={styles.typingText}>Fitmate AI đang phân tích dữ liệu...</Text>
+              <TypingWave />
             </View>
           </View>
         )}
@@ -235,6 +240,38 @@ export function AiChatInteractivePresentation({
         </View>
       </View>
     </KeyboardAvoidingView>
+  );
+}
+
+function TypingWave() {
+  const dots = useRef([0, 1, 2].map(() => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.stagger(140, dots.map((value) => Animated.sequence([
+        Animated.timing(value, { toValue: 1, duration: 260, useNativeDriver: true }),
+        Animated.timing(value, { toValue: 0, duration: 260, useNativeDriver: true }),
+      ])))
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [dots]);
+
+  return (
+    <View style={styles.typingDots} accessibilityLabel="Fitmate AI đang suy nghĩ">
+      {dots.map((value, index) => (
+        <Animated.View
+          key={index}
+          style={[
+            styles.typingDot,
+            {
+              opacity: value.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }),
+              transform: [{ translateY: value.interpolate({ inputRange: [0, 1], outputRange: [1, -4] }) }],
+            },
+          ]}
+        />
+      ))}
+    </View>
   );
 }
 
@@ -454,10 +491,18 @@ const styles = StyleSheet.create({
   typingBubble: {
     paddingVertical: spacing.sm,
   },
-  typingText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
+  typingDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    height: 18,
+    paddingHorizontal: 2,
+  },
+  typingDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
   },
   composerContainer: {
     backgroundColor: colors.surface,

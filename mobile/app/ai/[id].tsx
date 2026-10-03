@@ -24,7 +24,7 @@ export default function AiChatScreen() {
           const userMessage: AiChatMessageViewModel = { id: `initial-${Date.now()}`, sender: 'user', text: prompt, timestamp: 'Vừa xong' };
           setMessages([userMessage]);
           const reply = await aiService.sendMessage(id, prompt);
-          setMessages([userMessage, reply]);
+          await revealReply(reply, (updater) => setMessages((current) => updater(current)));
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Không thể tải cuộc trò chuyện.');
@@ -35,7 +35,22 @@ export default function AiChatScreen() {
     };
     void load();
   }, [id, prompt]);
-  const send = async (text: string) => { if (!id || processing) return; const optimistic: AiChatMessageViewModel = { id: `pending-${Date.now()}`, sender: 'user', text, timestamp: 'Vừa xong', isProcessing: true }; setMessages((current) => [...current, optimistic]); setProcessing(true); try { const reply = await aiService.sendMessage(id, text); setMessages((current) => [...current.map((item) => item.id === optimistic.id ? { ...item, isProcessing: false } : item), reply]); } catch (e) { setMessages((current) => current.map((item) => item.id === optimistic.id ? { ...item, isProcessing: false, isError: true } : item)); Alert.alert('Không thể gửi tin nhắn', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } finally { setProcessing(false); } };
+  const send = async (text: string) => { if (!id || processing) return; const optimistic: AiChatMessageViewModel = { id: `pending-${Date.now()}`, sender: 'user', text, timestamp: 'Vừa xong', isProcessing: true }; setMessages((current) => [...current, optimistic]); setProcessing(true); try { const reply = await aiService.sendMessage(id, text); setMessages((current) => current.map((item) => item.id === optimistic.id ? { ...item, isProcessing: false } : item)); await revealReply(reply, (updater) => setMessages((current) => updater(current))); } catch (e) { setMessages((current) => current.map((item) => item.id === optimistic.id ? { ...item, isProcessing: false, isError: true } : item)); Alert.alert('Không thể gửi tin nhắn', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } finally { setProcessing(false); } };
   if (loading || error) return <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>{loading ? <ActivityIndicator /> : <Text>{error}</Text>}</SafeAreaView>;
   return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><AiChatInteractivePresentation conversationTitle="Tư vấn Fitmate AI" messages={messages} isProcessing={processing} onBack={() => router.back()} onSendMessage={(text) => void send(text)} onReviewSuggestion={() => router.push('/workout/ai-adjust' as never)} /></SafeAreaView>;
+}
+
+async function revealReply(
+  reply: AiChatMessageViewModel,
+  update: (updater: (messages: AiChatMessageViewModel[]) => AiChatMessageViewModel[]) => void
+) {
+  const characters = Array.from(reply.text);
+  const chunkSize = Math.max(1, Math.ceil(characters.length / 180));
+  update((messages) => [...messages, { ...reply, text: '', isProcessing: true }]);
+  for (let end = chunkSize; end < characters.length; end += chunkSize) {
+    const visible = characters.slice(0, end).join('');
+    update((messages) => messages.map((item) => item.id === reply.id ? { ...item, text: visible } : item));
+    await new Promise((resolve) => setTimeout(resolve, 18));
+  }
+  update((messages) => messages.map((item) => item.id === reply.id ? { ...reply, isProcessing: false } : item));
 }
