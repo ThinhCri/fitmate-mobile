@@ -229,7 +229,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
         <SectionHeader title="Thao tác nhanh" />
         <View style={styles.quickGrid}>
           <TouchableOpacity
-            style={styles.quickActionCard}
+            style={[styles.quickActionCard, shadow.card]}
             onPress={onLogMealPress}
             activeOpacity={0.7}
             accessibilityRole="button"
@@ -242,7 +242,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.quickActionCard}
+            style={[styles.quickActionCard, shadow.card]}
             onPress={onScanMealPress}
             activeOpacity={0.7}
             accessibilityRole="button"
@@ -255,7 +255,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.quickActionCard}
+            style={[styles.quickActionCard, shadow.card]}
             onPress={onStartWorkoutPress}
             activeOpacity={0.7}
             accessibilityRole="button"
@@ -268,7 +268,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.quickActionCard}
+            style={[styles.quickActionCard, shadow.card]}
             onPress={onFindTrainerPress}
             activeOpacity={0.7}
             accessibilityRole="button"
@@ -545,33 +545,37 @@ const styles = StyleSheet.create({
   quickGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   quickActionCard: {
-    width: '47%',
-    minHeight: 100,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    flexGrow: 1,
+    flexBasis: '47%',
+    minWidth: 136,
+    minHeight: 116,
+    backgroundColor: 'rgba(255,255,255,0.90)',
+    borderRadius: radius.xl,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.92)',
   },
   actionIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   actionTitle: {
     color: colors.textPrimary,
-    fontWeight: '600',
+    fontWeight: '700',
+    lineHeight: 20,
   },
   actionSubtitle: {
-    color: colors.textMuted,
-    marginTop: 2,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+    lineHeight: 16,
   },
   workoutCard: {
     flexDirection: 'row',

@@ -643,3 +643,9 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 
 - Removed the redundant weekday/date label from the Dashboard header and kept the personalized greeting as the primary heading.
 - Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
+
+# Dashboard quick-action visual refinement — 2026-10-03
+
+- Replaced the brittle percentage-width quick-action grid with equal flexible two-column tiles that keep consistent gaps across Android screen widths.
+- Refined the four action tiles toward the approved soft glass direction: near-white translucent surfaces, white borders, larger radii, restrained card shadow, consistent icon geometry and clearer label hierarchy.
+- Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
