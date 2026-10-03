@@ -6,7 +6,7 @@ import {
   PlannedMealSlotViewModel,
 } from '@/features/nutrition/nutritionTypes';
 import type { INutritionRepository } from '../nutritionRepository';
-import { apiClient } from '@/services/api/client';
+import { apiClient, apiUploadFile } from '@/services/api/client';
 
 export class ApiNutritionRepository implements INutritionRepository {
   async getDaySummary(dateString?: string): Promise<DayNutritionSummaryViewModel> {
@@ -199,10 +199,18 @@ export class ApiNutritionRepository implements INutritionRepository {
   }
 
   async scanMealImage(uri: string) {
-    const form = new FormData();
-    const filename = uri.split('/').pop() || 'meal.jpg';
-    form.append('file', { uri, name: filename, type: 'image/jpeg' } as unknown as Blob);
-    const raw = await apiClient<{ items?: Array<{ name?: string; calories?: number; protein_g?: number; carbs_g?: number; fat_g?: number }> }>('/me/nutrition/scan', { method: 'POST', body: form });
+    const normalizedUri = uri.toLowerCase().split('?')[0];
+    const mimeType = normalizedUri.endsWith('.png')
+      ? 'image/png'
+      : normalizedUri.endsWith('.webp')
+        ? 'image/webp'
+        : 'image/jpeg';
+    const raw = await apiUploadFile<{ items?: Array<{ name?: string; calories?: number; protein_g?: number; carbs_g?: number; fat_g?: number }> }>(
+      '/me/nutrition/scan',
+      uri,
+      mimeType,
+      {}
+    );
     return (raw.items || []).map((item, index) => ({
       id: `scan-${index}`,
       name: item.name || 'Món ăn nhận diện',
