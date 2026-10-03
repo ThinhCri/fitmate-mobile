@@ -18,6 +18,7 @@ export const dashboardService = {
     const date = new Date(`${dashboard.date}T00:00:00`);
     return {
       greetingName: profile.full_name?.trim() || profile.email,
+      avatarUrl: profile.avatar_url ?? null,
       dateLabel: Number.isNaN(date.getTime()) ? dashboard.date : date.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }),
       calories: { consumed: dashboard.nutrition?.total_calories ?? 0, target: dashboard.nutrition?.target_calories ?? 0, burned: dashboard.workout?.total_calories_burned ?? 0 },
       macros: {

@@ -21,7 +21,6 @@ import {
   Plus,
   ChevronRight,
   CheckCircle2,
-  CircleUserRound,
 } from 'lucide-react-native';
 import { colors, radius, shadow, spacing, typography } from '@/theme/designTokens';
 import { MemberDashboardSummary } from '@/services/api/types';
@@ -29,6 +28,7 @@ import { SectionHeader } from '@/components/design-system/SectionHeader';
 import { PrimaryButton } from '@/components/design-system/Buttons';
 import { useTabBarScroll } from '@/context/TabBarVisibilityContext';
 import { GradientBackground } from '@/components/design-system/GradientBackground';
+import { Avatar } from '@/components/design-system/Avatar';
 
 export interface MemberHomePresentationProps {
   data: MemberDashboardSummary;
@@ -118,7 +118,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
             accessibilityLabel="Mở tài khoản và cài đặt"
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <CircleUserRound size={24} color={colors.primaryDark} />
+            <Avatar uri={data.avatarUrl} name={data.greetingName} size="sm" />
           </TouchableOpacity>
         </View>
       </View>

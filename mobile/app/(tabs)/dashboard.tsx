@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   InteractionManager,
@@ -23,6 +23,7 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const hasFocusedOnce = useRef(false);
   const load = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true);
     else setLoading(true);
@@ -46,7 +47,9 @@ export default function DashboardScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadUnreadNotificationCount();
-    }, [loadUnreadNotificationCount])
+      if (hasFocusedOnce.current) void load(true);
+      else hasFocusedOnce.current = true;
+    }, [load, loadUnreadNotificationCount])
   );
 
   useEffect(() => {

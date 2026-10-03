@@ -387,6 +387,7 @@ export function mapAvailabilitySlotToViewModel(
 
 export interface MemberDashboardSummary {
   greetingName: string;
+  avatarUrl?: string | null;
   dateLabel: string;
   calories: {
     consumed: number;
