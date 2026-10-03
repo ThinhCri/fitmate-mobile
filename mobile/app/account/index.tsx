@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
   AccountHubPresentation,
   AccountHubViewModel,
@@ -17,20 +17,20 @@ export default function AccountHubScreen() {
     role: 'member',
   });
 
-  useEffect(() => {
-    let mounted = true;
+  useFocusEffect(useCallback(() => {
+    let active = true;
     getAccountRepository()
       .getAccountHub()
       .then((data) => {
-        if (mounted) setAccount(data);
+        if (active) setAccount(data);
       })
       .catch((err) => {
         console.warn('Could not load account hub:', err);
       });
     return () => {
-      mounted = false;
+      active = false;
     };
-  }, []);
+  }, []));
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>

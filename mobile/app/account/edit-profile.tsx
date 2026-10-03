@@ -5,8 +5,10 @@ import { router } from 'expo-router';
 import { EditProfilePresentation, UserProfileFormData } from '@/features/account';
 import { getAccountRepository } from '@/repositories/accountRepository';
 import { ImagePickerService } from '@/services/imagePicker';
+import { useAuth } from '@/services/AuthContext';
 
 export default function EditProfileScreen() {
+  const { refresh } = useAuth();
   const [profile, setProfile] = useState<UserProfileFormData | null>(null);
   const [userId, setUserId] = useState('');
   const [error, setError] = useState('');
@@ -23,6 +25,7 @@ export default function EditProfileScreen() {
         : values.avatarUrl;
       setProfile({ ...values, avatarUrl });
       setPendingAvatar(null);
+      await refresh();
       Alert.alert('Thành công', 'Hồ sơ cá nhân đã được cập nhật.', [{ text: 'Xong', onPress: () => router.back() }]);
     }
     catch (e) { Alert.alert('Không thể cập nhật', e instanceof Error ? e.message : 'Vui lòng thử lại.'); }

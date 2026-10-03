@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -53,6 +53,10 @@ export function EditProfilePresentation({
   const [formData, setFormData] = useState<UserProfileFormData>(initialValues);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
+  useEffect(() => {
+    setFormData(initialValues);
+  }, [initialValues]);
+
   const isDirty = hasPendingAvatar || JSON.stringify(formData) !== JSON.stringify(initialValues);
 
   const handleBack = () => {
@@ -99,7 +103,7 @@ export function EditProfilePresentation({
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarWrapper}>
-            <Avatar uri={avatarPreviewUrl ?? formData.avatarUrl} name={formData.name} size="lg" />
+            <Avatar uri={avatarPreviewUrl ?? initialValues.avatarUrl ?? formData.avatarUrl} name={formData.name} size="lg" />
             <TouchableOpacity
               style={styles.cameraIconBtn}
               onPress={onAvatarPress}
