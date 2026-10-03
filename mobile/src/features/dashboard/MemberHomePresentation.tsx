@@ -86,7 +86,6 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
       >
       <View style={styles.headerRow}>
         <View style={styles.greetingCol}>
-          <Text style={[typography.caption, styles.dateLabel]}>{data.dateLabel}</Text>
           <Text style={[typography.display, styles.greetingText]}>
             Chào {data.greetingName}! 👋
           </Text>
@@ -406,10 +405,6 @@ const styles = StyleSheet.create({
   },
   greetingCol: {
     flex: 1,
-  },
-  dateLabel: {
-    color: colors.textSecondary,
-    marginBottom: 2,
   },
   greetingText: {
     color: colors.textPrimary,

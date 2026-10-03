@@ -638,3 +638,8 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Wrapped Dashboard scroll content in a top `SafeAreaView` while keeping the ambient gradient behind the system bar. Greeting and header actions no longer render underneath Android/iOS status-bar content.
 - The other four primary tabs already use `ScreenContainer` with the top edge and required no change.
 - Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule and changes were not committed.
+
+# Dashboard header simplification — 2026-10-03
+
+- Removed the redundant weekday/date label from the Dashboard header and kept the personalized greeting as the primary heading.
+- Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
