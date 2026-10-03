@@ -14,7 +14,7 @@ export interface INutritionRepository {
   addFoodItem(item: Omit<FoodItemViewModel, 'id'>): Promise<FoodItemViewModel>;
   deleteFoodItem(id: string): Promise<void>;
   updatePlannedSlot(slotId: string, isCompleted: boolean): Promise<void>;
-  scanMealImage(uri: string): Promise<import('@/features/nutrition/nutritionTypes').FoodCandidateViewModel[]>;
+  scanMealImage(uri: string, mimeType?: string | null): Promise<import('@/features/nutrition/nutritionTypes').FoodCandidateViewModel[]>;
 }
 
 export function getNutritionRepository(): INutritionRepository {

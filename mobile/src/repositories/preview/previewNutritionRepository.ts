@@ -149,7 +149,7 @@ let previewWeeklyMenu: PlannedMealSlotViewModel[] = [
 ];
 
 export class PreviewNutritionRepository implements INutritionRepository {
-  async scanMealImage(_uri: string) {
+  async scanMealImage(_uri: string, _mimeType?: string | null) {
     return [];
   }
   async getDaySummary(_dateString?: string): Promise<DayNutritionSummaryViewModel> {

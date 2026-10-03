@@ -198,13 +198,15 @@ export class ApiNutritionRepository implements INutritionRepository {
     throw new Error('Máy chủ chưa hỗ trợ trạng thái hoàn thành cho thực đơn.');
   }
 
-  async scanMealImage(uri: string) {
+  async scanMealImage(uri: string, detectedMimeType?: string | null) {
     const normalizedUri = uri.toLowerCase().split('?')[0];
-    const mimeType = normalizedUri.endsWith('.png')
-      ? 'image/png'
-      : normalizedUri.endsWith('.webp')
-        ? 'image/webp'
-        : 'image/jpeg';
+    const mimeType = detectedMimeType && ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(detectedMimeType.toLowerCase())
+      ? detectedMimeType.toLowerCase()
+      : normalizedUri.endsWith('.png')
+        ? 'image/png'
+        : normalizedUri.endsWith('.webp')
+          ? 'image/webp'
+          : 'image/jpeg';
     const raw = await apiUploadFile<{ items?: Array<{ name?: string; calories?: number; protein_g?: number; carbs_g?: number; fat_g?: number }> }>(
       '/me/nutrition/scan',
       uri,

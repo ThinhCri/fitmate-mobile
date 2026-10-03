@@ -12,15 +12,17 @@ export default function CameraScanRoute() {
     if (started.current) return;
     started.current = true;
 
-    const captureAndScan = async () => {
-      const image = await ImagePickerService.pickFromCamera({ quality: 0.8 });
+    const selectAndScan = async (source: 'camera' | 'library') => {
+      const image = source === 'camera'
+        ? await ImagePickerService.pickFromCamera({ quality: 0.8 })
+        : await ImagePickerService.pickFromLibrary({ quality: 0.8 });
       if (!image) {
         if (router.canGoBack()) router.back();
         return;
       }
 
       try {
-        const candidates = await getNutritionRepository().scanMealImage(image.uri);
+        const candidates = await getNutritionRepository().scanMealImage(image.uri, image.mimeType);
         router.replace({
           pathname: '/nutrition/candidates-review' as never,
           params: { candidates: JSON.stringify(candidates) },
@@ -37,7 +39,16 @@ export default function CameraScanRoute() {
       }
     };
 
-    void captureAndScan();
+    Alert.alert(
+      'Chọn ảnh món ăn',
+      'Bạn có thể chụp ảnh mới hoặc chọn ảnh có sẵn từ thư viện và Google Photos.',
+      [
+        { text: 'Quay lại', style: 'cancel', onPress: () => router.back() },
+        { text: 'Thư viện ảnh', onPress: () => void selectAndScan('library') },
+        { text: 'Chụp ảnh', onPress: () => void selectAndScan('camera') },
+      ],
+      { cancelable: true, onDismiss: () => router.back() }
+    );
   }, []);
 
   return <View style={{ flex: 1, backgroundColor: colors.background }} />;
