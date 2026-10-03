@@ -6,7 +6,7 @@ import {
 } from '@/features/account/accountTypes';
 import { IAccountRepository, AccountDeletionStatusViewModel } from '../accountRepository';
 import { authService } from '@/services/api/authService';
-import { apiClient, resolveApiResourceUrl } from '@/services/api/client';
+import { apiClient, apiUploadFile, resolveApiResourceUrl } from '@/services/api/client';
 import Constants from 'expo-constants';
 import { bookingService } from '@/services/api/bookingService';
 import { apiSocialRepository } from './apiSocialRepository';
@@ -92,10 +92,12 @@ export class ApiAccountRepository implements IAccountRepository {
     const fileName = originalName && /\.(jpe?g|png|webp)$/i.test(originalName)
       ? originalName
       : `avatar${extension}`;
-    const form = new FormData();
-    form.append('file', { uri: image.uri, name: fileName, type: mimeType } as any);
-    form.append('category', 'avatars');
-    const upload = await apiClient<{ storageKey?: string; uri?: string; signedUrl?: string }>('/uploads', { method: 'POST', body: form });
+    const upload = await apiUploadFile<{ storageKey?: string; uri?: string; signedUrl?: string }>(
+      '/uploads',
+      image.uri,
+      mimeType,
+      { category: 'avatars', fileName }
+    );
     if (!upload.storageKey) throw new Error('Máy chủ không trả về mã lưu trữ ảnh đại diện.');
     const profile = await apiClient<{ avatar_url?: string | null }>('/users/me/avatar', {
       method: 'PUT',

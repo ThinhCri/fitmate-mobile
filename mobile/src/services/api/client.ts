@@ -1,5 +1,6 @@
 import { sessionManager } from '@/services/session/sessionManager';
 import { getUserFacingApiErrorMessage } from './errorMessages';
+import * as FileSystem from 'expo-file-system/legacy';
 
 const RAW_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8080/api/v1';
@@ -38,6 +39,54 @@ export class ApiError extends Error {
 
 export function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError';
+}
+
+export async function apiUploadFile<T>(
+  endpoint: string,
+  fileUri: string,
+  mimeType: string,
+  parameters: Record<string, string>
+): Promise<T> {
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
+  const token = sessionManager.getAccessToken();
+
+  try {
+    const response = await FileSystem.uploadAsync(API_BASE_URL + cleanEndpoint, fileUri, {
+      httpMethod: 'POST',
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: 'file',
+      mimeType,
+      parameters,
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: 'Bearer ' + token } : {}),
+      },
+    });
+
+    let data: unknown;
+    try {
+      data = response.body ? JSON.parse(response.body) : {};
+    } catch {
+      data = response.body;
+    }
+
+    if (response.status < 200 || response.status >= 300) {
+      throw new ApiError(
+        getUserFacingApiErrorMessage(response.status, data),
+        response.status,
+        data
+      );
+    }
+
+    return data as T;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      'Không thể đọc hoặc tải ảnh lên. Vui lòng tải ảnh về thiết bị rồi thử lại.',
+      0,
+      error instanceof Error ? error.message : undefined
+    );
+  }
 }
 
 interface RequestOptions extends RequestInit {
