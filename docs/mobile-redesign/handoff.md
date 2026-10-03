@@ -669,3 +669,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Kept depth in the page background and restrained shadow rather than inside card opacity. Surface, subtle and outlined Card variants now render on white, with their existing border semantics retained where applicable.
 - Centered icons, labels and supporting copy in all four Dashboard quick-action tiles for a balanced two-column grid.
 - Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
+
+# Dashboard unread-notification badge — 2026-10-03
+
+- Replaced the permanent red notification dot with a real unread count loaded from the notification API.
+- The badge is hidden at zero, displays the exact count from 1 through 99 and caps larger values at `99+`.
+- Refreshes the unread count whenever Dashboard regains focus (including after reading notifications) and during pull-to-refresh. Notification-count failure does not block core Dashboard data.
+- Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.

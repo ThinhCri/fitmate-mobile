@@ -32,6 +32,7 @@ import { GradientBackground } from '@/components/design-system/GradientBackgroun
 
 export interface MemberHomePresentationProps {
   data: MemberDashboardSummary;
+  unreadNotificationCount?: number;
   onRefresh?: () => void;
   refreshing?: boolean;
   onLogMealPress?: () => void;
@@ -46,6 +47,7 @@ export interface MemberHomePresentationProps {
 
 export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
   data,
+  unreadNotificationCount = 0,
   onRefresh,
   refreshing = false,
   onLogMealPress,
@@ -100,7 +102,13 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Bell size={22} color={colors.textPrimary} />
-            <View style={styles.bellDot} />
+            {unreadNotificationCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -425,14 +433,25 @@ const styles = StyleSheet.create({
     borderColor: colors.surface,
     position: 'relative',
   },
-  bellDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  notificationBadge: {
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: radius.full,
     backgroundColor: colors.danger,
     position: 'absolute',
-    top: 12,
-    right: 14,
+    top: -3,
+    right: -3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.surface,
+  },
+  notificationBadgeText: {
+    color: colors.white,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '800',
   },
   mainCard: {
     backgroundColor: colors.surface,

@@ -7,12 +7,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { MemberHomePresentation } from '@/features/dashboard/MemberHomePresentation';
 import { dashboardService } from '@/services/api/dashboardService';
 import type { MemberDashboardSummary } from '@/services/api/types';
 import { useAuth } from '@/services/AuthContext';
 import { requestInitialPermissionsOnce } from '@/services/initialPermissions';
+import { getSupportRepository } from '@/repositories/supportRepository';
 import { colors, spacing, typography } from '@/theme/designTokens';
 
 export default function DashboardScreen() {
@@ -21,6 +22,7 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const load = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true);
     else setLoading(true);
@@ -30,6 +32,22 @@ export default function DashboardScreen() {
     finally { setLoading(false); setRefreshing(false); }
   }, []);
   useEffect(() => { void load(); }, [load]);
+
+  const loadUnreadNotificationCount = useCallback(async () => {
+    try {
+      const notifications = await getSupportRepository().getNotifications();
+      setUnreadNotificationCount(notifications.filter((item) => !item.isRead).length);
+    } catch {
+      // Notification count is secondary; keep the Dashboard usable if it fails.
+      setUnreadNotificationCount(0);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadUnreadNotificationCount();
+    }, [loadUnreadNotificationCount])
+  );
 
   useEffect(() => {
     if (!data || !user) return;
@@ -47,7 +65,7 @@ export default function DashboardScreen() {
   if (loading && !data) return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
   if (error && !data) return <View style={styles.center}><Text style={[typography.body, styles.error]}>{error}</Text><TouchableOpacity onPress={() => void load()} style={styles.retry}><Text style={styles.retryText}>Thử lại</Text></TouchableOpacity></View>;
   if (!data) return null;
-  return <MemberHomePresentation data={data} refreshing={refreshing} onRefresh={() => void load(true)}
+  return <MemberHomePresentation data={data} unreadNotificationCount={unreadNotificationCount} refreshing={refreshing} onRefresh={() => { void load(true); void loadUnreadNotificationCount(); }}
     onLogMealPress={() => router.push('/nutrition/manual-entry' as never)}
     onScanMealPress={() => router.push('/nutrition/scan' as never)}
     onStartWorkoutPress={() => router.push('/(tabs)/workout' as never)}
