@@ -305,7 +305,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
             <ChevronRight size={20} color={colors.textMuted} />
           </TouchableOpacity>
         ) : (
-          <View style={styles.noWorkoutBox}>
+          <View style={[styles.noWorkoutBox, shadow.card]}>
             <Text style={[typography.body, styles.noWorkoutText]}>
               Hôm nay là ngày nghỉ hoặc chưa có lịch tập.
             </Text>
@@ -359,7 +359,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           onAction={onLogMealPress}
         />
         {data.todayMeals.map((meal) => (
-          <View key={meal.id} style={styles.mealItemRow}>
+          <View key={meal.id} style={[styles.mealItemRow, shadow.card]}>
             <View style={styles.mealIconBox}>
               <CheckCircle2 size={18} color={colors.primary} />
             </View>
@@ -418,11 +418,11 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.90)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.92)',
     position: 'relative',
   },
   bellDot: {
@@ -435,11 +435,11 @@ const styles = StyleSheet.create({
     right: 14,
   },
   mainCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.90)',
     borderRadius: radius.xl,
     padding: spacing.xl,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.92)',
   },
   cardHeaderRow: {
     flexDirection: 'row',
@@ -580,11 +580,11 @@ const styles = StyleSheet.create({
   workoutCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    backgroundColor: 'rgba(255,255,255,0.90)',
+    borderRadius: radius.xl,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.92)',
   },
   workoutIconCircle: {
     width: 48,
@@ -606,24 +606,24 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   noWorkoutBox: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    backgroundColor: 'rgba(255,255,255,0.90)',
+    borderRadius: radius.xl,
     padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.92)',
   },
   noWorkoutText: {
     color: colors.textSecondary,
     textAlign: 'center',
   },
   waterCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    backgroundColor: 'rgba(255,255,255,0.90)',
+    borderRadius: radius.xl,
     padding: spacing.lg,
     marginTop: spacing.xl,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.92)',
   },
   waterHeader: {
     flexDirection: 'row',
@@ -669,12 +669,12 @@ const styles = StyleSheet.create({
   mealItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.90)',
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     marginBottom: spacing.xs,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.92)',
   },
   mealIconBox: {
     marginRight: spacing.md,

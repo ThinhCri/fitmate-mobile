@@ -649,3 +649,9 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Replaced the brittle percentage-width quick-action grid with equal flexible two-column tiles that keep consistent gaps across Android screen widths.
 - Refined the four action tiles toward the approved soft glass direction: near-white translucent surfaces, white borders, larger radii, restrained card shadow, consistent icon geometry and clearer label hierarchy.
 - Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
+
+# Dashboard card-system convergence — 2026-10-03
+
+- Aligned all custom Dashboard surfaces with the shared soft-glass card direction: energy summary, workout, rest state, hydration, meal rows and circular header actions now share the same translucent white surface and white edge treatment.
+- Standardized content-card radii and applied the restrained shared card shadow to previously flat empty/meal cards; semantic badges, progress tracks and action controls retain their distinct colors.
+- Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
