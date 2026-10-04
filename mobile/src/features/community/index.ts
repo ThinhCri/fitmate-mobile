@@ -2,6 +2,8 @@ export * from './communityTypes';
 export * from './CommunityFeedPresentation';
 export * from './CreatePostPresentation';
 export * from './PostDetailPresentation';
+export * from './CommentsSheet';
+export * from './SharePostSheet';
 export * from './ReportBlockModal';
 export * from './PublicProfilePresentation';
 export * from './FindFriendsPresentation';

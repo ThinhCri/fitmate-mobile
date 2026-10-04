@@ -698,3 +698,12 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Community reloads when its tab regains focus so new posts and comment counts are refreshed from the API.
 - Mobile repository, API adapter and preview adapter now carry `parent_comment_id` and the post-visibility update operation.
 - Source review and `git diff --check` completed; automated frontend commands were not run under the repository manual-execution rule.
+
+# Public community engagement flow — 2026-10-04
+
+- Mobile post creation is public-only for the current release; audience controls are hidden while the backend enum remains available for future expansion.
+- Feed actions are reduced to heart, comments, share-to-Fitmate-friends and bookmark. Multi-image posts use swipe paging with position dots.
+- Comments open over the feed in a keyboard-safe sheet, support one-level replies and comment likes, and rank root comments by likes then recency.
+- The post options menu reports other users' posts and offers edit/delete only to the owner. Sharing sends a post deep link through existing friend chat authorization.
+- Backend migration `20261004123000_SocialEngagementActions` persists bookmarks and comment likes; editing and toggle APIs are reflected in OpenAPI.
+- Backend build and all 903 unit tests pass. Frontend automated commands were not run under the repository manual-execution rule.

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,18 +12,12 @@ import {
 } from 'react-native';
 import {
   Users,
-  Search,
   MessageCircle,
   Heart,
-  Flame,
-  Smile,
   ShieldAlert,
-  Plus,
-  Share2,
+  Send,
+  Bookmark,
   MoreVertical,
-  CheckCircle2,
-  Globe,
-  Lock,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
@@ -38,11 +32,11 @@ export interface CommunityFeedPresentationProps {
   selectedCategory: 'all' | 'friends' | 'workout_exp' | 'nutrition_qa';
   onSegmentChange: (segment: 'community' | 'ai') => void;
   onCategoryChange: (category: 'all' | 'friends' | 'workout_exp' | 'nutrition_qa') => void;
-  onReaction: (postId: string, type: 'love' | 'fire' | 'smile') => void;
+  onReaction: (postId: string, type: 'love') => void;
   onSelectPost: (postId: string) => void;
+  onSharePost: (postId: string) => void;
+  onBookmarkPost: (postId: string) => void;
   onCreatePostPress: () => void;
-  onSearchFriendsPress: () => void;
-  onChatInboxPress: () => void;
   onReportPress: (postId: string) => void;
   onAuthorPress: (authorId: string) => void;
   onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -56,19 +50,19 @@ export function CommunityFeedPresentation({
   onCategoryChange,
   onReaction,
   onSelectPost,
+  onSharePost,
+  onBookmarkPost,
   onCreatePostPress,
-  onSearchFriendsPress,
-  onChatInboxPress,
   onReportPress,
   onAuthorPress,
   onScroll: externalOnScroll,
 }: CommunityFeedPresentationProps) {
   const { width: screenWidth } = useWindowDimensions();
+  const [activeMedia, setActiveMedia] = useState<Record<string, number>>({});
   const mediaWidth = Math.max(240, screenWidth - spacing.md * 4);
   const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
   const categories = [
     { key: 'all', label: 'Tất cả' },
-    { key: 'friends', label: 'Bạn bè' },
     { key: 'workout_exp', label: 'Kinh nghiệm tập' },
     { key: 'nutrition_qa', label: 'Hỏi đáp dinh dưỡng' },
   ] as const;
@@ -203,11 +197,7 @@ export function CommunityFeedPresentation({
                       </View>
                     )}
                   </View>
-                  <View style={styles.postMetaRow}>
-                    <Text style={styles.postTime}>{post.createdAt}</Text>
-                    {post.visibility === 'public' ? <Globe size={11} color={colors.textMuted} /> : post.visibility === 'friends' ? <Users size={11} color={colors.textMuted} /> : <Lock size={11} color={colors.textMuted} />}
-                    <Text style={styles.postTime}>{post.visibility === 'public' ? 'Công khai' : post.visibility === 'friends' ? 'Bạn bè' : 'Riêng tư'}</Text>
-                  </View>
+                  <Text style={styles.postTime}>{post.createdAt}</Text>
                 </View>
               </TouchableOpacity>
 
@@ -222,22 +212,20 @@ export function CommunityFeedPresentation({
             </View>
 
             {/* Post Content */}
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => onSelectPost(post.id)}
-              accessibilityRole="button"
-              accessibilityLabel="Xem chi tiết bài viết"
-            >
+            <View>
               <Text style={styles.postContent}>{post.content}</Text>
               {(post.mediaUrls?.length || post.mediaUrl) ? (
-                <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.mediaCarousel}>
+                <>
+                <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.mediaCarousel}
+                  onMomentumScrollEnd={(event) => setActiveMedia((current) => ({ ...current, [post.id]: Math.round(event.nativeEvent.contentOffset.x / mediaWidth) }))}>
                   {(post.mediaUrls?.length ? post.mediaUrls : [post.mediaUrl!]).map((uri, index, all) => (
                     <View key={`${uri}-${index}`} style={[styles.feedMediaFrame, { width: mediaWidth }]}>
                       <Image source={{ uri }} style={styles.feedMedia} accessibilityRole="image" accessibilityLabel={`Ảnh ${index + 1} trên ${all.length}`} />
-                      {all.length > 1 && <View style={styles.mediaCounter}><Text style={styles.mediaCounterText}>{index + 1}/{all.length}</Text></View>}
                     </View>
                   ))}
                 </ScrollView>
+                {(post.mediaUrls?.length || 0) > 1 && <View style={styles.paginationDots}>{post.mediaUrls!.map((_, index) => <View key={index} style={[styles.paginationDot, (activeMedia[post.id] || 0) === index && styles.paginationDotActive]} />)}</View>}
+                </>
               ) : null}
               {(post.workoutTags?.length || post.mealTags?.length || post.isKnowledgeSharing) ? (
                 <View style={styles.feedTags}>
@@ -245,7 +233,7 @@ export function CommunityFeedPresentation({
                   {post.isKnowledgeSharing && <Text style={styles.feedTag}>#kiến_thức</Text>}
                 </View>
               ) : null}
-            </TouchableOpacity>
+            </View>
 
             {/* Reactions & Actions Row */}
             <View style={styles.reactionsBar}>
@@ -260,56 +248,24 @@ export function CommunityFeedPresentation({
                   accessibilityLabel="Thả tim"
                 >
                   <Heart
-                    size={16}
+                    size={24}
                     color={post.reactions.userReaction === 'love' ? '#DC2626' : colors.textSecondary}
                     fill={post.reactions.userReaction === 'love' ? '#DC2626' : 'transparent'}
                   />
-                  <Text style={styles.reactionCount}>{post.reactions.love}</Text>
+                  {post.reactions.love > 0 && <Text style={styles.reactionCount}>{post.reactions.love}</Text>}
                 </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.reactionBtn,
-                    post.reactions.userReaction === 'fire' && styles.reactionBtnActive,
-                  ]}
-                  onPress={() => onReaction(post.id, 'fire')}
-                  accessibilityRole="button"
-                  accessibilityLabel="Truyền lửa"
-                >
-                  <Flame
-                    size={16}
-                    color={post.reactions.userReaction === 'fire' ? '#EA580C' : colors.textSecondary}
-                    fill={post.reactions.userReaction === 'fire' ? '#EA580C' : 'transparent'}
-                  />
-                  <Text style={styles.reactionCount}>{post.reactions.fire}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.reactionBtn,
-                    post.reactions.userReaction === 'smile' && styles.reactionBtnActive,
-                  ]}
-                  onPress={() => onReaction(post.id, 'smile')}
-                  accessibilityRole="button"
-                  accessibilityLabel="Thích"
-                >
-                  <Smile
-                    size={16}
-                    color={post.reactions.userReaction === 'smile' ? '#D97706' : colors.textSecondary}
-                  />
-                  <Text style={styles.reactionCount}>{post.reactions.smile}</Text>
-                </TouchableOpacity>
-              </View>
-
               <TouchableOpacity
-                style={styles.commentBtn}
+                style={styles.reactionBtn}
                 onPress={() => onSelectPost(post.id)}
                 accessibilityRole="button"
                 accessibilityLabel="Xem bình luận"
               >
-                <MessageCircle size={16} color={colors.textSecondary} />
-                <Text style={styles.commentCountText}>{post.commentCount} bình luận</Text>
+                <MessageCircle size={24} color={colors.textSecondary} />
+                {post.commentCount > 0 && <Text style={styles.reactionCount}>{post.commentCount}</Text>}
               </TouchableOpacity>
+              <TouchableOpacity style={styles.reactionBtn} onPress={() => onSharePost(post.id)} accessibilityLabel="Chia sẻ cho bạn bè"><Send size={24} color={colors.textSecondary} /></TouchableOpacity>
+              </View>
+              <TouchableOpacity style={styles.reactionBtn} onPress={() => onBookmarkPost(post.id)} accessibilityLabel={post.savedByViewer ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}><Bookmark size={24} color={colors.textSecondary} fill={post.savedByViewer ? colors.textSecondary : 'transparent'} /></TouchableOpacity>
             </View>
           </Card>
         ))}
@@ -504,20 +460,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.xs,
+    paddingTop: 2,
     marginTop: 4,
   },
   reactionsGroup: {
     flexDirection: 'row',
-    gap: spacing.xs,
+    gap: spacing.md,
   },
   reactionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: radius.md,
   },
@@ -539,4 +492,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
   },
+  paginationDots: { flexDirection: 'row', justifyContent: 'center', gap: 5, paddingTop: spacing.xs },
+  paginationDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border },
+  paginationDotActive: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.primary },
 });

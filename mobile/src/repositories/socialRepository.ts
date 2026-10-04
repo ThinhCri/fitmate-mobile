@@ -8,14 +8,17 @@ export interface ISocialRepository {
   listPosts(scope?: 'public' | 'friends'): Promise<CommunityPostViewModel[]>;
   getPost(id: string): Promise<CommunityPostViewModel>;
   createPost(values: CreatePostFormValues): Promise<CommunityPostViewModel>;
+  updatePost(postId: string, content: string): Promise<CommunityPostViewModel>;
   addComment(postId: string, text: string, parentCommentId?: string): Promise<PostCommentViewModel>;
   updatePostVisibility(postId: string, visibility: CommunityPostViewModel['visibility']): Promise<CommunityPostViewModel>;
+  toggleBookmark(postId: string): Promise<{ active: boolean; count: number }>;
+  toggleCommentLike(commentId: string): Promise<{ active: boolean; count: number }>;
   deletePost(postId: string): Promise<void>;
   blockUser(userId: string): Promise<void>;
   getPublicProfile(userId: string): Promise<{ profile: UserPublicProfileViewModel; requestId?: string }>;
   searchUsers(query: string): Promise<FriendItemViewModel[]>;
   listConversations(): Promise<ConversationItemViewModel[]>;
-  reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<void>;
+  reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<{ active: boolean; count: number }>;
   getFriends(): Promise<{
     friends: FriendItemViewModel[];
     pendingRequests: FriendItemViewModel[];

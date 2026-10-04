@@ -61,7 +61,11 @@ interface PostWire {
   is_knowledge: boolean;
   reactions_count: number;
   comments_count: number;
+  saved_by_viewer?: boolean;
+  reacted_by_viewer?: boolean;
   created_at: string;
+  likes_count?: number;
+  liked_by_viewer?: boolean;
 }
 
 interface CommentWire {
@@ -75,7 +79,7 @@ interface CommentWire {
 }
 
 function mapComment(wire: CommentWire, currentUserId?: string): PostCommentViewModel {
-  return { id: wire.id, parentCommentId: wire.parent_comment_id || undefined, authorId: wire.author_id, authorName: wire.author.display_name, authorRole: 'member', text: wire.text, createdAt: new Date(wire.created_at).toLocaleString('vi-VN'), isOwner: currentUserId === wire.author_id };
+  return { id: wire.id, parentCommentId: wire.parent_comment_id || undefined, authorId: wire.author_id, authorName: wire.author.display_name, authorRole: 'member', text: wire.text, createdAt: new Date(wire.created_at).toLocaleString('vi-VN'), isOwner: currentUserId === wire.author_id, likesCount: wire.likes_count || 0, likedByViewer: Boolean(wire.liked_by_viewer) };
 }
 
 function mapPost(wire: PostWire): CommunityPostViewModel {
@@ -101,10 +105,12 @@ function mapPost(wire: PostWire): CommunityPostViewModel {
       love: wire.reactions_count,
       fire: 0,
       smile: 0,
+      userReaction: wire.reacted_by_viewer ? 'love' : undefined,
     },
     commentCount: wire.comments_count,
     workoutTags: tags.filter((tag) => tag !== 'workout_exp' && tag !== 'nutrition_qa'),
     isKnowledgeSharing: wire.is_knowledge,
+    savedByViewer: Boolean(wire.saved_by_viewer),
   };
 }
 
@@ -112,11 +118,11 @@ export class ApiSocialRepository implements ISocialRepository {
   private convPeerCache = new Map<string, string>();
 
   async listPosts(scope: 'public' | 'friends' = 'public'): Promise<CommunityPostViewModel[]> {
-    const response = await apiClient<{ items: PostWire[]; nextCursor?: string | null }>(
-      `/social/posts?scope=${scope}&limit=50`,
-      { method: 'GET' }
-    );
-    return (response.items || []).map(mapPost);
+    const [response, me] = await Promise.all([
+      apiClient<{ items: PostWire[]; nextCursor?: string | null }>(`/social/posts?scope=${scope}&limit=50`, { method: 'GET' }),
+      authService.getMe(),
+    ]);
+    return (response.items || []).map((wire) => ({ ...mapPost(wire), isOwner: wire.author_id === me.id }));
   }
 
   async getPost(id: string): Promise<CommunityPostViewModel> {
@@ -147,7 +153,12 @@ export class ApiSocialRepository implements ISocialRepository {
     }
     const tags = [...values.workoutTags, ...values.mealTags];
     if (values.category !== 'all') tags.unshift(values.category);
-    const result = await apiClient<PostWire>('/social/posts', { method: 'POST', body: JSON.stringify({ content: values.content, image_storage_keys: storageKeys, tags, visibility: values.visibility, is_knowledge: Boolean(values.isKnowledgeSharing) }) });
+    const result = await apiClient<PostWire>('/social/posts', { method: 'POST', body: JSON.stringify({ content: values.content, image_storage_keys: storageKeys, tags, visibility: 'public', is_knowledge: Boolean(values.isKnowledgeSharing) }) });
+    return { ...mapPost(result), isOwner: true };
+  }
+
+  async updatePost(postId: string, content: string): Promise<CommunityPostViewModel> {
+    const result = await apiClient<PostWire>(`/social/posts/${encodeURIComponent(postId)}`, { method: 'PATCH', body: JSON.stringify({ content }) });
     return { ...mapPost(result), isOwner: true };
   }
 
@@ -165,6 +176,14 @@ export class ApiSocialRepository implements ISocialRepository {
       body: JSON.stringify({ visibility }),
     });
     return { ...mapPost(result), isOwner: true };
+  }
+
+  toggleBookmark(postId: string): Promise<{ active: boolean; count: number }> {
+    return apiClient(`/social/posts/${encodeURIComponent(postId)}/bookmark`, { method: 'POST' });
+  }
+
+  toggleCommentLike(commentId: string): Promise<{ active: boolean; count: number }> {
+    return apiClient(`/social/comments/${encodeURIComponent(commentId)}/like`, { method: 'POST' });
   }
 
   async deletePost(postId: string): Promise<void> {
@@ -194,9 +213,9 @@ export class ApiSocialRepository implements ISocialRepository {
     return (result.items || []).map((item) => ({ id: item.conversation_id, participantId: item.peer.user_id, participantName: item.peer.display_name || 'Người dùng Fitmate', participantRole: 'member', participantAvatar: item.peer.avatar_url || undefined, isOnline: false, lastMessage: item.last_message?.text || 'Chưa có tin nhắn', lastMessageTime: new Date(item.last_message_at).toLocaleString('vi-VN'), unreadCount: item.unread_count }));
   }
 
-  async reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<void> {
+  async reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<{ active: boolean; count: number }> {
     const wireType = type === 'love' ? 'heart' : type === 'fire' ? 'flame' : 'smile';
-    await apiClient(`/social/posts/${encodeURIComponent(postId)}/reactions`, {
+    return apiClient(`/social/posts/${encodeURIComponent(postId)}/reactions`, {
       method: 'POST',
       body: JSON.stringify({ type: wireType }),
     });

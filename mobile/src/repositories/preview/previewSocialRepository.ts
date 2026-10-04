@@ -86,9 +86,14 @@ export class PreviewSocialRepository implements ISocialRepository {
   }
 
   async createPost(values: CreatePostFormValues): Promise<CommunityPostViewModel> {
-    const post: CommunityPostViewModel = { id: `preview-post-${Date.now()}`, authorId: 'preview-me', authorName: 'Bạn', authorRole: 'member', content: values.content, mediaUrl: values.mediaUrls?.[0] || values.mediaUrl, mediaUrls: values.mediaUrls, category: values.category, visibility: values.visibility, createdAt: 'Vừa xong', reactions: { love: 0, fire: 0, smile: 0 }, commentCount: 0, workoutTags: values.workoutTags, mealTags: values.mealTags, isKnowledgeSharing: values.isKnowledgeSharing, isOwner: true, comments: [] };
+    const post: CommunityPostViewModel = { id: `preview-post-${Date.now()}`, authorId: 'preview-me', authorName: 'Bạn', authorRole: 'member', content: values.content, mediaUrl: values.mediaUrls?.[0] || values.mediaUrl, mediaUrls: values.mediaUrls, category: values.category, visibility: 'public', createdAt: 'Vừa xong', reactions: { love: 0, fire: 0, smile: 0 }, commentCount: 0, workoutTags: values.workoutTags, mealTags: values.mealTags, isKnowledgeSharing: values.isKnowledgeSharing, isOwner: true, comments: [] };
     previewPosts = [post, ...previewPosts];
     return post;
+  }
+
+  async updatePost(postId: string, content: string): Promise<CommunityPostViewModel> {
+    previewPosts = previewPosts.map((post) => post.id === postId ? { ...post, content } : post);
+    return this.getPost(postId);
   }
 
   async addComment(postId: string, text: string, parentCommentId?: string): Promise<PostCommentViewModel> {
@@ -114,19 +119,33 @@ export class PreviewSocialRepository implements ISocialRepository {
     return previewPosts.filter((post) => scope === 'public' || post.visibility === 'friends');
   }
 
-  async reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<void> {
+  async reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<{ active: boolean; count: number }> {
+    let result = { active: false, count: 0 };
     previewPosts = previewPosts.map((post) =>
       post.id === postId
-        ? {
+        ? (() => { const active = post.reactions.userReaction !== type; const count = Math.max(0, post.reactions[type] + (active ? 1 : -1)); result = { active, count }; return {
             ...post,
             reactions: {
               ...post.reactions,
-              [type]: post.reactions[type] + 1,
-              userReaction: type,
+              [type]: count,
+              userReaction: active ? type : undefined,
             },
-          }
+          }; })()
         : post
     );
+    return result;
+  }
+
+  async toggleBookmark(postId: string): Promise<{ active: boolean; count: number }> {
+    let active = false;
+    previewPosts = previewPosts.map((post) => post.id === postId ? { ...post, savedByViewer: (active = !post.savedByViewer) } : post);
+    return { active, count: active ? 1 : 0 };
+  }
+
+  async toggleCommentLike(commentId: string): Promise<{ active: boolean; count: number }> {
+    let result = { active: false, count: 0 };
+    previewPosts = previewPosts.map((post) => ({ ...post, comments: post.comments?.map((comment) => { if (comment.id !== commentId) return comment; const active = !comment.likedByViewer; const count = Math.max(0, (comment.likesCount || 0) + (active ? 1 : -1)); result = { active, count }; return { ...comment, likedByViewer: active, likesCount: count }; }) }));
+    return result;
   }
 
   async getFriends(): Promise<{

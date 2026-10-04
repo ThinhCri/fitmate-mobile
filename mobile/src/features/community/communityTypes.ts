@@ -11,6 +11,8 @@ export interface PostCommentViewModel {
   text: string;
   createdAt: string;
   isOwner?: boolean;
+  likesCount?: number;
+  likedByViewer?: boolean;
 }
 
 export interface CommunityPostViewModel {
@@ -37,6 +39,7 @@ export interface CommunityPostViewModel {
   mealTags?: string[];
   isKnowledgeSharing?: boolean;
   isOwner?: boolean;
+  savedByViewer?: boolean;
 }
 
 export interface CreatePostFormValues {

@@ -19,9 +19,6 @@ import {
   Utensils,
   BookOpen,
   ShieldCheck,
-  Globe,
-  Users,
-  Lock,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
@@ -62,9 +59,6 @@ export function CreatePostPresentation({
   onPickImages,
 }: CreatePostPresentationProps) {
   const [content, setContent] = useState(initialValues?.content || '');
-  const [visibility, setVisibility] = useState<'public' | 'friends' | 'private'>(
-    initialValues?.visibility || 'public'
-  );
   const [category, setCategory] = useState<'workout_exp' | 'nutrition_qa' | 'all'>(
     initialValues?.category || 'workout_exp'
   );
@@ -140,7 +134,7 @@ export function CreatePostPresentation({
       mediaUrls: images.map((image) => image.uri),
       mediaFiles: images,
       category,
-      visibility,
+      visibility: 'public',
       isKnowledgeSharing,
       workoutTags: selectedWorkoutTags,
       mealTags: selectedMealTags,
@@ -172,75 +166,6 @@ export function CreatePostPresentation({
       </View>
 
       <ScrollView style={styles.body} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
-        {/* Audience / Visibility Selector */}
-        <View style={styles.visibilityRow}>
-          <Text style={styles.sectionLabel}>Đối tượng xem:</Text>
-          <View style={styles.visibilityButtons}>
-            <TouchableOpacity
-              style={[
-                styles.visibilityPill,
-                visibility === 'public' && styles.visibilityPillActive,
-              ]}
-              onPress={() => setVisibility('public')}
-            >
-              <Globe
-                size={14}
-                color={visibility === 'public' ? colors.primary : colors.textSecondary}
-              />
-              <Text
-                style={[
-                  styles.visibilityText,
-                  visibility === 'public' && styles.visibilityTextActive,
-                ]}
-              >
-                Công khai
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.visibilityPill,
-                visibility === 'friends' && styles.visibilityPillActive,
-              ]}
-              onPress={() => setVisibility('friends')}
-            >
-              <Users
-                size={14}
-                color={visibility === 'friends' ? colors.primary : colors.textSecondary}
-              />
-              <Text
-                style={[
-                  styles.visibilityText,
-                  visibility === 'friends' && styles.visibilityTextActive,
-                ]}
-              >
-                Bạn bè
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.visibilityPill,
-                visibility === 'private' && styles.visibilityPillActive,
-              ]}
-              onPress={() => setVisibility('private')}
-            >
-              <Lock
-                size={14}
-                color={visibility === 'private' ? colors.primary : colors.textSecondary}
-              />
-              <Text
-                style={[
-                  styles.visibilityText,
-                  visibility === 'private' && styles.visibilityTextActive,
-                ]}
-              >
-                Chỉ mình tôi
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* Content TextArea */}
         <Card style={styles.composerCard}>
           <TextInput
@@ -258,6 +183,7 @@ export function CreatePostPresentation({
           </View>
         </Card>
 
+        {!isEditing && <>
         {/* Media Preview & Upload */}
         <View style={styles.sectionBlock}>
           <Text style={styles.sectionHeader}>Hình ảnh đính kèm ({images.length}/5)</Text>
@@ -368,6 +294,7 @@ export function CreatePostPresentation({
             Nội dung đăng tải tuân thủ Quy tắc ứng xử và an toàn sức khỏe Fitmate.
           </Text>
         </View>
+        </>}
       </ScrollView>
 
       {/* Unsaved Exit Confirmation Modal */}
