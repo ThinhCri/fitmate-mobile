@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -71,14 +71,21 @@ export function CreatePostPresentation({
   const [isKnowledgeSharing, setIsKnowledgeSharing] = useState(
     initialValues?.isKnowledgeSharing || false
   );
-  const [images, setImages] = useState<PostImageInput[]>(
-    initialValues?.mediaUrls?.length
-      ? initialValues.mediaUrls.slice(0, 5).map((uri) => ({ uri }))
-      : initialValues?.mediaUrl ? [{ uri: initialValues.mediaUrl }] : []
-  );
+  const [images, setImages] = useState<PostImageInput[]>(() => initialValues?.mediaUrls?.length
+    ? initialValues.mediaUrls.slice(0, 5).map((uri, index) => ({ uri, storageKey: initialValues.mediaStorageKeys?.[index] }))
+    : initialValues?.mediaUrl ? [{ uri: initialValues.mediaUrl, storageKey: initialValues.mediaStorageKeys?.[0] }] : []);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  const isDirty = content.trim().length > 0 || images.length > 0;
+  const initialSnapshot = useRef(JSON.stringify({
+    content: initialValues?.content || '',
+    category: initialValues?.category || 'workout_exp',
+    workoutTags: initialValues?.workoutTags || [],
+    mealTags: initialValues?.mealTags || [],
+    isKnowledgeSharing: initialValues?.isKnowledgeSharing || false,
+    images: images.map((image) => ({ uri: image.uri, storageKey: image.storageKey })),
+  }));
+  const currentSnapshot = JSON.stringify({ content, category, workoutTags: selectedWorkoutTags, mealTags: selectedMealTags, isKnowledgeSharing, images: images.map((image) => ({ uri: image.uri, storageKey: image.storageKey })) });
+  const isDirty = currentSnapshot !== initialSnapshot.current;
 
   const handleBackPress = () => {
     if (isDirty && !isSubmitting) {
@@ -156,8 +163,8 @@ export function CreatePostPresentation({
         <Text style={styles.headerTitle}>{isEditing ? 'Sửa bài viết' : 'Tạo bài viết'}</Text>
         <TouchableOpacity
           onPress={handleSubmit}
-          disabled={isSubmitting || !content.trim()}
-          style={[styles.publishBtn, (!content.trim() || isSubmitting) && styles.publishBtnDisabled]}
+          disabled={isSubmitting || !content.trim() || (isEditing && !isDirty)}
+          style={[styles.publishBtn, (!content.trim() || isSubmitting || (isEditing && !isDirty)) && styles.publishBtnDisabled]}
           accessibilityRole="button"
           accessibilityLabel={isEditing ? 'Lưu thay đổi' : 'Đăng bài viết'}
         >
@@ -175,15 +182,14 @@ export function CreatePostPresentation({
             placeholderTextColor={colors.textMuted}
             value={content}
             onChangeText={setContent}
-            maxLength={2000}
+            maxLength={5000}
             textAlignVertical="top"
           />
           <View style={styles.charCountRow}>
-            <Text style={styles.charCountText}>{content.length}/2000 ký tự</Text>
+            <Text style={styles.charCountText}>{content.length}/5000 ký tự</Text>
           </View>
         </Card>
 
-        {!isEditing && <>
         {/* Media Preview & Upload */}
         <View style={styles.sectionBlock}>
           <Text style={styles.sectionHeader}>Hình ảnh đính kèm ({images.length}/5)</Text>
@@ -294,17 +300,16 @@ export function CreatePostPresentation({
             Nội dung đăng tải tuân thủ Quy tắc ứng xử và an toàn sức khỏe Fitmate.
           </Text>
         </View>
-        </>}
       </ScrollView>
 
       {/* Unsaved Exit Confirmation Modal */}
       <ModalShell
         visible={showExitConfirm}
         onClose={() => setShowExitConfirm(false)}
-        title="Lưu bản nháp trước khi thoát?"
+        title={isEditing ? 'Bỏ các thay đổi?' : 'Thoát khi chưa đăng?'}
       >
         <Text style={styles.modalBodyText}>
-          Bạn có nội dung chưa được xuất bản. Bạn có muốn thoát mà không lưu không?
+          {isEditing ? 'Các thay đổi của bạn chưa được lưu. Bạn có muốn thoát không?' : 'Bài viết chưa được đăng. Bạn có muốn thoát không?'}
         </Text>
         <View style={styles.modalActionButtons}>
           <SecondaryButton

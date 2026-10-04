@@ -24,6 +24,7 @@ export interface CommunityPostViewModel {
   content: string;
   mediaUrl?: string;
   mediaUrls?: string[];
+  mediaStorageKeys?: string[];
   category: 'all' | 'friends' | 'workout_exp' | 'nutrition_qa';
   visibility: 'public' | 'friends' | 'private';
   createdAt: string;
@@ -46,6 +47,7 @@ export interface CreatePostFormValues {
   content: string;
   mediaUrl?: string;
   mediaUrls?: string[];
+  mediaStorageKeys?: string[];
   mediaFiles?: PostImageInput[];
   category: 'workout_exp' | 'nutrition_qa' | 'all';
   visibility: 'public' | 'friends' | 'private';
@@ -56,6 +58,7 @@ export interface CreatePostFormValues {
 
 export interface PostImageInput {
   uri: string;
+  storageKey?: string;
   mimeType?: string | null;
   fileName?: string | null;
 }

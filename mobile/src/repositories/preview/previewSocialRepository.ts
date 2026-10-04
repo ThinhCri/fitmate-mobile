@@ -91,8 +91,8 @@ export class PreviewSocialRepository implements ISocialRepository {
     return post;
   }
 
-  async updatePost(postId: string, content: string): Promise<CommunityPostViewModel> {
-    previewPosts = previewPosts.map((post) => post.id === postId ? { ...post, content } : post);
+  async updatePost(postId: string, values: CreatePostFormValues): Promise<CommunityPostViewModel> {
+    previewPosts = previewPosts.map((post) => post.id === postId ? { ...post, content: values.content, mediaUrl: values.mediaUrls?.[0], mediaUrls: values.mediaUrls || [], category: values.category, workoutTags: values.workoutTags, mealTags: values.mealTags, isKnowledgeSharing: values.isKnowledgeSharing } : post);
     return this.getPost(postId);
   }
 

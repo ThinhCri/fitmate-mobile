@@ -56,6 +56,7 @@ interface PostWire {
   content: string;
   image_url?: string | null;
   image_urls?: string[] | null;
+  image_storage_keys?: string[] | null;
   tags: string[];
   visibility: 'public' | 'friends' | 'private';
   is_knowledge: boolean;
@@ -84,6 +85,7 @@ function mapComment(wire: CommentWire, currentUserId?: string): PostCommentViewM
 
 function mapPost(wire: PostWire): CommunityPostViewModel {
   const tags = wire.tags || [];
+  const mealTagNames = new Set(['Dinh dưỡng sạch', 'Bữa phụ năng lượng', 'Giàu đạm (High Protein)', 'Keto / Low Carb']);
   const category = tags.includes('nutrition_qa')
     ? 'nutrition_qa'
     : tags.includes('workout_exp')
@@ -98,6 +100,7 @@ function mapPost(wire: PostWire): CommunityPostViewModel {
     content: wire.content,
     mediaUrl: wire.image_urls?.[0] || wire.image_url || undefined,
     mediaUrls: wire.image_urls?.length ? wire.image_urls : wire.image_url ? [wire.image_url] : [],
+    mediaStorageKeys: wire.image_storage_keys || [],
     category,
     visibility: wire.visibility,
     createdAt: new Date(wire.created_at).toLocaleString('vi-VN'),
@@ -108,7 +111,8 @@ function mapPost(wire: PostWire): CommunityPostViewModel {
       userReaction: wire.reacted_by_viewer ? 'love' : undefined,
     },
     commentCount: wire.comments_count,
-    workoutTags: tags.filter((tag) => tag !== 'workout_exp' && tag !== 'nutrition_qa'),
+    workoutTags: tags.filter((tag) => tag !== 'workout_exp' && tag !== 'nutrition_qa' && !mealTagNames.has(tag)),
+    mealTags: tags.filter((tag) => mealTagNames.has(tag)),
     isKnowledgeSharing: wire.is_knowledge,
     savedByViewer: Boolean(wire.saved_by_viewer),
   };
@@ -157,8 +161,26 @@ export class ApiSocialRepository implements ISocialRepository {
     return { ...mapPost(result), isOwner: true };
   }
 
-  async updatePost(postId: string, content: string): Promise<CommunityPostViewModel> {
-    const result = await apiClient<PostWire>(`/social/posts/${encodeURIComponent(postId)}`, { method: 'PATCH', body: JSON.stringify({ content }) });
+  async updatePost(postId: string, values: CreatePostFormValues): Promise<CommunityPostViewModel> {
+    const storageKeys: string[] = [];
+    for (const image of (values.mediaFiles || []).slice(0, 5)) {
+      if (image.storageKey) {
+        storageKeys.push(image.storageKey);
+        continue;
+      }
+      const lower = image.uri.toLowerCase();
+      const mimeType = image.mimeType || (lower.includes('.png') ? 'image/png' : lower.includes('.webp') ? 'image/webp' : 'image/jpeg');
+      const upload = await apiUploadFile<{ storage_key?: string; storageKey?: string }>('/uploads', image.uri, mimeType, { category: 'posts' });
+      const storageKey = upload.storage_key || upload.storageKey;
+      if (!storageKey) throw new Error('Máy chủ không trả về mã lưu trữ của hình ảnh.');
+      storageKeys.push(storageKey);
+    }
+    const tags = [...values.workoutTags, ...values.mealTags];
+    if (values.category !== 'all') tags.unshift(values.category);
+    const result = await apiClient<PostWire>(`/social/posts/${encodeURIComponent(postId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ content: values.content, image_storage_keys: storageKeys, tags, is_knowledge: Boolean(values.isKnowledgeSharing) }),
+    });
     return { ...mapPost(result), isOwner: true };
   }
 

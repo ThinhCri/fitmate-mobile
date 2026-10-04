@@ -720,3 +720,11 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Owners receive edit and destructive delete actions; other viewers receive separate report-post and block-user actions with clear descriptions. Destructive delete/block operations retain an explicit confirmation step.
 - The report form opened from this sheet no longer repeats the block action because blocking is already a distinct top-level choice.
 - Source review and `git diff --check` only; automated frontend commands were not run under the repository manual-execution rule.
+
+# Full community post editing — 2026-10-05
+
+- The edit route now reloads the owner-authorized post instead of trusting route text, then pre-fills content, existing images, category tags and the knowledge-sharing flag.
+- Owners can retain, remove or add images up to the five-image limit. Existing images retain their backend storage keys; only newly selected device images are uploaded before the update request.
+- The editor uses the same complete form for create and edit, disables save until something changes and warns before discarding unsaved edits. The backend update contract now persists the complete editable payload and removes detached media objects on a best-effort basis after the database update.
+- Admin report management was confirmed already present through `/reports` with pending/resolved/dismissed filters and resolve/dismiss actions; no duplicate admin module was added.
+- Source review and `git diff --check` only; automated frontend commands were not run under the repository manual-execution rule.

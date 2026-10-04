@@ -113,7 +113,7 @@ export default function SocialScreen() {
       <PostActionsSheet
         post={optionsPost}
         onClose={() => setOptionsPost(null)}
-        onEdit={(post) => { setOptionsPost(null); router.push({ pathname: '/community/create-post', params: { id: post.id, content: post.content } } as never); }}
+        onEdit={(post) => { setOptionsPost(null); router.push({ pathname: '/community/create-post', params: { id: post.id } } as never); }}
         onDelete={(post) => { setOptionsPost(null); Alert.alert('Xóa bài viết?', 'Bài viết sẽ bị xóa vĩnh viễn và không thể khôi phục.', [{ text: 'Hủy', style: 'cancel' }, { text: 'Xóa', style: 'destructive', onPress: async () => { try { await getSocialRepository().deletePost(post.id); setPosts((current) => current.filter((item) => item.id !== post.id)); } catch (cause) { Alert.alert('Không thể xóa bài viết', cause instanceof Error ? cause.message : 'Vui lòng thử lại.'); } } }]); }}
         onReport={(post) => { setOptionsPost(null); setReportPost(post); }}
         onBlock={(post) => { setOptionsPost(null); Alert.alert('Chặn người dùng?', `Bạn và ${post.authorName} sẽ không thể xem bài viết hoặc tương tác với nhau.`, [{ text: 'Hủy', style: 'cancel' }, { text: 'Chặn người dùng', style: 'destructive', onPress: async () => { try { await getSocialRepository().blockUser(post.authorId); await loadPosts('public'); Alert.alert('Đã chặn', `Bạn đã chặn ${post.authorName}.`); } catch (cause) { Alert.alert('Không thể chặn người dùng', cause instanceof Error ? cause.message : 'Vui lòng thử lại.'); } } }]); }}
