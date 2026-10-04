@@ -34,5 +34,6 @@ export interface AiChatMessageViewModel {
   isProcessing?: boolean;
   isError?: boolean;
   imageUri?: string;
+  imageUris?: string[];
   structuredSuggestion?: AiStructuredSuggestionViewModel;
 }

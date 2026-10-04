@@ -8,7 +8,7 @@ import { systemService } from '@/services/api/systemService';
 import { ImagePickerService, PickedImage } from '@/services/imagePicker';
 
 export default function AiChatScreen() {
-  const { id, prompt } = useLocalSearchParams<{ id: string; prompt?: string }>(); const [messages, setMessages] = useState<AiChatMessageViewModel[]>([]); const [loading, setLoading] = useState(true); const [processing, setProcessing] = useState(false); const [error, setError] = useState(''); const [attachment, setAttachment] = useState<PickedImage | null>(null); const sentInitial = useRef(false);
+  const { id, prompt } = useLocalSearchParams<{ id: string; prompt?: string }>(); const [messages, setMessages] = useState<AiChatMessageViewModel[]>([]); const [loading, setLoading] = useState(true); const [processing, setProcessing] = useState(false); const [error, setError] = useState(''); const [attachments, setAttachments] = useState<PickedImage[]>([]); const sentInitial = useRef(false);
   useEffect(() => {
     if (!id) return;
     const load = async () => {
@@ -36,14 +36,14 @@ export default function AiChatScreen() {
     };
     void load();
   }, [id, prompt]);
-  const send = async (text: string) => { if (!id || processing) return; const selectedImage = attachment; setAttachment(null); const optimistic: AiChatMessageViewModel = { id: `pending-${Date.now()}`, sender: 'user', text, timestamp: 'Vừa xong', imageUri: selectedImage?.uri, isProcessing: true }; setMessages((current) => [...current, optimistic]); setProcessing(true); try { const reply = await aiService.sendMessage(id, text, selectedImage ? { uri: selectedImage.uri, mimeType: selectedImage.mimeType } : undefined); setMessages((current) => current.map((item) => item.id === optimistic.id ? { ...item, isProcessing: false } : item)); await revealReply(reply, (updater) => setMessages((current) => updater(current))); } catch (e) { if (selectedImage) setAttachment(selectedImage); setMessages((current) => current.map((item) => item.id === optimistic.id ? { ...item, isProcessing: false, isError: true } : item)); Alert.alert('Không thể gửi tin nhắn', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } finally { setProcessing(false); } };
+  const send = async (text: string) => { if (!id || processing) return; const selectedImages = attachments; setAttachments([]); const imageUris = selectedImages.map((image) => image.uri); const optimistic: AiChatMessageViewModel = { id: `pending-${Date.now()}`, sender: 'user', text, timestamp: 'Vừa xong', imageUri: imageUris[0], imageUris, isProcessing: true }; setMessages((current) => [...current, optimistic]); setProcessing(true); try { const reply = await aiService.sendMessage(id, text, selectedImages.map((image) => ({ uri: image.uri, mimeType: image.mimeType, fileName: image.fileName }))); setMessages((current) => current.map((item) => item.id === optimistic.id ? { ...item, isProcessing: false } : item)); await revealReply(reply, (updater) => setMessages((current) => updater(current))); } catch (e) { setAttachments(selectedImages); setMessages((current) => current.map((item) => item.id === optimistic.id ? { ...item, isProcessing: false, isError: true } : item)); Alert.alert('Không thể gửi tin nhắn', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } finally { setProcessing(false); } };
   const chooseAttachment = () => Alert.alert('Đính kèm ảnh', 'Chọn nguồn ảnh', [
-    { text: 'Chụp ảnh', onPress: () => void ImagePickerService.pickFromCamera({ quality: 0.75 }).then(setAttachment) },
-    { text: 'Thư viện ảnh', onPress: () => void ImagePickerService.pickFromLibrary({ quality: 0.75 }).then(setAttachment) },
+    { text: 'Chụp ảnh', onPress: () => void ImagePickerService.pickFromCamera({ quality: 0.75 }).then((image) => image && setAttachments((current) => [...current, image].slice(0, 5))) },
+    { text: 'Thư viện ảnh', onPress: () => void ImagePickerService.pickMultipleFromLibrary(5 - attachments.length, { quality: 0.75 }).then((images) => setAttachments((current) => [...current, ...images].slice(0, 5))) },
     { text: 'Hủy', style: 'cancel' },
   ]);
   if (loading || error) return <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>{loading ? <ActivityIndicator /> : <Text>{error}</Text>}</SafeAreaView>;
-  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><AiChatInteractivePresentation conversationTitle="Tư vấn Fitmate AI" messages={messages} isProcessing={processing} attachmentUri={attachment?.uri} onAttachmentPress={chooseAttachment} onRemoveAttachment={() => setAttachment(null)} onBack={() => router.back()} onSendMessage={(text) => void send(text)} onReviewSuggestion={() => router.push('/workout/ai-adjust' as never)} /></SafeAreaView>;
+  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><AiChatInteractivePresentation conversationTitle="Tư vấn Fitmate AI" messages={messages} isProcessing={processing} attachmentUris={attachments.map((image) => image.uri)} onAttachmentPress={chooseAttachment} onRemoveAttachment={(index) => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))} onBack={() => router.back()} onSendMessage={(text) => void send(text)} onReviewSuggestion={() => router.push('/workout/ai-adjust' as never)} /></SafeAreaView>;
 }
 
 async function revealReply(

@@ -40,9 +40,9 @@ export interface AiChatInteractivePresentationProps {
   isProcessing?: boolean;
   onBack: () => void;
   onSendMessage: (text: string) => void;
-  attachmentUri?: string;
+  attachmentUris?: string[];
   onAttachmentPress: () => void;
-  onRemoveAttachment: () => void;
+  onRemoveAttachment: (index: number) => void;
   onRetryMessage?: (messageId: string) => void;
   onReviewSuggestion: (suggestion: AiStructuredSuggestionViewModel) => void;
 }
@@ -53,7 +53,7 @@ export function AiChatInteractivePresentation({
   isProcessing = false,
   onBack,
   onSendMessage,
-  attachmentUri,
+  attachmentUris = [],
   onAttachmentPress,
   onRemoveAttachment,
   onRetryMessage,
@@ -132,7 +132,9 @@ export function AiChatInteractivePresentation({
                   isAssistant ? styles.bubbleAssistant : styles.bubbleUser,
                 ]}
               >
-                {msg.imageUri && <Image source={{ uri: msg.imageUri }} style={styles.messageImage} />}
+                {(msg.imageUris?.length ? msg.imageUris : msg.imageUri ? [msg.imageUri] : []).map((uri, index) => (
+                  <Image key={`${uri}-${index}`} source={{ uri }} style={styles.messageImage} accessibilityRole="image" accessibilityLabel={`Ảnh đính kèm ${index + 1}`} />
+                ))}
                 <Text
                   style={[
                     styles.messageText,
@@ -228,16 +230,20 @@ export function AiChatInteractivePresentation({
 
       {/* Composer */}
       <View style={styles.composerContainer}>
-        {attachmentUri && (
-          <View style={styles.attachmentPreview}>
-            <Image source={{ uri: attachmentUri }} style={styles.attachmentImage} />
-            <TouchableOpacity style={styles.removeAttachment} onPress={onRemoveAttachment} accessibilityLabel="Bỏ ảnh đính kèm">
-              <X size={14} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
+        {attachmentUris.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.attachmentsRow}>
+            {attachmentUris.map((uri, index) => (
+              <View key={`${uri}-${index}`} style={styles.attachmentPreview}>
+                <Image source={{ uri }} style={styles.attachmentImage} accessibilityRole="image" accessibilityLabel={`Ảnh chờ gửi ${index + 1}`} />
+                <TouchableOpacity style={styles.removeAttachment} onPress={() => onRemoveAttachment(index)} accessibilityLabel={`Bỏ ảnh đính kèm ${index + 1}`}>
+                  <X size={14} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
         )}
         <View style={styles.composerRow}>
-          <TouchableOpacity style={styles.attachBtn} onPress={onAttachmentPress} disabled={isProcessing} accessibilityLabel="Đính kèm ảnh">
+          <TouchableOpacity style={styles.attachBtn} onPress={onAttachmentPress} disabled={isProcessing || attachmentUris.length >= 5} accessibilityLabel={`Đính kèm ảnh, đã chọn ${attachmentUris.length} trên 5`}>
             <Paperclip size={20} color={colors.primary} />
           </TouchableOpacity>
           <TextInput
@@ -541,7 +547,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  attachmentPreview: { width: 72, height: 72, marginBottom: spacing.sm },
+  attachmentsRow: { marginBottom: spacing.sm, maxHeight: 78 },
+  attachmentPreview: { width: 72, height: 72, marginRight: spacing.sm },
   attachmentImage: { width: 72, height: 72, borderRadius: radius.md },
   removeAttachment: { position: 'absolute', right: -6, top: -6, width: 22, height: 22, borderRadius: 11, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center' },
   attachBtn: { width: 40, height: 40, borderRadius: radius.full, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },

@@ -86,7 +86,7 @@ export class PreviewSocialRepository implements ISocialRepository {
   }
 
   async createPost(values: CreatePostFormValues): Promise<CommunityPostViewModel> {
-    const post: CommunityPostViewModel = { id: `preview-post-${Date.now()}`, authorId: 'preview-me', authorName: 'Bạn', authorRole: 'member', content: values.content, mediaUrl: values.mediaUrl, category: values.category, visibility: values.visibility, createdAt: 'Vừa xong', reactions: { love: 0, fire: 0, smile: 0 }, commentCount: 0, workoutTags: values.workoutTags, mealTags: values.mealTags, isKnowledgeSharing: values.isKnowledgeSharing, isOwner: true, comments: [] };
+    const post: CommunityPostViewModel = { id: `preview-post-${Date.now()}`, authorId: 'preview-me', authorName: 'Bạn', authorRole: 'member', content: values.content, mediaUrl: values.mediaUrls?.[0] || values.mediaUrl, mediaUrls: values.mediaUrls, category: values.category, visibility: values.visibility, createdAt: 'Vừa xong', reactions: { love: 0, fire: 0, smile: 0 }, commentCount: 0, workoutTags: values.workoutTags, mealTags: values.mealTags, isKnowledgeSharing: values.isKnowledgeSharing, isOwner: true, comments: [] };
     previewPosts = [post, ...previewPosts];
     return post;
   }

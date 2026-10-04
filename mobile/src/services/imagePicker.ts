@@ -95,6 +95,38 @@ export const ImagePickerService = {
     }
   },
 
+  async pickMultipleFromLibrary(maxCount = 5, options?: PickImageOptions): Promise<PickedImage[]> {
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        showPermissionAlert(
+          'Cần quyền truy cập thư viện ảnh',
+          'Vui lòng cấp quyền truy cập thư viện hình ảnh trong Cài đặt thiết bị để tiếp tục.'
+        );
+        return [];
+      }
+      const selectionLimit = Math.max(1, Math.min(5, maxCount));
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsMultipleSelection: true,
+        selectionLimit,
+        quality: options?.quality ?? 0.85,
+      });
+      if (res.canceled || !res.assets) return [];
+      return res.assets.slice(0, selectionLimit).map((asset) => ({
+        uri: asset.uri,
+        width: asset.width,
+        height: asset.height,
+        fileSize: asset.fileSize,
+        fileName: asset.fileName,
+        mimeType: asset.mimeType,
+      }));
+    } catch {
+      Alert.alert('Lỗi truy cập thư viện ảnh', 'Không thể khởi chạy thư viện hình ảnh.');
+      return [];
+    }
+  },
+
   async pickFromCamera(options?: PickImageOptions): Promise<PickedImage | null> {
     try {
       const granted = await this.requestCameraPermission();

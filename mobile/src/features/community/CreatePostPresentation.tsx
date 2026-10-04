@@ -27,7 +27,7 @@ import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
 import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
 import { ModalShell } from '@/components/design-system/ModalShell';
-import { CreatePostFormValues } from './communityTypes';
+import { CreatePostFormValues, PostImageInput } from './communityTypes';
 
 export interface CreatePostPresentationProps {
   initialValues?: Partial<CreatePostFormValues>;
@@ -35,7 +35,7 @@ export interface CreatePostPresentationProps {
   onSubmit: (values: CreatePostFormValues) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
-  onPickImage?: () => Promise<string | undefined>;
+  onPickImages?: (remaining: number) => Promise<PostImageInput[]>;
 }
 
 const AVAILABLE_WORKOUT_TAGS = [
@@ -59,7 +59,7 @@ export function CreatePostPresentation({
   onSubmit,
   onCancel,
   isSubmitting = false,
-  onPickImage,
+  onPickImages,
 }: CreatePostPresentationProps) {
   const [content, setContent] = useState(initialValues?.content || '');
   const [visibility, setVisibility] = useState<'public' | 'friends' | 'private'>(
@@ -77,8 +77,10 @@ export function CreatePostPresentation({
   const [isKnowledgeSharing, setIsKnowledgeSharing] = useState(
     initialValues?.isKnowledgeSharing || false
   );
-  const [images, setImages] = useState<string[]>(
-    initialValues?.mediaUrl ? [initialValues.mediaUrl] : []
+  const [images, setImages] = useState<PostImageInput[]>(
+    initialValues?.mediaUrls?.length
+      ? initialValues.mediaUrls.slice(0, 5).map((uri) => ({ uri }))
+      : initialValues?.mediaUrl ? [{ uri: initialValues.mediaUrl }] : []
   );
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
@@ -105,13 +107,21 @@ export function CreatePostPresentation({
   };
 
   const handleAddImage = async () => {
-    if (images.length >= 1) {
-      Alert.alert('Giới hạn', 'Phiên bản hiện tại hỗ trợ một hình ảnh cho mỗi bài viết.');
+    if (images.length >= 5) {
+      Alert.alert('Đã đủ ảnh', 'Mỗi bài viết được đính kèm tối đa 5 ảnh.');
       return;
     }
-    if (!onPickImage) return;
-    const uri = await onPickImage();
-    if (uri) setImages((prev) => [...prev, uri]);
+    if (!onPickImages) return;
+    const selected = await onPickImages(5 - images.length);
+    if (selected.length) {
+      setImages((prev) => {
+        const merged = [...prev];
+        selected.forEach((image) => {
+          if (!merged.some((item) => item.uri === image.uri)) merged.push(image);
+        });
+        return merged.slice(0, 5);
+      });
+    }
   };
 
   const handleRemoveImage = (index: number) => {
@@ -126,7 +136,9 @@ export function CreatePostPresentation({
 
     onSubmit({
       content: content.trim(),
-      mediaUrl: images[0],
+      mediaUrl: images[0]?.uri,
+      mediaUrls: images.map((image) => image.uri),
+      mediaFiles: images,
       category,
       visibility,
       isKnowledgeSharing,
@@ -248,11 +260,11 @@ export function CreatePostPresentation({
 
         {/* Media Preview & Upload */}
         <View style={styles.sectionBlock}>
-          <Text style={styles.sectionHeader}>Hình ảnh đính kèm ({images.length}/1)</Text>
+          <Text style={styles.sectionHeader}>Hình ảnh đính kèm ({images.length}/5)</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaRow}>
-            {images.map((imgUri, idx) => (
-              <View key={idx} style={styles.imageThumbnailWrapper}>
-                <Image source={{ uri: imgUri }} style={styles.thumbnailImage} />
+            {images.map((image, idx) => (
+              <View key={`${image.uri}-${idx}`} style={styles.imageThumbnailWrapper}>
+                <Image source={{ uri: image.uri }} style={styles.thumbnailImage} />
                 <TouchableOpacity
                   style={styles.removeImgBtn}
                   onPress={() => handleRemoveImage(idx)}
@@ -263,7 +275,7 @@ export function CreatePostPresentation({
               </View>
             ))}
 
-            {images.length < 1 && (
+            {images.length < 5 && (
               <TouchableOpacity
                 style={styles.addPhotoCard}
                 onPress={() => void handleAddImage()}

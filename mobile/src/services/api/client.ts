@@ -89,6 +89,49 @@ export async function apiUploadFile<T>(
   }
 }
 
+export async function apiUploadFiles<T>(
+  endpoint: string,
+  files: Array<{ uri: string; mimeType?: string | null; fileName?: string | null }>,
+  parameters: Record<string, string>
+): Promise<T> {
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
+  const token = sessionManager.getAccessToken();
+  const form = new FormData();
+  Object.entries(parameters).forEach(([key, value]) => form.append(key, value));
+  files.slice(0, 5).forEach((file, index) => {
+    form.append('files', {
+      uri: file.uri,
+      name: file.fileName || `image-${index + 1}.${file.mimeType === 'image/png' ? 'png' : file.mimeType === 'image/webp' ? 'webp' : 'jpg'}`,
+      type: file.mimeType || 'image/jpeg',
+    } as unknown as Blob);
+  });
+
+  try {
+    const response = await fetch(API_BASE_URL + cleanEndpoint, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: 'Bearer ' + token } : {}),
+      },
+      body: form,
+      signal: sessionManager.getAbortSignal(),
+    });
+    let data: unknown;
+    try { data = await response.json(); } catch { data = await response.text(); }
+    if (!response.ok) {
+      throw new ApiError(getUserFacingApiErrorMessage(response.status, data), response.status, data);
+    }
+    return data as T;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      'Không thể đọc hoặc tải ảnh lên. Vui lòng tải ảnh về thiết bị rồi thử lại.',
+      0,
+      error instanceof Error ? error.message : undefined
+    );
+  }
+}
+
 interface RequestOptions extends RequestInit {
   _isRetry?: boolean;
 }

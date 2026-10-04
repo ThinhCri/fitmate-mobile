@@ -20,6 +20,7 @@ export interface CommunityPostViewModel {
   authorVerified?: boolean;
   content: string;
   mediaUrl?: string;
+  mediaUrls?: string[];
   category: 'all' | 'friends' | 'workout_exp' | 'nutrition_qa';
   visibility: 'public' | 'friends' | 'private';
   createdAt: string;
@@ -40,11 +41,19 @@ export interface CommunityPostViewModel {
 export interface CreatePostFormValues {
   content: string;
   mediaUrl?: string;
+  mediaUrls?: string[];
+  mediaFiles?: PostImageInput[];
   category: 'workout_exp' | 'nutrition_qa' | 'all';
   visibility: 'public' | 'friends' | 'private';
   isKnowledgeSharing?: boolean;
   workoutTags: string[];
   mealTags: string[];
+}
+
+export interface PostImageInput {
+  uri: string;
+  mimeType?: string | null;
+  fileName?: string | null;
 }
 
 export type ReportTargetType = 'post' | 'comment' | 'user';

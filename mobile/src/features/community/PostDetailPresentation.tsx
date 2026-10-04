@@ -183,12 +183,16 @@ export function PostDetailPresentation({
             </View>
           )}
 
-          {/* Media Image */}
-          {post.mediaUrl && (
-            <View style={styles.mediaContainer}>
-              <Image source={{ uri: post.mediaUrl }} style={styles.mediaImage} />
-            </View>
-          )}
+          {/* Media images */}
+          {(post.mediaUrls?.length || post.mediaUrl) ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaRow}>
+              {(post.mediaUrls?.length ? post.mediaUrls : [post.mediaUrl!]).map((uri, index) => (
+                <View key={`${uri}-${index}`} style={styles.mediaContainer}>
+                  <Image source={{ uri }} style={styles.mediaImage} accessibilityRole="image" accessibilityLabel={`Ảnh bài viết ${index + 1}`} />
+                </View>
+              ))}
+            </ScrollView>
+          ) : null}
 
           {/* Reaction Bar */}
           <View style={styles.reactionBar}>
@@ -543,12 +547,14 @@ const styles = StyleSheet.create({
     color: '#B45309',
   },
   mediaContainer: {
-    width: '100%',
+    width: 280,
     height: 220,
     borderRadius: radius.md,
     overflow: 'hidden',
     marginTop: spacing.xs,
+    marginRight: spacing.sm,
   },
+  mediaRow: { marginTop: spacing.xs },
   mediaImage: {
     width: '100%',
     height: '100%',

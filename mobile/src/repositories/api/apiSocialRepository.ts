@@ -1,7 +1,7 @@
 import { CommunityPostViewModel, CreatePostFormValues, FriendItemViewModel, PostCommentViewModel, ReportRequest, UserPublicProfileViewModel } from '@/features/community';
 import { ConversationDetailViewModel, ConversationItemViewModel, ChatMessageViewModel } from '@/features/chat';
 import type { ISocialRepository } from '../socialRepository';
-import { apiClient } from '@/services/api/client';
+import { apiClient, apiUploadFile } from '@/services/api/client';
 import { authService } from '@/services/api/authService';
 import { createUuid } from '@/utils/uuid';
 
@@ -55,6 +55,7 @@ interface PostWire {
   };
   content: string;
   image_url?: string | null;
+  image_urls?: string[] | null;
   tags: string[];
   visibility: 'public' | 'friends' | 'private';
   is_knowledge: boolean;
@@ -90,7 +91,8 @@ function mapPost(wire: PostWire): CommunityPostViewModel {
     authorName: wire.author.display_name,
     authorRole: 'member',
     content: wire.content,
-    mediaUrl: wire.image_url || undefined,
+    mediaUrl: wire.image_urls?.[0] || wire.image_url || undefined,
+    mediaUrls: wire.image_urls?.length ? wire.image_urls : wire.image_url ? [wire.image_url] : [],
     category,
     visibility: wire.visibility,
     createdAt: new Date(wire.created_at).toLocaleString('vi-VN'),
@@ -126,18 +128,25 @@ export class ApiSocialRepository implements ISocialRepository {
   }
 
   async createPost(values: CreatePostFormValues): Promise<CommunityPostViewModel> {
-    let imageUrl = values.mediaUrl;
-    if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
-      const form = new FormData();
-      form.append('category', 'posts');
-      form.append('file', { uri: imageUrl, name: imageUrl.split('/').pop() || 'post.jpg', type: 'image/jpeg' } as unknown as Blob);
-      const upload = await apiClient<{ uri?: string; signedUrl?: string }>('/uploads', { method: 'POST', body: form });
-      imageUrl = upload.uri || upload.signedUrl;
-      if (!imageUrl) throw new Error('Máy chủ không trả về địa chỉ hình ảnh đã tải lên.');
+    const mediaFiles = (values.mediaFiles?.length
+      ? values.mediaFiles
+      : (values.mediaUrls?.length ? values.mediaUrls : values.mediaUrl ? [values.mediaUrl] : []).map((uri) => ({ uri }))).slice(0, 5);
+    const storageKeys: string[] = [];
+    for (const image of mediaFiles) {
+      const imageUri = image.uri;
+      if (/^https?:\/\//i.test(imageUri)) continue;
+      const lower = imageUri.toLowerCase();
+      const mimeType = image.mimeType || (lower.includes('.png') ? 'image/png' : lower.includes('.webp') ? 'image/webp' : 'image/jpeg');
+      const upload = await apiUploadFile<{ storage_key?: string; storageKey?: string }>(
+        '/uploads', imageUri, mimeType, { category: 'posts' }
+      );
+      const storageKey = upload.storage_key || upload.storageKey;
+      if (!storageKey) throw new Error('Máy chủ không trả về mã lưu trữ của hình ảnh.');
+      storageKeys.push(storageKey);
     }
     const tags = [...values.workoutTags, ...values.mealTags];
     if (values.category !== 'all') tags.unshift(values.category);
-    const result = await apiClient<PostWire>('/social/posts', { method: 'POST', body: JSON.stringify({ content: values.content, image_url: imageUrl, tags, visibility: values.visibility, is_knowledge: Boolean(values.isKnowledgeSharing) }) });
+    const result = await apiClient<PostWire>('/social/posts', { method: 'POST', body: JSON.stringify({ content: values.content, image_storage_keys: storageKeys, tags, visibility: values.visibility, is_knowledge: Boolean(values.isKnowledgeSharing) }) });
     return { ...mapPost(result), isOwner: true };
   }
 
