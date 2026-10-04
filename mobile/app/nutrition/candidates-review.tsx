@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
@@ -12,6 +12,9 @@ export default function CandidateReviewRoute() {
   const [candidates, setCandidates] = useState(initial);
   const [mealSlot, setMealSlot] = useState<MealTimeSlot>('lunch');
   const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    setCandidates(initial);
+  }, [initial]);
   const save = async () => { const selected = candidates.filter((item) => item.selected); if (!selected.length) { Alert.alert('Chưa chọn món', 'Hãy chọn ít nhất một món để lưu.'); return; } setSaving(true); try { await Promise.all(selected.map((item) => getNutritionRepository().addFoodItem({ name: item.name, portion: item.portionDescription, calories: item.calories, proteinGrams: item.protein, carbsGrams: item.carbs, fatGrams: item.fat, source: 'ai_confirmed', mealSlot, loggedAt: new Date().toISOString() }))); router.replace('/(tabs)/nutrition' as never); } catch (e) { Alert.alert('Không thể lưu kết quả', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } finally { setSaving(false); } };
   return <ScreenContainer edges={['top', 'bottom']}><CandidateReviewPresentation candidates={candidates} mealSlot={mealSlot} onMealSlotChange={setMealSlot} onToggleCandidate={(id) => setCandidates((items) => items.map((item) => item.id === id ? { ...item, selected: !item.selected } : item))} onEditCandidate={(candidate) => router.push({ pathname: '/nutrition/manual-entry' as never, params: { name: candidate.name, calories: String(candidate.calories), slot: mealSlot } })} onAddManualMissing={() => router.push('/nutrition/manual-entry' as never)} onConfirmAndSave={() => void save()} onBack={() => router.back()} isSaving={saving} /></ScreenContainer>;
 }

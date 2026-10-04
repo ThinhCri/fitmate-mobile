@@ -48,20 +48,32 @@ export async function apiUploadFile<T>(
   parameters: Record<string, string>
 ): Promise<T> {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
-  const token = sessionManager.getAccessToken();
 
   try {
-    const response = await FileSystem.uploadAsync(API_BASE_URL + cleanEndpoint, fileUri, {
-      httpMethod: 'POST',
-      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-      fieldName: 'file',
-      mimeType,
-      parameters,
-      headers: {
-        Accept: 'application/json',
-        ...(token ? { Authorization: 'Bearer ' + token } : {}),
-      },
-    });
+    const upload = async (token: string | null) =>
+      FileSystem.uploadAsync(API_BASE_URL + cleanEndpoint, fileUri, {
+        httpMethod: 'POST',
+        uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+        fieldName: 'file',
+        mimeType,
+        parameters,
+        headers: {
+          Accept: 'application/json',
+          ...(token ? { Authorization: 'Bearer ' + token } : {}),
+        },
+      });
+
+    let response = await upload(sessionManager.getAccessToken());
+    if (response.status === 401) {
+      try {
+        response = await upload(await sessionManager.refreshSession());
+      } catch (refreshErr) {
+        if (isAbortError(refreshErr)) {
+          throw refreshErr;
+        }
+        throw new ApiError('Phiên đăng nhập đã hết hạn', 401);
+      }
+    }
 
     let data: unknown;
     try {

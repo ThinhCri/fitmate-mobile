@@ -1,4 +1,4 @@
-import {
+﻿import {
   DayNutritionSummaryViewModel,
   FoodItemViewModel,
   MealSectionViewModel,
@@ -54,7 +54,7 @@ export class ApiNutritionRepository implements INutritionRepository {
       sections[slot].push({
         id: m.id,
         name: m.food_name,
-        portion: `${m.portion_size || 1} phần`,
+        portion: `${m.portion_size || 1} pháº§n`,
         calories: cal,
         proteinGrams: prot,
         carbsGrams: carbs,
@@ -82,29 +82,29 @@ export class ApiNutritionRepository implements INutritionRepository {
     const mealSections: MealSectionViewModel[] = [
       {
         slot: 'breakfast',
-        title: 'Bữa sáng',
-        subtitle: 'Khuyến nghị 400 - 550 kcal',
+        title: 'Bá»¯a sÃ¡ng',
+        subtitle: 'Khuyáº¿n nghá»‹ 400 - 550 kcal',
         totalCalories: sections.breakfast.reduce((sum, f) => sum + f.calories, 0),
         items: sections.breakfast,
       },
       {
         slot: 'lunch',
-        title: 'Bữa trưa',
-        subtitle: 'Khuyến nghị 650 - 800 kcal',
+        title: 'Bá»¯a trÆ°a',
+        subtitle: 'Khuyáº¿n nghá»‹ 650 - 800 kcal',
         totalCalories: sections.lunch.reduce((sum, f) => sum + f.calories, 0),
         items: sections.lunch,
       },
       {
         slot: 'dinner',
-        title: 'Bữa tối',
-        subtitle: 'Khuyến nghị 500 - 650 kcal',
+        title: 'Bá»¯a tá»‘i',
+        subtitle: 'Khuyáº¿n nghá»‹ 500 - 650 kcal',
         totalCalories: sections.dinner.reduce((sum, f) => sum + f.calories, 0),
         items: sections.dinner,
       },
       {
         slot: 'snack',
-        title: 'Bữa phụ & Tráng miệng',
-        subtitle: 'Khuyến nghị 150 - 250 kcal',
+        title: 'Bá»¯a phá»¥ & TrÃ¡ng miá»‡ng',
+        subtitle: 'Khuyáº¿n nghá»‹ 150 - 250 kcal',
         totalCalories: sections.snack.reduce((sum, f) => sum + f.calories, 0),
         items: sections.snack,
       },
@@ -135,7 +135,7 @@ export class ApiNutritionRepository implements INutritionRepository {
     return slots.filter((slot) => typeof raw[slot] === 'string' && raw[slot].trim()).map((slot) => ({
       id: `${raw.id || 'schedule'}-${slot}`,
       dayIndex: 0,
-      dayLabel: 'Hôm nay',
+      dayLabel: 'HÃ´m nay',
       mealSlot: slot,
       foodName: raw[slot],
       calories: 0,
@@ -148,7 +148,7 @@ export class ApiNutritionRepository implements INutritionRepository {
     return {
       id: raw.id,
       name: raw.food_name,
-      portion: `${raw.portion_size || 1} phần`,
+      portion: `${raw.portion_size || 1} pháº§n`,
       calories: raw.calories || 0,
       proteinGrams: raw.protein_g || 0,
       carbsGrams: raw.carbs_g || 0,
@@ -195,7 +195,7 @@ export class ApiNutritionRepository implements INutritionRepository {
 
   async updatePlannedSlot(slotId: string, isCompleted: boolean): Promise<void> {
     if (isCompleted) return;
-    throw new Error('Máy chủ chưa hỗ trợ trạng thái hoàn thành cho thực đơn.');
+    throw new Error('MÃ¡y chá»§ chÆ°a há»— trá»£ tráº¡ng thÃ¡i hoÃ n thÃ nh cho thá»±c Ä‘Æ¡n.');
   }
 
   async scanMealImage(uri: string, detectedMimeType?: string | null) {
@@ -207,23 +207,112 @@ export class ApiNutritionRepository implements INutritionRepository {
         : normalizedUri.endsWith('.webp')
           ? 'image/webp'
           : 'image/jpeg';
-    const raw = await apiUploadFile<{ items?: Array<{ name?: string; calories?: number; protein_g?: number; carbs_g?: number; fat_g?: number }> }>(
+    const raw = await apiUploadFile<any>(
       '/me/nutrition/scan',
       uri,
       mimeType,
       {}
     );
-    return (raw.items || []).map((item, index) => ({
-      id: `scan-${index}`,
-      name: item.name || 'Món ăn nhận diện',
-      portionDescription: 'Khẩu phần trong ảnh',
-      calories: item.calories ?? 0,
-      protein: item.protein_g ?? 0,
-      carbs: item.carbs_g ?? 0,
-      fat: item.fat_g ?? 0,
-      selected: true,
-    }));
+    return mapScanCandidates(raw);
   }
 }
 
 export const apiNutritionRepository = new ApiNutritionRepository();
+function mapScanCandidates(raw: any) {
+  if (Array.isArray(raw?.items) && raw.items.length > 0) {
+    return raw.items
+      .map((item: any, index: number) => toCandidate({
+        id: `scan-${index}`,
+        name: cleanFoodName(item?.name),
+        calories: numberValue(item?.calories),
+        protein: numberValue(item?.protein_g),
+        carbs: numberValue(item?.carbs_g),
+        fat: numberValue(item?.fat_g),
+        confidenceScore: numberValue(raw?.confidence),
+      }))
+      .filter(isCandidate);
+  }
+
+  if (Array.isArray(raw?.ingredients) && raw.ingredients.length > 0) {
+    const ingredientNames = uniqueNames(raw.ingredients.map(ingredientName));
+    const portionGrams = raw.ingredients
+      .map((item: any) => numberValue(item?.portion_estimate_g))
+      .reduce((sum: number, grams: number) => sum + grams, 0);
+
+    return [toCandidate({
+      id: 'scan-0',
+      name: ingredientNames.join(', '),
+      portionDescription: portionGrams > 0 ? `${Math.round(portionGrams)}g trong anh` : undefined,
+      calories: numberValue(raw?.calories_kcal),
+      protein: numberValue(raw?.protein_g),
+      carbs: numberValue(raw?.carbs_g),
+      fat: numberValue(raw?.fat_g),
+    })].filter(isCandidate);
+  }
+
+  return [];
+}
+
+function toCandidate(input: {
+  id: string;
+  name: string;
+  portionDescription?: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  confidenceScore?: number;
+}) {
+  const name = cleanFoodName(input.name);
+  if (!name) return null;
+
+  return {
+    id: input.id,
+    name,
+    portionDescription: input.portionDescription || 'Khau phan trong anh',
+    calories: input.calories,
+    protein: input.protein,
+    carbs: input.carbs,
+    fat: input.fat,
+    confidenceScore: input.confidenceScore,
+    selected: true,
+  };
+}
+
+function isCandidate(value: ReturnType<typeof toCandidate>): value is NonNullable<ReturnType<typeof toCandidate>> {
+  return value !== null;
+}
+
+function ingredientName(item: any) {
+  if (typeof item === 'string') return item;
+  return item?.name;
+}
+
+function uniqueNames(values: any[]) {
+  const seen = new Set<string>();
+  const names: string[] = [];
+  values.forEach((value) => {
+    const name = cleanFoodName(value);
+    const key = name.toLowerCase().replace(/\s+/g, ' ');
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(name);
+  });
+  return names.slice(0, 8);
+}
+
+function cleanFoodName(value: any) {
+  return String(value ?? '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\\n|\\t/g, ' ')
+    .replace(/[\\\n\t]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s.,;:_-]+|[\s.,;:_-]+$/g, '');
+}
+
+function numberValue(value: any) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return Math.round(parsed);
+}
+
