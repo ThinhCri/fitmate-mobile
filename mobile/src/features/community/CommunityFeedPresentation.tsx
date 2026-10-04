@@ -216,23 +216,30 @@ export function CommunityFeedPresentation({
               <Text style={styles.postContent}>{post.content}</Text>
               {(post.mediaUrls?.length || post.mediaUrl) ? (
                 <>
-                <ScrollView
-                  horizontal
-                  pagingEnabled
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.mediaCarousel}
-                  onMomentumScrollEnd={(event) => {
-                    const offsetX = event.nativeEvent?.contentOffset?.x ?? 0;
-                    const pageIndex = Math.round(offsetX / mediaWidth);
-                    setActiveMedia((current) => ({ ...current, [post.id]: pageIndex }));
-                  }}
-                >
-                  {(post.mediaUrls?.length ? post.mediaUrls : [post.mediaUrl!]).map((uri, index, all) => (
-                    <View key={`${uri}-${index}`} style={[styles.feedMediaFrame, { width: mediaWidth }]}>
-                      <Image source={{ uri }} style={styles.feedMedia} accessibilityRole="image" accessibilityLabel={`Ảnh ${index + 1} trên ${all.length}`} />
+                <View style={styles.mediaContainer}>
+                  <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.mediaCarousel}
+                    onMomentumScrollEnd={(event) => {
+                      const offsetX = event.nativeEvent?.contentOffset?.x ?? 0;
+                      const pageIndex = Math.round(offsetX / mediaWidth);
+                      setActiveMedia((current) => ({ ...current, [post.id]: pageIndex }));
+                    }}
+                  >
+                    {(post.mediaUrls?.length ? post.mediaUrls : [post.mediaUrl!]).map((uri, index, all) => (
+                      <View key={`${uri}-${index}`} style={[styles.feedMediaFrame, { width: mediaWidth }]}>
+                        <Image source={{ uri }} style={styles.feedMedia} accessibilityRole="image" accessibilityLabel={`Ảnh ${index + 1} trên ${all.length}`} />
+                      </View>
+                    ))}
+                  </ScrollView>
+                  {(post.mediaUrls?.length || 0) > 1 && (
+                    <View style={styles.mediaCounter} pointerEvents="none">
+                      <Text style={styles.mediaCounterText}>{Math.min((activeMedia[post.id] || 0) + 1, post.mediaUrls!.length)}/{post.mediaUrls!.length}</Text>
                     </View>
-                  ))}
-                </ScrollView>
+                  )}
+                </View>
                 {(post.mediaUrls?.length || 0) > 1 && <View style={styles.paginationDots}>{post.mediaUrls!.map((_, index) => <View key={index} style={[styles.paginationDot, (activeMedia[post.id] || 0) === index && styles.paginationDotActive]} />)}</View>}
                 </>
               ) : null}
@@ -458,10 +465,11 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     lineHeight: 20,
   },
-  mediaCarousel: { marginTop: spacing.sm, borderRadius: radius.md },
+  mediaContainer: { position: 'relative', marginTop: spacing.sm },
+  mediaCarousel: { borderRadius: radius.md },
   feedMediaFrame: { height: 320, backgroundColor: colors.surfaceSubtle, borderRadius: radius.md, overflow: 'hidden' },
   feedMedia: { width: '100%', height: '100%', resizeMode: 'cover' },
-  mediaCounter: { position: 'absolute', top: spacing.sm, right: spacing.sm, backgroundColor: 'rgba(15,23,42,0.72)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: radius.full },
+  mediaCounter: { position: 'absolute', top: spacing.sm, right: spacing.sm, zIndex: 1, backgroundColor: 'rgba(15,23,42,0.72)', paddingHorizontal: 9, paddingVertical: 5, borderRadius: radius.full },
   mediaCounterText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
   feedTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: spacing.xs },
   feedTag: { color: colors.primary, fontSize: 12, fontWeight: '600' },

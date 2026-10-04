@@ -711,4 +711,5 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 # Community carousel event fix — 2026-10-05
 
 - The carousel now copies the horizontal offset before scheduling its state update, preventing React Native's recycled scroll event from producing a null `contentOffset` crash.
+- Multi-image feed posts also show an Instagram-style current/total image counter in the media's top-right corner, synchronized with the existing pagination dots.
 - Source review and `git diff --check` only; automated frontend commands were not run under the repository manual-execution rule.
