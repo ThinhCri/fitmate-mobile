@@ -52,12 +52,19 @@ export interface FoodCandidateViewModel {
   id: string;
   name: string;
   portionDescription: string;
+  ingredients?: FoodCandidateIngredientViewModel[];
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
   confidenceScore?: number; // only if backend provides
   selected: boolean;
+}
+
+export interface FoodCandidateIngredientViewModel {
+  id: string;
+  name: string;
+  portionGrams: number;
 }
 
 export interface PlannedMealSlotViewModel {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -41,7 +41,7 @@ export interface CandidateReviewPresentationProps {
   onRetry?: () => void;
 }
 
-const SLOTS: Array<{ slot: MealTimeSlot; label: string; icon: React.ReactNode }> = [
+const SLOTS: { slot: MealTimeSlot; label: string; icon: React.ReactNode }[] = [
   { slot: 'breakfast', label: 'Sáng', icon: <Sun size={18} color={colors.primary} /> },
   { slot: 'lunch', label: 'Trưa', icon: <Sunset size={18} color={colors.warning} /> },
   { slot: 'dinner', label: 'Tối', icon: <Moon size={18} color={colors.secondary} /> },
@@ -124,10 +124,10 @@ export const CandidateReviewPresentation: React.FC<CandidateReviewPresentationPr
         <AlertTriangle size={20} color={colors.warning} style={styles.warningIcon} />
         <View style={{ flex: 1 }}>
           <Text style={[typography.bodyBold, styles.warningTitle]}>
-            Kết quả ước tính — hãy kiểm tra trước khi lưu
+            Kết quả ước tính - hãy kiểm tra trước khi lưu
           </Text>
           <Text style={[typography.caption, styles.warningDesc]}>
-            AI nhận diện món từ hình ảnh. Bạn có thể chọn/bỏ, sửa định lượng hoặc bổ sung món còn thiếu.
+            AI ước tính thành phần và dinh dưỡng từ hình ảnh. Hãy kiểm tra lượng gram, calo và macro trước khi lưu.
           </Text>
         </View>
       </View>
@@ -165,7 +165,7 @@ export const CandidateReviewPresentation: React.FC<CandidateReviewPresentationPr
 
       {/* Candidates List */}
       <Card padding="md" style={styles.candidatesCard}>
-        <Text style={[typography.title3, styles.candidatesTitle]}>Món ăn nhận diện được</Text>
+        <Text style={[typography.title3, styles.candidatesTitle]}>Thành phần nhận diện được</Text>
 
         {candidates.map((cand) => (
           <View key={cand.id} style={styles.candidateRow}>
@@ -184,9 +184,14 @@ export const CandidateReviewPresentation: React.FC<CandidateReviewPresentationPr
 
             <View style={styles.candidateInfo}>
               <View style={styles.candidateNameRow}>
-                <Text style={[typography.bodyBold, styles.candidateName]} numberOfLines={1}>
-                  {cand.name}
-                </Text>
+                <View style={styles.candidateTitleBlock}>
+                  <Text style={[typography.bodyBold, styles.candidateName]} numberOfLines={2}>
+                    {cand.name}
+                  </Text>
+                  <Text style={[typography.caption, styles.candidatePortion]}>
+                    {cand.portionDescription}
+                  </Text>
+                </View>
                 <TouchableOpacity
                   onPress={() => onEditCandidate(cand)}
                   style={styles.editBtn}
@@ -197,9 +202,20 @@ export const CandidateReviewPresentation: React.FC<CandidateReviewPresentationPr
                 </TouchableOpacity>
               </View>
 
-              <Text style={[typography.caption, styles.candidatePortion]}>
-                {cand.portionDescription}
-              </Text>
+              {cand.ingredients?.length ? (
+                <View style={styles.ingredientsList}>
+                  {cand.ingredients.map((ingredient) => (
+                    <View key={ingredient.id} style={styles.ingredientRow}>
+                      <Text style={[typography.captionMedium, styles.ingredientName]} numberOfLines={1}>
+                        {ingredient.name}
+                      </Text>
+                      <Text style={[typography.caption, styles.ingredientAmount]}>
+                        {ingredient.portionGrams > 0 ? ingredient.portionGrams + 'g' : 'Chưa rõ gram'}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
 
               <View style={styles.candidateNutrients}>
                 <Text style={[typography.captionMedium, { color: colors.primary }]}>
@@ -207,15 +223,15 @@ export const CandidateReviewPresentation: React.FC<CandidateReviewPresentationPr
                 </Text>
                 <Text style={styles.metaDot}>•</Text>
                 <Text style={[typography.caption, { color: colors.textSecondary }]}>
-                  P: {cand.protein}g
+                  Đạm {cand.protein}g
                 </Text>
                 <Text style={styles.metaDot}>•</Text>
                 <Text style={[typography.caption, { color: colors.textSecondary }]}>
-                  C: {cand.carbs}g
+                  Tinh bột {cand.carbs}g
                 </Text>
                 <Text style={styles.metaDot}>•</Text>
                 <Text style={[typography.caption, { color: colors.textSecondary }]}>
-                  F: {cand.fat}g
+                  Béo {cand.fat}g
                 </Text>
               </View>
             </View>
@@ -226,11 +242,11 @@ export const CandidateReviewPresentation: React.FC<CandidateReviewPresentationPr
           onPress={onAddManualMissing}
           style={styles.addMissingBtn}
           accessibilityRole="button"
-          accessibilityLabel="Thêm món còn thiếu"
+          accessibilityLabel="Thêm món hoặc thành phần còn thiếu"
         >
           <Plus size={16} color={colors.primary} />
           <Text style={[typography.bodyMedium, styles.addMissingText]}>
-            Thêm món còn thiếu thủ công
+            Thêm món hoặc thành phần còn thiếu
           </Text>
         </TouchableOpacity>
       </Card>
@@ -386,15 +402,18 @@ const styles = StyleSheet.create({
   },
   candidateInfo: {
     flex: 1,
+    gap: spacing.xs,
   },
   candidateNameRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
+  },
+  candidateTitleBlock: {
+    flex: 1,
   },
   candidateName: {
     color: colors.textPrimary,
-    flex: 1,
   },
   editBtn: {
     padding: spacing.xs,
@@ -406,8 +425,31 @@ const styles = StyleSheet.create({
   candidateNutrients: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: spacing.xs,
     marginTop: 4,
+  },
+  ingredientsList: {
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  ingredientRow: {
+    minHeight: 32,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceSubtle,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  ingredientName: {
+    color: colors.textPrimary,
+    flex: 1,
+  },
+  ingredientAmount: {
+    color: colors.textSecondary,
   },
   metaDot: {
     color: colors.textMuted,

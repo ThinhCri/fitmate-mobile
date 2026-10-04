@@ -1,5 +1,6 @@
-﻿import {
+import {
   DayNutritionSummaryViewModel,
+  FoodCandidateIngredientViewModel,
   FoodItemViewModel,
   MealSectionViewModel,
   MealTimeSlot,
@@ -219,30 +220,42 @@ export class ApiNutritionRepository implements INutritionRepository {
 
 export const apiNutritionRepository = new ApiNutritionRepository();
 function mapScanCandidates(raw: any) {
+  const topLevelIngredients = Array.isArray(raw?.ingredients) ? uniqueIngredients(raw.ingredients) : [];
+
   if (Array.isArray(raw?.items) && raw.items.length > 0) {
     return raw.items
-      .map((item: any, index: number) => toCandidate({
-        id: `scan-${index}`,
-        name: cleanFoodName(item?.name),
-        calories: numberValue(item?.calories),
-        protein: numberValue(item?.protein_g),
-        carbs: numberValue(item?.carbs_g),
-        fat: numberValue(item?.fat_g),
-        confidenceScore: numberValue(raw?.confidence),
-      }))
+      .map((item: any, index: number) => {
+        const ingredients = Array.isArray(item?.ingredients) && item.ingredients.length > 0
+          ? uniqueIngredients(item.ingredients)
+          : topLevelIngredients.length > 0
+            ? topLevelIngredients
+            : ingredientsFromName(item?.name);
+        const portionGrams = totalIngredientGrams(ingredients);
+        return toCandidate({
+          id: `scan-${index}`,
+          name: ingredients.length > 1 ? 'Món ăn quét từ ảnh' : translateIngredientName(item?.name),
+          portionDescription: cleanFoodName(item?.portion_description) ||
+            cleanFoodName(item?.portion) ||
+            (portionGrams > 0 ? `${portionGrams}g trong ảnh` : undefined),
+          ingredients: ingredients.length ? ingredients : undefined,
+          calories: numberValue(item?.calories),
+          protein: numberValue(item?.protein_g),
+          carbs: numberValue(item?.carbs_g),
+          fat: numberValue(item?.fat_g),
+          confidenceScore: numberValue(raw?.confidence),
+        });
+      })
       .filter(isCandidate);
   }
 
-  if (Array.isArray(raw?.ingredients) && raw.ingredients.length > 0) {
-    const ingredientNames = uniqueNames(raw.ingredients.map(ingredientName));
-    const portionGrams = raw.ingredients
-      .map((item: any) => numberValue(item?.portion_estimate_g))
-      .reduce((sum: number, grams: number) => sum + grams, 0);
+  if (topLevelIngredients.length > 0) {
+    const portionGrams = totalIngredientGrams(topLevelIngredients);
 
     return [toCandidate({
       id: 'scan-0',
-      name: ingredientNames.join(', '),
-      portionDescription: portionGrams > 0 ? `${Math.round(portionGrams)}g trong anh` : undefined,
+      name: 'Món ăn quét từ ảnh',
+      portionDescription: portionGrams > 0 ? `${portionGrams}g trong ảnh` : undefined,
+      ingredients: topLevelIngredients,
       calories: numberValue(raw?.calories_kcal),
       protein: numberValue(raw?.protein_g),
       carbs: numberValue(raw?.carbs_g),
@@ -257,6 +270,7 @@ function toCandidate(input: {
   id: string;
   name: string;
   portionDescription?: string;
+  ingredients?: FoodCandidateIngredientViewModel[];
   calories: number;
   protein: number;
   carbs: number;
@@ -269,7 +283,8 @@ function toCandidate(input: {
   return {
     id: input.id,
     name,
-    portionDescription: input.portionDescription || 'Khau phan trong anh',
+    portionDescription: input.portionDescription || 'Khẩu phần trong ảnh',
+    ingredients: input.ingredients,
     calories: input.calories,
     protein: input.protein,
     carbs: input.carbs,
@@ -288,19 +303,40 @@ function ingredientName(item: any) {
   return item?.name;
 }
 
-function uniqueNames(values: any[]) {
+function ingredientsFromName(value: any): FoodCandidateIngredientViewModel[] {
+  const cleaned = cleanFoodName(value);
+  if (!cleaned) return [];
+  return uniqueIngredients(
+    cleaned
+      .split(/\s*,\s*|\s+\band\b\s+/i)
+      .map((name) => ({ name, portion_estimate_g: 0 }))
+  );
+}
+
+function uniqueIngredients(values: any[]): FoodCandidateIngredientViewModel[] {
   const seen = new Set<string>();
-  const names: string[] = [];
-  values.forEach((value) => {
-    const name = cleanFoodName(value);
+  const ingredients: FoodCandidateIngredientViewModel[] = [];
+  values.forEach((value, index) => {
+    const name = translateIngredientName(ingredientName(value));
     const key = name.toLowerCase().replace(/\s+/g, ' ');
     if (!key || seen.has(key)) return;
     seen.add(key);
-    names.push(name);
+    ingredients.push({
+      id: `ingredient-${index}`,
+      name,
+      portionGrams: ingredientPortionGrams(value),
+    });
   });
-  return names.slice(0, 8);
+  return ingredients.slice(0, 8);
 }
 
+function ingredientPortionGrams(value: any) {
+  return numberValue(value?.portion_estimate_g ?? value?.portion_g ?? value?.weight_g ?? value?.grams);
+}
+
+function totalIngredientGrams(ingredients: FoodCandidateIngredientViewModel[]) {
+  return ingredients.reduce((sum, ingredient) => sum + ingredient.portionGrams, 0);
+}
 function cleanFoodName(value: any) {
   return String(value ?? '')
     .replace(/<[^>]+>/g, ' ')
@@ -310,6 +346,39 @@ function cleanFoodName(value: any) {
     .replace(/^[\s.,;:_-]+|[\s.,;:_-]+$/g, '');
 }
 
+
+const INGREDIENT_TRANSLATIONS: Record<string, string> = {
+  beef: 'Thịt bò',
+  bread: 'Bánh mì',
+  chicken: 'Thịt gà',
+  carrot: 'Cà rốt',
+  cucumber: 'Dưa leo',
+  egg: 'Trứng',
+  eggs: 'Trứng',
+  fish: 'Cá',
+  lettuce: 'Xà lách',
+  mayonnaise: 'Sốt mayonnaise',
+  noodle: 'Mì',
+  noodles: 'Mì',
+  onion: 'Hành tây',
+  pepper: 'Ớt chuông',
+  pork: 'Thịt heo',
+  rice: 'Cơm',
+  'roast beef': 'Thịt bò nướng',
+  shrimp: 'Tôm',
+  tofu: 'Đậu phụ',
+  'vietnamese bread': 'Bánh mì Việt Nam',
+  vegetable: 'Rau củ',
+  vegetables: 'Rau củ',
+};
+
+function translateIngredientName(value: any) {
+  const cleaned = cleanFoodName(value);
+  if (!cleaned) return '';
+  const normalized = cleaned.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (INGREDIENT_TRANSLATIONS[normalized]) return INGREDIENT_TRANSLATIONS[normalized];
+  return /[^\x00-\x7F]/.test(cleaned) ? cleaned : 'Thành phần khác';
+}
 function numberValue(value: any) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < 0) return 0;
