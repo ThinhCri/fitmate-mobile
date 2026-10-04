@@ -735,3 +735,4 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Feed delete/block confirmations now use the same in-app confirmation UI.
 - AI multi-image upload now copies non-file Android/Google Photos URIs into app cache before multipart upload, parses response bodies only once, preserves the real API error, and removes temporary files afterward.
 - Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing.
+- Follow-up: navigation guard imports `useNavigation` from `expo-router` and subscribes to `beforeRemove`; no undeclared direct `@react-navigation/native` dependency is required.

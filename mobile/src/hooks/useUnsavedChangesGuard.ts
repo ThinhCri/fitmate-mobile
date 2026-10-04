@@ -1,16 +1,21 @@
-import { useCallback, useState } from 'react';
-import { useNavigation, usePreventRemove } from '@react-navigation/native';
-import type { NavigationAction } from '@react-navigation/native';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigation } from 'expo-router';
+
+type PendingNavigationAction = Parameters<ReturnType<typeof useNavigation>['dispatch']>[0];
 
 export function useUnsavedChangesGuard(shouldPrevent: boolean, onDiscard: () => void) {
   const navigation = useNavigation();
-  const [pendingAction, setPendingAction] = useState<NavigationAction | null>(null);
+  const [pendingAction, setPendingAction] = useState<PendingNavigationAction | null>(null);
   const [visible, setVisible] = useState(false);
 
-  usePreventRemove(shouldPrevent, ({ data }) => {
-    setPendingAction(data.action);
-    setVisible(true);
-  });
+  useEffect(() => {
+    if (!shouldPrevent) return;
+    return navigation.addListener('beforeRemove', (event) => {
+      event.preventDefault();
+      setPendingAction(event.data.action);
+      setVisible(true);
+    });
+  }, [navigation, shouldPrevent]);
 
   const cancel = useCallback(() => {
     setVisible(false);
