@@ -141,6 +141,9 @@ export const ManualMealEntryPresentation: React.FC<ManualMealEntryPresentationPr
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
       >
         {/* Top bar header */}
         <View style={styles.topBar}>

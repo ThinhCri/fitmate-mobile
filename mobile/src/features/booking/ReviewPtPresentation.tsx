@@ -39,7 +39,7 @@ export function ReviewPtPresentation({
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
       <Card style={styles.card}>
         {/* Header context */}
         <View style={styles.contextHeader}>

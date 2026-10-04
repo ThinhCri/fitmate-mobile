@@ -159,7 +159,7 @@ export function CreatePostPresentation({
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.body} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.body} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
         {/* Audience / Visibility Selector */}
         <View style={styles.visibilityRow}>
           <Text style={styles.sectionLabel}>Đối tượng xem:</Text>

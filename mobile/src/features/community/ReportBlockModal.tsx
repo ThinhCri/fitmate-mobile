@@ -152,7 +152,7 @@ export function ReportBlockModal({
 
   return (
     <ModalShell visible={visible} onClose={onClose} title="Báo cáo vi phạm hoặc Chặn">
-      <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
         {/* Target Summary Card */}
         <View style={styles.targetCard}>
           <Text style={styles.targetLabel}>Đối tượng được báo cáo ({targetTypeLabel}):</Text>

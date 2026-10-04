@@ -234,7 +234,7 @@ export function SchedulePresentation({
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
         {/* Week Switcher Card */}
         <View style={styles.weekCard}>
           <View style={styles.weekHeaderRow}>

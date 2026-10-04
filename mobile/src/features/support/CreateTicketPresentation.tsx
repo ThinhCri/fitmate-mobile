@@ -106,7 +106,7 @@ export function CreateTicketPresentation({
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
         {/* Linked Booking context if present */}
         {linkedBookingId && (
           <Card style={styles.linkedBookingCard}>

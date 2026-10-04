@@ -220,6 +220,9 @@ export function ProfileServicesPresentation({
       </View>
 
       <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -494,7 +497,7 @@ export function ProfileServicesPresentation({
               </Pressable>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>
                   Tên gói dịch vụ <Text style={{ color: colors.danger }}>*</Text>

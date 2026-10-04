@@ -6,6 +6,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 import { ThemeProvider } from '@/theme';
 import { AuthProvider } from '@/services/AuthContext';
 import { PtVerificationGate } from '@/services/PtVerificationGate';
@@ -19,12 +20,17 @@ export default function RootLayout() {
           <AuthProvider>
             <PtVerificationGate />
             <StatusBar style="dark" />
-            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#FAFAF7' } }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
-            </Stack>
+            <KeyboardAvoidingView
+              style={{ flex: 1 }}
+              behavior={Platform.OS === 'android' ? 'height' : undefined}
+            >
+              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#FAFAF7' } }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
+              </Stack>
+            </KeyboardAvoidingView>
             <ToastHost />
           </AuthProvider>
         </ThemeProvider>

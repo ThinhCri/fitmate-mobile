@@ -41,7 +41,7 @@ export function PtSessionManagementPresentation({
   const [sessionNotes, setSessionNotes] = useState(initialNotes);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
       {/* Header Context */}
       <View style={styles.headerContext}>
         <View>

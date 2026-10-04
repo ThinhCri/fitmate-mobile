@@ -128,6 +128,9 @@ export function ConversationPresentation({
 
       {/* Messages Scroll View */}
       <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
         ref={scrollRef}
         style={styles.scrollArea}
         contentContainerStyle={styles.scrollContent}

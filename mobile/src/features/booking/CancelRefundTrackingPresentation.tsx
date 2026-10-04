@@ -42,7 +42,7 @@ export function CancelRefundTrackingPresentation({
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
       {/* If already submitted, show refund tracking status */}
       {isSubmitted && refundData ? (
         <View style={styles.trackingContainer}>

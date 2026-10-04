@@ -93,6 +93,9 @@ export function AiChatInteractivePresentation({
 
       {/* Messages Scroll Area */}
       <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
         ref={scrollRef}
         style={styles.scrollArea}
         contentContainerStyle={styles.scrollContent}

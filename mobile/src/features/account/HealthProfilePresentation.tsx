@@ -117,7 +117,7 @@ export function HealthProfilePresentation({
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
         {/* Medical Disclaimer Banner */}
         <Card style={styles.disclaimerCard}>
           <Shield size={18} color={colors.primary} />

@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "vn.fitmate.app",
+      "softwareKeyboardLayoutMode": "resize",
       "permissions": ["android.permission.POST_NOTIFICATIONS"]
     },
     "web": {

@@ -192,7 +192,7 @@ export function CertificatesPresentation({
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
         {verificationStatus && verificationStatus !== 'approved' && (
           <View style={styles.auditBanner}>
             <Clock size={22} color={colors.warning} />

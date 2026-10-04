@@ -120,6 +120,9 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
       >
         {/* Top Bar */}
         <View style={styles.topBar}>

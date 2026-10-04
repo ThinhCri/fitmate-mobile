@@ -152,6 +152,8 @@ export default function ForgotPasswordScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
       >
         {/* Step Indicator Pill */}
         <View style={styles.stepPill}>
