@@ -94,6 +94,14 @@ export async function apiUploadFiles<T>(
   files: Array<{ uri: string; mimeType?: string | null; fileName?: string | null }>,
   parameters: Record<string, string>
 ): Promise<T> {
+  if (files.length === 1) {
+    const file = files[0];
+    const mimeType = file.mimeType === 'image/png' || file.mimeType === 'image/webp'
+      ? file.mimeType
+      : 'image/jpeg';
+    return apiUploadFile<T>(endpoint, file.uri, mimeType, parameters);
+  }
+
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
   const token = sessionManager.getAccessToken();
   const temporaryUris: string[] = [];
