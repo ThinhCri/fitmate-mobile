@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -38,9 +38,10 @@ export interface PostDetailPresentationProps {
   currentUserId?: string;
   onBack: () => void;
   onReaction: (type: 'love' | 'fire' | 'smile') => void;
-  onAddComment: (text: string) => Promise<boolean> | void;
+  onAddComment: (text: string, parentCommentId?: string) => Promise<boolean> | void;
   onDeleteComment?: (commentId: string) => void;
   onDeletePost?: () => void;
+  onChangeVisibility?: (visibility: CommunityPostViewModel['visibility']) => void;
   onReportPress: (targetType: 'post' | 'comment', targetId: string, authorName: string) => void;
   onAuthorPress: (authorId: string) => void;
 }
@@ -53,6 +54,7 @@ export function PostDetailPresentation({
   onAddComment,
   onDeleteComment,
   onDeletePost,
+  onChangeVisibility,
   onReportPress,
   onAuthorPress,
 }: PostDetailPresentationProps) {
@@ -60,27 +62,42 @@ export function PostDetailPresentation({
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
-  const [replyToUser, setReplyToUser] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
+  const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
+  const inputRef = useRef<TextInput>(null);
 
   const comments = post.comments || [];
   const isOwner = post.isOwner || (currentUserId && post.authorId === currentUserId);
 
   const handleSendComment = async () => {
     if (!commentText.trim() || isSubmittingComment) return;
-    const textToSend = replyToUser ? `@${replyToUser} ${commentText.trim()}` : commentText.trim();
-
     setIsSubmittingComment(true);
     setSendError(null);
     try {
-      await onAddComment(textToSend);
+      const sent = await onAddComment(commentText.trim(), replyTo?.id);
+      if (sent === false) {
+        setSendError('Không thể gửi bình luận. Vui lòng thử lại.');
+        return;
+      }
       setCommentText('');
-      setReplyToUser(null);
-    } catch (err: any) {
+      setReplyTo(null);
+    } catch {
       setSendError('Không thể gửi bình luận. Vui lòng thử lại.');
     } finally {
       setIsSubmittingComment(false);
     }
   };
+
+  const startReply = (comment: PostCommentViewModel) => {
+    setReplyTo({ id: comment.id, name: comment.authorName });
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const rootComments = comments.filter((comment) => !comment.parentCommentId);
+  const repliesByRoot = comments.reduce<Record<string, PostCommentViewModel[]>>((groups, comment) => {
+    if (comment.parentCommentId) (groups[comment.parentCommentId] ||= []).push(comment);
+    return groups;
+  }, {});
 
   const getVisibilityIcon = () => {
     switch (post.visibility) {
@@ -93,10 +110,42 @@ export function PostDetailPresentation({
     }
   };
 
+  const renderComment = (comment: PostCommentViewModel, isReply = false) => (
+    <View key={comment.id} style={[styles.commentRow, isReply && styles.replyRow]}>
+      <TouchableOpacity onPress={() => onAuthorPress(comment.authorId)}>
+        <Avatar name={comment.authorName} size="sm" />
+      </TouchableOpacity>
+      <View style={styles.commentBody}>
+        <View style={styles.commentHeaderLine}>
+          <TouchableOpacity onPress={() => onAuthorPress(comment.authorId)}>
+            <Text style={styles.commentAuthorName}>{comment.authorName}</Text>
+          </TouchableOpacity>
+          {comment.authorRole === 'pt' && <Text style={styles.commentPtInline}>HLV</Text>}
+          <Text style={styles.commentTime}>{comment.createdAt}</Text>
+        </View>
+        <Text style={styles.commentContent}>{comment.text}</Text>
+        <View style={styles.commentActions}>
+          <TouchableOpacity onPress={() => startReply(comment)} style={styles.commentActionBtn}>
+            <Text style={styles.commentActionText}>Trả lời</Text>
+          </TouchableOpacity>
+          {comment.isOwner && onDeleteComment ? (
+            <TouchableOpacity onPress={() => onDeleteComment(comment.id)} style={styles.commentActionBtn}>
+              <Text style={[styles.commentActionText, { color: colors.danger }]}>Xóa</Text>
+            </TouchableOpacity>
+          ) : !comment.isOwner ? (
+            <TouchableOpacity onPress={() => onReportPress('comment', comment.id, comment.authorName)} style={styles.commentActionBtn}>
+              <Text style={styles.commentActionText}>Báo cáo</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {/* Header */}
       <View style={styles.header}>
@@ -253,7 +302,7 @@ export function PostDetailPresentation({
 
             <View style={styles.commentCountWrapper}>
               <MessageSquare size={16} color={colors.textSecondary} />
-              <Text style={styles.commentCountText}>{comments.length} bình luận</Text>
+              <Text style={styles.commentCountText}>{post.commentCount} bình luận</Text>
             </View>
           </View>
         </Card>
@@ -272,7 +321,7 @@ export function PostDetailPresentation({
         {/* Comments Section */}
         <View style={styles.commentsSection}>
           <Text style={styles.commentsSectionTitle}>
-            Bình luận ({comments.length})
+            Bình luận ({post.commentCount})
           </Text>
 
           {comments.length === 0 ? (
@@ -281,73 +330,33 @@ export function PostDetailPresentation({
                 Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ ý kiến!
               </Text>
             </View>
-          ) : (
-            comments.map((comment) => (
-              <View key={comment.id} style={styles.commentRow}>
-                <TouchableOpacity onPress={() => onAuthorPress(comment.authorId)}>
-                  <Avatar name={comment.authorName} size="sm" />
-                </TouchableOpacity>
-
-                <View style={styles.commentBubble}>
-                  <View style={styles.commentBubbleHeader}>
-                    <TouchableOpacity onPress={() => onAuthorPress(comment.authorId)}>
-                      <Text style={styles.commentAuthorName}>{comment.authorName}</Text>
-                    </TouchableOpacity>
-                    {comment.authorRole === 'pt' && (
-                      <View style={styles.commentPtBadge}>
-                        <Text style={styles.commentPtBadgeText}>HLV</Text>
-                      </View>
-                    )}
-                    <Text style={styles.commentTime}>{comment.createdAt}</Text>
-                  </View>
-
-                  <Text style={styles.commentContent}>{comment.text}</Text>
-
-                  <View style={styles.commentActions}>
-                    <TouchableOpacity
-                      onPress={() => setReplyToUser(comment.authorName)}
-                      style={styles.commentActionBtn}
-                    >
-                      <Text style={styles.commentActionText}>Trả lời</Text>
-                    </TouchableOpacity>
-
-                    {comment.isOwner && onDeleteComment && (
-                      <TouchableOpacity
-                        onPress={() => onDeleteComment(comment.id)}
-                        style={styles.commentActionBtn}
-                      >
-                        <Text style={[styles.commentActionText, { color: colors.danger }]}>
-                          Xóa
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-
-                    {!comment.isOwner && (
-                      <TouchableOpacity
-                        onPress={() =>
-                          onReportPress('comment', comment.id, comment.authorName)
-                        }
-                        style={styles.commentActionBtn}
-                      >
-                        <Text style={styles.commentActionText}>Báo cáo</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
+          ) : rootComments.map((comment) => {
+            const replies = repliesByRoot[comment.id] || [];
+            const expanded = expandedThreads.has(comment.id);
+            return (
+              <View key={comment.id} style={styles.threadBlock}>
+                {renderComment(comment)}
+                {replies.length > 0 && !expanded && (
+                  <TouchableOpacity style={styles.showRepliesButton} onPress={() => setExpandedThreads((current) => new Set(current).add(comment.id))}>
+                    <View style={styles.replyLine} />
+                    <Text style={styles.showRepliesText}>Xem {replies.length} câu trả lời</Text>
+                  </TouchableOpacity>
+                )}
+                {expanded && replies.map((reply) => renderComment(reply, true))}
               </View>
-            ))
-          )}
+            );
+          })}
         </View>
       </ScrollView>
 
       {/* Sticky Bottom Composer */}
       <View style={styles.bottomComposerContainer}>
-        {replyToUser && (
+        {replyTo && (
           <View style={styles.replyBanner}>
             <Text style={styles.replyBannerText}>
-              Đang trả lời <Text style={styles.replyBannerUser}>{replyToUser}</Text>
+              Đang trả lời <Text style={styles.replyBannerUser}>{replyTo.name}</Text>
             </Text>
-            <TouchableOpacity onPress={() => setReplyToUser(null)}>
+            <TouchableOpacity onPress={() => setReplyTo(null)}>
               <Text style={styles.cancelReplyText}>Hủy</Text>
             </TouchableOpacity>
           </View>
@@ -355,6 +364,7 @@ export function PostDetailPresentation({
 
         <View style={styles.composerInputRow}>
           <TextInput
+            ref={inputRef}
             style={styles.composerTextInput}
             placeholder="Viết bình luận công khai..."
             placeholderTextColor={colors.textMuted}
@@ -384,6 +394,23 @@ export function PostDetailPresentation({
         title="Tùy chọn bài viết"
       >
         <View style={styles.modalOptionsContainer}>
+          {isOwner && onChangeVisibility && (
+            <TouchableOpacity
+              style={styles.modalOptionItem}
+              onPress={() => {
+                setShowOptionsMenu(false);
+                Alert.alert('Ai có thể xem bài viết?', undefined, [
+                  { text: 'Công khai', onPress: () => onChangeVisibility('public') },
+                  { text: 'Bạn bè', onPress: () => onChangeVisibility('friends') },
+                  { text: 'Chỉ mình tôi', onPress: () => onChangeVisibility('private') },
+                  { text: 'Hủy', style: 'cancel' },
+                ]);
+              }}
+            >
+              {getVisibilityIcon()}
+              <Text style={styles.modalOptionText}>Đổi quyền riêng tư</Text>
+            </TouchableOpacity>
+          )}
           {isOwner && onDeletePost && (
             <TouchableOpacity
               style={styles.modalOptionItem}
@@ -646,34 +673,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.xs,
   },
-  commentBubble: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 4,
-  },
-  commentBubbleHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
+  threadBlock: { gap: spacing.xs },
+  replyRow: { marginLeft: 44 },
+  commentBody: { flex: 1, gap: 3, paddingTop: 1 },
+  commentHeaderLine: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  commentPtInline: { fontSize: 9, fontWeight: '700', color: colors.primary },
+  showRepliesButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginLeft: 44, paddingVertical: spacing.xs },
+  replyLine: { width: 30, height: 1, backgroundColor: colors.border },
+  showRepliesText: { ...typography.caption, color: colors.textSecondary, fontWeight: '600' },
   commentAuthorName: {
     fontSize: 14,
     fontWeight: '700',
     color: colors.textPrimary,
-  },
-  commentPtBadge: {
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 4,
-    borderRadius: radius.xs,
-  },
-  commentPtBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: colors.primary,
   },
   commentTime: {
     ...typography.caption,

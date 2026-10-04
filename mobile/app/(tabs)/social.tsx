@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { MessageCircle, UserSearch } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { AppTopBar } from '@/components/design-system/AppTopBar';
 import { ErrorState, LoadingSkeleton } from '@/components/design-system/FeedbackStates';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
@@ -29,13 +29,12 @@ export default function SocialScreen() {
     }
   }, []);
 
-  useEffect(() => { void loadPosts(); }, [loadPosts]);
+  useFocusEffect(useCallback(() => {
+    void loadPosts(category === 'friends' ? 'friends' : 'public');
+  }, [category, loadPosts]));
 
   const handleCategoryChange = (next: FeedCategory) => {
-    const previous = category;
     setCategory(next);
-    if (next === 'friends') void loadPosts('friends');
-    else if (previous === 'friends') void loadPosts('public');
   };
 
   const visiblePosts = posts.filter((post) => category === 'all' || category === 'friends' || post.category === category);

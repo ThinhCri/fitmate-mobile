@@ -91,10 +91,18 @@ export class PreviewSocialRepository implements ISocialRepository {
     return post;
   }
 
-  async addComment(postId: string, text: string): Promise<PostCommentViewModel> {
-    const comment: PostCommentViewModel = { id: `preview-comment-${Date.now()}`, authorId: 'preview-me', authorName: 'Bạn', authorRole: 'member', text, createdAt: 'Vừa xong', isOwner: true };
+  async addComment(postId: string, text: string, parentCommentId?: string): Promise<PostCommentViewModel> {
+    const comment: PostCommentViewModel = { id: `preview-comment-${Date.now()}`, parentCommentId, authorId: 'preview-me', authorName: 'Bạn', authorRole: 'member', text, createdAt: 'Vừa xong', isOwner: true };
     previewPosts = previewPosts.map((post) => post.id === postId ? { ...post, comments: [...(post.comments || []), comment], commentCount: post.commentCount + 1 } : post);
     return comment;
+  }
+
+  async updatePostVisibility(postId: string, visibility: CommunityPostViewModel['visibility']): Promise<CommunityPostViewModel> {
+    const post = previewPosts.find((item) => item.id === postId);
+    if (!post) throw new Error('Không tìm thấy bài viết.');
+    const updated = { ...post, visibility };
+    previewPosts = previewPosts.map((item) => item.id === postId ? updated : item);
+    return updated;
   }
 
   async deletePost(postId: string): Promise<void> { previewPosts = previewPosts.filter((post) => post.id !== postId); }

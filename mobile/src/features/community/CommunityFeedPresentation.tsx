@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Image,
+  useWindowDimensions,
 } from 'react-native';
 import {
   Users,
@@ -20,6 +22,8 @@ import {
   Share2,
   MoreVertical,
   CheckCircle2,
+  Globe,
+  Lock,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
@@ -59,6 +63,8 @@ export function CommunityFeedPresentation({
   onAuthorPress,
   onScroll: externalOnScroll,
 }: CommunityFeedPresentationProps) {
+  const { width: screenWidth } = useWindowDimensions();
+  const mediaWidth = Math.max(240, screenWidth - spacing.md * 4);
   const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
   const categories = [
     { key: 'all', label: 'Tất cả' },
@@ -197,7 +203,11 @@ export function CommunityFeedPresentation({
                       </View>
                     )}
                   </View>
-                  <Text style={styles.postTime}>{post.createdAt}</Text>
+                  <View style={styles.postMetaRow}>
+                    <Text style={styles.postTime}>{post.createdAt}</Text>
+                    {post.visibility === 'public' ? <Globe size={11} color={colors.textMuted} /> : post.visibility === 'friends' ? <Users size={11} color={colors.textMuted} /> : <Lock size={11} color={colors.textMuted} />}
+                    <Text style={styles.postTime}>{post.visibility === 'public' ? 'Công khai' : post.visibility === 'friends' ? 'Bạn bè' : 'Riêng tư'}</Text>
+                  </View>
                 </View>
               </TouchableOpacity>
 
@@ -219,6 +229,22 @@ export function CommunityFeedPresentation({
               accessibilityLabel="Xem chi tiết bài viết"
             >
               <Text style={styles.postContent}>{post.content}</Text>
+              {(post.mediaUrls?.length || post.mediaUrl) ? (
+                <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.mediaCarousel}>
+                  {(post.mediaUrls?.length ? post.mediaUrls : [post.mediaUrl!]).map((uri, index, all) => (
+                    <View key={`${uri}-${index}`} style={[styles.feedMediaFrame, { width: mediaWidth }]}>
+                      <Image source={{ uri }} style={styles.feedMedia} accessibilityRole="image" accessibilityLabel={`Ảnh ${index + 1} trên ${all.length}`} />
+                      {all.length > 1 && <View style={styles.mediaCounter}><Text style={styles.mediaCounterText}>{index + 1}/{all.length}</Text></View>}
+                    </View>
+                  ))}
+                </ScrollView>
+              ) : null}
+              {(post.workoutTags?.length || post.mealTags?.length || post.isKnowledgeSharing) ? (
+                <View style={styles.feedTags}>
+                  {[...(post.workoutTags || []), ...(post.mealTags || [])].slice(0, 4).map((tag) => <Text key={tag} style={styles.feedTag}>#{tag}</Text>)}
+                  {post.isKnowledgeSharing && <Text style={styles.feedTag}>#kiến_thức</Text>}
+                </View>
+              ) : null}
             </TouchableOpacity>
 
             {/* Reactions & Actions Row */}
@@ -458,6 +484,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textMuted,
   },
+  postMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   moreBtn: {
     padding: 4,
   },
@@ -466,6 +493,13 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     lineHeight: 20,
   },
+  mediaCarousel: { marginTop: spacing.sm, borderRadius: radius.md },
+  feedMediaFrame: { height: 320, backgroundColor: colors.surfaceSubtle, borderRadius: radius.md, overflow: 'hidden' },
+  feedMedia: { width: '100%', height: '100%', resizeMode: 'cover' },
+  mediaCounter: { position: 'absolute', top: spacing.sm, right: spacing.sm, backgroundColor: 'rgba(15,23,42,0.72)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: radius.full },
+  mediaCounterText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  feedTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: spacing.xs },
+  feedTag: { color: colors.primary, fontSize: 12, fontWeight: '600' },
   reactionsBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',

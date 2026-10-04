@@ -690,3 +690,11 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Added client-side JPG/PNG/WebP and 5 MB validation, normalized multipart filename/MIME metadata, reduced avatar picker quality to 0.7 and added a guarded loading/error/success flow with Vietnamese copy.
 - Remaining contract gap: profile `avatar_url` still stores an expiring signed URL rather than a stable `storageKey`; backend needs an attach/renew projection before this path is production-durable. The current change restores local physical-device upload/testing without disguising that gap.
 - Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
+
+# Instagram-style community interaction — 2026-10-04
+
+- Community feed keeps Fitmate design tokens and cards while adding an Instagram-inspired media carousel, visibility metadata, tags and a larger post-detail target.
+- Post detail now supports one-level threaded replies, a keyboard-safe reply composer, collapsible reply groups and owner-controlled post visibility.
+- Community reloads when its tab regains focus so new posts and comment counts are refreshed from the API.
+- Mobile repository, API adapter and preview adapter now carry `parent_comment_id` and the post-visibility update operation.
+- Source review and `git diff --check` completed; automated frontend commands were not run under the repository manual-execution rule.

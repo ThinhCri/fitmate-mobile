@@ -68,13 +68,14 @@ interface CommentWire {
   id: string;
   post_id: string;
   author_id: string;
+  parent_comment_id?: string | null;
   author: { id: string; display_name: string; avatar_url?: string | null };
   text: string;
   created_at: string;
 }
 
 function mapComment(wire: CommentWire, currentUserId?: string): PostCommentViewModel {
-  return { id: wire.id, authorId: wire.author_id, authorName: wire.author.display_name, authorRole: 'member', text: wire.text, createdAt: new Date(wire.created_at).toLocaleString('vi-VN'), isOwner: currentUserId === wire.author_id };
+  return { id: wire.id, parentCommentId: wire.parent_comment_id || undefined, authorId: wire.author_id, authorName: wire.author.display_name, authorRole: 'member', text: wire.text, createdAt: new Date(wire.created_at).toLocaleString('vi-VN'), isOwner: currentUserId === wire.author_id };
 }
 
 function mapPost(wire: PostWire): CommunityPostViewModel {
@@ -150,12 +151,20 @@ export class ApiSocialRepository implements ISocialRepository {
     return { ...mapPost(result), isOwner: true };
   }
 
-  async addComment(postId: string, text: string): Promise<PostCommentViewModel> {
+  async addComment(postId: string, text: string, parentCommentId?: string): Promise<PostCommentViewModel> {
     const [result, me] = await Promise.all([
-      apiClient<CommentWire>(`/social/posts/${encodeURIComponent(postId)}/comments`, { method: 'POST', body: JSON.stringify({ text }) }),
+      apiClient<CommentWire>(`/social/posts/${encodeURIComponent(postId)}/comments`, { method: 'POST', body: JSON.stringify({ text, parent_comment_id: parentCommentId }) }),
       authService.getMe(),
     ]);
     return mapComment(result, me.id);
+  }
+
+  async updatePostVisibility(postId: string, visibility: CommunityPostViewModel['visibility']): Promise<CommunityPostViewModel> {
+    const result = await apiClient<PostWire>(`/social/posts/${encodeURIComponent(postId)}/visibility`, {
+      method: 'PATCH',
+      body: JSON.stringify({ visibility }),
+    });
+    return { ...mapPost(result), isOwner: true };
   }
 
   async deletePost(postId: string): Promise<void> {

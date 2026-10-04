@@ -4,6 +4,7 @@
 
 export interface PostCommentViewModel {
   id: string;
+  parentCommentId?: string;
   authorId: string;
   authorName: string;
   authorRole: 'member' | 'pt';

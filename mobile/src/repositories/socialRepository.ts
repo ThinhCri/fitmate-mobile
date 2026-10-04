@@ -8,7 +8,8 @@ export interface ISocialRepository {
   listPosts(scope?: 'public' | 'friends'): Promise<CommunityPostViewModel[]>;
   getPost(id: string): Promise<CommunityPostViewModel>;
   createPost(values: CreatePostFormValues): Promise<CommunityPostViewModel>;
-  addComment(postId: string, text: string): Promise<PostCommentViewModel>;
+  addComment(postId: string, text: string, parentCommentId?: string): Promise<PostCommentViewModel>;
+  updatePostVisibility(postId: string, visibility: CommunityPostViewModel['visibility']): Promise<CommunityPostViewModel>;
   deletePost(postId: string): Promise<void>;
   blockUser(userId: string): Promise<void>;
   getPublicProfile(userId: string): Promise<{ profile: UserPublicProfileViewModel; requestId?: string }>;
