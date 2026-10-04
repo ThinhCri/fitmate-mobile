@@ -713,3 +713,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - The carousel now copies the horizontal offset before scheduling its state update, preventing React Native's recycled scroll event from producing a null `contentOffset` crash.
 - Multi-image feed posts also show an Instagram-style current/total image counter in the media's top-right corner, synchronized with the existing pagination dots.
 - Source review and `git diff --check` only; automated frontend commands were not run under the repository manual-execution rule.
+
+# Community post action sheet — 2026-10-05
+
+- Replaced the native three-dot action alert on the community feed with a rounded, dimmed-backdrop bottom action sheet aligned with the comment/share interaction style.
+- Owners receive edit and destructive delete actions; other viewers receive separate report-post and block-user actions with clear descriptions. Destructive delete/block operations retain an explicit confirmation step.
+- The report form opened from this sheet no longer repeats the block action because blocking is already a distinct top-level choice.
+- Source review and `git diff --check` only; automated frontend commands were not run under the repository manual-execution rule.

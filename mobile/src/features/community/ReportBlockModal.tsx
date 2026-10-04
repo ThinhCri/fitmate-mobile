@@ -34,7 +34,8 @@ export interface ReportBlockModalProps {
   targetSummary?: string;
   onClose: () => void;
   onSubmitReport: (report: ReportRequest) => Promise<boolean> | void;
-  onConfirmBlock: (userId: string) => Promise<boolean> | void;
+  onConfirmBlock?: (userId: string) => Promise<boolean> | void;
+  showBlockAction?: boolean;
 }
 
 const REPORT_REASONS: {
@@ -79,6 +80,7 @@ export function ReportBlockModal({
   onClose,
   onSubmitReport,
   onConfirmBlock,
+  showBlockAction = true,
 }: ReportBlockModalProps) {
   const [selectedReason, setSelectedReason] = useState<ReportReasonType>('spam');
   const [detail, setDetail] = useState('');
@@ -103,7 +105,7 @@ export function ReportBlockModal({
 
     setIsSubmitting(true);
     try {
-      await onSubmitReport({
+      const submitted = await onSubmitReport({
         targetId,
         targetType,
         targetAuthorName,
@@ -111,6 +113,10 @@ export function ReportBlockModal({
         reason: selectedReason,
         detail: detail.trim(),
       });
+      if (submitted === false) {
+        Alert.alert('Không thể gửi báo cáo', 'Vui lòng kiểm tra kết nối và thử lại.');
+        return;
+      }
       Alert.alert(
         'Đã gửi báo cáo',
         'Cảm ơn bạn đã đóng góp xây dựng cộng đồng Fitmate văn minh, lành mạnh.',
@@ -124,6 +130,7 @@ export function ReportBlockModal({
   };
 
   const handleBlock = () => {
+    if (!onConfirmBlock) return;
     Alert.alert(
       'Xác nhận chặn người dùng',
       `Bạn và ${targetAuthorName} sẽ không thể xem bài viết hay tương tác với nhau. Quyết định này không xóa lịch sử đặt lịch PT trước đó. Bạn vẫn muốn chặn?`,
@@ -220,32 +227,25 @@ export function ReportBlockModal({
           />
         </View>
 
-        {/* Divider OR */}
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>HOẶC</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        {/* Block User Section */}
-        <View style={styles.blockSection}>
-          <View style={styles.blockHeader}>
-            <UserX size={18} color={colors.danger} />
-            <Text style={styles.blockTitle}>Chặn người dùng này</Text>
-          </View>
-          <Text style={styles.blockDesc}>
-            Hai bên sẽ không nhìn thấy bài viết hoặc tương tác với nhau trên cộng đồng.
-          </Text>
-          <TouchableOpacity
-            style={styles.blockBtn}
-            onPress={handleBlock}
-            disabled={isBlocking}
-          >
-            <Text style={styles.blockBtnText}>
-              {isBlocking ? 'Đang xử lý...' : `Chặn ${targetAuthorName}`}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {showBlockAction && onConfirmBlock && (
+          <>
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>HOẶC</Text>
+              <View style={styles.dividerLine} />
+            </View>
+            <View style={styles.blockSection}>
+              <View style={styles.blockHeader}>
+                <UserX size={18} color={colors.danger} />
+                <Text style={styles.blockTitle}>Chặn người dùng này</Text>
+              </View>
+              <Text style={styles.blockDesc}>Hai bên sẽ không nhìn thấy bài viết hoặc tương tác với nhau trên cộng đồng.</Text>
+              <TouchableOpacity style={styles.blockBtn} onPress={handleBlock} disabled={isBlocking}>
+                <Text style={styles.blockBtnText}>{isBlocking ? 'Đang xử lý...' : `Chặn ${targetAuthorName}`}</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
       </ScrollView>
     </ModalShell>
   );

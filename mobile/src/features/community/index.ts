@@ -4,6 +4,7 @@ export * from './CreatePostPresentation';
 export * from './PostDetailPresentation';
 export * from './CommentsSheet';
 export * from './SharePostSheet';
+export * from './PostActionsSheet';
 export * from './ReportBlockModal';
 export * from './PublicProfilePresentation';
 export * from './FindFriendsPresentation';
