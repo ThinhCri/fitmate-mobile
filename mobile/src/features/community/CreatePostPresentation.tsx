@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -22,8 +22,6 @@ import {
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
-import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
-import { ModalShell } from '@/components/design-system/ModalShell';
 import { CreatePostFormValues, PostImageInput } from './communityTypes';
 
 export interface CreatePostPresentationProps {
@@ -33,6 +31,7 @@ export interface CreatePostPresentationProps {
   onCancel: () => void;
   isSubmitting?: boolean;
   onPickImages?: (remaining: number) => Promise<PostImageInput[]>;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 const AVAILABLE_WORKOUT_TAGS = [
@@ -57,6 +56,7 @@ export function CreatePostPresentation({
   onCancel,
   isSubmitting = false,
   onPickImages,
+  onDirtyChange,
 }: CreatePostPresentationProps) {
   const [content, setContent] = useState(initialValues?.content || '');
   const [category, setCategory] = useState<'workout_exp' | 'nutrition_qa' | 'all'>(
@@ -74,7 +74,6 @@ export function CreatePostPresentation({
   const [images, setImages] = useState<PostImageInput[]>(() => initialValues?.mediaUrls?.length
     ? initialValues.mediaUrls.slice(0, 5).map((uri, index) => ({ uri, storageKey: initialValues.mediaStorageKeys?.[index] }))
     : initialValues?.mediaUrl ? [{ uri: initialValues.mediaUrl, storageKey: initialValues.mediaStorageKeys?.[0] }] : []);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const initialSnapshot = useRef(JSON.stringify({
     content: initialValues?.content || '',
@@ -86,14 +85,7 @@ export function CreatePostPresentation({
   }));
   const currentSnapshot = JSON.stringify({ content, category, workoutTags: selectedWorkoutTags, mealTags: selectedMealTags, isKnowledgeSharing, images: images.map((image) => ({ uri: image.uri, storageKey: image.storageKey })) });
   const isDirty = currentSnapshot !== initialSnapshot.current;
-
-  const handleBackPress = () => {
-    if (isDirty && !isSubmitting) {
-      setShowExitConfirm(true);
-    } else {
-      onCancel();
-    }
-  };
+  useEffect(() => onDirtyChange?.(isDirty), [isDirty, onDirtyChange]);
 
   const handleToggleWorkoutTag = (tag: string) => {
     setSelectedWorkoutTags((prev) =>
@@ -153,7 +145,7 @@ export function CreatePostPresentation({
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={handleBackPress}
+          onPress={onCancel}
           style={styles.backButton}
           accessibilityLabel="Quay lại"
           accessibilityRole="button"
@@ -302,29 +294,6 @@ export function CreatePostPresentation({
         </View>
       </ScrollView>
 
-      {/* Unsaved Exit Confirmation Modal */}
-      <ModalShell
-        visible={showExitConfirm}
-        onClose={() => setShowExitConfirm(false)}
-        title={isEditing ? 'Bỏ các thay đổi?' : 'Thoát khi chưa đăng?'}
-      >
-        <Text style={styles.modalBodyText}>
-          {isEditing ? 'Các thay đổi của bạn chưa được lưu. Bạn có muốn thoát không?' : 'Bài viết chưa được đăng. Bạn có muốn thoát không?'}
-        </Text>
-        <View style={styles.modalActionButtons}>
-          <SecondaryButton
-            label="Thoát không lưu"
-            onPress={() => {
-              setShowExitConfirm(false);
-              onCancel();
-            }}
-          />
-          <PrimaryButton
-            label="Tiếp tục chỉnh sửa"
-            onPress={() => setShowExitConfirm(false)}
-          />
-        </View>
-      </ModalShell>
     </View>
   );
 }
@@ -560,13 +529,5 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     flex: 1,
-  },
-  modalBodyText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
-  },
-  modalActionButtons: {
-    gap: spacing.sm,
   },
 });

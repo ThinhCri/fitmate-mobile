@@ -3,6 +3,7 @@ import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { MessageCircle, UserSearch } from 'lucide-react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { AppTopBar } from '@/components/design-system/AppTopBar';
+import { ConfirmationModal } from '@/components/design-system';
 import { ErrorState, LoadingSkeleton } from '@/components/design-system/FeedbackStates';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { CommentsSheet, CommunityFeedPresentation, CommunityPostViewModel, FriendItemViewModel, PostActionsSheet, ReportBlockModal, ReportRequest, SharePostSheet } from '@/features/community';
@@ -22,6 +23,7 @@ export default function SocialScreen() {
   const [sharing, setSharing] = useState(false);
   const [optionsPost, setOptionsPost] = useState<CommunityPostViewModel | null>(null);
   const [reportPost, setReportPost] = useState<CommunityPostViewModel | null>(null);
+  const [pendingConfirm, setPendingConfirm] = useState<{ type: 'delete' | 'block'; post: CommunityPostViewModel } | null>(null);
 
   const loadPosts = useCallback(async (scope: 'public' | 'friends' = 'public') => {
     setLoading(true);
@@ -114,9 +116,39 @@ export default function SocialScreen() {
         post={optionsPost}
         onClose={() => setOptionsPost(null)}
         onEdit={(post) => { setOptionsPost(null); router.push({ pathname: '/community/create-post', params: { id: post.id } } as never); }}
-        onDelete={(post) => { setOptionsPost(null); Alert.alert('Xóa bài viết?', 'Bài viết sẽ bị xóa vĩnh viễn và không thể khôi phục.', [{ text: 'Hủy', style: 'cancel' }, { text: 'Xóa', style: 'destructive', onPress: async () => { try { await getSocialRepository().deletePost(post.id); setPosts((current) => current.filter((item) => item.id !== post.id)); } catch (cause) { Alert.alert('Không thể xóa bài viết', cause instanceof Error ? cause.message : 'Vui lòng thử lại.'); } } }]); }}
+        onDelete={(post) => { setOptionsPost(null); setPendingConfirm({ type: 'delete', post }); }}
         onReport={(post) => { setOptionsPost(null); setReportPost(post); }}
-        onBlock={(post) => { setOptionsPost(null); Alert.alert('Chặn người dùng?', `Bạn và ${post.authorName} sẽ không thể xem bài viết hoặc tương tác với nhau.`, [{ text: 'Hủy', style: 'cancel' }, { text: 'Chặn người dùng', style: 'destructive', onPress: async () => { try { await getSocialRepository().blockUser(post.authorId); await loadPosts('public'); Alert.alert('Đã chặn', `Bạn đã chặn ${post.authorName}.`); } catch (cause) { Alert.alert('Không thể chặn người dùng', cause instanceof Error ? cause.message : 'Vui lòng thử lại.'); } } }]); }}
+        onBlock={(post) => { setOptionsPost(null); setPendingConfirm({ type: 'block', post }); }}
+      />
+      <ConfirmationModal
+        visible={Boolean(pendingConfirm)}
+        title={pendingConfirm?.type === 'delete' ? 'Xóa bài viết?' : 'Chặn người dùng?'}
+        message={pendingConfirm?.type === 'delete'
+          ? 'Bài viết sẽ bị xóa vĩnh viễn và không thể khôi phục.'
+          : `Bạn và ${pendingConfirm?.post.authorName ?? 'người này'} sẽ không thể xem bài viết hoặc tương tác với nhau.`}
+        confirmLabel={pendingConfirm?.type === 'delete' ? 'Xóa bài viết' : 'Chặn người dùng'}
+        cancelLabel="Hủy"
+        destructive
+        onCancel={() => setPendingConfirm(null)}
+        onConfirm={() => {
+          const action = pendingConfirm;
+          setPendingConfirm(null);
+          if (!action) return;
+          void (async () => {
+            try {
+              if (action.type === 'delete') {
+                await getSocialRepository().deletePost(action.post.id);
+                setPosts((current) => current.filter((item) => item.id !== action.post.id));
+              } else {
+                await getSocialRepository().blockUser(action.post.authorId);
+                await loadPosts('public');
+                Alert.alert('Đã chặn', `Bạn đã chặn ${action.post.authorName}.`);
+              }
+            } catch (cause) {
+              Alert.alert(action.type === 'delete' ? 'Không thể xóa bài viết' : 'Không thể chặn người dùng', cause instanceof Error ? cause.message : 'Vui lòng thử lại.');
+            }
+          })();
+        }}
       />
       {reportPost && <ReportBlockModal visible targetId={reportPost.id} targetType="post" targetAuthorId={reportPost.authorId} targetAuthorName={reportPost.authorName} targetSummary={reportPost.content.slice(0, 80)} showBlockAction={false} onClose={() => setReportPost(null)} onSubmitReport={async (request: ReportRequest) => { try { await getSocialRepository().reportOrBlockUser(request); return true; } catch { return false; } }} />}
     </ScreenContainer>

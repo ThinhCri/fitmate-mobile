@@ -10,3 +10,4 @@ export * from './Card';
 export * from './Avatar';
 export * from './ListRow';
 export * from './ModalShell';
+export * from './ConfirmationModal';

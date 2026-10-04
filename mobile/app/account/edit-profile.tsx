@@ -6,6 +6,8 @@ import { EditProfilePresentation, UserProfileFormData } from '@/features/account
 import { getAccountRepository } from '@/repositories/accountRepository';
 import { ImagePickerService } from '@/services/imagePicker';
 import { useAuth } from '@/services/AuthContext';
+import { ConfirmationModal } from '@/components/design-system';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 
 export default function EditProfileScreen() {
   const { refresh } = useAuth();
@@ -14,6 +16,8 @@ export default function EditProfileScreen() {
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [pendingAvatar, setPendingAvatar] = useState<{ storageKey: string; previewUrl: string } | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const guard = useUnsavedChangesGuard(isDirty && !isSaving, () => setIsDirty(false));
   useEffect(() => { const repository = getAccountRepository(); Promise.all([repository.getProfile(), repository.getAccountHub()]).then(([data, hub]) => { setProfile(data); setUserId(hub.id); }).catch((e) => setError(e instanceof Error ? e.message : 'Không thể tải hồ sơ.')); }, []);
   const submit = async (values: UserProfileFormData) => {
     setIsSaving(true);
@@ -26,7 +30,8 @@ export default function EditProfileScreen() {
       setProfile({ ...values, avatarUrl });
       setPendingAvatar(null);
       await refresh();
-      Alert.alert('Thành công', 'Hồ sơ cá nhân đã được cập nhật.', [{ text: 'Xong', onPress: () => router.back() }]);
+      setIsDirty(false);
+      Alert.alert('Thành công', 'Hồ sơ cá nhân đã được cập nhật.', [{ text: 'Xong', onPress: () => requestAnimationFrame(() => router.back()) }]);
     }
     catch (e) { Alert.alert('Không thể cập nhật', e instanceof Error ? e.message : 'Vui lòng thử lại.'); }
     finally { setIsSaving(false); }
@@ -58,5 +63,8 @@ export default function EditProfileScreen() {
     { text: 'Thư viện', onPress: () => void uploadAvatar('library') },
     { text: 'Hủy', style: 'cancel' },
   ]);
-  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><EditProfilePresentation initialValues={profile} avatarPreviewUrl={pendingAvatar?.previewUrl} hasPendingAvatar={Boolean(pendingAvatar)} isSaving={isSaving} onBack={() => router.back()} onSubmit={submit} onAvatarPress={chooseAvatar} onPreviewPublicProfile={() => userId && router.push(`/community/user/${userId}` as never)} onHealthProfilePress={() => router.push('/account/health-profile' as never)} onWeightHistoryPress={() => router.push('/workout/weight' as never)} /></SafeAreaView>;
+  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <EditProfilePresentation initialValues={profile} avatarPreviewUrl={pendingAvatar?.previewUrl} hasPendingAvatar={Boolean(pendingAvatar)} isSaving={isSaving} onBack={() => router.back()} onSubmit={submit} onAvatarPress={chooseAvatar} onPreviewPublicProfile={() => userId && router.push(`/community/user/${userId}` as never)} onHealthProfilePress={() => router.push('/account/health-profile' as never)} onWeightHistoryPress={() => router.push('/workout/weight' as never)} onDirtyChange={setIsDirty} />
+    <ConfirmationModal visible={guard.visible} title="Bỏ thay đổi?" message="Bạn có thay đổi chưa lưu. Bạn có muốn thoát mà không lưu không?" confirmLabel="Thoát không lưu" onConfirm={guard.discard} onCancel={guard.cancel} />
+  </SafeAreaView>;
 }

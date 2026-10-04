@@ -5,12 +5,16 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { CommunityPostViewModel, CreatePostPresentation, CreatePostFormValues } from '@/features/community';
 import { getSocialRepository } from '@/repositories/socialRepository';
 import { ImagePickerService } from '@/services/imagePicker';
+import { ConfirmationModal } from '@/components/design-system';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 
 export default function CreatePostScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const [submitting, setSubmitting] = useState(false);
   const [editingPost, setEditingPost] = useState<CommunityPostViewModel | null>(null);
   const [loading, setLoading] = useState(Boolean(params.id));
+  const [isDirty, setIsDirty] = useState(false);
+  const guard = useUnsavedChangesGuard(isDirty && !submitting, () => setIsDirty(false));
 
   useEffect(() => {
     if (!params.id) return;
@@ -23,7 +27,7 @@ export default function CreatePostScreen() {
   }, [params.id]);
 
   const pickImages = async (remaining: number) => ImagePickerService.pickMultipleFromLibrary(remaining, { quality: 0.8 });
-  const submit = async (values: CreatePostFormValues) => { setSubmitting(true); try { if (params.id) { await getSocialRepository().updatePost(params.id, values); router.back(); } else { await getSocialRepository().createPost(values); router.back(); } } catch (e) { Alert.alert(params.id ? 'Không thể sửa bài viết' : 'Không thể đăng bài', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } finally { setSubmitting(false); } };
+  const submit = async (values: CreatePostFormValues) => { setSubmitting(true); try { if (params.id) { await getSocialRepository().updatePost(params.id, values); } else { await getSocialRepository().createPost(values); } setIsDirty(false); requestAnimationFrame(() => router.back()); } catch (e) { Alert.alert(params.id ? 'Không thể sửa bài viết' : 'Không thể đăng bài', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } finally { setSubmitting(false); } };
 
   if (loading || (params.id && !editingPost)) {
     return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator /></View></SafeAreaView>;
@@ -41,5 +45,15 @@ export default function CreatePostScreen() {
     mealTags: editingPost.mealTags || [],
   } : undefined;
 
-  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><CreatePostPresentation isEditing={Boolean(params.id)} initialValues={initialValues} onSubmit={submit} onCancel={() => router.back()} isSubmitting={submitting} onPickImages={pickImages} /></SafeAreaView>;
+  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <CreatePostPresentation isEditing={Boolean(params.id)} initialValues={initialValues} onSubmit={submit} onCancel={() => router.back()} isSubmitting={submitting} onPickImages={pickImages} onDirtyChange={setIsDirty} />
+    <ConfirmationModal
+      visible={guard.visible}
+      title={params.id ? 'Bỏ các thay đổi?' : 'Thoát khi chưa đăng?'}
+      message={params.id ? 'Các thay đổi của bạn chưa được lưu. Bạn có muốn thoát không?' : 'Bài viết chưa được đăng. Bạn có muốn thoát không?'}
+      confirmLabel="Thoát không lưu"
+      onConfirm={guard.discard}
+      onCancel={guard.cancel}
+    />
+  </SafeAreaView>;
 }

@@ -21,8 +21,6 @@ import {
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
 import { Avatar } from '@/components/design-system/Avatar';
-import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
-import { ModalShell } from '@/components/design-system/ModalShell';
 import { UserProfileFormData } from './accountTypes';
 
 export interface EditProfilePresentationProps {
@@ -36,6 +34,7 @@ export interface EditProfilePresentationProps {
   onAvatarPress: () => void;
   avatarPreviewUrl?: string;
   hasPendingAvatar?: boolean;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export function EditProfilePresentation({
@@ -49,23 +48,16 @@ export function EditProfilePresentation({
   onAvatarPress,
   avatarPreviewUrl,
   hasPendingAvatar = false,
+  onDirtyChange,
 }: EditProfilePresentationProps) {
   const [formData, setFormData] = useState<UserProfileFormData>(initialValues);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   useEffect(() => {
     setFormData(initialValues);
   }, [initialValues]);
 
   const isDirty = hasPendingAvatar || JSON.stringify(formData) !== JSON.stringify(initialValues);
-
-  const handleBack = () => {
-    if (isDirty && !isSaving) {
-      setShowExitConfirm(true);
-    } else {
-      onBack();
-    }
-  };
+  useEffect(() => onDirtyChange?.(isDirty), [isDirty, onDirtyChange]);
 
   const handleSubmit = () => {
     if (!formData.name.trim()) {
@@ -80,7 +72,7 @@ export function EditProfilePresentation({
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={handleBack}
+          onPress={onBack}
           style={styles.iconBtn}
           accessibilityLabel="Quay lại"
           accessibilityRole="button"
@@ -243,29 +235,6 @@ export function EditProfilePresentation({
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Unsaved Changes Modal */}
-      <ModalShell
-        visible={showExitConfirm}
-        onClose={() => setShowExitConfirm(false)}
-        title="Bỏ thay đổi?"
-      >
-        <Text style={styles.modalText}>
-          Bạn có thay đổi chưa lưu. Bạn có muốn thoát mà không lưu không?
-        </Text>
-        <View style={styles.modalButtons}>
-          <SecondaryButton
-            label="Thoát không lưu"
-            onPress={() => {
-              setShowExitConfirm(false);
-              onBack();
-            }}
-          />
-          <PrimaryButton
-            label="Tiếp tục sửa"
-            onPress={() => setShowExitConfirm(false)}
-          />
-        </View>
-      </ModalShell>
     </View>
   );
 }
@@ -435,13 +404,5 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     lineHeight: 16,
-  },
-  modalText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
-  },
-  modalButtons: {
-    gap: spacing.sm,
   },
 });
