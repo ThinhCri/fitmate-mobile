@@ -707,3 +707,8 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - The post options menu reports other users' posts and offers edit/delete only to the owner. Sharing sends a post deep link through existing friend chat authorization.
 - Backend migration `20261004123000_SocialEngagementActions` persists bookmarks and comment likes; editing and toggle APIs are reflected in OpenAPI.
 - Backend build and all 903 unit tests pass. Frontend automated commands were not run under the repository manual-execution rule.
+
+# Community carousel event fix — 2026-10-05
+
+- The carousel now copies the horizontal offset before scheduling its state update, preventing React Native's recycled scroll event from producing a null `contentOffset` crash.
+- Source review and `git diff --check` only; automated frontend commands were not run under the repository manual-execution rule.

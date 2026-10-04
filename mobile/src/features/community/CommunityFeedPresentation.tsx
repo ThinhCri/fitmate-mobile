@@ -216,8 +216,17 @@ export function CommunityFeedPresentation({
               <Text style={styles.postContent}>{post.content}</Text>
               {(post.mediaUrls?.length || post.mediaUrl) ? (
                 <>
-                <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.mediaCarousel}
-                  onMomentumScrollEnd={(event) => setActiveMedia((current) => ({ ...current, [post.id]: Math.round(event.nativeEvent.contentOffset.x / mediaWidth) }))}>
+                <ScrollView
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.mediaCarousel}
+                  onMomentumScrollEnd={(event) => {
+                    const offsetX = event.nativeEvent?.contentOffset?.x ?? 0;
+                    const pageIndex = Math.round(offsetX / mediaWidth);
+                    setActiveMedia((current) => ({ ...current, [post.id]: pageIndex }));
+                  }}
+                >
                   {(post.mediaUrls?.length ? post.mediaUrls : [post.mediaUrl!]).map((uri, index, all) => (
                     <View key={`${uri}-${index}`} style={[styles.feedMediaFrame, { width: mediaWidth }]}>
                       <Image source={{ uri }} style={styles.feedMedia} accessibilityRole="image" accessibilityLabel={`Ảnh ${index + 1} trên ${all.length}`} />
