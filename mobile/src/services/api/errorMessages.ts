@@ -6,8 +6,8 @@ const CODE_MESSAGES: Record<string, string> = {
   'FITMATE.AUTH.INVALID_CREDENTIALS': 'Email hoặc mật khẩu không chính xác.',
   'FITMATE.AUTH.FORBIDDEN': 'Bạn không có quyền thực hiện thao tác này.',
   'FITMATE.VALIDATION.FAILED': 'Thông tin đã nhập chưa hợp lệ. Vui lòng kiểm tra lại.',
-  'FITMATE.AI.UNAVAILABLE': 'Tính năng nhận diện món ăn đang tạm thời chưa sẵn sàng.',
-  'FITMATE.AI.INVALID_OUTPUT': 'AI chưa thể nhận diện ảnh này. Vui lòng thử ảnh khác hoặc nhập thủ công.',
+  'FITMATE.AI.UNAVAILABLE': 'Dịch vụ AI đang tạm thời chưa sẵn sàng. Vui lòng thử lại sau.',
+  'FITMATE.AI.INVALID_OUTPUT': 'AI chưa thể xử lý yêu cầu này. Vui lòng diễn đạt lại hoặc thử nội dung khác.',
   'FITMATE.AI.RATE_LIMITED': 'AI đang xử lý quá nhiều yêu cầu. Vui lòng chờ một lát rồi thử lại.',
 };
 

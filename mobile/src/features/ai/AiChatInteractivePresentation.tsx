@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   Animated,
+  Image,
   View,
   Text,
   StyleSheet,
@@ -22,6 +23,8 @@ import {
   AlertTriangle,
   RotateCcw,
   SlidersHorizontal,
+  Paperclip,
+  X,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
@@ -37,6 +40,9 @@ export interface AiChatInteractivePresentationProps {
   isProcessing?: boolean;
   onBack: () => void;
   onSendMessage: (text: string) => void;
+  attachmentUri?: string;
+  onAttachmentPress: () => void;
+  onRemoveAttachment: () => void;
   onRetryMessage?: (messageId: string) => void;
   onReviewSuggestion: (suggestion: AiStructuredSuggestionViewModel) => void;
 }
@@ -47,6 +53,9 @@ export function AiChatInteractivePresentation({
   isProcessing = false,
   onBack,
   onSendMessage,
+  attachmentUri,
+  onAttachmentPress,
+  onRemoveAttachment,
   onRetryMessage,
   onReviewSuggestion,
 }: AiChatInteractivePresentationProps) {
@@ -123,6 +132,7 @@ export function AiChatInteractivePresentation({
                   isAssistant ? styles.bubbleAssistant : styles.bubbleUser,
                 ]}
               >
+                {msg.imageUri && <Image source={{ uri: msg.imageUri }} style={styles.messageImage} />}
                 <Text
                   style={[
                     styles.messageText,
@@ -218,7 +228,18 @@ export function AiChatInteractivePresentation({
 
       {/* Composer */}
       <View style={styles.composerContainer}>
+        {attachmentUri && (
+          <View style={styles.attachmentPreview}>
+            <Image source={{ uri: attachmentUri }} style={styles.attachmentImage} />
+            <TouchableOpacity style={styles.removeAttachment} onPress={onRemoveAttachment} accessibilityLabel="Bỏ ảnh đính kèm">
+              <X size={14} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.composerRow}>
+          <TouchableOpacity style={styles.attachBtn} onPress={onAttachmentPress} disabled={isProcessing} accessibilityLabel="Đính kèm ảnh">
+            <Paperclip size={20} color={colors.primary} />
+          </TouchableOpacity>
           <TextInput
             style={styles.textInput}
             placeholder="Hỏi trợ lý Fitmate về tập luyện, dinh dưỡng..."
@@ -361,6 +382,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderBottomRightRadius: 2,
   },
+  messageImage: { width: 210, height: 150, borderRadius: radius.md, marginBottom: spacing.xs },
   messageText: {
     ...typography.body,
     lineHeight: 20,
@@ -519,6 +541,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
+  attachmentPreview: { width: 72, height: 72, marginBottom: spacing.sm },
+  attachmentImage: { width: 72, height: 72, borderRadius: radius.md },
+  removeAttachment: { position: 'absolute', right: -6, top: -6, width: 22, height: 22, borderRadius: 11, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center' },
+  attachBtn: { width: 40, height: 40, borderRadius: radius.full, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
   textInput: {
     flex: 1,
     backgroundColor: colors.surfaceSubtle,

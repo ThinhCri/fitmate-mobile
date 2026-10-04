@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, apiUploadFile } from './client';
 import type { AiChatMessageViewModel, AiConversationSummaryViewModel } from '@/features/ai';
 
 interface ThreadWire { id: string; title?: string; last_message_at?: string; message_count?: number }
@@ -12,5 +12,10 @@ export const aiService = {
   },
   async createThread(title?: string): Promise<string> { const result = await apiClient<ThreadWire>('/chat/ai/threads', { method: 'POST', body: JSON.stringify({ title }) }); return result.id; },
   async listMessages(threadId: string): Promise<AiChatMessageViewModel[]> { const result = await apiClient<{ items: MessageWire[] }>(`/chat/ai/threads/${encodeURIComponent(threadId)}/messages?limit=50`); return (result.items || []).map(mapMessage); },
-  async sendMessage(threadId: string, text: string): Promise<AiChatMessageViewModel> { const result = await apiClient<MessageWire>('/chat/ai/messages', { method: 'POST', body: JSON.stringify({ thread_id: threadId, text }) }); return mapMessage(result); },
+  async sendMessage(threadId: string, text: string, image?: { uri: string; mimeType?: string | null }): Promise<AiChatMessageViewModel> {
+    const result = image
+      ? await apiUploadFile<MessageWire>('/chat/ai/messages/image', image.uri, image.mimeType || 'image/jpeg', { thread_id: threadId, text })
+      : await apiClient<MessageWire>('/chat/ai/messages', { method: 'POST', body: JSON.stringify({ thread_id: threadId, text }) });
+    return mapMessage(result);
+  },
 };
