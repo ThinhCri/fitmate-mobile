@@ -96,17 +96,35 @@ export async function apiUploadFiles<T>(
 ): Promise<T> {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
   const token = sessionManager.getAccessToken();
-  const form = new FormData();
-  Object.entries(parameters).forEach(([key, value]) => form.append(key, value));
-  files.slice(0, 5).forEach((file, index) => {
-    form.append('files', {
-      uri: file.uri,
-      name: file.fileName || `image-${index + 1}.${file.mimeType === 'image/png' ? 'png' : file.mimeType === 'image/webp' ? 'webp' : 'jpg'}`,
-      type: file.mimeType || 'image/jpeg',
-    } as unknown as Blob);
-  });
+  const temporaryUris: string[] = [];
 
   try {
+    const form = new FormData();
+    Object.entries(parameters).forEach(([key, value]) => form.append(key, value));
+
+    for (const [index, file] of files.slice(0, 5).entries()) {
+      const mimeType = file.mimeType === 'image/png' || file.mimeType === 'image/webp'
+        ? file.mimeType
+        : 'image/jpeg';
+      const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+      let uploadUri = file.uri;
+
+      // Android/Google Photos may return a content URI that fetch cannot stream as multipart.
+      // Copy it to the app cache first so every selected image has a readable file URI.
+      if (!uploadUri.startsWith('file://')) {
+        if (!FileSystem.cacheDirectory) throw new Error('Không tìm thấy thư mục tạm của ứng dụng.');
+        uploadUri = `${FileSystem.cacheDirectory}fitmate-upload-${Date.now()}-${index}.${extension}`;
+        await FileSystem.copyAsync({ from: file.uri, to: uploadUri });
+        temporaryUris.push(uploadUri);
+      }
+
+      form.append('files', {
+        uri: uploadUri,
+        name: file.fileName?.trim() || `image-${index + 1}.${extension}`,
+        type: mimeType,
+      } as unknown as Blob);
+    }
+
     const response = await fetch(API_BASE_URL + cleanEndpoint, {
       method: 'POST',
       headers: {
@@ -116,8 +134,13 @@ export async function apiUploadFiles<T>(
       body: form,
       signal: sessionManager.getAbortSignal(),
     });
-    let data: unknown;
-    try { data = await response.json(); } catch { data = await response.text(); }
+    const rawBody = await response.text();
+    let data: unknown = rawBody;
+    if (rawBody) {
+      try { data = JSON.parse(rawBody); } catch { /* Keep the server's plain-text error. */ }
+    } else {
+      data = {};
+    }
     if (!response.ok) {
       throw new ApiError(getUserFacingApiErrorMessage(response.status, data), response.status, data);
     }
@@ -129,6 +152,8 @@ export async function apiUploadFiles<T>(
       0,
       error instanceof Error ? error.message : undefined
     );
+  } finally {
+    await Promise.all(temporaryUris.map((uri) => FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => undefined)));
   }
 }
 

@@ -728,3 +728,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - The editor uses the same complete form for create and edit, disables save until something changes and warns before discarding unsaved edits. The backend update contract now persists the complete editable payload and removes detached media objects on a best-effort basis after the database update.
 - Admin report management was confirmed already present through `/reports` with pending/resolved/dismissed filters and resolve/dismiss actions; no duplicate admin module was added.
 - Source review and `git diff --check` only; automated frontend commands were not run under the repository manual-execution rule.
+# Session update — 2026-10-05 (navigation confirmation and AI image upload)
+
+- Added one reusable bottom-sheet confirmation component for unsaved/destructive actions.
+- Create/edit post and edit profile now guard every navigation removal path, including header back, Android hardware Back, and native swipe-back gesture.
+- Feed delete/block confirmations now use the same in-app confirmation UI.
+- AI multi-image upload now copies non-file Android/Google Photos URIs into app cache before multipart upload, parses response bodies only once, preserves the real API error, and removes temporary files afterward.
+- Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing.
