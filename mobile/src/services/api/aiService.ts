@@ -11,6 +11,15 @@ export const aiService = {
     return (result || []).map((item) => ({ id: item.id, title: item.title || 'Cuộc trò chuyện AI', lastMessagePreview: `${item.message_count ?? 0} tin nhắn`, lastUpdatedAt: item.last_message_at ? new Date(item.last_message_at).toLocaleString('vi-VN') : 'Chưa có tin nhắn', category: 'general' as const }));
   },
   async createThread(title?: string): Promise<string> { const result = await apiClient<ThreadWire>('/chat/ai/threads', { method: 'POST', body: JSON.stringify({ title }) }); return result.id; },
+  async renameThread(threadId: string, title: string): Promise<void> {
+    await apiClient<ThreadWire>(`/chat/ai/threads/${encodeURIComponent(threadId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title }),
+    });
+  },
+  async deleteThread(threadId: string): Promise<void> {
+    await apiClient<void>(`/chat/ai/threads/${encodeURIComponent(threadId)}`, { method: 'DELETE' });
+  },
   async listMessages(threadId: string): Promise<AiChatMessageViewModel[]> { const result = await apiClient<{ items: MessageWire[] }>(`/chat/ai/threads/${encodeURIComponent(threadId)}/messages?limit=50`); return (result.items || []).map(mapMessage); },
   async sendMessage(threadId: string, text: string, image?: { uri: string; mimeType?: string | null }): Promise<AiChatMessageViewModel> {
     const result = image

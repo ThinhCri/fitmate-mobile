@@ -644,6 +644,13 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Removed the redundant weekday/date label from the Dashboard header and kept the personalized greeting as the primary heading.
 - Source review and `git diff --check` only; automated commands were not run under the repository manual-execution rule.
 
+# AI conversation management — 2026-10-04
+
+- Added user-named conversation creation plus rename and delete actions backed by the authenticated AI thread API.
+- The conversation list reloads whenever it regains focus, so message counts and recent activity update immediately after leaving a chat.
+- Backend ownership remains authoritative; failed mutations keep the local list unchanged and show Vietnamese errors.
+- Source review and `git diff --check` only; automated mobile commands were not run under the repository manual-execution rule.
+
 # Dashboard quick-action visual refinement — 2026-10-03
 
 - Replaced the brittle percentage-width quick-action grid with equal flexible two-column tiles that keep consistent gaps across Android screen widths.

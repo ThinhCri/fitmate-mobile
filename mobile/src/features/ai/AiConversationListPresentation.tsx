@@ -5,7 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
+  TextInput,
 } from 'react-native';
 import {
   ChevronLeft,
@@ -16,6 +16,7 @@ import {
   Activity,
   TrendingDown,
   Trash2,
+  Pencil,
   ShieldAlert,
   Dumbbell,
   Utensils,
@@ -31,7 +32,8 @@ export interface AiConversationListPresentationProps {
   isAiAvailable?: boolean;
   onBack: () => void;
   onSelectConversation: (conversationId: string) => void;
-  onNewConversation: (initialPrompt?: string) => void;
+  onNewConversation: (initialPrompt?: string, title?: string) => void;
+  onRenameConversation: (conversationId: string, title: string) => void;
   onDeleteConversation: (conversationId: string) => void;
   onManualWorkoutNavigation: () => void;
   onManualNutritionNavigation: () => void;
@@ -61,17 +63,42 @@ export function AiConversationListPresentation({
   onBack,
   onSelectConversation,
   onNewConversation,
+  onRenameConversation,
   onDeleteConversation,
   onManualWorkoutNavigation,
   onManualNutritionNavigation,
 }: AiConversationListPresentationProps) {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [renameTargetId, setRenameTargetId] = useState<string | null>(null);
+  const [titleInput, setTitleInput] = useState('');
+  const [isCreateModalVisible, setCreateModalVisible] = useState(false);
 
   const confirmDelete = () => {
     if (deleteTargetId) {
       onDeleteConversation(deleteTargetId);
       setDeleteTargetId(null);
     }
+  };
+
+  const openRename = (conversation: AiConversationSummaryViewModel) => {
+    setRenameTargetId(conversation.id);
+    setTitleInput(conversation.title);
+  };
+
+  const saveRename = () => {
+    const title = titleInput.trim();
+    if (!renameTargetId || !title) return;
+    onRenameConversation(renameTargetId, title);
+    setRenameTargetId(null);
+    setTitleInput('');
+  };
+
+  const createNamedConversation = () => {
+    const title = titleInput.trim();
+    if (!title) return;
+    onNewConversation(undefined, title);
+    setCreateModalVisible(false);
+    setTitleInput('');
   };
 
   return (
@@ -88,7 +115,7 @@ export function AiConversationListPresentation({
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Trợ lý Fitmate</Text>
         <TouchableOpacity
-          onPress={() => onNewConversation()}
+          onPress={() => { setTitleInput(''); setCreateModalVisible(true); }}
           style={styles.newChatBtn}
           accessibilityLabel="Tạo đoạn hội thoại mới"
           accessibilityRole="button"
@@ -151,7 +178,7 @@ export function AiConversationListPresentation({
                 <TouchableOpacity
                   key={idx}
                   style={styles.promptChip}
-                  onPress={() => onNewConversation(p.prompt)}
+                  onPress={() => onNewConversation(p.prompt, p.label)}
                   accessibilityRole="button"
                 >
                   <IconComp size={16} color={colors.primary} />
@@ -209,14 +236,14 @@ export function AiConversationListPresentation({
                   </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.deleteBtn}
-                  onPress={() => setDeleteTargetId(c.id)}
-                  accessibilityLabel="Xóa đoạn hội thoại"
-                  accessibilityRole="button"
-                >
-                  <Trash2 size={16} color={colors.textMuted} />
-                </TouchableOpacity>
+                <View style={styles.cardActions}>
+                  <TouchableOpacity style={styles.actionBtn} onPress={() => openRename(c)} accessibilityLabel="Đổi tên đoạn hội thoại" accessibilityRole="button">
+                    <Pencil size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.actionBtn} onPress={() => setDeleteTargetId(c.id)} accessibilityLabel="Xóa đoạn hội thoại" accessibilityRole="button">
+                    <Trash2 size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
+                </View>
               </Card>
             ))
           )}
@@ -230,7 +257,7 @@ export function AiConversationListPresentation({
         title="Xóa đoạn hội thoại?"
       >
         <Text style={styles.modalBodyText}>
-          Toàn bộ lịch sử trao đổi trong đoạn hội thoại này sẽ bị xóa khỏi thiết bị của bạn.
+          Toàn bộ lịch sử trao đổi này sẽ bị xóa khỏi tài khoản và không thể khôi phục.
         </Text>
         <View style={styles.modalActionButtons}>
           <TouchableOpacity
@@ -245,6 +272,24 @@ export function AiConversationListPresentation({
           >
             <Text style={styles.modalDeleteText}>Xóa vĩnh viễn</Text>
           </TouchableOpacity>
+        </View>
+      </ModalShell>
+
+      <ModalShell visible={isCreateModalVisible} onClose={() => setCreateModalVisible(false)} title="Tạo cuộc trò chuyện">
+        <Text style={styles.inputLabel}>Tên cuộc trò chuyện</Text>
+        <TextInput value={titleInput} onChangeText={setTitleInput} placeholder="Ví dụ: Kế hoạch tập tuần này" maxLength={200} autoFocus style={styles.titleInput} />
+        <View style={styles.modalActionButtons}>
+          <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setCreateModalVisible(false)}><Text style={styles.modalCancelText}>Hủy</Text></TouchableOpacity>
+          <TouchableOpacity style={[styles.modalSaveBtn, !titleInput.trim() && styles.disabledBtn]} onPress={createNamedConversation} disabled={!titleInput.trim()}><Text style={styles.modalSaveText}>Tạo</Text></TouchableOpacity>
+        </View>
+      </ModalShell>
+
+      <ModalShell visible={Boolean(renameTargetId)} onClose={() => setRenameTargetId(null)} title="Đổi tên cuộc trò chuyện">
+        <Text style={styles.inputLabel}>Tên cuộc trò chuyện</Text>
+        <TextInput value={titleInput} onChangeText={setTitleInput} placeholder="Nhập tên mới" maxLength={200} autoFocus style={styles.titleInput} />
+        <View style={styles.modalActionButtons}>
+          <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setRenameTargetId(null)}><Text style={styles.modalCancelText}>Hủy</Text></TouchableOpacity>
+          <TouchableOpacity style={[styles.modalSaveBtn, !titleInput.trim() && styles.disabledBtn]} onPress={saveRename} disabled={!titleInput.trim()}><Text style={styles.modalSaveText}>Lưu</Text></TouchableOpacity>
         </View>
       </ModalShell>
     </View>
@@ -455,10 +500,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: '600',
   },
-  deleteBtn: {
-    padding: spacing.xs,
+  cardActions: {
+    gap: 2,
     marginLeft: spacing.xs,
   },
+  actionBtn: { padding: spacing.xs },
   emptyContainer: {
     padding: spacing.xl,
     alignItems: 'center',
@@ -502,4 +548,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: colors.textPrimary, marginBottom: spacing.xs },
+  titleInput: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, color: colors.textPrimary, backgroundColor: colors.surface, marginBottom: spacing.md },
+  modalSaveBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.sm, backgroundColor: colors.primary, borderRadius: radius.md },
+  modalSaveText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
+  disabledBtn: { opacity: 0.5 },
 });
