@@ -1,6 +1,8 @@
 import { sessionManager } from '@/services/session/sessionManager';
 import { getUserFacingApiErrorMessage } from './errorMessages';
 import * as FileSystem from 'expo-file-system/legacy';
+import { File as ExpoFile } from 'expo-file-system';
+import { fetch as expoFetch } from 'expo/fetch';
 
 const RAW_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8080/api/v1';
@@ -115,25 +117,18 @@ export async function apiUploadFiles<T>(
         ? file.mimeType
         : 'image/jpeg';
       const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
-      let uploadUri = file.uri;
+      if (!FileSystem.cacheDirectory) throw new Error('Không tìm thấy thư mục tạm của ứng dụng.');
+      const uploadUri = `${FileSystem.cacheDirectory}fitmate-upload-${Date.now()}-${index}.${extension}`;
+      await FileSystem.copyAsync({ from: file.uri, to: uploadUri });
+      temporaryUris.push(uploadUri);
 
-      // Android/Google Photos may return a content URI that fetch cannot stream as multipart.
-      // Copy it to the app cache first so every selected image has a readable file URI.
-      if (!uploadUri.startsWith('file://')) {
-        if (!FileSystem.cacheDirectory) throw new Error('Không tìm thấy thư mục tạm của ứng dụng.');
-        uploadUri = `${FileSystem.cacheDirectory}fitmate-upload-${Date.now()}-${index}.${extension}`;
-        await FileSystem.copyAsync({ from: file.uri, to: uploadUri });
-        temporaryUris.push(uploadUri);
-      }
-
-      form.append('files', {
-        uri: uploadUri,
-        name: file.fileName?.trim() || `image-${index + 1}.${extension}`,
-        type: mimeType,
-      } as unknown as Blob);
+      // Expo File is a real native Blob. A plain React Native { uri, name, type }
+      // object is not a Blob and fails intermittently when several Android files
+      // are appended to the same multipart request.
+      form.append('files', new ExpoFile(uploadUri));
     }
 
-    const response = await fetch(API_BASE_URL + cleanEndpoint, {
+    const response = await expoFetch(API_BASE_URL + cleanEndpoint, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
