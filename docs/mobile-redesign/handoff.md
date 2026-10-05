@@ -800,3 +800,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Email verification now prevents repeated resend requests with a visible 60-second countdown while retaining the Backend's neutral account-enumeration-safe response.
 - Removed the unsupported end-to-end-encryption claim from the recovery screen. Static verification uses `git diff --check`; runtime/typecheck remains for operator testing per repository rule.
 - Password-reset code resend uses a visible 60-second cooldown.
+
+## Session update — 2026-10-05 (food AI handoff alignment)
+
+- Kept the production boundary as Mobile → .NET Backend → private Python inference service; no AI credential or model endpoint is exposed to Mobile.
+- Nutrition scan now consumes the Backend's optional confidence and explanatory note. The AI handoff does not provide calibrated confidence, so the contract truthfully returns `null` instead of a fabricated percentage.
+- The candidate review displays the Backend note, including the model's estimated portion, while all values remain editable before persistence.
+- Static verification only per repository rule: `git diff --check`. Full image inference remains blocked locally until an AI runtime and model base are installed on suitable hardware.

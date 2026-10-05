@@ -207,7 +207,11 @@ export class ApiNutritionRepository implements INutritionRepository {
         : normalizedUri.endsWith('.webp')
           ? 'image/webp'
           : 'image/jpeg';
-    const raw = await apiUploadFile<{ items?: Array<{ name?: string; calories?: number; protein_g?: number; carbs_g?: number; fat_g?: number }> }>(
+    const raw = await apiUploadFile<{
+      items?: Array<{ name?: string; calories?: number; protein_g?: number; carbs_g?: number; fat_g?: number }>;
+      confidence?: number | null;
+      note?: string | null;
+    }>(
       '/me/nutrition/scan',
       uri,
       mimeType,
@@ -216,11 +220,12 @@ export class ApiNutritionRepository implements INutritionRepository {
     return (raw.items || []).map((item, index) => ({
       id: `scan-${index}`,
       name: item.name || 'Món ăn nhận diện',
-      portionDescription: 'Khẩu phần trong ảnh',
+      portionDescription: raw.note || 'Khẩu phần do AI ước tính từ ảnh',
       calories: item.calories ?? 0,
       protein: item.protein_g ?? 0,
       carbs: item.carbs_g ?? 0,
       fat: item.fat_g ?? 0,
+      confidenceScore: raw.confidence ?? undefined,
       selected: true,
     }));
   }
