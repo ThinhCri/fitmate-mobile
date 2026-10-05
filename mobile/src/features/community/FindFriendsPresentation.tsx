@@ -27,6 +27,7 @@ export interface FindFriendsPresentationProps {
   friendsList: FriendItemViewModel[];
   pendingRequests: FriendItemViewModel[];
   sentRequests: FriendItemViewModel[];
+  suggestedUsers: FriendItemViewModel[];
   searchResults: FriendItemViewModel[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -43,6 +44,7 @@ export function FindFriendsPresentation({
   friendsList,
   pendingRequests,
   sentRequests,
+  suggestedUsers,
   searchResults,
   searchQuery,
   onSearchChange,
@@ -54,7 +56,7 @@ export function FindFriendsPresentation({
   onSelectUser,
   onMessageUser,
 }: FindFriendsPresentationProps) {
-  const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'sent'>('friends');
+  const [activeTab, setActiveTab] = useState<'suggestions' | 'friends' | 'requests' | 'sent'>('suggestions');
   const [roleFilter, setRoleFilter] = useState<'all' | 'member' | 'pt'>('all');
 
   const isSearching = searchQuery.trim().length > 0;
@@ -66,6 +68,8 @@ export function FindFriendsPresentation({
 
   const currentTabItems = () => {
     switch (activeTab) {
+      case 'suggestions':
+        return filterByRole(suggestedUsers);
       case 'requests':
         return filterByRole(pendingRequests);
       case 'sent':
@@ -159,6 +163,14 @@ export function FindFriendsPresentation({
       {!isSearching && (
         <View style={styles.tabContainer}>
           <TouchableOpacity
+            style={[styles.tabBtn, activeTab === 'suggestions' && styles.tabBtnActive]}
+            onPress={() => setActiveTab('suggestions')}
+          >
+            <Text style={[styles.tabText, activeTab === 'suggestions' && styles.tabTextActive]}>
+              Gợi ý
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[styles.tabBtn, activeTab === 'friends' && styles.tabBtnActive]}
             onPress={() => setActiveTab('friends')}
           >
@@ -220,7 +232,7 @@ export function FindFriendsPresentation({
                     style={styles.userInfoRow}
                     onPress={() => onSelectUser(item.id)}
                   >
-                    <Avatar name={item.name} size="md" />
+                    <Avatar uri={item.avatarUrl} name={item.name} size="md" />
                     <View style={styles.userDetails}>
                       <View style={styles.userNameRow}>
                         <Text style={styles.userName}>{item.name}</Text>
@@ -280,7 +292,9 @@ export function FindFriendsPresentation({
             {currentTabItems().length === 0 ? (
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyText}>
-                  {activeTab === 'friends'
+                  {activeTab === 'suggestions'
+                    ? 'Chưa có gợi ý kết bạn mới.'
+                    : activeTab === 'friends'
                     ? 'Bạn chưa kết nối với bạn bè nào. Thử tìm kiếm ở trên!'
                     : activeTab === 'requests'
                     ? 'Không có lời mời kết bạn nào đang chờ.'
@@ -294,7 +308,7 @@ export function FindFriendsPresentation({
                     style={styles.userInfoRow}
                     onPress={() => onSelectUser(item.id)}
                   >
-                    <Avatar name={item.name} size="md" />
+                    <Avatar uri={item.avatarUrl} name={item.name} size="md" />
                     <View style={styles.userDetails}>
                       <View style={styles.userNameRow}>
                         <Text style={styles.userName}>{item.name}</Text>
@@ -316,7 +330,15 @@ export function FindFriendsPresentation({
                   </TouchableOpacity>
 
                   {/* Actions for current tab */}
-                  {activeTab === 'requests' ? (
+                  {activeTab === 'suggestions' ? (
+                    <TouchableOpacity
+                      style={styles.actionPillPrimary}
+                      onPress={() => onSendRequest(item.id)}
+                    >
+                      <UserPlus size={16} color="#FFFFFF" />
+                      <Text style={styles.actionPillPrimaryText}>Kết bạn</Text>
+                    </TouchableOpacity>
+                  ) : activeTab === 'requests' ? (
                     <View style={styles.requestActionsRow}>
                       <TouchableOpacity
                         style={styles.rejectBtn}

@@ -262,7 +262,7 @@ export class ApiSocialRepository implements ISocialRepository {
   async searchUsers(query: string): Promise<FriendItemViewModel[]> {
     if (!query.trim()) return [];
     const result = await apiClient<PublicProfileWire[]>(`/users/search?q=${encodeURIComponent(query.trim())}&limit=50`);
-    return (result || []).map((item) => ({ id: item.id, name: item.full_name, role: item.role === 'pt' ? 'pt' : 'member', relationship: 'none', headline: item.fitness_goal || undefined }));
+    return (result || []).map((item) => ({ id: item.id, name: item.full_name, role: item.role === 'pt' ? 'pt' : 'member', avatarUrl: item.avatar_url || undefined, relationship: 'none', headline: item.fitness_goal || undefined }));
   }
 
   async listConversations(): Promise<ConversationItemViewModel[]> {
@@ -298,7 +298,7 @@ export class ApiSocialRepository implements ISocialRepository {
     sentRequests: FriendItemViewModel[];
     discoverUsers: FriendItemViewModel[];
   }> {
-    const [friendsRes, incomingRes, outgoingRes] = await Promise.all([
+    const [friendsRes, incomingRes, outgoingRes, suggestionsRes] = await Promise.all([
       apiClient<{ items: FriendSummaryWire[]; nextCursor?: string | null }>('/social/friends', {
         method: 'GET',
       }),
@@ -308,6 +308,7 @@ export class ApiSocialRepository implements ISocialRepository {
       apiClient<{ items: FriendRequestWire[] }>('/social/friends/requests?type=outgoing', {
         method: 'GET',
       }),
+      apiClient<PublicProfileWire[]>('/users/suggestions?limit=20', { method: 'GET' }),
     ]);
     const incoming = incomingRes?.items || [];
     const outgoing = outgoingRes?.items || [];
@@ -320,6 +321,7 @@ export class ApiSocialRepository implements ISocialRepository {
       id: f.id,
       name: f.display_name,
       role: 'member',
+      avatarUrl: f.avatar_url || undefined,
       isOnline: false,
       relationship: 'friend',
       headline: f.avatar_url ? undefined : 'Bạn bè Fitmate',
@@ -330,6 +332,7 @@ export class ApiSocialRepository implements ISocialRepository {
       requestId: r.id,
       name: profiles.get(r.sender_id)?.full_name || 'Người dùng Fitmate',
       role: profiles.get(r.sender_id)?.role === 'pt' ? 'pt' : 'member',
+      avatarUrl: profiles.get(r.sender_id)?.avatar_url || undefined,
       relationship: 'received_request',
       requestDate: new Date(r.created_at).toLocaleDateString('vi-VN'),
       headline: profiles.get(r.sender_id)?.fitness_goal || undefined,
@@ -340,6 +343,7 @@ export class ApiSocialRepository implements ISocialRepository {
       requestId: r.id,
       name: profiles.get(r.recipient_id)?.full_name || 'Người dùng Fitmate',
       role: profiles.get(r.recipient_id)?.role === 'pt' ? 'pt' : 'member',
+      avatarUrl: profiles.get(r.recipient_id)?.avatar_url || undefined,
       relationship: 'sent_request',
       requestDate: new Date(r.created_at).toLocaleDateString('vi-VN'),
       headline: profiles.get(r.recipient_id)?.fitness_goal || undefined,
@@ -349,7 +353,14 @@ export class ApiSocialRepository implements ISocialRepository {
       friends,
       pendingRequests,
       sentRequests,
-      discoverUsers: [],
+      discoverUsers: (suggestionsRes || []).map((item) => ({
+        id: item.id,
+        name: item.full_name,
+        role: item.role === 'pt' ? 'pt' : 'member',
+        avatarUrl: item.avatar_url || undefined,
+        relationship: 'none',
+        headline: item.fitness_goal || undefined,
+      })),
     };
   }
 

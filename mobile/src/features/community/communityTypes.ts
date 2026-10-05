@@ -79,6 +79,7 @@ export interface UserPublicProfileViewModel {
   id: string;
   name: string;
   role: 'member' | 'pt';
+  avatarUrl?: string;
   bio: string;
   isVerified?: boolean;
   friendshipStatus: 'friend' | 'none' | 'request_sent' | 'request_received';

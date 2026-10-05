@@ -735,6 +735,14 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Feed delete/block confirmations now use the same in-app confirmation UI.
 - AI multi-image upload now copies every selected image into app cache and appends real native `ExpoFile` blobs through `expo/fetch`, parses response bodies only once, preserves the real API error, and removes temporary files afterward.
 - Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing.
+
+## Session update — 2026-10-05 (friend suggestions and user search)
+
+- The friend screen now opens on API-backed suggestions while retaining separate friends, incoming requests and sent requests tabs.
+- Suggestions display real public names, roles and avatars; sending a request reloads all relationship lists so the selected account disappears from suggestions and moves to sent requests.
+- Account now exposes `Gợi ý kết bạn` as the discovery entry instead of duplicating a standalone friend-list shortcut already available in Community.
+- User search uses the authenticated Backend search contract and keeps the known relationship state for returned friends or pending requests.
+- Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing after rebuilding the Backend container.
 - Follow-up: navigation guard imports `useNavigation` from `expo-router` and subscribes to `beforeRemove`; no undeclared direct `@react-navigation/native` dependency is required.
 
 ## Session update — 2026-10-05 (saved community posts)

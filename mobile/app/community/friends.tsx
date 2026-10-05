@@ -13,6 +13,7 @@ export default function FindFriendsScreen() {
   const [friendsList, setFriendsList] = useState<FriendItemViewModel[]>([]);
   const [pendingRequests, setPendingRequests] = useState<FriendItemViewModel[]>([]);
   const [sentRequests, setSentRequests] = useState<FriendItemViewModel[]>([]);
+  const [suggestedUsers, setSuggestedUsers] = useState<FriendItemViewModel[]>([]);
   const [allUsers, setAllUsers] = useState<FriendItemViewModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +25,7 @@ export default function FindFriendsScreen() {
       setFriendsList(data.friends);
       setPendingRequests(data.pendingRequests);
       setSentRequests(data.sentRequests);
+      setSuggestedUsers(data.discoverUsers);
       setAllUsers([...data.friends, ...data.pendingRequests, ...data.sentRequests, ...data.discoverUsers]);
       setError(null);
     } catch (err) {
@@ -39,7 +41,7 @@ export default function FindFriendsScreen() {
 
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setAllUsers([...friendsList, ...pendingRequests, ...sentRequests]);
+      setAllUsers([...friendsList, ...pendingRequests, ...sentRequests, ...suggestedUsers]);
       return;
     }
     let active = true;
@@ -59,7 +61,7 @@ export default function FindFriendsScreen() {
       active = false;
       clearTimeout(timer);
     };
-  }, [friendsList, pendingRequests, searchQuery, sentRequests]);
+  }, [friendsList, pendingRequests, searchQuery, sentRequests, suggestedUsers]);
 
   const searchResults = searchQuery.trim() ? allUsers : [];
 
@@ -138,6 +140,7 @@ export default function FindFriendsScreen() {
         friendsList={friendsList}
         pendingRequests={pendingRequests}
         sentRequests={sentRequests}
+        suggestedUsers={suggestedUsers}
         searchResults={searchResults}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

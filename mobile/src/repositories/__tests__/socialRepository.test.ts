@@ -103,6 +103,20 @@ describe('Social Repository & Data Source Isolation', () => {
           }),
         };
       }
+      if (url.includes('/users/suggestions')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => [
+            {
+              id: 'suggested-user-uuid',
+              full_name: 'Lê Minh Anh',
+              avatar_url: 'https://example.com/suggested-avatar.jpg',
+              role: 'Member',
+            },
+          ],
+        };
+      }
       return { ok: false, status: 404, json: async () => ({}) };
     });
 
@@ -118,6 +132,13 @@ describe('Social Repository & Data Source Isolation', () => {
     expect(result.sentRequests).toHaveLength(1);
     expect(result.sentRequests[0].id).toBe('req-out-1');
     expect(result.sentRequests[0].relationship).toBe('sent_request');
+
+    expect(result.discoverUsers).toHaveLength(1);
+    expect(result.discoverUsers[0]).toMatchObject({
+      id: 'suggested-user-uuid',
+      name: 'Lê Minh Anh',
+      relationship: 'none',
+    });
   });
 
   it('fetches conversation and messages via API', async () => {
