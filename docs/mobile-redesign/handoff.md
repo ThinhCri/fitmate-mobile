@@ -736,3 +736,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - AI multi-image upload now copies every selected image into app cache and appends real native `ExpoFile` blobs through `expo/fetch`, parses response bodies only once, preserves the real API error, and removes temporary files afterward.
 - Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing.
 - Follow-up: navigation guard imports `useNavigation` from `expo-router` and subscribes to `beforeRemove`; no undeclared direct `@react-navigation/native` dependency is required.
+
+## Session update — 2026-10-05 (saved community posts)
+
+- Added Account → `Bài viết đã lưu` and route `/community/saved`.
+- The screen reads `GET /api/v1/social/bookmarks`, reuses the community post cards, supports reactions, comments/detail, friend sharing, author navigation, and removes a card immediately after unbookmarking.
+- Added loading, empty, error, and retry states; preview repository follows the same interface without production fallback.
+- Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing after the Backend container is rebuilt.

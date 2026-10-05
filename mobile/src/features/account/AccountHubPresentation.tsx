@@ -18,6 +18,7 @@ import {
   LogOut,
   Sparkles,
   CheckCircle2,
+  Bookmark,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
@@ -33,6 +34,7 @@ export interface AccountHubPresentationProps {
   onHealthProfilePress: () => void;
   onSettingsPress: () => void;
   onSupportPress: () => void;
+  onSavedPostsPress: () => void;
   onLogoutPress: () => void;
 }
 
@@ -45,6 +47,7 @@ export function AccountHubPresentation({
   onHealthProfilePress,
   onSettingsPress,
   onSupportPress,
+  onSavedPostsPress,
   onLogoutPress,
 }: AccountHubPresentationProps) {
   const isPt = account.role === 'pt';
@@ -139,6 +142,19 @@ export function AccountHubPresentation({
                 )}
               <ChevronRight size={18} color={colors.textMuted} />
             </View>
+          </TouchableOpacity>
+        </Card>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Nội dung</Text>
+        <Card style={styles.menuCard}>
+          <TouchableOpacity style={styles.menuItem} onPress={onSavedPostsPress}>
+            <View style={styles.menuItemLeft}>
+              <Bookmark size={18} color={colors.primary} />
+              <Text style={styles.menuItemText}>Bài viết đã lưu</Text>
+            </View>
+            <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
         </Card>
       </View>

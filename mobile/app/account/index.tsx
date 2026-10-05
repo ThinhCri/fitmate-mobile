@@ -46,6 +46,7 @@ export default function AccountHubScreen() {
         onHealthProfilePress={() => router.push('/account/health-profile' as any)}
         onSettingsPress={() => router.push('/account/settings' as any)}
         onSupportPress={() => router.push('/support' as any)}
+        onSavedPostsPress={() => router.push('/community/saved' as any)}
         onLogoutPress={async () => {
           await logout();
           router.replace('/(auth)/login' as any);

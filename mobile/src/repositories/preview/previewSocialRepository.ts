@@ -119,6 +119,10 @@ export class PreviewSocialRepository implements ISocialRepository {
     return previewPosts.filter((post) => scope === 'public' || post.visibility === 'friends');
   }
 
+  async listBookmarkedPosts(): Promise<CommunityPostViewModel[]> {
+    return previewPosts.filter((post) => post.savedByViewer);
+  }
+
   async reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<{ active: boolean; count: number }> {
     let result = { active: false, count: 0 };
     previewPosts = previewPosts.map((post) =>

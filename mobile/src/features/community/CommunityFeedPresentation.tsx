@@ -40,6 +40,9 @@ export interface CommunityFeedPresentationProps {
   onReportPress: (postId: string) => void;
   onAuthorPress: (authorId: string) => void;
   onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  showFeedChrome?: boolean;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
 export function CommunityFeedPresentation({
@@ -56,6 +59,9 @@ export function CommunityFeedPresentation({
   onReportPress,
   onAuthorPress,
   onScroll: externalOnScroll,
+  showFeedChrome = true,
+  emptyTitle = 'Chưa có bài viết',
+  emptyDescription = 'Bảng tin này chưa có nội dung phù hợp. Hãy chia sẻ bài viết đầu tiên.',
 }: CommunityFeedPresentationProps) {
   const { width: screenWidth } = useWindowDimensions();
   const [activeMedia, setActiveMedia] = useState<Record<string, number>>({});
@@ -75,6 +81,7 @@ export function CommunityFeedPresentation({
       onScroll={handleScroll}
       scrollEventThrottle={scrollEventThrottle}
     >
+      {showFeedChrome && <>
       {/* Top Segmented Controls: Feed vs AI Assistant */}
       <View style={styles.segmentedContainer}>
         <View style={styles.segmentedTrack}>
@@ -165,15 +172,16 @@ export function CommunityFeedPresentation({
           </View>
         </TouchableOpacity>
       </Card>
+      </>}
 
       {/* Posts Feed */}
       <View style={styles.postsList}>
         {posts.length === 0 ? (
           <EmptyState
-            title="Chưa có bài viết"
-            description="Bảng tin này chưa có nội dung phù hợp. Hãy chia sẻ bài viết đầu tiên."
-            actionLabel="Tạo bài viết"
-            onAction={onCreatePostPress}
+            title={emptyTitle}
+            description={emptyDescription}
+            actionLabel={showFeedChrome ? 'Tạo bài viết' : undefined}
+            onAction={showFeedChrome ? onCreatePostPress : undefined}
           />
         ) : posts.map((post) => (
           <Card key={post.id} style={styles.postCard}>

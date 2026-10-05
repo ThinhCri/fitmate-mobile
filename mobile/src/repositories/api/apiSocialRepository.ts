@@ -129,6 +129,14 @@ export class ApiSocialRepository implements ISocialRepository {
     return (response.items || []).map((wire) => ({ ...mapPost(wire), isOwner: wire.author_id === me.id }));
   }
 
+  async listBookmarkedPosts(): Promise<CommunityPostViewModel[]> {
+    const [response, me] = await Promise.all([
+      apiClient<{ items: PostWire[]; nextCursor?: string | null }>('/social/bookmarks?limit=50', { method: 'GET' }),
+      authService.getMe(),
+    ]);
+    return (response.items || []).map((wire) => ({ ...mapPost(wire), savedByViewer: true, isOwner: wire.author_id === me.id }));
+  }
+
   async getPost(id: string): Promise<CommunityPostViewModel> {
     const [wire, comments, me] = await Promise.all([
       apiClient<PostWire>(`/social/posts/${encodeURIComponent(id)}`),
