@@ -55,7 +55,7 @@ export class ApiNutritionRepository implements INutritionRepository {
       sections[slot].push({
         id: m.id,
         name: m.food_name,
-        portion: `${m.portion_size || 1} pháº§n`,
+        portion: `${m.portion_size || 1} phần`,
         calories: cal,
         proteinGrams: prot,
         carbsGrams: carbs,
@@ -83,29 +83,29 @@ export class ApiNutritionRepository implements INutritionRepository {
     const mealSections: MealSectionViewModel[] = [
       {
         slot: 'breakfast',
-        title: 'Bá»¯a sÃ¡ng',
-        subtitle: 'Khuyáº¿n nghá»‹ 400 - 550 kcal',
+        title: 'Bữa sáng',
+        subtitle: 'Khuyến nghị 400 - 550 kcal',
         totalCalories: sections.breakfast.reduce((sum, f) => sum + f.calories, 0),
         items: sections.breakfast,
       },
       {
         slot: 'lunch',
-        title: 'Bá»¯a trÆ°a',
-        subtitle: 'Khuyáº¿n nghá»‹ 650 - 800 kcal',
+        title: 'Bữa trưa',
+        subtitle: 'Khuyến nghị 650 - 800 kcal',
         totalCalories: sections.lunch.reduce((sum, f) => sum + f.calories, 0),
         items: sections.lunch,
       },
       {
         slot: 'dinner',
-        title: 'Bá»¯a tá»‘i',
-        subtitle: 'Khuyáº¿n nghá»‹ 500 - 650 kcal',
+        title: 'Bữa tối',
+        subtitle: 'Khuyến nghị 500 - 650 kcal',
         totalCalories: sections.dinner.reduce((sum, f) => sum + f.calories, 0),
         items: sections.dinner,
       },
       {
         slot: 'snack',
-        title: 'Bá»¯a phá»¥ & TrÃ¡ng miá»‡ng',
-        subtitle: 'Khuyáº¿n nghá»‹ 150 - 250 kcal',
+        title: 'Bữa phụ & Tráng miệng',
+        subtitle: 'Khuyến nghị 150 - 250 kcal',
         totalCalories: sections.snack.reduce((sum, f) => sum + f.calories, 0),
         items: sections.snack,
       },
@@ -136,7 +136,7 @@ export class ApiNutritionRepository implements INutritionRepository {
     return slots.filter((slot) => typeof raw[slot] === 'string' && raw[slot].trim()).map((slot) => ({
       id: `${raw.id || 'schedule'}-${slot}`,
       dayIndex: 0,
-      dayLabel: 'HÃ´m nay',
+      dayLabel: 'Hôm nay',
       mealSlot: slot,
       foodName: raw[slot],
       calories: 0,
@@ -149,7 +149,7 @@ export class ApiNutritionRepository implements INutritionRepository {
     return {
       id: raw.id,
       name: raw.food_name,
-      portion: `${raw.portion_size || 1} pháº§n`,
+      portion: `${raw.portion_size || 1} phần`,
       calories: raw.calories || 0,
       proteinGrams: raw.protein_g || 0,
       carbsGrams: raw.carbs_g || 0,
@@ -196,7 +196,7 @@ export class ApiNutritionRepository implements INutritionRepository {
 
   async updatePlannedSlot(slotId: string, isCompleted: boolean): Promise<void> {
     if (isCompleted) return;
-    throw new Error('MÃ¡y chá»§ chÆ°a há»— trá»£ tráº¡ng thÃ¡i hoÃ n thÃ nh cho thá»±c Ä‘Æ¡n.');
+    throw new Error('Máy chủ chưa hỗ trợ trạng thái hoàn thành cho thực đơn.');
   }
 
   async scanMealImage(uri: string, detectedMimeType?: string | null) {
