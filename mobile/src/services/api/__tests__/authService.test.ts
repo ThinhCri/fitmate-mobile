@@ -67,6 +67,7 @@ describe('AuthService & ApiClient (MOB-800)', () => {
         authService.resetPassword({
           token: 'valid-reset-token',
           new_password: 'short',
+          email: 'member@fitmate.vn',
         })
       ).rejects.toThrow('Mật khẩu mới phải có độ dài từ 12 đến 128 ký tự');
     });
@@ -76,6 +77,7 @@ describe('AuthService & ApiClient (MOB-800)', () => {
         authService.resetPassword({
           token: 'valid-reset-token',
           new_password: 'B'.repeat(130),
+          email: 'member@fitmate.vn',
         })
       ).rejects.toThrow('Mật khẩu mới phải có độ dài từ 12 đến 128 ký tự');
     });

@@ -87,6 +87,7 @@ export interface ForgotPasswordRequest {
 export interface ResetPasswordRequest {
   token: string;
   new_password: string; // 12-128 chars
+  email: string;
 }
 
 export interface ProblemDetails {

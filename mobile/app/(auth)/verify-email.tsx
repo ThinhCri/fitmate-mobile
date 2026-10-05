@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, MailCheck } from 'lucide-react-native';
@@ -20,6 +20,13 @@ export default function VerifyEmailScreen() {
   const [resending, setResending] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [resendAfterSeconds, setResendAfterSeconds] = useState(email ? 60 : 0);
+
+  useEffect(() => {
+    if (resendAfterSeconds <= 0) return;
+    const timer = setTimeout(() => setResendAfterSeconds((value) => Math.max(0, value - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [resendAfterSeconds]);
 
   const verify = async () => {
     if (!email || !/^\d{6}$/.test(code)) {
@@ -45,6 +52,7 @@ export default function VerifyEmailScreen() {
     setMessage('');
     try {
       await authService.resendEmailVerification(email);
+      setResendAfterSeconds(60);
       setMessage('Nếu tài khoản hợp lệ, mã mới đã được gửi. Hãy kiểm tra cả thư rác.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể gửi lại mã xác minh.');
@@ -88,8 +96,20 @@ export default function VerifyEmailScreen() {
         <TouchableOpacity style={[styles.primaryButton, submitting && styles.disabled]} onPress={() => void verify()} disabled={submitting}>
           {submitting ? <ActivityIndicator color={colors.white} /> : <Text style={styles.primaryText}>Xác minh</Text>}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryButton} onPress={() => void resend()} disabled={resending}>
-          {resending ? <ActivityIndicator color={colors.primary} /> : <Text style={styles.secondaryText}>Gửi lại mã</Text>}
+        <TouchableOpacity
+          style={[styles.secondaryButton, (resending || resendAfterSeconds > 0) && styles.disabled]}
+          onPress={() => void resend()}
+          disabled={resending || resendAfterSeconds > 0}
+          accessibilityRole="button"
+          accessibilityLabel={resendAfterSeconds > 0 ? `Có thể gửi lại mã sau ${resendAfterSeconds} giây` : 'Gửi lại mã xác minh'}
+        >
+          {resending ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : (
+            <Text style={styles.secondaryText}>
+              {resendAfterSeconds > 0 ? `Gửi lại mã sau ${resendAfterSeconds}s` : 'Gửi lại mã'}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScreenContainer>

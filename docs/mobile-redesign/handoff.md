@@ -792,3 +792,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Chat, inbox, friend requests, notification inbox and Dashboard now refresh immediately on relevant events and retain a fifteen-second foreground-only poll as recovery rather than primary transport.
 - Open chat marks a message read only when the newest incoming message ID changes. All covered pollers suppress overlapping requests, and the API client honors the server's `Retry-After` cooldown after a 429 response.
 - Runtime/typecheck remains for operator testing per repository rule; static verification uses `git diff --check`.
+
+## Session update — 2026-10-05 (account recovery)
+
+- Completed the forgot-password flow against the verified Backend endpoints: request reset email, paste or open a reset link, submit its token together with the account email, and return to login after success.
+- The reset form now sends the required `email` field instead of a token-only request that the Backend cannot resolve to an account. A root `/reset-password` route accepts email links and pre-fills query parameters when available.
+- Email verification now prevents repeated resend requests with a visible 60-second countdown while retaining the Backend's neutral account-enumeration-safe response.
+- Removed the unsupported end-to-end-encryption claim from the recovery screen. Static verification uses `git diff --check`; runtime/typecheck remains for operator testing per repository rule.

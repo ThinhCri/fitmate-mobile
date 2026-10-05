@@ -8,7 +8,7 @@
  * 2. POST /auth/password/reset (resetPassword with token & 12-128 char password)
  * 3. Zero mock fallbacks on API errors
  */
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import {
   ArrowLeft,
   KeyRound,
@@ -43,17 +43,35 @@ const MAX_PASSWORD_LEN = 128;
 
 type ResetViewTab = 'request' | 'reset';
 
+function readResetLink(value: string): { token: string; email?: string } {
+  const trimmed = value.trim();
+  if (!trimmed.includes('://') && !trimmed.includes('?')) return { token: trimmed };
+
+  try {
+    const parsed = new URL(trimmed);
+    return {
+      token: parsed.searchParams.get('token') || trimmed,
+      email: parsed.searchParams.get('email') || undefined,
+    };
+  } catch {
+    return { token: trimmed };
+  }
+}
+
 export default function ForgotPasswordScreen() {
-  const [activeTab, setActiveTab] = useState<ResetViewTab>('request');
+  const params = useLocalSearchParams<{ email?: string; token?: string }>();
+  const initialEmail = useMemo(() => (params.email || '').trim().toLowerCase(), [params.email]);
+  const initialToken = useMemo(() => params.token || '', [params.token]);
+  const [activeTab, setActiveTab] = useState<ResetViewTab>(initialToken ? 'reset' : 'request');
 
   // Request Tab State
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail);
   const [sendingRequest, setSendingRequest] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
 
   // Reset Tab State
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState(initialToken);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -87,8 +105,13 @@ export default function ForgotPasswordScreen() {
 
   const handleResetPassword = async () => {
     setResetError(null);
+    const trimmedEmail = email.trim().toLowerCase();
     const trimmedToken = token.trim();
 
+    if (!trimmedEmail || !EMAIL_REGEX.test(trimmedEmail)) {
+      setResetError('Vui lòng nhập đúng email đã yêu cầu đặt lại mật khẩu');
+      return;
+    }
     if (!trimmedToken) {
       setResetError('Vui lòng nhập mã token đặt lại mật khẩu');
       return;
@@ -107,6 +130,7 @@ export default function ForgotPasswordScreen() {
       await authService.resetPassword({
         token: trimmedToken,
         new_password: newPassword,
+        email: trimmedEmail,
       });
 
       Alert.alert(
@@ -217,13 +241,13 @@ export default function ForgotPasswordScreen() {
                 <View style={styles.successTexts}>
                   <Text style={styles.successTitle}>Đã gửi yêu cầu đặt lại!</Text>
                   <Text style={styles.successSubtitle}>
-                    Nếu email <Text style={{ fontWeight: '700' }}>{email.trim()}</Text> tồn tại trong hệ thống, bạn sẽ nhận được mã bảo mật trong ít phút.
+                    Nếu email <Text style={{ fontWeight: '700' }}>{email.trim()}</Text> tồn tại trong hệ thống, bạn sẽ nhận được đường dẫn đặt lại mật khẩu trong ít phút.
                   </Text>
                   <TouchableOpacity
                     style={styles.goToResetTabBtn}
                     onPress={() => setActiveTab('reset')}
                   >
-                    <Text style={styles.goToResetTabText}>Nhập mã xác thực vừa nhận →</Text>
+                    <Text style={styles.goToResetTabText}>Đặt mật khẩu bằng đường dẫn đã nhận →</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -279,7 +303,7 @@ export default function ForgotPasswordScreen() {
                 <View style={styles.securityBadgeRow}>
                   <Text style={styles.securityTitle}>Chính sách bảo mật Fitmate</Text>
                   <View style={styles.e2eBadge}>
-                    <Text style={styles.e2eBadgeText}>Mã hoá E2E</Text>
+                    <Text style={styles.e2eBadgeText}>Không tiết lộ tài khoản</Text>
                   </View>
                 </View>
                 <Text style={styles.securityDesc}>
@@ -295,7 +319,7 @@ export default function ForgotPasswordScreen() {
                 <Text style={styles.tipTitle}>Không nhận được thư?</Text>
               </View>
               <Text style={styles.tipDesc}>
-                Hãy kiểm tra mục Thư rác (Spam) hoặc Quảng cáo. Đường dẫn và mã bảo mật sẽ hết hiệu lực sau 15 phút.
+                Hãy kiểm tra mục Thư rác (Spam) hoặc Quảng cáo. Đường dẫn bảo mật sẽ hết hiệu lực sau 15 phút.
               </Text>
             </View>
           </View>
@@ -312,10 +336,33 @@ export default function ForgotPasswordScreen() {
             ) : null}
 
             <View style={styles.formCard}>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>
+                  Email đã yêu cầu đặt lại <Text style={styles.requiredAsterisk}>*</Text>
+                </Text>
+                <View style={styles.inputWrapper}>
+                  <Mail size={18} color={colors.textMuted} style={styles.inputLeftIcon} />
+                  <TextInput
+                    style={styles.input}
+                    value={email}
+                    onChangeText={(val) => {
+                      setEmail(val);
+                      setResetError(null);
+                    }}
+                    placeholder="tenban@example.com"
+                    placeholderTextColor={colors.textMuted}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    autoCorrect={false}
+                    editable={!resettingPassword}
+                  />
+                </View>
+              </View>
+
               {/* Token Input */}
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>
-                  Mã xác thực (Token) <Text style={styles.requiredAsterisk}>*</Text>
+                  Mã bảo mật trong đường dẫn email <Text style={styles.requiredAsterisk}>*</Text>
                 </Text>
                 <View style={styles.inputWrapper}>
                   <KeyRound size={18} color={colors.textMuted} style={styles.inputLeftIcon} />
@@ -323,10 +370,12 @@ export default function ForgotPasswordScreen() {
                     style={styles.input}
                     value={token}
                     onChangeText={(val) => {
-                      setToken(val);
+                      const resetLink = readResetLink(val);
+                      setToken(resetLink.token);
+                      if (resetLink.email) setEmail(resetLink.email.toLowerCase());
                       setResetError(null);
                     }}
-                    placeholder="Dán mã bảo mật từ email"
+                    placeholder="Dán đường dẫn hoặc token trong email"
                     placeholderTextColor={colors.textMuted}
                     autoCapitalize="none"
                     autoCorrect={false}
