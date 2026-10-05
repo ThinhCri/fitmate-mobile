@@ -10,7 +10,7 @@ import { apiClient } from '@/services/api/client';
 
 interface NotificationWire {
   id: string;
-  type?: 'friend_request' | 'system' | 'reminder' | 'booking' | 'payment';
+  type?: string;
   title?: string;
   message?: string;
   summary?: string | null;
@@ -60,14 +60,15 @@ export class ApiSupportRepository implements ISupportRepository {
     return (res?.items || []).map((n) => {
       let category: 'booking' | 'social' | 'ai' | 'system' = 'system';
       let targetType: 'booking' | 'friend_request' | 'ai_plan' | 'expired' = 'expired';
+      const normalizedType = (n.type || '').replace(/_/g, '').toLowerCase();
 
-      if (n.type === 'booking' || n.type === 'payment') {
+      if (normalizedType === 'booking' || normalizedType === 'payment') {
         category = 'booking';
         targetType = 'booking';
-      } else if (n.type === 'friend_request') {
+      } else if (normalizedType === 'friendrequest') {
         category = 'social';
         targetType = 'friend_request';
-      } else if (n.type === 'reminder') {
+      } else if (normalizedType === 'reminder') {
         category = 'ai';
         targetType = 'ai_plan';
       }

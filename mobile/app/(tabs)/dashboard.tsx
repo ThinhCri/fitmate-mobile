@@ -49,6 +49,8 @@ export default function DashboardScreen() {
       void loadUnreadNotificationCount();
       if (hasFocusedOnce.current) void load(true);
       else hasFocusedOnce.current = true;
+      const timer = setInterval(() => void loadUnreadNotificationCount(), 5000);
+      return () => clearInterval(timer);
     }, [load, loadUnreadNotificationCount])
   );
 

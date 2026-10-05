@@ -19,7 +19,6 @@ import {
   Sparkles,
   CheckCircle2,
   Bookmark,
-  UserPlus,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
@@ -36,7 +35,6 @@ export interface AccountHubPresentationProps {
   onSettingsPress: () => void;
   onSupportPress: () => void;
   onSavedPostsPress: () => void;
-  onFriendSuggestionsPress: () => void;
   onLogoutPress: () => void;
 }
 
@@ -50,7 +48,6 @@ export function AccountHubPresentation({
   onSettingsPress,
   onSupportPress,
   onSavedPostsPress,
-  onFriendSuggestionsPress,
   onLogoutPress,
 }: AccountHubPresentationProps) {
   const isPt = account.role === 'pt';
@@ -145,22 +142,6 @@ export function AccountHubPresentation({
                 )}
               <ChevronRight size={18} color={colors.textMuted} />
             </View>
-          </TouchableOpacity>
-        </Card>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Kết nối</Text>
-        <Card style={styles.menuCard}>
-          <TouchableOpacity style={styles.menuItem} onPress={onFriendSuggestionsPress}>
-            <View style={styles.menuItemLeft}>
-              <UserPlus size={18} color={colors.primary} />
-              <View>
-                <Text style={styles.menuItemText}>Gợi ý kết bạn</Text>
-                <Text style={styles.menuItemSubtitle}>Khám phá hội viên và huấn luyện viên phù hợp</Text>
-              </View>
-            </View>
-            <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
         </Card>
       </View>
@@ -394,12 +375,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: colors.textPrimary,
-  },
-  menuItemSubtitle: {
-    marginTop: 2,
-    fontSize: 11,
-    lineHeight: 15,
-    color: colors.textMuted,
   },
   menuItemRight: {
     flexDirection: 'row',

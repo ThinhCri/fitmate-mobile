@@ -37,6 +37,8 @@ export default function FindFriendsScreen() {
 
   useFocusEffect(useCallback(() => {
     void loadFriends();
+    const timer = setInterval(() => void loadFriends(), 5000);
+    return () => clearInterval(timer);
   }, [loadFriends]));
 
   useEffect(() => {

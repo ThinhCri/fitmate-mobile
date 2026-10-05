@@ -743,6 +743,14 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Account now exposes `Gợi ý kết bạn` as the discovery entry instead of duplicating a standalone friend-list shortcut already available in Community.
 - User search uses the authenticated Backend search contract and keeps the known relationship state for returned friends or pending requests.
 - Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing after rebuilding the Backend container.
+
+## Session update — 2026-10-05 (friend request live refresh)
+
+- Removed the duplicate friend-suggestion entry from Account; discovery remains in Community.
+- While focused, the friend/request screen, Dashboard unread notification badge and notification inbox now refresh every five seconds and stop polling when the user leaves the screen.
+- Notification mapping accepts the Backend's actual PascalCase enum values such as `FriendRequest` as well as snake_case values, so friend-request notifications navigate to the correct screen.
+- This provides near-real-time in-app synchronization without claiming SignalR support. Native background push still requires an Expo notifications/device-token build and provider configuration; it is not simulated in Expo Go.
+- Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing.
 - Follow-up: navigation guard imports `useNavigation` from `expo-router` and subscribes to `beforeRemove`; no undeclared direct `@react-navigation/native` dependency is required.
 
 ## Session update — 2026-10-05 (saved community posts)

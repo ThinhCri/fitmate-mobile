@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, StyleSheet, Text, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
   NotificationsPresentation,
   NotificationItemViewModel,
@@ -13,20 +13,24 @@ export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    getSupportRepository()
+  const loadNotifications = useCallback(async () => {
+    try {
+      const data = await getSupportRepository()
       .getNotifications()
-      .then((data) => {
-        setNotifications(data);
-        setError(null);
-      })
-      .catch((err) => {
-        setError(err?.message || 'Không thể tải thông báo');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      setNotifications(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể tải thông báo');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useFocusEffect(useCallback(() => {
+    void loadNotifications();
+    const timer = setInterval(() => void loadNotifications(), 5000);
+    return () => clearInterval(timer);
+  }, [loadNotifications]));
 
   const handleSelectNotification = async (item: NotificationItemViewModel) => {
     setNotifications((prev) =>
