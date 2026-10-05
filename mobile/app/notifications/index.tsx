@@ -28,7 +28,7 @@ export default function NotificationsScreen() {
 
   useFocusEffect(useCallback(() => {
     void loadNotifications();
-    const timer = setInterval(() => void loadNotifications(), 5000);
+    const timer = setInterval(() => void loadNotifications(), 15000);
     return () => clearInterval(timer);
   }, [loadNotifications]));
 

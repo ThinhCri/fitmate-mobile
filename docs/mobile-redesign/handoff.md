@@ -747,7 +747,7 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 ## Session update — 2026-10-05 (friend request live refresh)
 
 - Removed the duplicate friend-suggestion entry from Account; discovery remains in Community.
-- While focused, the friend/request screen, Dashboard unread notification badge and notification inbox now refresh every five seconds and stop polling when the user leaves the screen.
+- While focused, the friend/request screen, Dashboard unread notification badge and notification inbox now refresh every fifteen seconds and stop polling when the user leaves the screen. The interval avoids exhausting the authenticated API budget while keeping two-device testing reasonably fresh.
 - Notification mapping accepts the Backend's actual PascalCase enum values such as `FriendRequest` as well as snake_case values, so friend-request notifications navigate to the correct screen.
 - This provides near-real-time in-app synchronization without claiming SignalR support. Native background push still requires an Expo notifications/device-token build and provider configuration; it is not simulated in Expo Go.
 - Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing.
