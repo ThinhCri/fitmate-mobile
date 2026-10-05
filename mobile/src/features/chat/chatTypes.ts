@@ -34,6 +34,7 @@ export interface ConversationDetailViewModel {
   participantId: string;
   participantName: string;
   participantRole: 'member' | 'pt';
+  participantAvatar?: string;
   isOnline?: boolean;
   isRestricted?: boolean;
   messages: ChatMessageViewModel[];

@@ -1,7 +1,7 @@
 import { CommunityPostViewModel, CreatePostFormValues, FriendItemViewModel, PostCommentViewModel, ReportRequest, UserPublicProfileViewModel } from '@/features/community';
 import { ConversationDetailViewModel, ConversationItemViewModel, ChatMessageViewModel } from '@/features/chat';
 import type { ISocialRepository } from '../socialRepository';
-import { apiClient, apiUploadFile } from '@/services/api/client';
+import { ApiError, apiClient, apiUploadFile } from '@/services/api/client';
 import { authService } from '@/services/api/authService';
 import { createUuid } from '@/utils/uuid';
 
@@ -120,6 +120,32 @@ function mapPost(wire: PostWire): CommunityPostViewModel {
 
 export class ApiSocialRepository implements ISocialRepository {
   private convPeerCache = new Map<string, string>();
+  private profileCache = new Map<string, PublicProfileWire>();
+
+  private async loadProfiles(userIds: string[]): Promise<Map<string, PublicProfileWire>> {
+    const uniqueIds = [...new Set(userIds.filter(Boolean))];
+    const result = new Map<string, PublicProfileWire>();
+    uniqueIds.forEach((userId) => {
+      const cached = this.profileCache.get(userId);
+      if (cached) result.set(userId, cached);
+    });
+    const profiles = await Promise.all(
+      uniqueIds.filter((userId) => !result.has(userId)).map(async (userId) => {
+        try {
+          const profile = await apiClient<PublicProfileWire>(`/users/${encodeURIComponent(userId)}/profile`);
+          return [userId, profile] as const;
+        } catch {
+          return null;
+        }
+      })
+    );
+    profiles.forEach((item) => {
+      if (!item) return;
+      result.set(item[0], item[1]);
+      this.profileCache.set(item[0], item[1]);
+    });
+    return result;
+  }
 
   async listPosts(scope: 'public' | 'friends' = 'public'): Promise<CommunityPostViewModel[]> {
     const [response, me] = await Promise.all([
@@ -234,13 +260,27 @@ export class ApiSocialRepository implements ISocialRepository {
 
   async searchUsers(query: string): Promise<FriendItemViewModel[]> {
     if (!query.trim()) return [];
-    const result = await apiClient<PublicProfileWire[]>(`/users/search?q=${encodeURIComponent(query.trim())}&limit=20`);
+    const result = await apiClient<PublicProfileWire[]>(`/users/search?q=${encodeURIComponent(query.trim())}&limit=50`);
     return (result || []).map((item) => ({ id: item.id, name: item.full_name, role: item.role === 'pt' ? 'pt' : 'member', relationship: 'none', headline: item.fitness_goal || undefined }));
   }
 
   async listConversations(): Promise<ConversationItemViewModel[]> {
-    const result = await apiClient<{ items: ConversationWire[] }>('/chat/friends/conversations?limit=50');
-    return (result.items || []).map((item) => ({ id: item.conversation_id, participantId: item.peer.user_id, participantName: item.peer.display_name || 'Người dùng Fitmate', participantRole: 'member', participantAvatar: item.peer.avatar_url || undefined, isOnline: false, lastMessage: item.last_message?.text || 'Chưa có tin nhắn', lastMessageTime: new Date(item.last_message_at).toLocaleString('vi-VN'), unreadCount: item.unread_count }));
+    const result = await apiClient<{ items: ConversationWire[] }>('/chat/friends/conversations?limit=100');
+    const items = result.items || [];
+    const profiles = await this.loadProfiles(items.map((item) => item.peer.user_id));
+    return items.map((item) => {
+      const profile = profiles.get(item.peer.user_id);
+      return {
+        id: item.conversation_id,
+        participantId: item.peer.user_id,
+        participantName: profile?.full_name || item.peer.display_name || 'Người dùng Fitmate',
+        participantRole: profile?.role === 'pt' ? 'pt' : 'member',
+        participantAvatar: profile?.avatar_url || item.peer.avatar_url || undefined,
+        lastMessage: item.last_message?.text || 'Chưa có tin nhắn',
+        lastMessageTime: new Date(item.last_message_at).toLocaleString('vi-VN'),
+        unreadCount: item.unread_count,
+      };
+    });
   }
 
   async reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<{ active: boolean; count: number }> {
@@ -268,6 +308,12 @@ export class ApiSocialRepository implements ISocialRepository {
         method: 'GET',
       }),
     ]);
+    const incoming = incomingRes?.items || [];
+    const outgoing = outgoingRes?.items || [];
+    const profiles = await this.loadProfiles([
+      ...incoming.map((request) => request.sender_id),
+      ...outgoing.map((request) => request.recipient_id),
+    ]);
 
     const friends: FriendItemViewModel[] = (friendsRes?.items || []).map((f) => ({
       id: f.id,
@@ -278,22 +324,24 @@ export class ApiSocialRepository implements ISocialRepository {
       headline: f.avatar_url ? undefined : 'Bạn bè Fitmate',
     }));
 
-    const pendingRequests: FriendItemViewModel[] = (incomingRes?.items || []).map((r) => ({
+    const pendingRequests: FriendItemViewModel[] = incoming.map((r) => ({
       id: r.sender_id,
       requestId: r.id,
-      name: `Người dùng ${r.sender_id.slice(0, 8)}`,
-      role: 'member',
+      name: profiles.get(r.sender_id)?.full_name || 'Người dùng Fitmate',
+      role: profiles.get(r.sender_id)?.role === 'pt' ? 'pt' : 'member',
       relationship: 'received_request',
       requestDate: new Date(r.created_at).toLocaleDateString('vi-VN'),
+      headline: profiles.get(r.sender_id)?.fitness_goal || undefined,
     }));
 
-    const sentRequests: FriendItemViewModel[] = (outgoingRes?.items || []).map((r) => ({
+    const sentRequests: FriendItemViewModel[] = outgoing.map((r) => ({
       id: r.recipient_id,
       requestId: r.id,
-      name: `Người dùng ${r.recipient_id.slice(0, 8)}`,
-      role: 'member',
+      name: profiles.get(r.recipient_id)?.full_name || 'Người dùng Fitmate',
+      role: profiles.get(r.recipient_id)?.role === 'pt' ? 'pt' : 'member',
       relationship: 'sent_request',
       requestDate: new Date(r.created_at).toLocaleDateString('vi-VN'),
+      headline: profiles.get(r.recipient_id)?.fitness_goal || undefined,
     }));
 
     return {
@@ -339,7 +387,8 @@ export class ApiSocialRepository implements ISocialRepository {
     let conv: ConversationWire;
     try {
       conv = await apiClient<ConversationWire>(`/chat/friends/conversations/${id}`, { method: 'GET' });
-    } catch {
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 404) throw error;
       const list = await apiClient<{ items: ConversationWire[] }>('/chat/friends/conversations?limit=100');
       const existing = (list.items || []).find((item) => item.peer.user_id === id);
       if (existing) conv = existing;
@@ -354,11 +403,12 @@ export class ApiSocialRepository implements ISocialRepository {
     }
 
     const messagesRes = await apiClient<{ items: ChatMessageWire[]; nextCursor?: string | null }>(
-      `/chat/friends/conversations/${conv.conversation_id}/messages?limit=50`,
+      `/chat/friends/conversations/${conv.conversation_id}/messages?limit=100`,
       { method: 'GET' }
     );
+    const profile = (await this.loadProfiles([conv.peer.user_id])).get(conv.peer.user_id);
 
-    const messages: ChatMessageViewModel[] = (messagesRes?.items || []).map((m) => {
+    const messages: ChatMessageViewModel[] = [...(messagesRes?.items || [])].reverse().map((m) => {
       const isSelf = conv?.peer?.user_id ? m.sender_user_id !== conv.peer.user_id : true;
       return {
         id: m.id,
@@ -366,7 +416,7 @@ export class ApiSocialRepository implements ISocialRepository {
         senderName: m.sender,
         text: m.text,
         timestamp: new Date(m.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        status: 'read',
+        status: 'sent',
         isSelf,
       };
     });
@@ -374,12 +424,19 @@ export class ApiSocialRepository implements ISocialRepository {
     return {
       id: conv.conversation_id,
       participantId: conv.peer.user_id,
-      participantName: conv.peer.display_name || 'Người dùng Fitmate',
-      participantRole: 'member',
-      isOnline: false,
+      participantName: profile?.full_name || conv.peer.display_name || 'Người dùng Fitmate',
+      participantRole: profile?.role === 'pt' ? 'pt' : 'member',
+      participantAvatar: profile?.avatar_url || conv.peer.avatar_url || undefined,
       isRestricted: false,
       messages,
     };
+  }
+
+  async markConversationRead(conversationId: string, lastReadMessageId: string): Promise<void> {
+    await apiClient(`/chat/friends/conversations/${encodeURIComponent(conversationId)}/read`, {
+      method: 'POST',
+      body: JSON.stringify({ last_read_message_id: lastReadMessageId }),
+    });
   }
 
   async sendMessage(conversationId: string, text: string): Promise<ChatMessageViewModel> {
@@ -391,8 +448,9 @@ export class ApiSocialRepository implements ISocialRepository {
         });
         peerUserId = conv.peer.user_id;
         this.convPeerCache.set(conversationId, peerUserId);
-      } catch {
-        // Fallback: nếu conversationId chính là peerUserId
+      } catch (error) {
+        if (!(error instanceof ApiError) || error.status !== 404) throw error;
+        // Khi mở chat từ hồ sơ, route dùng peerUserId trước khi có conversation.
         peerUserId = conversationId;
       }
     }

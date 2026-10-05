@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import {
   ConversationPresentation,
   ConversationDetailViewModel,
@@ -17,24 +17,42 @@ export default function ConversationScreen() {
   const [error, setError] = useState<string | null>(null);
   const [reportModalVisible, setReportModalVisible] = useState(false);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!id) {
       setLoading(false);
-      return;
+      return undefined;
     }
-    getSocialRepository()
-      .getConversation(id)
-      .then((data) => {
-        setConversation(data);
+    let active = true;
+    const refresh = async (initial = false) => {
+      try {
+        const data = await getSocialRepository().getConversation(id);
+        if (!active) return;
+        const lastIncoming = [...data.messages].reverse().find((message) => !message.isSelf);
+        if (lastIncoming) {
+          void getSocialRepository().markConversationRead(data.id, lastIncoming.id).catch(() => undefined);
+        }
+        setConversation((current) => {
+          const localMessages = current?.messages.filter((message) => message.status === 'sending' || message.status === 'failed') || [];
+          const serverIds = new Set(data.messages.map((message) => message.id));
+          return {
+            ...data,
+            messages: [...data.messages, ...localMessages.filter((message) => !serverIds.has(message.id))],
+          };
+        });
         setError(null);
-      })
-      .catch((err) => {
-        setError(err?.message || 'Không thể tải cuộc trò chuyện');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [id]);
+      } catch (err) {
+        if (active && initial) setError(err instanceof Error ? err.message : 'Không thể tải cuộc trò chuyện');
+      } finally {
+        if (active && initial) setLoading(false);
+      }
+    };
+    void refresh(true);
+    const timer = setInterval(() => void refresh(), 3000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [id]));
 
   const handleSendMessage = async (text: string) => {
     if (!conversation) return;

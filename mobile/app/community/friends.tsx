@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
   FindFriendsPresentation,
   FriendItemViewModel,
@@ -17,43 +17,51 @@ export default function FindFriendsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    getSocialRepository()
+  const loadFriends = useCallback(async () => {
+    try {
+      const data = await getSocialRepository()
       .getFriends()
-      .then((data) => {
-        setFriendsList(data.friends);
-        setPendingRequests(data.pendingRequests);
-        setSentRequests(data.sentRequests);
-        setAllUsers([...data.friends, ...data.pendingRequests, ...data.sentRequests, ...data.discoverUsers]);
-        setError(null);
-      })
-      .catch((err) => {
-        setError(err?.message || 'Không thể tải danh sách bạn bè');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      setFriendsList(data.friends);
+      setPendingRequests(data.pendingRequests);
+      setSentRequests(data.sentRequests);
+      setAllUsers([...data.friends, ...data.pendingRequests, ...data.sentRequests, ...data.discoverUsers]);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể tải danh sách bạn bè');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useFocusEffect(useCallback(() => {
+    void loadFriends();
+  }, [loadFriends]));
+
   useEffect(() => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) {
+      setAllUsers([...friendsList, ...pendingRequests, ...sentRequests]);
+      return;
+    }
     let active = true;
-    getSocialRepository().searchUsers(searchQuery).then((items) => {
-      if (!active) return;
-      const relationships = new Map(
-        [...friendsList, ...pendingRequests, ...sentRequests].map((item) => [item.id, item])
-      );
-      setAllUsers(items.map((item) => relationships.has(item.id)
-        ? { ...item, ...relationships.get(item.id) }
-        : item));
-      setError(null);
-    }).catch((err) => { if (active) setError(err instanceof Error ? err.message : 'Không thể tìm người dùng'); });
-    return () => { active = false; };
+    const timer = setTimeout(() => {
+      getSocialRepository().searchUsers(searchQuery).then((items) => {
+        if (!active) return;
+        const relationships = new Map(
+          [...friendsList, ...pendingRequests, ...sentRequests].map((item) => [item.id, item])
+        );
+        setAllUsers(items.map((item) => relationships.has(item.id)
+          ? { ...item, ...relationships.get(item.id) }
+          : item));
+        setError(null);
+      }).catch((err) => { if (active) setError(err instanceof Error ? err.message : 'Không thể tìm người dùng'); });
+    }, 350);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [friendsList, pendingRequests, searchQuery, sentRequests]);
 
-  const searchResults = allUsers.filter((u) =>
-    u.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const searchResults = searchQuery.trim() ? allUsers : [];
 
   const handleAcceptRequest = async (friendId: string) => {
     const target = pendingRequests.find((r) => r.id === friendId);
@@ -97,8 +105,7 @@ export default function FindFriendsScreen() {
     if (user) {
       try {
         await getSocialRepository().sendFriendRequest(friendId);
-        const refreshed = await getSocialRepository().getFriends();
-        setSentRequests(refreshed.sentRequests);
+        await loadFriends();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Không thể gửi lời mời');
       }

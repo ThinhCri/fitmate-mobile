@@ -744,3 +744,12 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Added loading, empty, error, and retry states; preview repository follows the same interface without production fallback.
 - Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing after the Backend container is rebuilt.
 - Saved posts now mirrors the community feed interaction model: comments use the dimmed bottom sheet, overflow actions use `PostActionsSheet`, reports stay in-app, and delete/block use the shared confirmation modal. Bookmark remains the only unbookmark control; the screen no longer navigates to post detail for these actions.
+
+## Session update — 2026-10-05 (friends and chat synchronization)
+
+- Friend requests now resolve real public-profile names, roles and fitness goals instead of displaying shortened user IDs; user search is debounced and refreshed whenever the screen regains focus.
+- The inbox refreshes every five seconds while focused, and an open conversation refreshes every three seconds without overwriting optimistic or failed local messages.
+- Opening a conversation calls the existing monotonic read endpoint for the newest incoming message, so unread counts can clear on the next inbox refresh.
+- Conversation participants are enriched from public profiles and cached for the app session. Network/auth failures are no longer mistaken for a missing conversation, and the UI no longer claims unsupported online or read-receipt state.
+- The current contract has no realtime socket or per-message peer-read receipt; polling and truthful `sent` status are used instead of simulating either feature.
+- Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing.

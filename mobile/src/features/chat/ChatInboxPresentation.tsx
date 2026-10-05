@@ -142,7 +142,7 @@ export function ChatInboxPresentation({
             >
               <Card style={styles.conversationCard}>
                 <View style={styles.avatarWrapper}>
-                  <Avatar name={item.participantName} size="md" />
+                  <Avatar uri={item.participantAvatar} name={item.participantName} size="md" />
                   {item.participantRole === 'pt' && (
                     <View style={styles.ptBadge}>
                       <Text style={styles.ptBadgeText}>PT</Text>

@@ -100,7 +100,7 @@ export function ConversationPresentation({
           accessibilityRole="button"
           accessibilityLabel={`Xem hồ sơ của ${conversation.participantName}`}
         >
-          <Avatar name={conversation.participantName} size="sm" />
+          <Avatar uri={conversation.participantAvatar} name={conversation.participantName} size="sm" />
           <View style={styles.headerInfo}>
             <View style={styles.headerNameRow}>
               <Text style={styles.headerName}>{conversation.participantName}</Text>
@@ -110,9 +110,7 @@ export function ConversationPresentation({
                 </View>
               )}
             </View>
-            <Text style={styles.statusSubtitle}>
-              {conversation.isOnline ? 'Đang trực tuyến' : 'Ngoại tuyến'}
-            </Text>
+            <Text style={styles.statusSubtitle}>Tin nhắn riêng</Text>
           </View>
         </TouchableOpacity>
 

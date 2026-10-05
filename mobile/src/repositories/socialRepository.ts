@@ -32,6 +32,7 @@ export interface ISocialRepository {
   cancelFriendRequest(requestId: string): Promise<void>;
   unfriend(targetUserId: string): Promise<void>;
   getConversation(id: string): Promise<ConversationDetailViewModel>;
+  markConversationRead(conversationId: string, lastReadMessageId: string): Promise<void>;
   sendMessage(conversationId: string, text: string): Promise<ChatMessageViewModel>;
   reportOrBlockUser(request: ReportRequest): Promise<void>;
 }

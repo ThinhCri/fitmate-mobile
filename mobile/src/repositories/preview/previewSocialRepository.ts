@@ -244,6 +244,8 @@ export class PreviewSocialRepository implements ISocialRepository {
     };
   }
 
+  async markConversationRead(_conversationId: string, _lastReadMessageId: string): Promise<void> {}
+
   async reportOrBlockUser(_request: ReportRequest): Promise<void> {
     // In preview mode, silently accept
   }
