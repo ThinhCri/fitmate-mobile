@@ -743,3 +743,4 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - The screen reads `GET /api/v1/social/bookmarks`, reuses the community post cards, supports reactions, comments/detail, friend sharing, author navigation, and removes a card immediately after unbookmarking.
 - Added loading, empty, error, and retry states; preview repository follows the same interface without production fallback.
 - Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing after the Backend container is rebuilt.
+- Saved posts now mirrors the community feed interaction model: comments use the dimmed bottom sheet, overflow actions use `PostActionsSheet`, reports stay in-app, and delete/block use the shared confirmation modal. Bookmark remains the only unbookmark control; the screen no longer navigates to post detail for these actions.
