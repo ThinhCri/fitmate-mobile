@@ -784,3 +784,4 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Long-pressing a received message opens five common reactions: heart, thumbs-up, laugh, surprise and sad. Reaction counts and the current viewer's choice are persisted by the Backend and refreshed with conversation polling.
 - The production adapter uploads images under the `chat` category before sending storage keys; preview mode implements the same repository surface without becoming a production fallback.
 - Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing after applying the Backend migrations and rebuilding the API container.
+- Follow-up image rendering fix: conversation polling retains each message's signed URL for ten minutes instead of replacing it every three seconds, and remote chat images use Expo's memory/disk cache with a visible load-error state.

@@ -10,6 +10,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import {
   ChevronLeft,
   Send,
@@ -58,6 +59,7 @@ export function ConversationPresentation({
 }: ConversationPresentationProps) {
   const [inputText, setInputText] = useState('');
   const [reactionTargetId, setReactionTargetId] = useState<string | null>(null);
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const scrollRef = useRef<ScrollView>(null);
 
   const handleSend = () => {
@@ -172,7 +174,30 @@ export function ConversationPresentation({
               {!!msg.imageUrls?.length && (
                 <View style={styles.messageImages}>
                   {msg.imageUrls.map((uri, imageIndex) => (
-                    <Image key={`${uri}-${imageIndex}`} source={{ uri }} style={styles.messageImage} resizeMode="cover" />
+                    <View key={`${msg.id}-${imageIndex}`} style={styles.messageImageFrame}>
+                      <ExpoImage
+                        source={{ uri }}
+                        style={styles.messageImage}
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                        recyclingKey={`${msg.id}-${imageIndex}`}
+                        transition={0}
+                        onLoad={() => setFailedImages((current) => {
+                          const key = `${msg.id}-${imageIndex}`;
+                          if (!current[key]) return current;
+                          const next = { ...current };
+                          delete next[key];
+                          return next;
+                        })}
+                        onError={() => setFailedImages((current) => ({ ...current, [`${msg.id}-${imageIndex}`]: true }))}
+                      />
+                      {failedImages[`${msg.id}-${imageIndex}`] && (
+                        <View style={styles.imageErrorOverlay}>
+                          <AlertCircle size={18} color={colors.textMuted} />
+                          <Text style={styles.imageErrorText}>Không tải được ảnh</Text>
+                        </View>
+                      )}
+                    </View>
                   ))}
                 </View>
               )}
@@ -413,7 +438,10 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   messageImages: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 4 },
-  messageImage: { width: 120, height: 120, borderRadius: radius.md },
+  messageImageFrame: { width: 120, height: 120, borderRadius: radius.md, overflow: 'hidden', backgroundColor: colors.surfaceSubtle },
+  messageImage: { width: '100%', height: '100%' },
+  imageErrorOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: colors.surfaceSubtle },
+  imageErrorText: { fontSize: 10, color: colors.textMuted },
   messageFooter: {
     flexDirection: 'row',
     alignItems: 'center',

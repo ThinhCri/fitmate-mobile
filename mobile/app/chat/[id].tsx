@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { View, StyleSheet, Text, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -19,6 +19,7 @@ export default function ConversationScreen() {
   const [error, setError] = useState<string | null>(null);
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedImages, setSelectedImages] = useState<ChatImageInput[]>([]);
+  const imageUrlCache = useRef(new Map<string, { urls: string[]; cachedAt: number }>());
 
   useFocusEffect(useCallback(() => {
     if (!id) {
@@ -35,11 +36,21 @@ export default function ConversationScreen() {
           void getSocialRepository().markConversationRead(data.id, lastIncoming.id).catch(() => undefined);
         }
         setConversation((current) => {
+          const now = Date.now();
+          const stableMessages = data.messages.map((message) => {
+            if (!message.imageUrls?.length) return message;
+            const cached = imageUrlCache.current.get(message.id);
+            if (cached && cached.urls.length === message.imageUrls.length && now - cached.cachedAt < 10 * 60 * 1000) {
+              return { ...message, imageUrls: cached.urls };
+            }
+            imageUrlCache.current.set(message.id, { urls: message.imageUrls, cachedAt: now });
+            return message;
+          });
           const localMessages = current?.messages.filter((message) => message.status === 'sending' || message.status === 'failed') || [];
-          const serverIds = new Set(data.messages.map((message) => message.id));
+          const serverIds = new Set(stableMessages.map((message) => message.id));
           return {
             ...data,
-            messages: [...data.messages, ...localMessages.filter((message) => !serverIds.has(message.id))],
+            messages: [...stableMessages, ...localMessages.filter((message) => !serverIds.has(message.id))],
           };
         });
         setError(null);
@@ -79,6 +90,9 @@ export default function ConversationScreen() {
 
     try {
       const sentMsg = await getSocialRepository().sendMessage(conversation.id, text, images);
+      if (sentMsg.imageUrls?.length) {
+        imageUrlCache.current.set(sentMsg.id, { urls: sentMsg.imageUrls, cachedAt: Date.now() });
+      }
       setConversation((prev) =>
         prev
           ? {
