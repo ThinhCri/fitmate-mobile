@@ -46,12 +46,10 @@ export default function SavedPostsScreen() {
         <CommunityFeedPresentation
           posts={posts}
           activeSegment="community"
-          selectedCategory="all"
           showFeedChrome={false}
           emptyTitle="Chưa có bài viết đã lưu"
           emptyDescription="Nhấn biểu tượng lưu ở một bài viết để xem lại tại đây."
           onSegmentChange={() => undefined}
-          onCategoryChange={() => undefined}
           onReaction={async (postId, type) => { try { const result = await getSocialRepository().reactToPost(postId, type); setPosts((current) => current.map((post) => post.id === postId ? { ...post, reactions: { ...post.reactions, love: result.count, userReaction: result.active ? 'love' : undefined } } : post)); } catch (cause) { Alert.alert('Không thể thả cảm xúc', cause instanceof Error ? cause.message : 'Vui lòng thử lại.'); } }}
           onSelectPost={(postId) => void openComments(postId)}
           onSharePost={async (postId) => {

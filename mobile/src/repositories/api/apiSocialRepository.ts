@@ -147,9 +147,10 @@ export class ApiSocialRepository implements ISocialRepository {
     return result;
   }
 
-  async listPosts(scope: 'public' | 'friends' = 'public'): Promise<CommunityPostViewModel[]> {
+  async listPosts(scope: 'public' | 'friends' = 'public', query = ''): Promise<CommunityPostViewModel[]> {
+    const search = query.trim() ? `&query=${encodeURIComponent(query.trim())}` : '';
     const [response, me] = await Promise.all([
-      apiClient<{ items: PostWire[]; nextCursor?: string | null }>(`/social/posts?scope=${scope}&limit=50`, { method: 'GET' }),
+      apiClient<{ items: PostWire[]; nextCursor?: string | null }>(`/social/posts?scope=${scope}&limit=50${search}`, { method: 'GET' }),
       authService.getMe(),
     ]);
     return (response.items || []).map((wire) => ({ ...mapPost(wire), isOwner: wire.author_id === me.id }));

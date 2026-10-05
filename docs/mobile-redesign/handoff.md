@@ -753,3 +753,11 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Conversation participants are enriched from public profiles and cached for the app session. Network/auth failures are no longer mistaken for a missing conversation, and the UI no longer claims unsupported online or read-receipt state.
 - The current contract has no realtime socket or per-message peer-read receipt; polling and truthful `sent` status are used instead of simulating either feature.
 - Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing.
+
+## Session update — 2026-10-05 (community search)
+
+- Replaced the three local feed category chips with one controlled search field below the Community/AI switch.
+- Search waits 400 ms after typing, then calls the Backend feed with its optional `query`; it does not filter only the posts already loaded on the device.
+- Plain text searches post content, author name and tags. A leading `#` requests tag-only search, for example `#gym`.
+- Empty and retry copy now reflects the current search while post creation categories/tags remain intact for metadata and future filtering.
+- Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing.

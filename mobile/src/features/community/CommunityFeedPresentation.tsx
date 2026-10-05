@@ -8,6 +8,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   Image,
+  TextInput,
   useWindowDimensions,
 } from 'react-native';
 import {
@@ -18,6 +19,8 @@ import {
   Send,
   Bookmark,
   MoreVertical,
+  Search,
+  X,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
@@ -29,9 +32,9 @@ import { GradientBackground } from '@/components/design-system/GradientBackgroun
 export interface CommunityFeedPresentationProps {
   posts: CommunityPostViewModel[];
   activeSegment: 'community' | 'ai';
-  selectedCategory: 'all' | 'friends' | 'workout_exp' | 'nutrition_qa';
   onSegmentChange: (segment: 'community' | 'ai') => void;
-  onCategoryChange: (category: 'all' | 'friends' | 'workout_exp' | 'nutrition_qa') => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
   onReaction: (postId: string, type: 'love') => void;
   onSelectPost: (postId: string) => void;
   onSharePost: (postId: string) => void;
@@ -48,9 +51,9 @@ export interface CommunityFeedPresentationProps {
 export function CommunityFeedPresentation({
   posts,
   activeSegment,
-  selectedCategory,
   onSegmentChange,
-  onCategoryChange,
+  searchQuery = '',
+  onSearchChange,
   onReaction,
   onSelectPost,
   onSharePost,
@@ -67,12 +70,6 @@ export function CommunityFeedPresentation({
   const [activeMedia, setActiveMedia] = useState<Record<string, number>>({});
   const mediaWidth = Math.max(240, screenWidth - spacing.md * 4);
   const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
-  const categories = [
-    { key: 'all', label: 'Tất cả' },
-    { key: 'workout_exp', label: 'Kinh nghiệm tập' },
-    { key: 'nutrition_qa', label: 'Hỏi đáp dinh dưỡng' },
-  ] as const;
-
   return (
     <GradientBackground>
     <ScrollView
@@ -116,34 +113,33 @@ export function CommunityFeedPresentation({
           </TouchableOpacity>
         </View>
 
-        {/* Category Filter Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsRow}
-        >
-          {categories.map((c) => {
-            const isSelected = c.key === selectedCategory;
-            return (
+        {onSearchChange && (
+          <View style={styles.searchBox}>
+            <Search size={19} color={colors.textMuted} />
+            <TextInput
+              value={searchQuery}
+              onChangeText={onSearchChange}
+              placeholder="Tìm bài viết, người đăng hoặc #hashtag"
+              placeholderTextColor={colors.textMuted}
+              style={styles.searchInput}
+              returnKeyType="search"
+              autoCapitalize="none"
+              autoCorrect={false}
+              maxLength={100}
+              accessibilityLabel="Tìm kiếm bài viết cộng đồng"
+            />
+            {searchQuery.length > 0 && (
               <TouchableOpacity
-                key={c.key}
-                style={[styles.categoryChip, isSelected && styles.categoryChipActive]}
-                onPress={() => onCategoryChange(c.key)}
+                onPress={() => onSearchChange('')}
+                style={styles.clearSearch}
                 accessibilityRole="button"
-                accessibilityLabel={`Lọc theo ${c.label}`}
+                accessibilityLabel="Xóa nội dung tìm kiếm"
               >
-                <Text
-                  style={[
-                    styles.categoryChipText,
-                    isSelected && styles.categoryChipTextActive,
-                  ]}
-                >
-                  {c.label}
-                </Text>
+                <X size={18} color={colors.textSecondary} />
               </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+            )}
+          </View>
+        )}
       </View>
 
       {/* Safety Notice Banner */}
@@ -339,28 +335,30 @@ const styles = StyleSheet.create({
   segmentTextActive: {
     color: '#FFFFFF',
   },
-  chipsRow: {
+  searchBox: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    paddingVertical: 2,
-  },
-  categoryChip: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    minHeight: 46,
     paddingHorizontal: spacing.md,
-    paddingVertical: 6,
     borderRadius: radius.full,
-    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
   },
-  categoryChipActive: {
-    backgroundColor: colors.primary,
+  searchInput: {
+    flex: 1,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: colors.textPrimary,
   },
-  categoryChipText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.textSecondary,
-  },
-  categoryChipTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+  clearSearch: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceSubtle,
   },
   safetyBanner: {
     flexDirection: 'row',

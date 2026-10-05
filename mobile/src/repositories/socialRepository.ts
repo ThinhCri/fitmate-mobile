@@ -5,7 +5,7 @@ import { apiSocialRepository } from './api/apiSocialRepository';
 import { previewSocialRepository } from './preview/previewSocialRepository';
 
 export interface ISocialRepository {
-  listPosts(scope?: 'public' | 'friends'): Promise<CommunityPostViewModel[]>;
+  listPosts(scope?: 'public' | 'friends', query?: string): Promise<CommunityPostViewModel[]>;
   listBookmarkedPosts(): Promise<CommunityPostViewModel[]>;
   getPost(id: string): Promise<CommunityPostViewModel>;
   createPost(values: CreatePostFormValues): Promise<CommunityPostViewModel>;

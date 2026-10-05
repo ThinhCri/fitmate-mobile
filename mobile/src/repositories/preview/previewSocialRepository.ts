@@ -115,8 +115,21 @@ export class PreviewSocialRepository implements ISocialRepository {
   async getPublicProfile(userId: string): Promise<{ profile: UserPublicProfileViewModel; requestId?: string }> { return { profile: { id: userId, name: 'Người dùng Preview', role: 'member', bio: '', friendshipStatus: 'friend', postCount: 0, friendCount: previewFriends.length, posts: [] } }; }
   async searchUsers(query: string): Promise<FriendItemViewModel[]> { return previewDiscover.filter((item) => item.name.toLowerCase().includes(query.toLowerCase())); }
   async listConversations(): Promise<ConversationItemViewModel[]> { return [{ id: 'conv-1', participantId: 'pt-101', participantName: 'HLV Hoàng Nam', participantRole: 'pt', lastMessage: 'Tin nhắn preview', lastMessageTime: 'Vừa xong', unreadCount: 0 }]; }
-  async listPosts(scope: 'public' | 'friends' = 'public'): Promise<CommunityPostViewModel[]> {
-    return previewPosts.filter((post) => scope === 'public' || post.visibility === 'friends');
+  async listPosts(scope: 'public' | 'friends' = 'public', query = ''): Promise<CommunityPostViewModel[]> {
+    const term = query.trim().toLocaleLowerCase('vi-VN');
+    const hashtagOnly = term.startsWith('#');
+    const normalizedTerm = (hashtagOnly ? term.slice(1) : term).trim();
+    return previewPosts.filter((post) => {
+      const visible = scope === 'public' ? post.visibility === 'public' : post.visibility !== 'private';
+      if (!visible) return false;
+      if (!normalizedTerm) return true;
+      const tagMatch = [...(post.workoutTags || []), ...(post.mealTags || [])]
+        .some((tag) => tag.toLocaleLowerCase('vi-VN').includes(normalizedTerm));
+      return tagMatch || (!hashtagOnly && (
+        post.content.toLocaleLowerCase('vi-VN').includes(normalizedTerm)
+        || post.authorName.toLocaleLowerCase('vi-VN').includes(normalizedTerm)
+      ));
+    });
   }
 
   async listBookmarkedPosts(): Promise<CommunityPostViewModel[]> {
