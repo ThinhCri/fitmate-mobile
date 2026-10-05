@@ -128,6 +128,9 @@ export const authService = {
    * - New password must be 12-128 characters.
    */
   async resetPassword(data: ResetPasswordRequest): Promise<void> {
+    if (!/^\d{6}$/.test(data.token)) {
+      throw new Error('Mã đặt lại mật khẩu phải gồm đúng 6 chữ số');
+    }
     if (
       !data.new_password ||
       data.new_password.length < 12 ||

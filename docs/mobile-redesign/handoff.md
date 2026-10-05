@@ -795,7 +795,8 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 
 ## Session update — 2026-10-05 (account recovery)
 
-- Completed the forgot-password flow against the verified Backend endpoints: request reset email, paste or open a reset link, submit its token together with the account email, and return to login after success.
-- The reset form now sends the required `email` field instead of a token-only request that the Backend cannot resolve to an account. A root `/reset-password` route accepts email links and pre-fills query parameters when available.
+- Completed the forgot-password flow against the verified Backend endpoints: request a reset email, enter its six-digit code with the account email and new password, then return to login after success.
+- The reset form sends the required `email` field instead of a token-only request that the Backend cannot resolve to an account. It no longer depends on a local or production deep link.
 - Email verification now prevents repeated resend requests with a visible 60-second countdown while retaining the Backend's neutral account-enumeration-safe response.
 - Removed the unsupported end-to-end-encryption claim from the recovery screen. Static verification uses `git diff --check`; runtime/typecheck remains for operator testing per repository rule.
+- Password-reset code resend uses a visible 60-second cooldown.

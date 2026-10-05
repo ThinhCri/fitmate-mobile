@@ -65,7 +65,7 @@ describe('AuthService & ApiClient (MOB-800)', () => {
     it('rejects password reset with new_password shorter than 12 characters', async () => {
       await expect(
         authService.resetPassword({
-          token: 'valid-reset-token',
+          token: '123456',
           new_password: 'short',
           email: 'member@fitmate.vn',
         })
@@ -75,7 +75,7 @@ describe('AuthService & ApiClient (MOB-800)', () => {
     it('rejects password reset with new_password longer than 128 characters', async () => {
       await expect(
         authService.resetPassword({
-          token: 'valid-reset-token',
+          token: '123456',
           new_password: 'B'.repeat(130),
           email: 'member@fitmate.vn',
         })
