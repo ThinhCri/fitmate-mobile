@@ -257,6 +257,10 @@ export class PreviewSocialRepository implements ISocialRepository {
     };
   }
 
+  async toggleMessageReaction(_messageId: string, reaction: '❤️' | '👍' | '😂' | '😮' | '😢'): Promise<ChatMessageViewModel['reactions']> {
+    return [{ reaction, count: 1, reactedByViewer: true }];
+  }
+
   async markConversationRead(_conversationId: string, _lastReadMessageId: string): Promise<void> {}
 
   async reportOrBlockUser(_request: ReportRequest): Promise<void> {

@@ -19,14 +19,28 @@ export interface ConversationItemViewModel {
 
 export type MessageDeliveryStatus = 'sending' | 'sent' | 'read' | 'failed';
 
+export interface ChatMessageReactionViewModel {
+  reaction: '❤️' | '👍' | '😂' | '😮' | '😢';
+  count: number;
+  reactedByViewer: boolean;
+}
+
 export interface ChatMessageViewModel {
   id: string;
   senderId: string;
   senderName: string;
   text: string;
+  imageUrls?: string[];
+  reactions?: ChatMessageReactionViewModel[];
   timestamp: string;
   status: MessageDeliveryStatus;
   isSelf: boolean;
+}
+
+export interface ChatImageInput {
+  uri: string;
+  mimeType?: string | null;
+  fileName?: string | null;
 }
 
 export interface ConversationDetailViewModel {

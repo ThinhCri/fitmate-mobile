@@ -1,5 +1,5 @@
 import { CommunityPostViewModel, CreatePostFormValues, FriendItemViewModel, PostCommentViewModel, ReportRequest, UserPublicProfileViewModel } from '@/features/community';
-import { ConversationDetailViewModel, ConversationItemViewModel, ChatMessageViewModel } from '@/features/chat';
+import { ConversationDetailViewModel, ConversationItemViewModel, ChatImageInput, ChatMessageViewModel } from '@/features/chat';
 import { getDataSourceMode } from './repositoryTypes';
 import { apiSocialRepository } from './api/apiSocialRepository';
 import { previewSocialRepository } from './preview/previewSocialRepository';
@@ -33,7 +33,8 @@ export interface ISocialRepository {
   unfriend(targetUserId: string): Promise<void>;
   getConversation(id: string): Promise<ConversationDetailViewModel>;
   markConversationRead(conversationId: string, lastReadMessageId: string): Promise<void>;
-  sendMessage(conversationId: string, text: string): Promise<ChatMessageViewModel>;
+  sendMessage(conversationId: string, text: string, images?: ChatImageInput[]): Promise<ChatMessageViewModel>;
+  toggleMessageReaction(messageId: string, reaction: '❤️' | '👍' | '😂' | '😮' | '😢'): Promise<ChatMessageViewModel['reactions']>;
   reportOrBlockUser(request: ReportRequest): Promise<void>;
 }
 

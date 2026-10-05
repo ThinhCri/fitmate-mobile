@@ -777,3 +777,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Plain text searches post content, author name and tags. A leading `#` requests tag-only search, for example `#gym`.
 - Empty and retry copy now reflects the current search while post creation categories/tags remain intact for metadata and future filtering.
 - Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing.
+
+## Session update — 2026-10-05 (friend chat media and reactions)
+
+- Friend chat can select and preview up to five gallery images, send image-only or mixed messages, render returned signed images, and retry a failed image message without relying on asynchronous selection state.
+- Long-pressing a received message opens five common reactions: heart, thumbs-up, laugh, surprise and sad. Reaction counts and the current viewer's choice are persisted by the Backend and refreshed with conversation polling.
+- The production adapter uploads images under the `chat` category before sending storage keys; preview mode implements the same repository surface without becoming a production fallback.
+- Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing after applying the Backend migrations and rebuilding the API container.

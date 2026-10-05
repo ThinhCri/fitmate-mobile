@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import {
   ChevronLeft,
@@ -20,6 +21,8 @@ import {
   Clock,
   Shield,
   ExternalLink,
+  Paperclip,
+  X,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Avatar } from '@/components/design-system/Avatar';
@@ -32,7 +35,11 @@ export interface ConversationPresentationProps {
   conversation: ConversationDetailViewModel;
   onBack: () => void;
   onSendMessage: (text: string) => void;
+  selectedImageUrls: string[];
+  onPickImages: () => void;
+  onRemoveImage: (index: number) => void;
   onRetryMessage: (messageId: string) => void;
+  onReactMessage: (messageId: string, reaction: '❤️' | '👍' | '😂' | '😮' | '😢') => void;
   onParticipantPress: (participantId: string) => void;
   onReportPress: () => void;
 }
@@ -41,15 +48,20 @@ export function ConversationPresentation({
   conversation,
   onBack,
   onSendMessage,
+  selectedImageUrls,
+  onPickImages,
+  onRemoveImage,
   onRetryMessage,
+  onReactMessage,
   onParticipantPress,
   onReportPress,
 }: ConversationPresentationProps) {
   const [inputText, setInputText] = useState('');
+  const [reactionTargetId, setReactionTargetId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
 
   const handleSend = () => {
-    if (!inputText.trim() || conversation.isRestricted) return;
+    if ((!inputText.trim() && selectedImageUrls.length === 0) || conversation.isRestricted) return;
     onSendMessage(inputText.trim());
     setInputText('');
   };
@@ -148,20 +160,30 @@ export function ConversationPresentation({
               </View>
             )}
 
-            <View
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onLongPress={() => !msg.isSelf && msg.status !== 'sending' && setReactionTargetId(msg.id)}
+              delayLongPress={250}
               style={[
                 styles.bubbleContainer,
                 msg.isSelf ? styles.bubbleSelf : styles.bubbleOther,
               ]}
             >
-              <Text
+              {!!msg.imageUrls?.length && (
+                <View style={styles.messageImages}>
+                  {msg.imageUrls.map((uri, imageIndex) => (
+                    <Image key={`${uri}-${imageIndex}`} source={{ uri }} style={styles.messageImage} resizeMode="cover" />
+                  ))}
+                </View>
+              )}
+              {!!msg.text && <Text
                 style={[
                   styles.messageText,
                   msg.isSelf ? styles.messageTextSelf : styles.messageTextOther,
                 ]}
               >
                 {msg.text}
-              </Text>
+              </Text>}
 
               <View style={styles.messageFooter}>
                 <Text
@@ -174,7 +196,37 @@ export function ConversationPresentation({
                 </Text>
                 {msg.isSelf && renderMessageStatus(msg)}
               </View>
-            </View>
+              {!!msg.reactions?.length && (
+                <View style={styles.reactionSummary}>
+                  {msg.reactions.map((item) => (
+                    <TouchableOpacity
+                      key={item.reaction}
+                      style={[styles.reactionChip, item.reactedByViewer && styles.reactionChipActive]}
+                      onPress={() => onReactMessage(msg.id, item.reaction)}
+                    >
+                      <Text style={styles.reactionChipText}>{item.reaction} {item.count}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+              {!msg.isSelf && reactionTargetId === msg.id && (
+                <View style={styles.reactionPicker}>
+                  {(['❤️', '👍', '😂', '😮', '😢'] as const).map((reaction) => (
+                    <TouchableOpacity
+                      key={reaction}
+                      style={styles.reactionOption}
+                      onPress={() => {
+                        setReactionTargetId(null);
+                        onReactMessage(msg.id, reaction);
+                      }}
+                      accessibilityLabel={`Thả cảm xúc ${reaction}`}
+                    >
+                      <Text style={styles.reactionOptionText}>{reaction}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
         ))}
 
@@ -205,7 +257,23 @@ export function ConversationPresentation({
             </Text>
           </View>
         ) : (
+          <View>
+            {selectedImageUrls.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectedImagesRow}>
+                {selectedImageUrls.map((uri, index) => (
+                  <View key={`${uri}-${index}`} style={styles.selectedImageWrap}>
+                    <Image source={{ uri }} style={styles.selectedImage} />
+                    <TouchableOpacity style={styles.removeImageBtn} onPress={() => onRemoveImage(index)}>
+                      <X size={13} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
           <View style={styles.activeComposerRow}>
+            <TouchableOpacity style={styles.attachBtn} onPress={onPickImages} accessibilityLabel="Đính kèm tối đa 5 ảnh">
+              <Paperclip size={20} color={colors.primary} />
+            </TouchableOpacity>
             <TextInput
               style={styles.textInput}
               placeholder="Nhập tin nhắn..."
@@ -218,14 +286,15 @@ export function ConversationPresentation({
             <TouchableOpacity
               style={[
                 styles.sendBtn,
-                !inputText.trim() && styles.sendBtnDisabled,
+                !inputText.trim() && selectedImageUrls.length === 0 && styles.sendBtnDisabled,
               ]}
               onPress={handleSend}
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() && selectedImageUrls.length === 0}
               accessibilityLabel="Gửi tin nhắn"
             >
               <Send size={18} color="#FFFFFF" />
             </TouchableOpacity>
+          </View>
           </View>
         )}
 
@@ -343,6 +412,8 @@ const styles = StyleSheet.create({
   messageTextOther: {
     color: colors.textPrimary,
   },
+  messageImages: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 4 },
+  messageImage: { width: 120, height: 120, borderRadius: radius.md },
   messageFooter: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -350,6 +421,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
     alignSelf: 'flex-end',
   },
+  reactionSummary: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 5 },
+  reactionChip: { backgroundColor: colors.surfaceSubtle, borderRadius: radius.full, paddingHorizontal: 7, paddingVertical: 2 },
+  reactionChipActive: { borderWidth: 1, borderColor: colors.primary },
+  reactionChipText: { fontSize: 12, color: colors.textPrimary },
+  reactionPicker: { flexDirection: 'row', marginTop: 6, paddingHorizontal: 4, paddingVertical: 3, borderRadius: radius.full, backgroundColor: colors.surface },
+  reactionOption: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+  reactionOptionText: { fontSize: 20 },
   timestampText: {
     fontSize: 10,
   },
@@ -432,6 +510,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
+  attachBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  selectedImagesRow: { marginBottom: spacing.sm },
+  selectedImageWrap: { marginRight: spacing.sm },
+  selectedImage: { width: 64, height: 64, borderRadius: radius.sm },
+  removeImageBtn: { position: 'absolute', right: -4, top: -4, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center' },
   textInput: {
     flex: 1,
     backgroundColor: colors.surfaceSubtle,

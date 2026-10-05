@@ -1,5 +1,5 @@
 import { CommunityPostViewModel, CreatePostFormValues, FriendItemViewModel, PostCommentViewModel, ReportRequest, UserPublicProfileViewModel } from '@/features/community';
-import { ConversationDetailViewModel, ConversationItemViewModel, ChatMessageViewModel } from '@/features/chat';
+import { ConversationDetailViewModel, ConversationItemViewModel, ChatImageInput, ChatMessageViewModel } from '@/features/chat';
 import type { ISocialRepository } from '../socialRepository';
 import { ApiError, apiClient, apiUploadFile } from '@/services/api/client';
 import { authService } from '@/services/api/authService';
@@ -28,6 +28,8 @@ interface ChatMessageWire {
   text: string;
   created_at: string;
   client_message_id?: string;
+  image_urls?: string[] | null;
+  reactions?: Array<{ reaction: '❤️' | '👍' | '😂' | '😮' | '😢'; count: number; reacted_by_viewer: boolean }> | null;
 }
 
 interface ConversationWire {
@@ -427,6 +429,8 @@ export class ApiSocialRepository implements ISocialRepository {
         senderId: m.sender_user_id,
         senderName: m.sender,
         text: m.text,
+        imageUrls: m.image_urls || [],
+        reactions: (m.reactions || []).map((item) => ({ reaction: item.reaction, count: item.count, reactedByViewer: item.reacted_by_viewer })),
         timestamp: new Date(m.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         status: 'sent',
         isSelf,
@@ -451,7 +455,7 @@ export class ApiSocialRepository implements ISocialRepository {
     });
   }
 
-  async sendMessage(conversationId: string, text: string): Promise<ChatMessageViewModel> {
+  async sendMessage(conversationId: string, text: string, images: ChatImageInput[] = []): Promise<ChatMessageViewModel> {
     let peerUserId = this.convPeerCache.get(conversationId);
     if (!peerUserId) {
       try {
@@ -468,12 +472,23 @@ export class ApiSocialRepository implements ISocialRepository {
     }
 
     const clientMessageId = createUuid();
+    const storageKeys = await Promise.all(images.slice(0, 5).map(async (image) => {
+      const uploaded = await apiUploadFile<{ storage_key?: string; storageKey?: string; signed_url?: string; signedUrl?: string }>(
+        '/uploads', image.uri,
+        image.mimeType === 'image/png' || image.mimeType === 'image/webp' ? image.mimeType : 'image/jpeg',
+        { category: 'chat' }
+      );
+      const storageKey = uploaded.storage_key || uploaded.storageKey;
+      if (!storageKey) throw new Error('Máy chủ không trả về mã lưu trữ của hình ảnh.');
+      return storageKey;
+    }));
     const res = await apiClient<ChatMessageWire>('/chat/friends/messages', {
       method: 'POST',
       body: JSON.stringify({
         peer_user_id: peerUserId,
         text,
         client_message_id: clientMessageId,
+        image_storage_keys: storageKeys,
       }),
     });
 
@@ -482,12 +497,26 @@ export class ApiSocialRepository implements ISocialRepository {
       senderId: res?.sender_user_id || 'me',
       senderName: res?.sender || 'Tôi',
       text: res?.text || text,
+      imageUrls: res?.image_urls || images.map((image) => image.uri),
+      reactions: (res?.reactions || []).map((item) => ({ reaction: item.reaction, count: item.count, reactedByViewer: item.reacted_by_viewer })),
       timestamp: res?.created_at
         ? new Date(res.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
         : 'Vừa xong',
       status: 'sent',
       isSelf: true,
     };
+  }
+
+  async toggleMessageReaction(messageId: string, reaction: '❤️' | '👍' | '😂' | '😮' | '😢'): Promise<ChatMessageViewModel['reactions']> {
+    const result = await apiClient<{ items: NonNullable<ChatMessageWire['reactions']> }>(
+      `/chat/friends/messages/${encodeURIComponent(messageId)}/reactions`,
+      { method: 'POST', body: JSON.stringify({ reaction }) }
+    );
+    return (result.items || []).map((item) => ({
+      reaction: item.reaction,
+      count: item.count,
+      reactedByViewer: item.reacted_by_viewer,
+    }));
   }
 
   async reportOrBlockUser(request: ReportRequest): Promise<void> {

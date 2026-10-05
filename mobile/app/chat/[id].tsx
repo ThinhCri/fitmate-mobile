@@ -1,14 +1,16 @@
 import React, { useCallback, useState } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import {
   ConversationPresentation,
   ConversationDetailViewModel,
   ChatMessageViewModel,
+  ChatImageInput,
 } from '@/features/chat';
 import { ReportBlockModal, ReportRequest } from '@/features/community';
 import { getSocialRepository } from '@/repositories/socialRepository';
+import { ImagePickerService } from '@/services/imagePicker';
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,6 +18,7 @@ export default function ConversationScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<ChatImageInput[]>([]);
 
   useFocusEffect(useCallback(() => {
     if (!id) {
@@ -54,13 +57,17 @@ export default function ConversationScreen() {
     };
   }, [id]));
 
-  const handleSendMessage = async (text: string) => {
+  const handleSendMessage = async (text: string, imageOverride?: ChatImageInput[]) => {
     if (!conversation) return;
+    const images = imageOverride ?? selectedImages;
+    if (!text.trim() && images.length === 0) return;
+    if (!imageOverride) setSelectedImages([]);
     const tempMsg: ChatMessageViewModel = {
       id: `m-${Date.now()}`,
       senderId: 'my-id',
       senderName: 'Tôi',
       text,
+      imageUrls: images.map((image) => image.uri),
       timestamp: 'Vừa xong',
       status: 'sending',
       isSelf: true,
@@ -71,7 +78,7 @@ export default function ConversationScreen() {
     );
 
     try {
-      const sentMsg = await getSocialRepository().sendMessage(conversation.id, text);
+      const sentMsg = await getSocialRepository().sendMessage(conversation.id, text, images);
       setConversation((prev) =>
         prev
           ? {
@@ -100,7 +107,29 @@ export default function ConversationScreen() {
     const message = conversation?.messages.find((item) => item.id === messageId);
     if (!message) return;
     setConversation((prev) => prev ? { ...prev, messages: prev.messages.filter((item) => item.id !== messageId) } : prev);
-    void handleSendMessage(message.text);
+    void handleSendMessage(message.text, (message.imageUrls || []).map((uri) => ({ uri })));
+  };
+
+  const handleReactMessage = async (messageId: string, reaction: '❤️' | '👍' | '😂' | '😮' | '😢') => {
+    try {
+      const reactions = await getSocialRepository().toggleMessageReaction(messageId, reaction);
+      setConversation((current) => current ? {
+        ...current,
+        messages: current.messages.map((message) => message.id === messageId ? { ...message, reactions } : message),
+      } : current);
+    } catch (cause) {
+      Alert.alert('Không thể thả cảm xúc', cause instanceof Error ? cause.message : 'Vui lòng thử lại.');
+    }
+  };
+
+  const handlePickImages = async () => {
+    const remaining = 5 - selectedImages.length;
+    if (remaining <= 0) {
+      Alert.alert('Đã đủ ảnh', 'Mỗi tin nhắn được gửi tối đa 5 ảnh.');
+      return;
+    }
+    const picked = await ImagePickerService.pickMultipleFromLibrary(remaining);
+    setSelectedImages((current) => [...current, ...picked].slice(0, 5));
   };
 
   const handleSubmitReport = async (report: ReportRequest): Promise<boolean> => {
@@ -143,7 +172,11 @@ export default function ConversationScreen() {
         conversation={conversation}
         onBack={() => router.back()}
         onSendMessage={handleSendMessage}
+        selectedImageUrls={selectedImages.map((image) => image.uri)}
+        onPickImages={handlePickImages}
+        onRemoveImage={(index) => setSelectedImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
         onRetryMessage={handleRetryMessage}
+        onReactMessage={handleReactMessage}
         onParticipantPress={(participantId) =>
           router.push(`/community/user/${participantId}` as any)
         }
