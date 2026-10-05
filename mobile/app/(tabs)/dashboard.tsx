@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   InteractionManager,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import { useAuth } from '@/services/AuthContext';
 import { requestInitialPermissionsOnce } from '@/services/initialPermissions';
 import { getSupportRepository } from '@/repositories/supportRepository';
 import { colors, spacing, typography } from '@/theme/designTokens';
+import { realtimeService } from '@/services/realtime/realtimeService';
 
 export default function DashboardScreen() {
   const { user } = useAuth();
@@ -24,6 +26,7 @@ export default function DashboardScreen() {
   const [error, setError] = useState<string | null>(null);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const hasFocusedOnce = useRef(false);
+  const notificationLoadInFlight = useRef(false);
   const load = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true);
     else setLoading(true);
@@ -35,12 +38,16 @@ export default function DashboardScreen() {
   useEffect(() => { void load(); }, [load]);
 
   const loadUnreadNotificationCount = useCallback(async () => {
+    if (notificationLoadInFlight.current || AppState.currentState !== 'active') return;
+    notificationLoadInFlight.current = true;
     try {
       const notifications = await getSupportRepository().getNotifications();
       setUnreadNotificationCount(notifications.filter((item) => !item.isRead).length);
     } catch {
       // Notification count is secondary; keep the Dashboard usable if it fails.
       setUnreadNotificationCount(0);
+    } finally {
+      notificationLoadInFlight.current = false;
     }
   }, []);
 
@@ -49,8 +56,9 @@ export default function DashboardScreen() {
       void loadUnreadNotificationCount();
       if (hasFocusedOnce.current) void load(true);
       else hasFocusedOnce.current = true;
-      const timer = setInterval(() => void loadUnreadNotificationCount(), 15000);
-      return () => clearInterval(timer);
+      const unsubscribeRealtime = realtimeService.subscribe('notifications.updated', () => void loadUnreadNotificationCount());
+      const timer = setInterval(() => { if (AppState.currentState === 'active') void loadUnreadNotificationCount(); }, 15000);
+      return () => { clearInterval(timer); unsubscribeRealtime(); };
     }, [load, loadUnreadNotificationCount])
   );
 

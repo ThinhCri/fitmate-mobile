@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator, Alert } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator, Alert, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import {
@@ -7,13 +7,17 @@ import {
   NotificationItemViewModel,
 } from '@/features/support';
 import { getSupportRepository } from '@/repositories/supportRepository';
+import { realtimeService } from '@/services/realtime/realtimeService';
 
 export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<NotificationItemViewModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loadInFlight = useRef(false);
 
   const loadNotifications = useCallback(async () => {
+    if (loadInFlight.current || AppState.currentState !== 'active') return;
+    loadInFlight.current = true;
     try {
       const data = await getSupportRepository()
       .getNotifications()
@@ -22,14 +26,16 @@ export default function NotificationsScreen() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tải thông báo');
     } finally {
+      loadInFlight.current = false;
       setLoading(false);
     }
   }, []);
 
   useFocusEffect(useCallback(() => {
     void loadNotifications();
-    const timer = setInterval(() => void loadNotifications(), 15000);
-    return () => clearInterval(timer);
+    const unsubscribeRealtime = realtimeService.subscribe('notifications.updated', () => void loadNotifications());
+    const timer = setInterval(() => { if (AppState.currentState === 'active') void loadNotifications(); }, 15000);
+    return () => { clearInterval(timer); unsubscribeRealtime(); };
   }, [loadNotifications]));
 
   const handleSelectNotification = async (item: NotificationItemViewModel) => {

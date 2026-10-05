@@ -7,6 +7,25 @@ import { fetch as expoFetch } from 'expo/fetch';
 const RAW_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8080/api/v1';
 const API_BASE_URL = RAW_BASE_URL.replace(/\/+$/, '');
+let rateLimitedUntil = 0;
+
+async function waitForRateLimitWindow(signal: AbortSignal): Promise<void> {
+  const delayMs = rateLimitedUntil - Date.now();
+  if (delayMs <= 0) return;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort);
+      resolve();
+    }, delayMs);
+    const onAbort = () => {
+      clearTimeout(timer);
+      const error = new Error('Yêu cầu đã bị hủy');
+      error.name = 'AbortError';
+      reject(error);
+    };
+    signal.addEventListener('abort', onAbort, { once: true });
+  });
+}
 
 /**
  * Rewrites loopback URLs returned by a local Docker API to the same origin the
@@ -190,6 +209,7 @@ export async function apiClient<T>(
   const signal = options.signal || sessionManager.getAbortSignal();
 
   try {
+    await waitForRateLimitWindow(signal);
     const response = await fetch(url, {
       ...options,
       headers,
@@ -233,6 +253,13 @@ export async function apiClient<T>(
     }
 
     if (!response.ok) {
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        const retrySeconds = retryAfter && /^\d+$/.test(retryAfter)
+          ? Number(retryAfter)
+          : 5;
+        rateLimitedUntil = Math.max(rateLimitedUntil, Date.now() + Math.max(1, retrySeconds) * 1000);
+      }
       let errorData: unknown;
       try {
         errorData = await response.json();

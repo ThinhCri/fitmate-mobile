@@ -1,5 +1,5 @@
-import React, { useCallback, useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import {
@@ -7,6 +7,7 @@ import {
   FriendItemViewModel,
 } from '@/features/community';
 import { getSocialRepository } from '@/repositories/socialRepository';
+import { realtimeService } from '@/services/realtime/realtimeService';
 
 export default function FindFriendsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,8 +18,11 @@ export default function FindFriendsScreen() {
   const [allUsers, setAllUsers] = useState<FriendItemViewModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loadInFlight = useRef(false);
 
   const loadFriends = useCallback(async () => {
+    if (loadInFlight.current || AppState.currentState !== 'active') return;
+    loadInFlight.current = true;
     try {
       const data = await getSocialRepository()
       .getFriends()
@@ -31,14 +35,16 @@ export default function FindFriendsScreen() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tải danh sách bạn bè');
     } finally {
+      loadInFlight.current = false;
       setLoading(false);
     }
   }, []);
 
   useFocusEffect(useCallback(() => {
     void loadFriends();
-    const timer = setInterval(() => void loadFriends(), 15000);
-    return () => clearInterval(timer);
+    const unsubscribeRealtime = realtimeService.subscribe('friends.updated', () => void loadFriends());
+    const timer = setInterval(() => { if (AppState.currentState === 'active') void loadFriends(); }, 15000);
+    return () => { clearInterval(timer); unsubscribeRealtime(); };
   }, [loadFriends]));
 
   useEffect(() => {

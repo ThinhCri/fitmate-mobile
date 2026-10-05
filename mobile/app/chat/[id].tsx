@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator, Alert, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import {
@@ -11,6 +11,7 @@ import {
 import { ReportBlockModal, ReportRequest } from '@/features/community';
 import { getSocialRepository } from '@/repositories/socialRepository';
 import { ImagePickerService } from '@/services/imagePicker';
+import { realtimeService } from '@/services/realtime/realtimeService';
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -20,6 +21,8 @@ export default function ConversationScreen() {
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedImages, setSelectedImages] = useState<ChatImageInput[]>([]);
   const imageUrlCache = useRef(new Map<string, { urls: string[]; cachedAt: number }>());
+  const lastMarkedReadId = useRef<string | null>(null);
+  const refreshInFlight = useRef(false);
 
   useFocusEffect(useCallback(() => {
     if (!id) {
@@ -28,12 +31,17 @@ export default function ConversationScreen() {
     }
     let active = true;
     const refresh = async (initial = false) => {
+      if (refreshInFlight.current || AppState.currentState !== 'active') return;
+      refreshInFlight.current = true;
       try {
         const data = await getSocialRepository().getConversation(id);
         if (!active) return;
         const lastIncoming = [...data.messages].reverse().find((message) => !message.isSelf);
-        if (lastIncoming) {
-          void getSocialRepository().markConversationRead(data.id, lastIncoming.id).catch(() => undefined);
+        if (lastIncoming && lastMarkedReadId.current !== lastIncoming.id) {
+          lastMarkedReadId.current = lastIncoming.id;
+          void getSocialRepository().markConversationRead(data.id, lastIncoming.id).catch(() => {
+            if (lastMarkedReadId.current === lastIncoming.id) lastMarkedReadId.current = null;
+          });
         }
         setConversation((current) => {
           const now = Date.now();
@@ -57,14 +65,20 @@ export default function ConversationScreen() {
       } catch (err) {
         if (active && initial) setError(err instanceof Error ? err.message : 'Không thể tải cuộc trò chuyện');
       } finally {
+        refreshInFlight.current = false;
         if (active && initial) setLoading(false);
       }
     };
     void refresh(true);
-    const timer = setInterval(() => void refresh(), 3000);
+    const unsubscribeRealtime = realtimeService.subscribe('chat.updated', (payload) => {
+      const event = payload as { conversation_id?: string } | undefined;
+      if (!event?.conversation_id || event.conversation_id === id) void refresh();
+    });
+    const timer = setInterval(() => void refresh(), 15000);
     return () => {
       active = false;
       clearInterval(timer);
+      unsubscribeRealtime();
     };
   }, [id]));
 

@@ -785,3 +785,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - The production adapter uploads images under the `chat` category before sending storage keys; preview mode implements the same repository surface without becoming a production fallback.
 - Static verification only per repository rule: `git diff --check`. Runtime/typecheck remains for operator testing after applying the Backend migrations and rebuilding the API container.
 - Follow-up image rendering fix: conversation polling retains each message's signed URL for ten minutes instead of replacing it every three seconds, and remote chat images use Expo's memory/disk cache with a visible load-error state.
+
+## Session update — 2026-10-05 (realtime and rate-limit hardening)
+
+- Added an authenticated SignalR JSON/WebSocket client without a new npm dependency. It reconnects with bounded backoff, closes while Android is backgrounded, and dispatches chat, friend and notification invalidation events.
+- Chat, inbox, friend requests, notification inbox and Dashboard now refresh immediately on relevant events and retain a fifteen-second foreground-only poll as recovery rather than primary transport.
+- Open chat marks a message read only when the newest incoming message ID changes. All covered pollers suppress overlapping requests, and the API client honors the server's `Retry-After` cooldown after a 429 response.
+- Runtime/typecheck remains for operator testing per repository rule; static verification uses `git diff --check`.

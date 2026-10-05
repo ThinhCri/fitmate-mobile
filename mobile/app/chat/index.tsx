@@ -1,19 +1,23 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Text } from 'react-native';
+import { ActivityIndicator, AppState, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { ChatInboxPresentation, ConversationItemViewModel } from '@/features/chat';
 import { getSocialRepository } from '@/repositories/socialRepository';
+import { realtimeService } from '@/services/realtime/realtimeService';
 
 export default function ChatInboxScreen() {
   const [items, setItems] = useState<ConversationItemViewModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const hasLoadedRef = useRef(false);
+  const refreshInFlight = useRef(false);
 
   useFocusEffect(useCallback(() => {
     let active = true;
     const refresh = async (initial = false) => {
+      if (refreshInFlight.current || AppState.currentState !== 'active') return;
+      refreshInFlight.current = true;
       try {
         const conversations = await getSocialRepository().listConversations();
         if (!active) return;
@@ -25,14 +29,17 @@ export default function ChatInboxScreen() {
           setError(e instanceof Error ? e.message : 'Không thể tải hộp thư.');
         }
       } finally {
+        refreshInFlight.current = false;
         if (active && initial) setLoading(false);
       }
     };
     void refresh(true);
-    const timer = setInterval(() => void refresh(), 5000);
+    const unsubscribeRealtime = realtimeService.subscribe('chat.updated', () => void refresh());
+    const timer = setInterval(() => { if (AppState.currentState === 'active') void refresh(); }, 15000);
     return () => {
       active = false;
       clearInterval(timer);
+      unsubscribeRealtime();
     };
   }, []));
 
