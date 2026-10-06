@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
 import {
   ArrowLeft,
   AlertTriangle,
@@ -18,6 +18,10 @@ import {
   Sunset,
   Moon,
   Cookie,
+  Flame,
+  Beef,
+  Wheat,
+  Droplets,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { FoodCandidateViewModel, MealTimeSlot } from './nutritionTypes';
@@ -27,6 +31,7 @@ import { LoadingSkeleton, ErrorState } from '@/components/design-system/Feedback
 
 export interface CandidateReviewPresentationProps {
   imageUri?: string;
+  ingredients: string[];
   candidates: FoodCandidateViewModel[];
   mealSlot: MealTimeSlot;
   onMealSlotChange: (slot: MealTimeSlot) => void;
@@ -50,6 +55,7 @@ const SLOTS: Array<{ slot: MealTimeSlot; label: string; icon: React.ReactNode }>
 
 export const CandidateReviewPresentation: React.FC<CandidateReviewPresentationProps> = ({
   imageUri,
+  ingredients,
   candidates,
   mealSlot,
   onMealSlotChange,
@@ -135,7 +141,14 @@ export const CandidateReviewPresentation: React.FC<CandidateReviewPresentationPr
       {/* Scanned Image Preview & Meal Slot Choice */}
       <Card padding="md" style={styles.imageAndSlotCard}>
         {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
+          <Image
+            source={{ uri: imageUri }}
+            style={styles.previewImage}
+            contentFit="cover"
+            transition={180}
+            cachePolicy="memory-disk"
+            accessibilityLabel="Ảnh bữa ăn vừa phân tích"
+          />
         ) : null}
 
         <View style={styles.slotChoiceContainer}>
@@ -163,28 +176,57 @@ export const CandidateReviewPresentation: React.FC<CandidateReviewPresentationPr
         </View>
       </Card>
 
+      <Card padding="md" style={styles.ingredientsCard}>
+        <Text style={[typography.title3, styles.candidatesTitle]}>Thành phần AI nhận diện</Text>
+        <Text style={[typography.caption, styles.ingredientsHint]}>
+          Danh sách đầy đủ từ ảnh, không rút gọn nguyên liệu.
+        </Text>
+        <View style={styles.ingredientsList}>
+          {ingredients.map((ingredient, index) => (
+            <View key={`${ingredient}-${index}`} style={styles.ingredientRow}>
+              <View style={styles.ingredientIndex}>
+                <Text style={styles.ingredientIndexText}>{index + 1}</Text>
+              </View>
+              <Text style={[typography.bodyMedium, styles.ingredientName]}>{ingredient}</Text>
+            </View>
+          ))}
+          {ingredients.length === 0 ? (
+            <Text style={[typography.body, styles.emptyCandidatesText]}>
+              AI chưa trả về danh sách nguyên liệu cụ thể.
+            </Text>
+          ) : null}
+        </View>
+      </Card>
+
       {/* Candidates List */}
       <Card padding="md" style={styles.candidatesCard}>
-        <Text style={[typography.title3, styles.candidatesTitle]}>Món ăn nhận diện được</Text>
+        <Text style={[typography.title3, styles.candidatesTitle]}>Dinh dưỡng ước tính cho cả bữa</Text>
 
-        {candidates.map((cand) => (
-          <View key={cand.id} style={styles.candidateRow}>
+        {candidates.length === 0 ? (
+          <View style={styles.emptyCandidates}>
+            <Text style={[typography.body, styles.emptyCandidatesText]}>
+              AI chưa tách được thành phần món ăn. Bạn có thể thêm món thủ công.
+            </Text>
+          </View>
+        ) : null}
+
+        {candidates.map((cand, index) => (
+          <View key={cand.id} style={[styles.candidateRow, cand.selected && styles.candidateRowSelected]}>
             <TouchableOpacity
               onPress={() => onToggleCandidate(cand.id)}
               style={styles.checkboxTouchable}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: cand.selected }}
             >
-              {cand.selected ? (
-                <CheckCircle2 size={22} color={colors.primary} />
-              ) : (
-                <Circle size={22} color={colors.textMuted} />
-              )}
+              <View style={[styles.numberBadge, cand.selected && styles.numberBadgeSelected]}>
+                <Text style={[styles.numberText, cand.selected && styles.numberTextSelected]}>{index + 1}</Text>
+              </View>
+              {cand.selected ? <CheckCircle2 size={18} color={colors.primary} /> : <Circle size={18} color={colors.textMuted} />}
             </TouchableOpacity>
 
             <View style={styles.candidateInfo}>
               <View style={styles.candidateNameRow}>
-                <Text style={[typography.bodyBold, styles.candidateName]} numberOfLines={1}>
+                <Text style={[typography.bodyBold, styles.candidateName]}>
                   {cand.name}
                 </Text>
                 <TouchableOpacity
@@ -201,22 +243,27 @@ export const CandidateReviewPresentation: React.FC<CandidateReviewPresentationPr
                 {cand.portionDescription}
               </Text>
 
-              <View style={styles.candidateNutrients}>
-                <Text style={[typography.captionMedium, { color: colors.primary }]}>
-                  {cand.calories} kcal
-                </Text>
-                <Text style={styles.metaDot}>•</Text>
-                <Text style={[typography.caption, { color: colors.textSecondary }]}>
-                  P: {cand.protein}g
-                </Text>
-                <Text style={styles.metaDot}>•</Text>
-                <Text style={[typography.caption, { color: colors.textSecondary }]}>
-                  C: {cand.carbs}g
-                </Text>
-                <Text style={styles.metaDot}>•</Text>
-                <Text style={[typography.caption, { color: colors.textSecondary }]}>
-                  F: {cand.fat}g
-                </Text>
+              <View style={styles.nutrientGrid}>
+                <View style={[styles.nutrientTile, styles.calorieTile]}>
+                  <Flame size={15} color="#EA580C" />
+                  <Text style={styles.nutrientValue}>{cand.calories}</Text>
+                  <Text style={styles.nutrientLabel}>kcal</Text>
+                </View>
+                <View style={[styles.nutrientTile, styles.proteinTile]}>
+                  <Beef size={15} color="#DC2626" />
+                  <Text style={styles.nutrientValue}>{cand.protein}g</Text>
+                  <Text style={styles.nutrientLabel}>Đạm</Text>
+                </View>
+                <View style={[styles.nutrientTile, styles.carbsTile]}>
+                  <Wheat size={15} color="#B45309" />
+                  <Text style={styles.nutrientValue}>{cand.carbs}g</Text>
+                  <Text style={styles.nutrientLabel}>Tinh bột</Text>
+                </View>
+                <View style={[styles.nutrientTile, styles.fatTile]}>
+                  <Droplets size={15} color="#2563EB" />
+                  <Text style={styles.nutrientValue}>{cand.fat}g</Text>
+                  <Text style={styles.nutrientLabel}>Chất béo</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -243,11 +290,9 @@ export const CandidateReviewPresentation: React.FC<CandidateReviewPresentationPr
         </View>
 
         <View style={styles.totalsMacrosRow}>
-          <Text style={[typography.caption, styles.totalsMacroText]}>Đạm: {totalProtein}g</Text>
-          <Text style={styles.metaDot}>•</Text>
-          <Text style={[typography.caption, styles.totalsMacroText]}>Tinh bột: {totalCarbs}g</Text>
-          <Text style={styles.metaDot}>•</Text>
-          <Text style={[typography.caption, styles.totalsMacroText]}>Béo: {totalFat}g</Text>
+          <View style={styles.totalMacroItem}><Text style={styles.totalMacroValue}>{totalProtein}g</Text><Text style={styles.totalsMacroText}>Đạm</Text></View>
+          <View style={styles.totalMacroItem}><Text style={styles.totalMacroValue}>{totalCarbs}g</Text><Text style={styles.totalsMacroText}>Tinh bột</Text></View>
+          <View style={styles.totalMacroItem}><Text style={styles.totalMacroValue}>{totalFat}g</Text><Text style={styles.totalsMacroText}>Chất béo</Text></View>
         </View>
       </Card>
 
@@ -369,20 +414,91 @@ const styles = StyleSheet.create({
   candidatesTitle: {
     color: colors.textPrimary,
   },
+  ingredientsCard: {
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+  },
+  ingredientsHint: {
+    color: colors.textSecondary,
+  },
+  ingredientsList: {
+    gap: spacing.sm,
+  },
+  ingredientRow: {
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceSubtle,
+  },
+  ingredientIndex: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primaryLight,
+  },
+  ingredientIndexText: {
+    color: colors.primaryDark,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  ingredientName: {
+    flex: 1,
+    color: colors.textPrimary,
+  },
+  emptyCandidates: {
+    padding: spacing.lg,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceSubtle,
+  },
+  emptyCandidatesText: {
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
   candidateRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSubtle,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
     gap: spacing.md,
   },
+  candidateRowSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
+  },
   checkboxTouchable: {
-    paddingTop: 2,
-    minWidth: 40,
-    minHeight: 40,
+    minWidth: 34,
+    minHeight: 64,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: spacing.xs,
+  },
+  numberBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.surfaceSubtle,
+  },
+  numberBadgeSelected: {
+    backgroundColor: colors.primary,
+  },
+  numberText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  numberTextSelected: {
+    color: colors.white,
   },
   candidateInfo: {
     flex: 1,
@@ -403,14 +519,34 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 2,
   },
-  candidateNutrients: {
+  nutrientGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  nutrientTile: {
+    width: '48%',
+    minHeight: 54,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: 4,
+    gap: 5,
   },
-  metaDot: {
-    color: colors.textMuted,
+  calorieTile: { backgroundColor: '#FFF7ED' },
+  proteinTile: { backgroundColor: '#FEF2F2' },
+  carbsTile: { backgroundColor: '#FFFBEB' },
+  fatTile: { backgroundColor: '#EFF6FF' },
+  nutrientValue: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  nutrientLabel: {
+    color: colors.textSecondary,
+    fontSize: 11,
   },
   addMissingBtn: {
     minHeight: 44,
@@ -442,10 +578,24 @@ const styles = StyleSheet.create({
   },
   totalsMacrosRow: {
     flexDirection: 'row',
-    gap: spacing.xs,
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  totalMacroItem: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+  },
+  totalMacroValue: {
+    color: colors.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
   },
   totalsMacroText: {
     color: colors.textSecondary,
+    fontSize: 11,
   },
   ctaRow: {
     marginTop: spacing.xs,

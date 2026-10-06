@@ -17,8 +17,6 @@ import {
   Dumbbell,
   Calendar,
   Flame,
-  Droplet,
-  Plus,
   ChevronRight,
   CheckCircle2,
 } from 'lucide-react-native';
@@ -38,10 +36,12 @@ export interface MemberHomePresentationProps {
   onLogMealPress?: () => void;
   onScanMealPress?: () => void;
   onStartWorkoutPress?: () => void;
-  onFindTrainerPress?: () => void;
+  onUpcomingAppointmentPress?: (appointmentId: string) => void;
   onWorkoutDetailPress?: (workoutId: string) => void;
   onNotificationPress?: () => void;
   onAccountPress?: () => void;
+  onGoalsPress?: () => void;
+  onMealPress?: (mealId: string) => void;
   onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
@@ -53,10 +53,12 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
   onLogMealPress,
   onScanMealPress,
   onStartWorkoutPress,
-  onFindTrainerPress,
+  onUpcomingAppointmentPress,
   onWorkoutDetailPress,
   onNotificationPress,
   onAccountPress,
+  onGoalsPress,
+  onMealPress,
   onScroll: externalOnScroll,
 }) => {
   const { onScroll: handleScroll, scrollEventThrottle } = useTabBarScroll(externalOnScroll);
@@ -175,6 +177,12 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
         <Text style={[typography.caption, styles.progressCaption]}>
           {data.calories.target > 0 ? `Đã đạt ${caloriePercent}% mục tiêu năng lượng hàng ngày` : 'Chưa thiết lập mục tiêu năng lượng'}
         </Text>
+        {data.calories.target <= 0 ? (
+          <TouchableOpacity style={styles.goalCta} onPress={onGoalsPress} accessibilityRole="button">
+            <Text style={[typography.captionMedium, styles.goalCtaText]}>Thiết lập mục tiêu dinh dưỡng</Text>
+            <ChevronRight size={17} color={colors.primary} />
+          </TouchableOpacity>
+        ) : null}
 
         <View style={styles.macrosRow}>
           <View style={styles.macroCol}>
@@ -262,31 +270,31 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
             <Text style={[typography.caption, styles.actionSubtitle]}>Nhận diện AI</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {data.todayWorkout ? <TouchableOpacity
             style={[styles.quickActionCard, shadow.card]}
-            onPress={onStartWorkoutPress}
+            onPress={() => onWorkoutDetailPress?.(data.todayWorkout!.id)}
             activeOpacity={0.7}
             accessibilityRole="button"
           >
             <View style={[styles.actionIconBox, { backgroundColor: colors.warningLight }]}>
               <Dumbbell size={22} color="#D97706" />
             </View>
-            <Text style={[typography.bodyMedium, styles.actionTitle]}>Bắt đầu tập</Text>
-            <Text style={[typography.caption, styles.actionSubtitle]}>Kế hoạch ngày</Text>
-          </TouchableOpacity>
+            <Text style={[typography.bodyMedium, styles.actionTitle]}>{data.todayWorkout.resourceType === 'session' ? 'Tiếp tục tập' : 'Buổi tập hôm nay'}</Text>
+            <Text style={[typography.caption, styles.actionSubtitle]}>{data.todayWorkout.title}</Text>
+          </TouchableOpacity> : null}
 
-          <TouchableOpacity
+          {data.upcomingAppointment ? <TouchableOpacity
             style={[styles.quickActionCard, shadow.card]}
-            onPress={onFindTrainerPress}
+            onPress={() => onUpcomingAppointmentPress?.(data.upcomingAppointment!.id)}
             activeOpacity={0.7}
             accessibilityRole="button"
           >
             <View style={[styles.actionIconBox, { backgroundColor: '#F3E8FF' }]}>
               <Calendar size={22} color="#9333EA" />
             </View>
-            <Text style={[typography.bodyMedium, styles.actionTitle]}>Tìm HLV</Text>
-            <Text style={[typography.caption, styles.actionSubtitle]}>Đặt lịch PT</Text>
-          </TouchableOpacity>
+            <Text style={[typography.bodyMedium, styles.actionTitle]}>Lịch hẹn sắp tới</Text>
+            <Text style={[typography.caption, styles.actionSubtitle]}>{data.upcomingAppointment.trainerName}</Text>
+          </TouchableOpacity> : null}
         </View>
       </View>
 
@@ -307,7 +315,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
                 {data.todayWorkout.title}
               </Text>
               <Text style={[typography.caption, styles.workoutDetails]}>
-                {data.todayWorkout.durationMinutes} phút • {data.todayWorkout.exerciseCount} bài tập
+                {data.todayWorkout.durationMinutes} phút{data.todayWorkout.exerciseCount > 0 ? ` • ${data.todayWorkout.exerciseCount} bài tập` : ''}
               </Text>
             </View>
             <ChevronRight size={20} color={colors.textMuted} />
@@ -326,39 +334,19 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
         )}
       </View>
 
-      <View style={[styles.waterCard, shadow.card]}>
-        <View style={styles.waterHeader}>
-          <View style={styles.waterTitleRow}>
-            <Droplet size={20} color={colors.info} />
-            <Text style={[typography.title3, styles.waterTitle]}>Nước uống trong ngày</Text>
-          </View>
-          <Text style={[typography.bodyBold, styles.waterAmount]}>
-            {data.water.targetMl > 0 ? `${data.water.consumedMl} / ${data.water.targetMl} ml` : 'Chưa có dữ liệu'}
-          </Text>
+      {data.upcomingAppointment ? (
+        <View style={styles.sectionMargin}>
+          <SectionHeader title="Lịch hẹn PT sắp tới" />
+          <TouchableOpacity style={[styles.workoutCard, shadow.card]} onPress={() => onUpcomingAppointmentPress?.(data.upcomingAppointment!.id)} accessibilityRole="button">
+            <View style={styles.workoutIconCircle}><Calendar size={23} color={colors.white} /></View>
+            <View style={styles.workoutInfoCol}>
+              <Text style={[typography.title3, styles.workoutTitle]}>{data.upcomingAppointment.trainerName}</Text>
+              <Text style={[typography.caption, styles.workoutDetails]}>{new Date(data.upcomingAppointment.slotStartUtc).toLocaleString('vi-VN')} • {data.upcomingAppointment.durationMinutes} phút</Text>
+            </View>
+            <ChevronRight size={20} color={colors.textMuted} />
+          </TouchableOpacity>
         </View>
-
-        <View style={styles.waterProgressBarBg}>
-          <View
-            style={[
-              styles.waterProgressBarFill,
-              {
-                width: `${data.water.targetMl > 0 ? Math.min(100, Math.round((data.water.consumedMl / data.water.targetMl) * 100)) : 0}%`,
-              },
-            ]}
-          />
-        </View>
-
-        {data.water.targetMl > 0 && <TouchableOpacity
-          style={styles.addWaterButton}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-        >
-          <Plus size={16} color={colors.info} />
-          <Text style={[typography.captionMedium, styles.addWaterText]}>
-            +250ml nước vừa uống
-          </Text>
-        </TouchableOpacity>}
-      </View>
+      ) : null}
 
       <View style={styles.sectionMargin}>
         <SectionHeader
@@ -366,8 +354,9 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
           actionText="+ Thêm món"
           onAction={onLogMealPress}
         />
+        {data.todayMeals.length === 0 ? <Text style={[typography.body, styles.noWorkoutText]}>Chưa có bữa ăn nào được ghi hôm nay.</Text> : null}
         {data.todayMeals.map((meal) => (
-          <View key={meal.id} style={[styles.mealItemRow, shadow.card]}>
+          <TouchableOpacity key={meal.id} style={[styles.mealItemRow, shadow.card]} onPress={() => onMealPress?.(meal.id)} accessibilityRole="button">
             <View style={styles.mealIconBox}>
               <CheckCircle2 size={18} color={colors.primary} />
             </View>
@@ -382,7 +371,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
             <Text style={[typography.bodyBold, styles.mealCalories]}>
               {meal.calories} kcal
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
       </ScrollView>
@@ -528,6 +517,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     textAlign: 'center',
   },
+  goalCta: {
+    minHeight: 44,
+    marginTop: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.primaryLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  goalCtaText: { color: colors.primary },
   macrosRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

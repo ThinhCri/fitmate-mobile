@@ -21,6 +21,8 @@ export interface FoodItemViewModel {
   loggedAt?: string;
   photoUri?: string;
   notes?: string;
+  aiConfidence?: number;
+  confirmed?: boolean;
 }
 
 export interface MealSectionViewModel {
@@ -56,8 +58,15 @@ export interface FoodCandidateViewModel {
   protein: number;
   carbs: number;
   fat: number;
+  grams?: number;
+  notes?: string;
   confidenceScore?: number; // only if backend provides
   selected: boolean;
+}
+
+export interface NutritionScanResultViewModel {
+  candidates: FoodCandidateViewModel[];
+  ingredients: string[];
 }
 
 export interface PlannedMealSlotViewModel {
@@ -67,5 +76,13 @@ export interface PlannedMealSlotViewModel {
   mealSlot: MealTimeSlot;
   foodName: string;
   calories: number;
+  portion?: string;
+  grams?: number;
+  proteinGrams: number;
+  carbsGrams: number;
+  fatGrams: number;
+  notes?: string;
   isCompleted: boolean;
+  consumedDate?: string;
+  mealLogId?: string;
 }

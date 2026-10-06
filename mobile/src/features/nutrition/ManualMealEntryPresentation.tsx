@@ -40,11 +40,14 @@ export interface ManualMealEntryFormValues {
 
 export interface ManualMealEntryPresentationProps {
   initialValues?: Partial<FoodItemViewModel>;
+  initialQuantity?: string;
+  initialUnit?: string;
   isEditing?: boolean;
   onBack: () => void;
   onSubmit: (values: ManualMealEntryFormValues) => void;
   onDelete?: () => void;
   isSubmitting?: boolean;
+  submitLabel?: string;
 }
 
 const MEAL_SLOTS: Array<{ slot: MealTimeSlot; label: string; icon: React.ReactNode }> = [
@@ -58,16 +61,19 @@ const UNITS = ['Bát / Tô', 'Gam (g)', 'Chén', 'Khẩu phần', 'Dĩa / Đĩa'
 
 export const ManualMealEntryPresentation: React.FC<ManualMealEntryPresentationProps> = ({
   initialValues,
+  initialQuantity,
+  initialUnit,
   isEditing = false,
   onBack,
   onSubmit,
   onDelete,
   isSubmitting = false,
+  submitLabel,
 }) => {
   const [name, setName] = useState(initialValues?.name ?? '');
   const [mealSlot, setMealSlot] = useState<MealTimeSlot>(initialValues?.mealSlot ?? 'breakfast');
-  const [quantity, setQuantity] = useState('1');
-  const [unit, setUnit] = useState('Bát / Tô');
+  const [quantity, setQuantity] = useState(initialQuantity ?? '1');
+  const [unit, setUnit] = useState(initialUnit || 'Bát / Tô');
   const [grams, setGrams] = useState(initialValues?.grams ? String(initialValues.grams) : '200');
   const [calories, setCalories] = useState(
     initialValues?.calories ? String(initialValues.calories) : ''
@@ -324,7 +330,7 @@ export const ManualMealEntryPresentation: React.FC<ManualMealEntryPresentationPr
         {/* Submit Actions */}
         <View style={styles.ctaContainer}>
           <PrimaryButton
-            label={isEditing ? 'Lưu thay đổi' : 'Lưu vào nhật ký'}
+            label={submitLabel ?? (isEditing ? 'Lưu thay đổi' : 'Lưu vào nhật ký')}
             onPress={handleSubmit}
             loading={isSubmitting}
             fullWidth

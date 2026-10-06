@@ -16,6 +16,7 @@ import {
   Moon,
   Cookie,
   Plus,
+  Trash2,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { PlannedMealSlotViewModel, MealTimeSlot } from './nutritionTypes';
@@ -25,9 +26,11 @@ export interface WeeklyMenuPresentationProps {
   onBack: () => void;
   onSelectDay: (dayIndex: number) => void;
   selectedDayIndex: number;
+  todayDayIndex: number;
   menuSlots: PlannedMealSlotViewModel[];
   onMarkConsumed: (slot: PlannedMealSlotViewModel) => void;
   onReplaceMeal: (slot: PlannedMealSlotViewModel) => void;
+  onDeleteMeal: (slot: PlannedMealSlotViewModel) => void;
   onAddMealSlot: (mealSlot: MealTimeSlot) => void;
 }
 
@@ -44,9 +47,11 @@ export const WeeklyMenuPresentation: React.FC<WeeklyMenuPresentationProps> = ({
   onBack,
   onSelectDay,
   selectedDayIndex,
+  todayDayIndex,
   menuSlots,
   onMarkConsumed,
   onReplaceMeal,
+  onDeleteMeal,
   onAddMealSlot,
 }) => {
   return (
@@ -98,7 +103,8 @@ export const WeeklyMenuPresentation: React.FC<WeeklyMenuPresentationProps> = ({
       <View style={styles.slotsCol}>
         {(['breakfast', 'lunch', 'dinner', 'snack'] as MealTimeSlot[]).map((slotKey) => {
           const slotMeta = MEAL_LABELS[slotKey];
-          const items = menuSlots.filter((s) => s.mealSlot === slotKey);
+          const items = menuSlots.filter((s) => s.dayIndex === selectedDayIndex && s.mealSlot === slotKey);
+          const isFutureDay = selectedDayIndex > todayDayIndex;
 
           return (
             <Card key={slotKey} padding="md" style={styles.slotCard}>
@@ -138,9 +144,11 @@ export const WeeklyMenuPresentation: React.FC<WeeklyMenuPresentationProps> = ({
                     <View style={styles.itemActions}>
                       <TouchableOpacity
                         onPress={() => onMarkConsumed(item)}
-                        style={styles.consumedBtn}
+                        style={[styles.consumedBtn, (item.isCompleted || isFutureDay) && styles.disabledAction]}
+                        disabled={item.isCompleted || isFutureDay}
                         accessibilityRole="button"
-                        accessibilityLabel="Đánh dấu đã ăn"
+                        accessibilityLabel={isFutureDay ? 'Chưa thể xác nhận món của ngày tương lai' : 'Đánh dấu đã ăn'}
+                        accessibilityState={{ disabled: item.isCompleted || isFutureDay }}
                       >
                         <CheckCircle2 size={16} color={item.isCompleted ? colors.success : colors.textMuted} />
                         <Text
@@ -149,7 +157,7 @@ export const WeeklyMenuPresentation: React.FC<WeeklyMenuPresentationProps> = ({
                             { color: item.isCompleted ? colors.success : colors.textSecondary },
                           ]}
                         >
-                          {item.isCompleted ? 'Đã ăn' : 'Đã ăn món này'}
+                          {item.isCompleted ? 'Đã ăn' : isFutureDay ? 'Chưa đến ngày' : 'Đã ăn món này'}
                         </Text>
                       </TouchableOpacity>
 
@@ -161,6 +169,15 @@ export const WeeklyMenuPresentation: React.FC<WeeklyMenuPresentationProps> = ({
                       >
                         <RefreshCw size={14} color={colors.primary} />
                         <Text style={[typography.captionMedium, styles.replaceText]}>Thay món</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => onDeleteMeal(item)}
+                        style={styles.deleteBtn}
+                        accessibilityRole="button"
+                        accessibilityLabel="Xóa món khỏi kế hoạch"
+                      >
+                        <Trash2 size={15} color={colors.danger} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -311,5 +328,14 @@ const styles = StyleSheet.create({
   },
   replaceText: {
     color: colors.primary,
+  },
+  deleteBtn: {
+    minWidth: 36,
+    minHeight: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabledAction: {
+    opacity: 0.75,
   },
 });

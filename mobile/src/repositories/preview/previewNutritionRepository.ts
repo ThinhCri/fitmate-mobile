@@ -117,6 +117,9 @@ let previewWeeklyMenu: PlannedMealSlotViewModel[] = [
     mealSlot: 'breakfast',
     foodName: 'Cháo yến mạch sữa hạt & quả mọng',
     calories: 320,
+    proteinGrams: 12,
+    carbsGrams: 52,
+    fatGrams: 8,
     isCompleted: true,
   },
   {
@@ -126,6 +129,9 @@ let previewWeeklyMenu: PlannedMealSlotViewModel[] = [
     mealSlot: 'lunch',
     foodName: 'Cơm gạo lứt + ức gà áp chảo + rau củ luộc',
     calories: 580,
+    proteinGrams: 45,
+    carbsGrams: 65,
+    fatGrams: 14,
     isCompleted: true,
   },
   {
@@ -135,6 +141,9 @@ let previewWeeklyMenu: PlannedMealSlotViewModel[] = [
     mealSlot: 'dinner',
     foodName: 'Salad cá hồi áp chảo dầu ô liu',
     calories: 420,
+    proteinGrams: 32,
+    carbsGrams: 20,
+    fatGrams: 22,
     isCompleted: false,
   },
   {
@@ -144,19 +153,22 @@ let previewWeeklyMenu: PlannedMealSlotViewModel[] = [
     mealSlot: 'snack',
     foodName: 'Sữa chua Hy Lạp + hạnh nhân',
     calories: 160,
+    proteinGrams: 12,
+    carbsGrams: 14,
+    fatGrams: 6,
     isCompleted: false,
   },
 ];
 
 export class PreviewNutritionRepository implements INutritionRepository {
   async scanMealImage(_uri: string, _mimeType?: string | null) {
-    return [];
+    return { candidates: [], ingredients: [] };
   }
   async getDaySummary(_dateString?: string): Promise<DayNutritionSummaryViewModel> {
     return JSON.parse(JSON.stringify(previewSummary));
   }
 
-  async getWeeklyMenu(): Promise<PlannedMealSlotViewModel[]> {
+  async getWeeklyMenu(_weekStart: string): Promise<PlannedMealSlotViewModel[]> {
     return JSON.parse(JSON.stringify(previewWeeklyMenu));
   }
 
@@ -193,6 +205,18 @@ export class PreviewNutritionRepository implements INutritionRepository {
     return newItem;
   }
 
+  async updateFoodItem(id: string, item: Omit<FoodItemViewModel, 'id'>): Promise<FoodItemViewModel> {
+    await this.deleteFoodItem(id);
+    const updated = { ...item, id };
+    const meal = previewSummary.meals.find((entry) => entry.slot === item.mealSlot);
+    if (meal) {
+      meal.items.push(updated);
+      meal.totalCalories += updated.calories;
+      previewSummary.calories.consumed += updated.calories;
+    }
+    return updated;
+  }
+
   async deleteFoodItem(id: string): Promise<void> {
     for (const meal of previewSummary.meals) {
       const idx = meal.items.findIndex((i) => i.id === id);
@@ -206,10 +230,28 @@ export class PreviewNutritionRepository implements INutritionRepository {
     }
   }
 
-  async updatePlannedSlot(slotId: string, isCompleted: boolean): Promise<void> {
-    const slot = previewWeeklyMenu.find((s) => s.id === slotId);
+  async addPlannedMeal(item: Omit<PlannedMealSlotViewModel, 'id' | 'isCompleted'>, _weekStart: string) {
+    const created = { ...item, id: `plan-${Date.now()}`, isCompleted: false };
+    previewWeeklyMenu.push(created);
+    return created;
+  }
+
+  async updatePlannedMeal(id: string, item: Omit<PlannedMealSlotViewModel, 'id' | 'isCompleted'>, _weekStart: string) {
+    const index = previewWeeklyMenu.findIndex((entry) => entry.id === id);
+    const updated = { ...item, id, isCompleted: previewWeeklyMenu[index]?.isCompleted ?? false };
+    if (index >= 0) previewWeeklyMenu[index] = updated;
+    return updated;
+  }
+
+  async deletePlannedMeal(id: string): Promise<void> {
+    previewWeeklyMenu = previewWeeklyMenu.filter((entry) => entry.id !== id);
+  }
+
+  async consumePlannedMeal(id: string, date: string): Promise<void> {
+    const slot = previewWeeklyMenu.find((entry) => entry.id === id);
     if (slot) {
-      slot.isCompleted = isCompleted;
+      slot.isCompleted = true;
+      slot.consumedDate = date;
     }
   }
 }

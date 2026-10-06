@@ -82,10 +82,12 @@ export default function DashboardScreen() {
     onLogMealPress={() => router.push('/nutrition/manual-entry' as never)}
     onScanMealPress={() => router.push('/nutrition/scan' as never)}
     onStartWorkoutPress={() => router.push('/(tabs)/workout' as never)}
-    onFindTrainerPress={() => router.push('/(tabs)/marketplace' as never)}
-    onWorkoutDetailPress={(id) => router.push(`/workout/plan/${id}` as never)}
+    onWorkoutDetailPress={(id) => router.push(data.todayWorkout?.resourceType === 'session' ? `/workout/session/${id}` as never : `/workout/${id}` as never)}
+    onUpcomingAppointmentPress={(id) => router.push(`/booking/${id}` as never)}
     onNotificationPress={() => router.push('/notifications' as never)}
-    onAccountPress={() => router.push('/account' as never)} />;
+    onAccountPress={() => router.push('/account' as never)}
+    onGoalsPress={() => router.push('/nutrition/goals' as never)}
+    onMealPress={(id) => router.push(`/nutrition/${id}` as never)} />;
 }
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl, backgroundColor: colors.background },

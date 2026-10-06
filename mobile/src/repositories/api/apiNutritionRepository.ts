@@ -9,6 +9,85 @@ import type { INutritionRepository } from '../nutritionRepository';
 import { apiClient, apiUploadFile } from '@/services/api/client';
 
 export class ApiNutritionRepository implements INutritionRepository {
+  private normalizeServing(portion?: string, grams?: number) {
+    const normalized = portion?.trim() || '';
+    const quantityMatch = normalized.match(/^([\d]+(?:[.,]\d+)?)(?:\s+|$)/);
+    const parsedQuantity = quantityMatch
+      ? Number.parseFloat(quantityMatch[1].replace(',', '.'))
+      : 1;
+    const unit = quantityMatch
+      ? normalized.slice(quantityMatch[0].length).trim()
+      : normalized;
+
+    return {
+      quantity: Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1,
+      unit: unit && unit.length <= 50 ? unit : 'khẩu phần',
+      portionSize: grams && grams > 0 ? grams : 1,
+    };
+  }
+
+  private mapPlannedMeal(raw: any): PlannedMealSlotViewModel {
+    const quantity = raw.serving_quantity ?? 1;
+    const unit = raw.serving_unit || 'khẩu phần';
+    return {
+      id: raw.id,
+      dayIndex: raw.day_of_week,
+      dayLabel: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][raw.day_of_week] || '',
+      mealSlot: raw.meal_slot,
+      foodName: raw.food_name,
+      calories: raw.calories ?? 0,
+      portion: `${quantity} ${unit}`,
+      grams: raw.grams ?? undefined,
+      proteinGrams: raw.protein_g ?? 0,
+      carbsGrams: raw.carbs_g ?? 0,
+      fatGrams: raw.fat_g ?? 0,
+      notes: raw.notes ?? undefined,
+      isCompleted: raw.is_consumed ?? false,
+      consumedDate: raw.consumed_date ?? undefined,
+      mealLogId: raw.meal_log_id ?? undefined,
+    };
+  }
+
+  private plannedMealPayload(item: Omit<PlannedMealSlotViewModel, 'id' | 'isCompleted'>) {
+    return {
+      day_of_week: item.dayIndex,
+      meal_slot: item.mealSlot,
+      food_name: item.foodName,
+      serving_quantity: Number.parseFloat(item.portion || '') || 1,
+      serving_unit: (item.portion || '').replace(/^\s*[\d.,]+\s*/, '') || 'khẩu phần',
+      grams: item.grams,
+      calories: item.calories,
+      protein_g: item.proteinGrams,
+      carbs_g: item.carbsGrams,
+      fat_g: item.fatGrams,
+      notes: item.notes,
+    };
+  }
+  private mapMeal(raw: any): FoodItemViewModel {
+    const quantity = raw.serving_quantity ?? raw.portion_size ?? 1;
+    const unit = raw.serving_unit || 'khẩu phần';
+    const source = raw.source === 'ai_estimate'
+      ? (raw.confirmed ? 'ai_confirmed' : 'ai_estimated')
+      : 'manual';
+    return {
+      id: raw.id,
+      name: raw.food_name,
+      portion: `${quantity} ${unit}`,
+      grams: raw.grams ?? undefined,
+      calories: raw.calories ?? 0,
+      proteinGrams: raw.protein_g ?? 0,
+      carbsGrams: raw.carbs_g ?? 0,
+      fatGrams: raw.fat_g ?? 0,
+      source,
+      mealSlot: raw.meal_slot || 'lunch',
+      loggedAt: raw.logged_at,
+      photoUri: raw.image_url ?? undefined,
+      notes: raw.notes ?? undefined,
+      aiConfidence: raw.ai_confidence ?? undefined,
+      confirmed: raw.confirmed ?? false,
+    };
+  }
+
   async getDaySummary(dateString?: string): Promise<DayNutritionSummaryViewModel> {
     const today = new Date();
     const effectiveDateStr =
@@ -44,26 +123,10 @@ export class ApiNutritionRepository implements INutritionRepository {
       totalCarbs += carbs;
       totalFat += fat;
 
-      const hour = m.logged_at ? new Date(m.logged_at).getHours() : 12;
-      let slot: MealTimeSlot = 'lunch';
-      if (hour < 10) slot = 'breakfast';
-      else if (hour < 15) slot = 'lunch';
-      else if (hour < 20) slot = 'dinner';
-      else slot = 'snack';
-
-      sections[slot].push({
-        id: m.id,
-        name: m.food_name,
-        portion: `${m.portion_size || 1} phần`,
-        calories: cal,
-        proteinGrams: prot,
-        carbsGrams: carbs,
-        fatGrams: fat,
-        source: m.source === 'ai_estimate' ? 'ai_estimated' : 'manual',
-        mealSlot: slot,
-        loggedAt: m.logged_at,
-        photoUri: m.image_url ?? undefined,
-      });
+      const slot: MealTimeSlot = ['breakfast', 'lunch', 'dinner', 'snack'].includes(m.meal_slot)
+        ? m.meal_slot
+        : 'lunch';
+      sections[slot].push(this.mapMeal(m));
     });
 
     const isToday =
@@ -120,47 +183,26 @@ export class ApiNutritionRepository implements INutritionRepository {
         burnedExercise: dashboard?.workout?.total_calories_burned ?? 0,
       },
       macros: {
-        protein: { current: totalProtein, target: 0 },
-        carbs: { current: totalCarbs, target: 0 },
-        fat: { current: totalFat, target: 0 },
+        protein: { current: totalProtein, target: dashboard?.nutrition?.target_protein_g ?? 0 },
+        carbs: { current: totalCarbs, target: dashboard?.nutrition?.target_carbs_g ?? 0 },
+        fat: { current: totalFat, target: dashboard?.nutrition?.target_fat_g ?? 0 },
       },
       meals: mealSections,
     };
   }
 
-  async getWeeklyMenu(): Promise<PlannedMealSlotViewModel[]> {
-    const raw = await apiClient<any>('/me/nutrition/schedule');
-    if (!raw) return [];
-    const slots: MealTimeSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'];
-    return slots.filter((slot) => typeof raw[slot] === 'string' && raw[slot].trim()).map((slot) => ({
-      id: `${raw.id || 'schedule'}-${slot}`,
-      dayIndex: 0,
-      dayLabel: 'Hôm nay',
-      mealSlot: slot,
-      foodName: raw[slot],
-      calories: 0,
-      isCompleted: false,
-    }));
+  async getWeeklyMenu(weekStart: string): Promise<PlannedMealSlotViewModel[]> {
+    const raw = await apiClient<any[]>(`/me/nutrition/weekly-plan?week_start=${encodeURIComponent(weekStart)}`);
+    return (Array.isArray(raw) ? raw : []).map((item) => this.mapPlannedMeal(item));
   }
 
   async getFoodItem(id: string): Promise<FoodItemViewModel> {
     const raw = await apiClient<any>('/me/nutrition/meals/' + encodeURIComponent(id));
-    return {
-      id: raw.id,
-      name: raw.food_name,
-      portion: `${raw.portion_size || 1} phần`,
-      calories: raw.calories || 0,
-      proteinGrams: raw.protein_g || 0,
-      carbsGrams: raw.carbs_g || 0,
-      fatGrams: raw.fat_g || 0,
-      source: raw.source === 'ai_estimate' ? 'ai_estimated' : 'manual',
-      mealSlot: 'lunch',
-      loggedAt: raw.logged_at,
-      photoUri: raw.image_url ?? undefined,
-    };
+    return this.mapMeal(raw);
   }
 
   async addFoodItem(item: Omit<FoodItemViewModel, 'id'>): Promise<FoodItemViewModel> {
+    const serving = this.normalizeServing(item.portion, item.grams);
     const raw = await apiClient<any>('/me/nutrition/meals', {
       method: 'POST',
       body: JSON.stringify({
@@ -169,22 +211,41 @@ export class ApiNutritionRepository implements INutritionRepository {
         protein_g: item.proteinGrams,
         carbs_g: item.carbsGrams,
         fat_g: item.fatGrams,
-        portion_size: item.grams ? item.grams / 100 : 1,
+        portion_size: serving.portionSize,
+        meal_slot: item.mealSlot,
+        serving_quantity: serving.quantity,
+        serving_unit: serving.unit,
+        grams: item.grams,
+        notes: item.notes,
+        source: item.source === 'ai_confirmed' || item.source === 'ai_estimated' ? 'ai_estimate' : 'manual',
+        ai_confidence: item.aiConfidence,
+        confirmed: item.confirmed ?? true,
         logged_at: item.loggedAt || new Date().toISOString(),
       }),
     });
-    return {
-      id: raw.id,
-      name: raw.food_name,
-      portion: item.portion,
-      calories: raw.calories,
-      proteinGrams: raw.protein_g,
-      carbsGrams: raw.carbs_g,
-      fatGrams: raw.fat_g,
-      source: 'manual',
-      mealSlot: item.mealSlot,
-      loggedAt: raw.logged_at,
-    };
+    return this.mapMeal(raw);
+  }
+
+  async updateFoodItem(id: string, item: Omit<FoodItemViewModel, 'id'>): Promise<FoodItemViewModel> {
+    const serving = this.normalizeServing(item.portion, item.grams);
+    const raw = await apiClient<any>('/me/nutrition/meals/' + encodeURIComponent(id), {
+      method: 'PATCH',
+      body: JSON.stringify({
+        food_name: item.name,
+        calories: item.calories,
+        protein_g: item.proteinGrams,
+        carbs_g: item.carbsGrams,
+        fat_g: item.fatGrams,
+        portion_size: serving.portionSize,
+        meal_slot: item.mealSlot,
+        serving_quantity: serving.quantity,
+        serving_unit: serving.unit,
+        grams: item.grams,
+        notes: item.notes ?? '',
+        confirmed: item.confirmed ?? true,
+      }),
+    });
+    return this.mapMeal(raw);
   }
 
   async deleteFoodItem(id: string): Promise<void> {
@@ -193,9 +254,31 @@ export class ApiNutritionRepository implements INutritionRepository {
     });
   }
 
-  async updatePlannedSlot(slotId: string, isCompleted: boolean): Promise<void> {
-    if (isCompleted) return;
-    throw new Error('Máy chủ chưa hỗ trợ trạng thái hoàn thành cho thực đơn.');
+  async addPlannedMeal(item: Omit<PlannedMealSlotViewModel, 'id' | 'isCompleted'>, weekStart: string) {
+    const raw = await apiClient<any>(`/me/nutrition/weekly-plan?week_start=${encodeURIComponent(weekStart)}`, {
+      method: 'POST',
+      body: JSON.stringify(this.plannedMealPayload(item)),
+    });
+    return this.mapPlannedMeal(raw);
+  }
+
+  async updatePlannedMeal(id: string, item: Omit<PlannedMealSlotViewModel, 'id' | 'isCompleted'>, weekStart: string) {
+    const raw = await apiClient<any>(`/me/nutrition/weekly-plan/${encodeURIComponent(id)}?week_start=${encodeURIComponent(weekStart)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(this.plannedMealPayload(item)),
+    });
+    return this.mapPlannedMeal(raw);
+  }
+
+  async deletePlannedMeal(id: string): Promise<void> {
+    await apiClient(`/me/nutrition/weekly-plan/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  }
+
+  async consumePlannedMeal(id: string, date: string): Promise<void> {
+    await apiClient(`/me/nutrition/weekly-plan/${encodeURIComponent(id)}/consume`, {
+      method: 'POST',
+      body: JSON.stringify({ date }),
+    });
   }
 
   async scanMealImage(uri: string, detectedMimeType?: string | null) {
@@ -209,6 +292,7 @@ export class ApiNutritionRepository implements INutritionRepository {
           : 'image/jpeg';
     const raw = await apiUploadFile<{
       items?: Array<{ name?: string; calories?: number; protein_g?: number; carbs_g?: number; fat_g?: number }>;
+      ingredients?: string[];
       confidence?: number | null;
       note?: string | null;
     }>(
@@ -217,17 +301,22 @@ export class ApiNutritionRepository implements INutritionRepository {
       mimeType,
       {}
     );
-    return (raw.items || []).map((item, index) => ({
-      id: `scan-${index}`,
-      name: item.name || 'Món ăn nhận diện',
-      portionDescription: raw.note || 'Khẩu phần do AI ước tính từ ảnh',
-      calories: item.calories ?? 0,
-      protein: item.protein_g ?? 0,
-      carbs: item.carbs_g ?? 0,
-      fat: item.fat_g ?? 0,
-      confidenceScore: raw.confidence ?? undefined,
-      selected: true,
-    }));
+    return {
+      candidates: (raw.items || []).map((item, index) => ({
+        id: `scan-${index}`,
+        name: item.name || 'Tổng dinh dưỡng bữa ăn',
+        portionDescription: '1 khẩu phần',
+        calories: item.calories ?? 0,
+        protein: item.protein_g ?? 0,
+        carbs: item.carbs_g ?? 0,
+        fat: item.fat_g ?? 0,
+        confidenceScore: raw.confidence ?? undefined,
+        selected: true,
+      })),
+      ingredients: (raw.ingredients || [])
+        .filter((ingredient): ingredient is string => typeof ingredient === 'string' && ingredient.trim().length > 0)
+        .map((ingredient) => ingredient.trim()),
+    };
   }
 }
 

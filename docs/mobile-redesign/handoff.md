@@ -807,3 +807,75 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Nutrition scan now consumes the Backend's optional confidence and explanatory note. The AI handoff does not provide calibrated confidence, so the contract truthfully returns `null` instead of a fabricated percentage.
 - The candidate review displays the Backend note, including the model's estimated portion, while all values remain editable before persistence.
 - Static verification only per repository rule: `git diff --check`. Full image inference remains blocked locally until an AI runtime and model base are installed on suitable hardware.
+# Weekly nutrition plan API integration — 2026-10-06
+
+- The weekly menu now reads the additive backend `/me/nutrition/weekly-plan?week_start=...` contract instead of adapting the legacy four-string schedule.
+- T2–CN filtering now uses each item's real `day_of_week`; the selected day defaults to today.
+- Adding and replacing a planned meal reuse the manual nutrition form and persist serving, calories, macros and notes to the selected week/day/slot.
+- “Đã ăn” is a one-way confirmation that calls the backend consume endpoint and creates a real diary meal; it no longer toggles a local fake state. Repeated server calls are idempotent.
+- Planned meals can be removed with confirmation; historical diary entries are explicitly preserved. The screen refetches on focus after add/edit.
+- Mobile install/build/test/lint/typecheck/Expo commands were not run, as required by repository instructions. Runtime verification is still required on Expo after the backend container is ready.
+# Nutrition scan result visual fix — 2026-10-06
+
+- The selected camera/gallery image is copied into the Expo cache before AI upload/navigation, preventing temporary Android/Google Photos URI grants from turning the result preview into a gray frame.
+- The review screen now renders the preview with `expo-image` disk/memory caching and deletes the temporary review copy after save or explicit back navigation.
+- AI-detected components now use selectable bordered cards with numbered badges and separate calorie/protein/carbohydrate/fat tiles; bullet-separated `P/C/F` text was removed.
+- Empty AI component results have a clear manual-entry fallback. Manual editing receives the candidate's portion and full macro values instead of only name/calories.
+- Mobile commands were not run, per repository instructions; verify the camera and Google Photos paths on the Android device.
+# Full ingredient review and scan-image retention — 2026-10-06
+
+- The scan flow now retains the cached local image URI in an in-memory scan session as well as route params, so navigation cannot drop the preview reference. `expo-image` receives an explicit URI source.
+- The mobile scan adapter consumes the new backend `ingredients` array. The confirmation screen lists every ingredient in full, one labeled row per ingredient, without `+`, bullets, abbreviations or “N nguyên liệu khác”.
+- Whole-meal calories/macros remain a separate summary because the model does not return trustworthy per-ingredient macro allocation.
+- Mobile commands were not run per repository instructions; reload the Expo bundle and perform a new scan because old in-memory scan responses do not contain the new `ingredients` field.
+# Nutrition AI save validation fix — 2026-10-06
+
+- Fixed scan-confirm save failures caused by mapping the AI explanatory `note` into `serving_unit`; long notes exceeded the backend's 50-character unit limit.
+- Scan candidates now use the valid explicit portion `1 khẩu phần`.
+- The API nutrition adapter now normalizes quantity/unit defensively for both create and update, falling back to `khẩu phần` instead of sending invalid descriptive text.
+- Existing review state produced before this fix is also normalized at save time.
+- Per repository instructions, mobile build/test/Expo commands were not run by the agent.
+
+# Nutrition scan draft composition — 2026-10-06
+
+- “Thêm món còn thiếu” no longer writes a separate diary entry or exits the scan flow. It creates a local candidate and returns it to the active confirmation list.
+- Editing an AI candidate now updates that candidate in the same confirmation draft instead of saving prematurely.
+- Added and edited candidates remain selected and participate in the displayed nutrition totals.
+- The backend is called only after “Xác nhận và lưu vào nhật ký”; the selected AI/manual candidates are then saved together.
+- Mobile runtime commands were not run per repository instructions.
+
+# Weekly meal future-consumption guard — 2026-10-06
+
+- Planned meals for future days now show “Chưa đến ngày” and disable the consumed action.
+- Today and past days remain eligible for “Đã ăn”.
+- The route handler independently rejects future dates before optimistic state or API calls, so UI state cannot bypass the rule accidentally.
+- The existing backend check still verifies that the submitted date exactly matches `week_start + day_of_week` before writing the nutrition diary.
+
+# Nutrition target settings — 2026-10-06
+
+- Added `/nutrition/goals` for authenticated users to load and save daily calorie, protein, carbohydrate and fat targets through `/users/me/preferences`.
+- The nutrition diary and member dashboard now consume all four target fields from the dashboard response.
+- When targets are absent, the diary no longer describes `0%` or `0 kcal remaining` as meaningful progress; it presents a setup action instead.
+- The settings form validates the same numeric ranges as the backend and explains that targets are personal tracking values, not medical advice.
+- Mobile commands were not run per repository instructions.
+
+# Nutrition target CTA clarity — 2026-10-06
+
+- Replaced the ambiguous target action embedded inside the “remaining calories” pill with a full-width settings row.
+- The row now has a settings icon, explicit “Mục tiêu dinh dưỡng” title, explanatory text, action label and chevron.
+- The “Còn lại” pill is now display-only and appears only after a calorie target exists, preventing layout imbalance and misleading interaction affordance.
+
+# Dashboard real-data and contextual actions — 2026-10-06
+
+- Home now maps `today_workout`, `today_meals` and `upcoming_appointment` from the dashboard API instead of forcing workout/meals to empty values.
+- Removed the hydration card because no real hydration persistence/API exists.
+- Quick workout opens today's plan when available; the PT quick action opens the upcoming appointment when one exists and only falls back to trainer discovery otherwise.
+- Added a visible nutrition-goal CTA when no calorie target exists, and today's meal rows open their real diary detail.
+- Mobile runtime commands were not run per repository instructions.
+
+# Dashboard quick-action deduplication — 2026-10-06
+
+- The quick-action grid now always contains only the two true shortcuts: manual meal logging and AI meal scan.
+- “Buổi tập hôm nay” is added only when the dashboard has a concrete plan/session to open directly.
+- “Lịch hẹn sắp tới” is added only when a concrete appointment exists.
+- Removed the workout-tab and trainer-marketplace fallback cards from the quick grid because those destinations already exist in bottom navigation.

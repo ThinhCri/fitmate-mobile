@@ -61,7 +61,7 @@ describe('Nutrition Repository & Data Source Isolation', () => {
     expect(summary.calories.target).toBe(2000);
     expect(summary.meals.length).toBeGreaterThan(0);
 
-    const menu = await repo.getWeeklyMenu();
+    const menu = await repo.getWeeklyMenu('2026-09-28');
     expect(menu.length).toBeGreaterThan(0);
   });
 

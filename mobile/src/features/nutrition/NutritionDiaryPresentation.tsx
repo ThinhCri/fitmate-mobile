@@ -23,6 +23,7 @@ import {
   Cookie,
   Edit3,
   Calendar,
+  Settings2,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { DayNutritionSummaryViewModel, FoodItemViewModel, MealTimeSlot } from './nutritionTypes';
@@ -41,6 +42,7 @@ export interface NutritionDiaryPresentationProps {
   onSelectDate: () => void;
   onAddManualPress: (slot?: MealTimeSlot) => void;
   onScanPress: () => void;
+  onGoalsPress: () => void;
   onFoodItemPress: (item: FoodItemViewModel) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -59,6 +61,7 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
   onSelectDate,
   onAddManualPress,
   onScanPress,
+  onGoalsPress,
   onFoodItemPress,
   onRefresh,
   refreshing = false,
@@ -203,6 +206,31 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
 
       {/* Energy & Macros Summary Card */}
       <Card padding="md" style={styles.macroCard}>
+        <TouchableOpacity
+          style={styles.goalSettingsRow}
+          onPress={onGoalsPress}
+          accessibilityRole="button"
+          accessibilityLabel={summary.calories.target > 0 ? 'Chỉnh sửa mục tiêu dinh dưỡng' : 'Thiết lập mục tiêu dinh dưỡng'}
+        >
+          <View style={styles.goalSettingsIcon}>
+            <Settings2 size={20} color={colors.primary} />
+          </View>
+          <View style={styles.goalSettingsCopy}>
+            <Text style={[typography.bodyBold, styles.goalSettingsTitle]}>Mục tiêu dinh dưỡng</Text>
+            <Text style={[typography.caption, styles.goalSettingsSubtitle]} numberOfLines={2}>
+              {summary.calories.target > 0
+                ? `${summary.calories.target.toLocaleString('vi-VN')} kcal mỗi ngày · Nhấn để chỉnh sửa`
+                : 'Thiết lập calories và các chất dinh dưỡng cần theo dõi mỗi ngày'}
+            </Text>
+          </View>
+          <View style={styles.goalSettingsAction}>
+            <Text style={[typography.captionMedium, styles.goalSettingsActionText]}>
+              {summary.calories.target > 0 ? 'Chỉnh sửa' : 'Thiết lập'}
+            </Text>
+            <ChevronRight size={18} color={colors.primary} />
+          </View>
+        </TouchableOpacity>
+
         <View style={styles.macroCardHeader}>
           <View>
             <Text style={[typography.captionMedium, styles.summarySubtitle]}>TỔNG NĂNG LƯỢNG NẠP</Text>
@@ -215,12 +243,12 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
               </Text>
             </View>
           </View>
-          <View style={styles.remainingPill}>
+          {summary.calories.target > 0 ? <View style={styles.remainingPill}>
             <Text style={[typography.caption, styles.remainingPillLabel]}>Còn lại</Text>
             <Text style={[typography.bodyBold, styles.remainingPillValue]}>
               {remainingKcal.toLocaleString('vi-VN')} kcal
             </Text>
-          </View>
+          </View> : null}
         </View>
 
         {/* Progress Bar */}
@@ -229,7 +257,7 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
         </View>
         <View style={styles.progressLabelRow}>
           <Text style={[typography.caption, styles.progressCaption]}>
-            Đã nạp {calorieRatio}% mục tiêu ngày
+            {summary.calories.target > 0 ? `Đã nạp ${calorieRatio}% mục tiêu ngày` : 'Theo dõi năng lượng đã nạp'}
           </Text>
           <Text style={[typography.caption, styles.progressCaption]}>
             {summary.calories.target > 0 ? `Mục tiêu: ${summary.calories.target} kcal` : 'Chưa thiết lập mục tiêu calo'}
@@ -241,9 +269,7 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
           <View style={styles.macroCol}>
             <View style={styles.macroColHeader}>
               <Text style={[typography.captionMedium, styles.macroTitle]}>Đạm</Text>
-              <Text style={[typography.captionMedium, { color: colors.primary }]}>
-                {percent(summary.macros.protein.current, summary.macros.protein.target)}%
-              </Text>
+              {summary.macros.protein.target > 0 ? <Text style={[typography.captionMedium, { color: colors.primary }]}>{percent(summary.macros.protein.current, summary.macros.protein.target)}%</Text> : null}
             </View>
             <Text style={[typography.bodyBold, styles.macroValue]}>
               {summary.macros.protein.current}g{' '}
@@ -265,9 +291,7 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
           <View style={styles.macroCol}>
             <View style={styles.macroColHeader}>
               <Text style={[typography.captionMedium, styles.macroTitle]}>Tinh bột</Text>
-              <Text style={[typography.captionMedium, { color: colors.secondary }]}>
-                {percent(summary.macros.carbs.current, summary.macros.carbs.target)}%
-              </Text>
+              {summary.macros.carbs.target > 0 ? <Text style={[typography.captionMedium, { color: colors.secondary }]}>{percent(summary.macros.carbs.current, summary.macros.carbs.target)}%</Text> : null}
             </View>
             <Text style={[typography.bodyBold, styles.macroValue]}>
               {summary.macros.carbs.current}g{' '}
@@ -289,9 +313,7 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
           <View style={styles.macroCol}>
             <View style={styles.macroColHeader}>
               <Text style={[typography.captionMedium, styles.macroTitle]}>Chất béo</Text>
-              <Text style={[typography.captionMedium, { color: colors.warning }]}>
-                {percent(summary.macros.fat.current, summary.macros.fat.target)}%
-              </Text>
+              {summary.macros.fat.target > 0 ? <Text style={[typography.captionMedium, { color: colors.warning }]}>{percent(summary.macros.fat.current, summary.macros.fat.target)}%</Text> : null}
             </View>
             <Text style={[typography.bodyBold, styles.macroValue]}>
               {summary.macros.fat.current}g{' '}
@@ -534,6 +556,45 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     borderRadius: radius.md,
     alignItems: 'flex-end',
+  },
+  goalSettingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 72,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.primaryLight,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    gap: spacing.sm,
+  },
+  goalSettingsIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+  },
+  goalSettingsCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  goalSettingsTitle: {
+    color: colors.primaryDark,
+  },
+  goalSettingsSubtitle: {
+    color: colors.textSecondary,
+    marginTop: 2,
+    lineHeight: 17,
+  },
+  goalSettingsAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  goalSettingsActionText: {
+    color: colors.primary,
   },
   remainingPillLabel: {
     color: colors.primaryDark,

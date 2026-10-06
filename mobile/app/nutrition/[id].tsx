@@ -36,7 +36,19 @@ export default function MealDetailRoute() {
     if (!food) return;
     router.push({
       pathname: '/nutrition/manual-entry' as any,
-      params: { id: food.id, name: food.name, slot: food.mealSlot },
+      params: {
+        id: food.id,
+        name: food.name,
+        slot: food.mealSlot,
+        portion: food.portion,
+        grams: food.grams ? String(food.grams) : undefined,
+        calories: String(food.calories),
+        protein: String(food.proteinGrams),
+        carbs: String(food.carbsGrams),
+        fat: String(food.fatGrams),
+        notes: food.notes,
+        source: food.source,
+      },
     });
   };
 

@@ -407,6 +407,7 @@ export interface MemberDashboardSummary {
   streakDays: number;
   todayWorkout?: {
     id: string;
+    resourceType: 'plan' | 'session';
     title: string;
     durationMinutes: number;
     exerciseCount: number;
@@ -419,6 +420,13 @@ export interface MemberDashboardSummary {
     calories: number;
     time: string;
   }[];
+  upcomingAppointment?: {
+    id: string;
+    trainerName: string;
+    slotStartUtc: string;
+    durationMinutes: number;
+    status: string;
+  } | null;
 }
 
 // ==========================================
