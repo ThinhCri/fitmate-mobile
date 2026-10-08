@@ -77,6 +77,13 @@ export function ProfileServicesPresentation({
   const [serviceDescription, setServiceDescription] = useState('');
   const [servicePrice, setServicePrice] = useState('');
   const [serviceDuration, setServiceDuration] = useState('60');
+  const [serviceKind, setServiceKind] = useState<ServiceInput['service_kind']>('one_to_one');
+  const [deliveryMode, setDeliveryMode] = useState<ServiceInput['delivery_mode']>('in_person');
+  const [targetAudience, setTargetAudience] = useState('');
+  const [requiredEquipment, setRequiredEquipment] = useState('');
+  const [deliverable, setDeliverable] = useState('');
+  const [locationName, setLocationName] = useState('');
+  const [locationAddress, setLocationAddress] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const activeServicesCount = services.filter((s) => s.is_active).length;
@@ -86,6 +93,13 @@ export function ProfileServicesPresentation({
     setServiceDescription('');
     setServicePrice('300000');
     setServiceDuration('60');
+    setServiceKind('one_to_one');
+    setDeliveryMode('in_person');
+    setTargetAudience('');
+    setRequiredEquipment('');
+    setDeliverable('');
+    setLocationName('');
+    setLocationAddress('');
     setCreateModalVisible(true);
   };
 
@@ -95,6 +109,13 @@ export function ProfileServicesPresentation({
     setServiceDescription(service.description || '');
     setServicePrice(service.price_vnd.toString());
     setServiceDuration(service.duration_minutes.toString());
+    setServiceKind(service.service_kind ?? 'one_to_one');
+    setDeliveryMode(service.delivery_mode ?? 'in_person');
+    setTargetAudience(service.target_audience ?? '');
+    setRequiredEquipment(service.required_equipment ?? '');
+    setDeliverable(service.deliverable ?? '');
+    setLocationName(service.location_name ?? '');
+    setLocationAddress(service.location_address ?? '');
     setEditModalVisible(true);
   };
 
@@ -114,14 +135,17 @@ export function ProfileServicesPresentation({
       Alert.alert('Lỗi', 'Thời lượng phải từ 15 đến 240 phút');
       return;
     }
+    const details = buildDetails();
+    if (!details) return;
 
     setSubmitting(true);
     try {
       await onCreateService({
         name: serviceName.trim(),
-        description: serviceDescription.trim() || undefined,
+        description: serviceDescription.trim(),
         price_vnd: price,
         duration_minutes: duration,
+        ...details,
       });
       setCreateModalVisible(false);
     } catch (err) {
@@ -148,14 +172,17 @@ export function ProfileServicesPresentation({
       Alert.alert('Lỗi', 'Thời lượng phải từ 15 đến 240 phút');
       return;
     }
+    const details = buildDetails();
+    if (!details) return;
 
     setSubmitting(true);
     try {
       await onUpdateService(editingService.id, {
         name: serviceName.trim(),
-        description: serviceDescription.trim() || undefined,
+        description: serviceDescription.trim(),
         price_vnd: price,
         duration_minutes: duration,
+        ...details,
       });
       setEditModalVisible(false);
       setEditingService(null);
@@ -164,6 +191,30 @@ export function ProfileServicesPresentation({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const buildDetails = (): Pick<ServiceInput, 'service_kind' | 'delivery_mode' | 'target_audience' | 'required_equipment' | 'deliverable' | 'location_name' | 'location_address'> | null => {
+    if (serviceDescription.trim().length < 20) {
+      Alert.alert('Thiếu mô tả', 'Hãy mô tả cụ thể học viên sẽ làm gì trong buổi tập (ít nhất 20 ký tự).');
+      return null;
+    }
+    if (!targetAudience.trim() || !requiredEquipment.trim() || !deliverable.trim()) {
+      Alert.alert('Thiếu thông tin', 'Hãy ghi đối tượng phù hợp, dụng cụ cần chuẩn bị và kết quả học viên nhận được.');
+      return null;
+    }
+    if (deliveryMode === 'in_person' && (!locationName.trim() || !locationAddress.trim())) {
+      Alert.alert('Thiếu địa điểm', 'Buổi tập trực tiếp cần một tên và địa chỉ địa điểm cố định.');
+      return null;
+    }
+    return {
+      service_kind: serviceKind,
+      delivery_mode: deliveryMode,
+      target_audience: targetAudience.trim(),
+      required_equipment: requiredEquipment.trim(),
+      deliverable: deliverable.trim(),
+      location_name: deliveryMode === 'in_person' ? locationName.trim() : undefined,
+      location_address: deliveryMode === 'in_person' ? locationAddress.trim() : undefined,
+    };
   };
 
   const handleToggleStatus = async (service: Service) => {
@@ -388,7 +439,7 @@ export function ProfileServicesPresentation({
                           item.is_active ? styles.statusTextActive : styles.statusTextInactive,
                         ]}
                       >
-                        {item.is_active ? 'Đang nhận khách' : 'Tạm ngưng'}
+                        {item.delivery_mode === 'online' ? 'Bản nháp online' : item.is_active ? 'Đang nhận khách' : 'Tạm ngưng'}
                       </Text>
                     </View>
                   </View>
@@ -397,9 +448,17 @@ export function ProfileServicesPresentation({
                       {item.description}
                     </Text>
                   ) : null}
+                  <Text style={styles.serviceDescription}>
+                    {item.service_kind === 'assessment_and_plan' ? 'Đánh giá & lập kế hoạch' : 'Buổi tập 1–1'} · {item.delivery_mode === 'online' ? 'Trực tuyến (chưa mở đặt lịch)' : 'Trực tiếp'}
+                  </Text>
+                  {!!item.target_audience && <Text style={styles.serviceDescription}>Phù hợp: {item.target_audience}</Text>}
+                  {!!item.required_equipment && <Text style={styles.serviceDescription}>Cần chuẩn bị: {item.required_equipment}</Text>}
+                  {!!item.deliverable && <Text style={styles.serviceDescription}>Nhận được: {item.deliverable}</Text>}
+                  {!!item.location_name && <Text style={styles.serviceDescription}>Địa điểm: {item.location_name} — {item.location_address}</Text>}
                 </View>
                 <Switch
                   value={item.is_active}
+                  disabled={item.delivery_mode === 'online'}
                   onValueChange={() => handleToggleStatus(item)}
                   trackColor={{ false: colors.border, true: colors.primary }}
                   thumbColor={colors.white}
@@ -522,6 +581,52 @@ export function ProfileServicesPresentation({
                   multiline
                 />
               </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Loại dịch vụ *</Text>
+                <View style={styles.formRow}>
+                  <Pressable style={[styles.choiceButton, serviceKind === 'one_to_one' && styles.choiceSelected]} onPress={() => setServiceKind('one_to_one')}>
+                    <Text>Buổi tập 1–1</Text>
+                  </Pressable>
+                  <Pressable style={[styles.choiceButton, serviceKind === 'assessment_and_plan' && styles.choiceSelected]} onPress={() => setServiceKind('assessment_and_plan')}>
+                    <Text>Đánh giá & lập kế hoạch</Text>
+                  </Pressable>
+                </View>
+              </View>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Hình thức *</Text>
+                <View style={styles.formRow}>
+                  <Pressable style={[styles.choiceButton, deliveryMode === 'in_person' && styles.choiceSelected]} onPress={() => setDeliveryMode('in_person')}>
+                    <Text>Trực tiếp</Text>
+                  </Pressable>
+                  <Pressable style={[styles.choiceButton, deliveryMode === 'online' && styles.choiceSelected]} onPress={() => setDeliveryMode('online')}>
+                    <Text>Online</Text>
+                  </Pressable>
+                </View>
+                {deliveryMode === 'online' && <Text style={styles.serviceDescription}>Lưu bản nháp; chưa nhận đặt lịch khi tính năng tạo Google Meet chưa kết nối.</Text>}
+              </View>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Phù hợp với ai? *</Text>
+                <TextInput style={styles.textInput} value={targetAudience} onChangeText={setTargetAudience} placeholder="Ví dụ: người mới tập muốn tăng sức mạnh" placeholderTextColor={colors.textMuted} />
+              </View>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Cần chuẩn bị dụng cụ gì? *</Text>
+                <TextInput style={styles.textInput} value={requiredEquipment} onChangeText={setRequiredEquipment} placeholder="Ví dụ: giày tập; không cần dụng cụ khác" placeholderTextColor={colors.textMuted} />
+              </View>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Học viên sẽ nhận được gì? *</Text>
+                <TextInput style={styles.textInput} value={deliverable} onChangeText={setDeliverable} placeholder="Ví dụ: hướng dẫn kỹ thuật và kế hoạch 4 tuần" placeholderTextColor={colors.textMuted} />
+              </View>
+              {deliveryMode === 'in_person' && <>
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>Tên địa điểm cố định *</Text>
+                  <TextInput style={styles.textInput} value={locationName} onChangeText={setLocationName} placeholder="Ví dụ: Fit Gym Quận 1" placeholderTextColor={colors.textMuted} />
+                </View>
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>Địa chỉ đầy đủ *</Text>
+                  <TextInput style={styles.textInput} value={locationAddress} onChangeText={setLocationAddress} placeholder="Số nhà, đường, phường, quận, thành phố" placeholderTextColor={colors.textMuted} />
+                </View>
+              </>}
 
               <View style={styles.formRow}>
                 <View style={[styles.formGroup, { flex: 1, marginRight: spacing.sm }]}>
@@ -1101,6 +1206,22 @@ const styles = StyleSheet.create({
   },
   formRow: {
     flexDirection: 'row',
+  },
+  choiceButton: {
+    flex: 1,
+    minHeight: 44,
+    marginRight: spacing.xs,
+    padding: spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceSubtle,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+  },
+  choiceSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
   },
   formLabel: {
     ...typography.bodyMedium,

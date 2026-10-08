@@ -42,6 +42,8 @@ export interface CertificatesPresentationProps {
     file: UploadFilePayload;
   }) => Promise<void>;
   verificationStatus?: string;
+  phoneVerified?: boolean;
+  onVerifyPhone?: () => void;
 }
 
 export function CertificatesPresentation({
@@ -53,6 +55,8 @@ export function CertificatesPresentation({
   onBack,
   onSubmitCertificate,
   verificationStatus,
+  phoneVerified,
+  onVerifyPhone,
 }: CertificatesPresentationProps) {
   // Form state for adding new certificate
   const [title, setTitle] = useState('');
@@ -193,6 +197,15 @@ export function CertificatesPresentation({
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
+        {phoneVerified === false && onVerifyPhone ? (
+          <Pressable onPress={onVerifyPhone} accessibilityRole="button" style={styles.auditBanner}>
+            <AlertCircle size={22} color={colors.warning} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.auditBannerTitle}>Xác minh số điện thoại PT</Text>
+              <Text style={styles.auditBannerText}>Admin chỉ có thể duyệt hồ sơ sau khi bạn xác minh số điện thoại bằng mã SMS. Nhấn để xác minh.</Text>
+            </View>
+          </Pressable>
+        ) : null}
         {verificationStatus && verificationStatus !== 'approved' && (
           <View style={styles.auditBanner}>
             <Clock size={22} color={colors.warning} />

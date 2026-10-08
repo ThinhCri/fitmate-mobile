@@ -264,7 +264,7 @@ describe('bookingService & apiBookingRepository (MOB-802)', () => {
         member_id: 'mem-101',
         pt_user_id: 'pt-101',
         service_id: 'srv-101',
-        slot_start_utc: '2026-10-10T08:00:00Z',
+        slot_start_utc: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
         duration_minutes: 60,
         status: 'Confirmed',
         rescheduled_count: 0,
@@ -286,6 +286,30 @@ describe('bookingService & apiBookingRepository (MOB-802)', () => {
       expect(vm.canCancel).toBe(true);
       expect(vm.canReschedule).toBe(true);
       expect(vm.canReview).toBe(false);
+    });
+
+    it('hides self-cancel and reschedule inside the 48-hour cutoff', () => {
+      const wire: AppointmentWire = {
+        id: 'apt-soon',
+        member_id: 'mem-101',
+        pt_user_id: 'pt-101',
+        service_id: 'srv-101',
+        slot_start_utc: new Date(Date.now() + 47 * 60 * 60 * 1000).toISOString(),
+        duration_minutes: 60,
+        status: 'Confirmed',
+        rescheduled_count: 0,
+        price_listed_vnd: 300000,
+        discount_vnd: 0,
+        actual_paid_vnd: 300000,
+        platform_fee_rate_bps: 1000,
+        platform_fee_vnd: 30000,
+        trainer_share_vnd: 270000,
+        policy_version: '2026-09-22-v1',
+      };
+
+      const vm = mapAppointmentWireToViewModel(wire);
+      expect(vm.canCancel).toBe(false);
+      expect(vm.canReschedule).toBe(false);
     });
 
     it('disallows reschedule if already rescheduled once', () => {

@@ -89,24 +89,27 @@ export function mapAppointmentWireToViewModel(
     coach: coachSummary || {
       id: wire.pt_user_id,
       name: 'Huấn luyện viên',
-      title: 'Pro PT',
-      specialty: 'Thể hình & Sức mạnh',
-      rating: 5.0,
+      title: 'Huấn luyện viên',
+      specialty: '',
+      rating: 0,
       reviewCount: 0,
-      isVerified: true,
+      isVerified: false,
     },
-    serviceName: 'Buổi tập cá nhân 1-1',
+    serviceName: 'Buổi huấn luyện',
     scheduledDate: formattedDate,
     scheduledTime: `${startTimeStr} - ${endTimeStr} (${durationMin} phút)`,
-    location: 'Fitmate Partner Gym',
+    location: '',
     bookingStatus,
     paymentStatus,
     paidAmountVnd: wire.actual_paid_vnd,
     createdAt: wire.slot_start_utc,
     canCancel:
       (wire.status === 'Confirmed' || wire.status === 'Pending') &&
-      slotDate.getTime() - Date.now() >= 24 * 60 * 60 * 1000,
-    canReschedule: wire.status === 'Confirmed' && wire.rescheduled_count < 1,
+      slotDate.getTime() - Date.now() >= 48 * 60 * 60 * 1000,
+    canReschedule:
+      wire.status === 'Confirmed' &&
+      wire.rescheduled_count < 1 &&
+      slotDate.getTime() - Date.now() >= 48 * 60 * 60 * 1000,
     canReview: wire.status === 'Completed',
     canConfirmCompletion: wire.status === 'AwaitingMemberConfirmation',
     canDispute: wire.status === 'AwaitingMemberConfirmation',
@@ -127,8 +130,8 @@ export class ApiBookingRepository implements IBookingRepository {
       const summary: CoachSummaryViewModel = {
         id: detail.id,
         name: detail.name,
-        title: 'Pro PT',
-        specialty: detail.specialties.join(', ') || 'Thể hình',
+        title: 'Huấn luyện viên',
+        specialty: detail.specialties.join(', '),
         rating: detail.rating,
         reviewCount: detail.reviewCount,
         avatarUrl: detail.avatarUrl ?? undefined,
@@ -140,11 +143,11 @@ export class ApiBookingRepository implements IBookingRepository {
       const fallback: CoachSummaryViewModel = {
         id: ptId,
         name: 'Huấn luyện viên',
-        title: 'Pro PT',
-        specialty: 'Thể hình & Phục hồi',
-        rating: 5.0,
+        title: 'Huấn luyện viên',
+        specialty: '',
+        rating: 0,
         reviewCount: 0,
-        isVerified: true,
+        isVerified: false,
       };
       return fallback;
     }
@@ -247,7 +250,7 @@ export class ApiBookingRepository implements IBookingRepository {
       requestedAt: wire.cancelled_at_utc || new Date().toISOString(),
       reason: 'Hủy lịch hẹn trước giờ tập theo chính sách hoàn tiền 100%.',
       cancellationPolicyNotice:
-        'Hoàn trả 100% khi hội viên hủy trước ít nhất 24 giờ theo chính sách nền tảng Fitmate.',
+        'Hoàn trả 100% khi hội viên hủy trước ít nhất 48 giờ theo chính sách nền tảng Fitmate.',
     };
   }
 }

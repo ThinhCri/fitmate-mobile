@@ -96,6 +96,7 @@ export const bookingService = {
   }): Promise<PaymentWire> {
     return apiClient<PaymentWire>('/payments', {
       method: 'POST',
+      headers: { 'Idempotency-Key': data.hold_id },
       body: JSON.stringify(data),
     });
   },

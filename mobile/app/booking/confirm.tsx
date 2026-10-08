@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, Linking } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, Alert, Linking, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ConfirmHoldPresentation } from '../../src/features/booking/ConfirmHoldPresentation';
 import { BookingHoldQuoteViewModel } from '../../src/features/booking/bookingTypes';
 import { bookingService } from '@/services/api/bookingService';
+import type { AppointmentWire } from '@/services/api/types';
+import { colors, spacing } from '@/theme/designTokens';
 
 export default function ConfirmBookingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     holdId?: string;
+    appointmentId?: string;
     coachId?: string;
     coachName?: string;
     serviceId?: string;
@@ -20,53 +23,62 @@ export default function ConfirmBookingScreen() {
   }>();
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [remainingSeconds, setRemainingSeconds] = useState(300);
-
-  const priceVnd = parseInt(params.priceVnd || '300000', 10);
-  const holdId = params.holdId || 'bk-hold-8921';
-
-  const quote: BookingHoldQuoteViewModel = {
-    bookingId: holdId,
-    coach: {
-      id: params.coachId || 'coach-1',
-      name: params.coachName || 'HLV Hoàng Nam',
-      title: 'Pro PT',
-      specialty: 'Thể hình & Phục hồi',
-      rating: 4.95,
-      reviewCount: 48,
-      isVerified: true,
-    },
-    service: {
-      id: params.serviceId || 'srv-1',
-      name: params.serviceName || 'Tập sức mạnh cá nhân 1-kèm-1',
-      durationMinutes: 60,
-      priceVnd,
-      description: 'Tập trung kỹ thuật chuẩn y sinh học, an toàn và tối ưu.',
-      locationName: 'Fitmate Partner Studio',
-      locationAddress: 'Thành phố Hồ Chí Minh',
-    },
-    selectedDate: params.selectedDate || 'Hôm nay',
-    selectedTimeSlot: params.selectedTimeSlot || '18:00 - 19:00',
-    location: 'Fitmate Partner Studio (TP. Hồ Chí Minh)',
-    servicePriceVnd: priceVnd,
-    platformFeeVnd: 0,
-    totalVnd: priceVnd,
-    holdExpiresAt: params.expiresAt || new Date(Date.now() + 300000).toISOString(),
-    remainingSeconds,
-  };
+  const [appointment, setAppointment] = useState<AppointmentWire | null>(null);
+  const [expiresAt, setExpiresAt] = useState('');
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const expiryShown = useRef(false);
 
   useEffect(() => {
-    if (!params.expiresAt) return;
+    if (!params.holdId || !params.appointmentId || !params.coachName || !params.serviceName) {
+      setError('Thiếu thông tin giữ chỗ. Vui lòng chọn lại lịch tập.');
+      setLoading(false);
+      return;
+    }
+    let active = true;
+    Promise.all([bookingService.getBookingHold(params.holdId), bookingService.getMyBookingDetail(params.appointmentId)])
+      .then(([hold, detail]) => {
+        if (!active) return;
+        if (!hold.is_active || hold.hold_id !== params.holdId || detail.id !== params.appointmentId) throw new Error('Giờ giữ chỗ đã hết hạn. Vui lòng chọn lại.');
+        setAppointment(detail);
+        setExpiresAt(hold.expires_at);
+        setError('');
+      })
+      .catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : 'Không thể kiểm tra giờ giữ chỗ.'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [params.appointmentId, params.coachName, params.holdId, params.serviceName]);
+
+  const totalVnd = appointment ? Math.max(0, appointment.price_listed_vnd - appointment.discount_vnd) : 0;
+  const quote: BookingHoldQuoteViewModel | null = appointment && params.holdId ? {
+    bookingId: params.holdId,
+    slotStartUtc: appointment.slot_start_utc,
+    coach: { id: appointment.pt_user_id, name: params.coachName!, title: 'Huấn luyện viên', specialty: '', rating: 0, reviewCount: 0, isVerified: true },
+    service: { id: appointment.service_id, name: params.serviceName!, durationMinutes: appointment.duration_minutes, priceVnd: totalVnd, description: '', locationName: '', locationAddress: '' },
+    selectedDate: new Date(appointment.slot_start_utc).toLocaleDateString('vi-VN'),
+    selectedTimeSlot: new Date(appointment.slot_start_utc).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    location: '',
+    servicePriceVnd: totalVnd,
+    platformFeeVnd: 0,
+    totalVnd,
+    holdExpiresAt: expiresAt,
+    remainingSeconds,
+  } : null;
+
+  useEffect(() => {
+    if (!expiresAt) return;
     const updateCountdown = () => {
       const diffSec = Math.max(
         0,
-        Math.floor((new Date(params.expiresAt!).getTime() - Date.now()) / 1000)
+        Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)
       );
       setRemainingSeconds(diffSec);
-      if (diffSec <= 0) {
+      if (diffSec <= 0 && !expiryShown.current) {
+        expiryShown.current = true;
         Alert.alert(
           'Hết hạn giữ chỗ',
-          'Thời gian giữ chỗ tạm thời (5 phút) đã kết thúc. Vui lòng chọn lại khung giờ.',
+          'Thời gian giữ chỗ đã kết thúc. Vui lòng chọn lại khung giờ.',
           [{ text: 'Đồng ý', onPress: () => router.back() }]
         );
       }
@@ -75,12 +87,15 @@ export default function ConfirmBookingScreen() {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [params.expiresAt, router]);
+  }, [expiresAt, router]);
 
-  const handlePay = async () => {
+  const createPayment = async () => {
+    if (!quote || remainingSeconds <= 0 || isProcessing) return;
     setIsProcessing(true);
     try {
       if (params.holdId) {
+        const hold = await bookingService.getBookingHold(params.holdId);
+        if (!hold.is_active) throw new Error('Giờ giữ chỗ đã hết hạn. Vui lòng chọn lại.');
         const payment = await bookingService.createPayment({
           hold_id: params.holdId,
           method: 'payos',
@@ -103,14 +118,31 @@ export default function ConfirmBookingScreen() {
     }
   };
 
+  const handlePay = () => {
+    if (!quote || remainingSeconds <= 0 || isProcessing) return;
+    const timeUntilStart = new Date(quote.slotStartUtc || '').getTime() - Date.now();
+    if (Number.isFinite(timeUntilStart) && timeUntilStart < 48 * 60 * 60 * 1000) {
+      Alert.alert(
+        'Buổi tập trong vòng 48 giờ',
+        'Bạn sẽ không thể tự hủy hoặc đổi lịch để được hoàn tiền nếu bận hoặc vắng mặt. Chỉ thanh toán khi chắc chắn tham gia được.',
+        [
+          { text: 'Chọn giờ khác', style: 'cancel' },
+          { text: 'Tôi hiểu, tiếp tục', onPress: () => void createPayment() },
+        ],
+      );
+      return;
+    }
+    void createPayment();
+  };
+
   return (
     <View style={styles.container}>
-      <ConfirmHoldPresentation
+      {loading ? <ActivityIndicator style={styles.center} color={colors.primary} /> : error || !quote ? <View style={styles.center}><Text style={styles.message}>{error || 'Không thể tải thông tin giữ chỗ.'}</Text><TouchableOpacity onPress={() => router.back()}><Text style={styles.back}>Chọn lại giờ</Text></TouchableOpacity></View> : <ConfirmHoldPresentation
         quote={quote}
-        isProcessing={isProcessing}
+        isProcessing={isProcessing || remainingSeconds <= 0}
         onPayPayOS={handlePay}
         onCancelHold={() => router.back()}
-      />
+      />}
     </View>
   );
 }
@@ -120,4 +152,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
+  message: { color: colors.textPrimary, textAlign: 'center' },
+  back: { color: colors.primary, fontWeight: '700', padding: spacing.md },
 });

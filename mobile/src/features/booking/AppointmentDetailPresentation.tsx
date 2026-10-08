@@ -150,13 +150,13 @@ export function AppointmentDetailPresentation({
           </View>
         </View>
 
-        <View style={styles.detailLine}>
+        {!!appointment.location && <View style={styles.detailLine}>
           <MapPin size={16} color={colors.primary} />
           <View style={styles.detailLineText}>
             <Text style={styles.detailLineLabel}>Địa điểm</Text>
             <Text style={styles.detailLineValue}>{appointment.location}</Text>
           </View>
-        </View>
+        </View>}
       </Card>
 
       {/* Financial Breakdown Card */}

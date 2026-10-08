@@ -146,9 +146,9 @@ export class PreviewBookingRepository implements IBookingRepository {
       requestedAmountVnd: 300000,
       refundAmountVnd: 300000,
       requestedAt: '2026-09-28T14:30:00Z',
-      reason: 'Hủy lịch hẹn trước 24 giờ theo chính sách hoàn tiền 100%.',
+      reason: 'Hủy lịch hẹn trước 48 giờ theo chính sách hoàn tiền 100%.',
       cancellationPolicyNotice:
-        'Hoàn trả 100% khi hủy trước ít nhất 24 giờ theo chính sách Fitmate.',
+        'Hoàn trả 100% khi hủy trước ít nhất 48 giờ theo chính sách Fitmate.',
     };
   }
 }

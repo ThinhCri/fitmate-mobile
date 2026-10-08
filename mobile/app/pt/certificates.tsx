@@ -4,6 +4,7 @@ import { ptService, SubmitCertificateInput } from '@/services/api/ptService';
 import type { PtCertificate } from '@/services/api/types';
 import { CertificatesPresentation } from '@/features/pt/CertificatesPresentation';
 import { useAuth } from '@/services/AuthContext';
+import { authService } from '@/services/api/authService';
 
 export default function CertificatesRoute() {
   const router = useRouter();
@@ -13,12 +14,14 @@ export default function CertificatesRoute() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [phoneVerified, setPhoneVerified] = useState<boolean | undefined>();
 
   const fetchCertificates = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await ptService.getMyCertificates();
+      const [data, profile] = await Promise.all([ptService.getMyCertificates(), authService.getMe()]);
+      setPhoneVerified(profile.phone_verified === true);
       const items = data?.items || [];
       setCertificates(items);
       const hasApproved = items.some((item) => ['approved', '1'].includes(String(item.status).toLowerCase()));
@@ -69,6 +72,8 @@ export default function CertificatesRoute() {
       }}
       onSubmitCertificate={handleSubmitCertificate}
       verificationStatus={user?.ptVerificationStatus}
+      phoneVerified={phoneVerified}
+      onVerifyPhone={() => router.push('/pt/verify-phone' as never)}
     />
   );
 }

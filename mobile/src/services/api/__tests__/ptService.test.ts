@@ -21,6 +21,18 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { ptService } from '../ptService';
 import { ApiError } from '../client';
 import { sessionManager } from '@/services/session/sessionManager';
+import type { ServiceInput } from '../types';
+
+const validServiceDetails: Omit<ServiceInput, 'name' | 'price_vnd' | 'duration_minutes'> = {
+  description: 'Buổi tập cá nhân theo nhu cầu và thể trạng học viên.',
+  service_kind: 'one_to_one',
+  delivery_mode: 'in_person',
+  target_audience: 'Người mới tập',
+  required_equipment: 'Giày thể thao',
+  deliverable: 'Hướng dẫn kỹ thuật trong buổi tập',
+  location_name: 'Phòng tập Fit Gym',
+  location_address: 'Số 1 Nguyễn Huệ, Quận 1, TP.HCM',
+};
 
 const secureStoreMock = new Map<string, string>();
 
@@ -114,6 +126,7 @@ describe('ptService (MOB-801)', () => {
     it('creates service with valid input and rejects invalid fields', async () => {
       await expect(
         ptService.createService({
+          ...validServiceDetails,
           name: '',
           price_vnd: 200000,
           duration_minutes: 60,
@@ -122,6 +135,7 @@ describe('ptService (MOB-801)', () => {
 
       await expect(
         ptService.createService({
+          ...validServiceDetails,
           name: 'Gói Yoga',
           price_vnd: -50000,
           duration_minutes: 60,
@@ -130,6 +144,7 @@ describe('ptService (MOB-801)', () => {
 
       await expect(
         ptService.createService({
+          ...validServiceDetails,
           name: 'Gói Yoga',
           price_vnd: 200000,
           duration_minutes: 10,
@@ -149,6 +164,7 @@ describe('ptService (MOB-801)', () => {
       } as unknown as Response);
 
       const created = await ptService.createService({
+        ...validServiceDetails,
         name: 'Gói Pilates',
         price_vnd: 350000,
         duration_minutes: 60,

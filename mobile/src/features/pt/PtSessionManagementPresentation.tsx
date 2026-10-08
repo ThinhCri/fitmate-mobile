@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput } from 'react-native';
-import { Calendar, Clock, MapPin, CheckCircle2, AlertCircle, FileText, User } from 'lucide-react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Clock, MapPin, FileText } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
 import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
@@ -13,12 +13,12 @@ export interface PtSessionManagementPresentationProps {
   serviceName: string;
   scheduledTime: string;
   location: string;
-  status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'held' | 'pending' | 'confirmed' | 'in_progress' | 'awaiting_member_confirmation' | 'completed' | 'cancelled' | 'disputed' | 'other';
   paidAmountVnd: number;
-  initialNotes?: string;
+  busy?: boolean;
   onAcceptSession?: () => void;
   onStartSession?: () => void;
-  onCompleteSession?: (notes: string) => void;
+  onCompleteSession?: () => void;
   onCancelSession?: (reason: string) => void;
 }
 
@@ -32,14 +32,12 @@ export function PtSessionManagementPresentation({
   location,
   status,
   paidAmountVnd,
-  initialNotes = '',
+  busy = false,
   onAcceptSession,
   onStartSession,
   onCompleteSession,
   onCancelSession,
 }: PtSessionManagementPresentationProps) {
-  const [sessionNotes, setSessionNotes] = useState(initialNotes);
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
       {/* Header Context */}
@@ -66,7 +64,17 @@ export function PtSessionManagementPresentation({
               ? 'Đang diễn ra'
               : status === 'confirmed'
               ? 'Đã xác nhận'
-              : 'Chờ duyệt'}
+              : status === 'awaiting_member_confirmation'
+              ? 'Chờ hội viên xác nhận'
+              : status === 'disputed'
+              ? 'Đang xử lý phản hồi'
+              : status === 'cancelled'
+              ? 'Đã hủy'
+              : status === 'held'
+              ? 'Đang giữ chỗ'
+              : status === 'pending'
+              ? 'Chờ xác nhận'
+              : 'Không còn hiệu lực'}
           </Text>
         </View>
       </View>
@@ -96,47 +104,38 @@ export function PtSessionManagementPresentation({
           <Clock size={16} color={colors.primary} />
           <Text style={styles.infoText}>{scheduledTime}</Text>
         </View>
-        <View style={styles.infoLine}>
+        {!!location && <View style={styles.infoLine}>
           <MapPin size={16} color={colors.primary} />
           <Text style={styles.infoText}>{location}</Text>
-        </View>
+        </View>}
       </Card>
 
-      {/* Post-Session Coaching Notes */}
-      <Card style={styles.card}>
-        <Text style={styles.sectionTitle}>Ghi chú buổi dạy &amp; Hiệu suất học viên</Text>
-        <TextInput
-          style={styles.textArea}
-          multiline
-          numberOfLines={4}
-          placeholder="Nhập nhận xét về mức tạ, kỹ thuật và phản hồi của học viên..."
-          placeholderTextColor={colors.textMuted}
-          value={sessionNotes}
-          onChangeText={setSessionNotes}
-        />
-      </Card>
+      {status === 'awaiting_member_confirmation' && <Text style={styles.subText}>Bạn đã báo hoàn tất. Hội viên có thể xác nhận hoặc phản hồi về buổi tập.</Text>}
+      {status === 'disputed' && <Text style={styles.subText}>Hội viên đã gửi phản hồi. Vui lòng chờ bộ phận hỗ trợ xử lý.</Text>}
 
       {/* Allowed Actions */}
       <View style={styles.actions}>
         {status === 'pending' && onAcceptSession && (
-          <PrimaryButton label="Chấp nhận lịch hẹn" onPress={onAcceptSession} />
+          <PrimaryButton label="Chấp nhận lịch hẹn" onPress={onAcceptSession} disabled={busy} />
         )}
 
         {status === 'confirmed' && onStartSession && (
-          <PrimaryButton label="Bắt đầu buổi tập" onPress={onStartSession} />
+          <PrimaryButton label="Bắt đầu buổi tập" onPress={onStartSession} disabled={busy} />
         )}
 
         {status === 'in_progress' && onCompleteSession && (
           <PrimaryButton
-            label="Hoàn tất buổi tập & Lưu ghi chú"
-            onPress={() => onCompleteSession(sessionNotes)}
+            label="Báo hoàn tất buổi tập"
+            onPress={onCompleteSession}
+            disabled={busy}
           />
         )}
 
         {(status === 'pending' || status === 'confirmed') && onCancelSession && (
           <SecondaryButton
             label="Hủy lịch dạy"
-            onPress={() => onCancelSession('Bận việc đột xuất')}
+            onPress={() => onCancelSession('PT không thể thực hiện buổi tập')}
+            disabled={busy}
           />
         )}
       </View>

@@ -42,7 +42,7 @@ export function ConfirmHoldPresentation({
             </View>
           </View>
           <Text style={styles.holdSubtitle}>
-            Vui lòng hoàn tất thanh toán trước khi thời gian giữ chỗ kết thúc để đảm bảo slot tập.
+            Vui lòng hoàn tất thanh toán trước khi thời gian giữ chỗ kết thúc để giữ giờ tập này.
           </Text>
         </View>
       </View>
@@ -76,13 +76,13 @@ export function ConfirmHoldPresentation({
           </View>
         </View>
 
-        <View style={styles.infoLine}>
+        {quote.location ? <View style={styles.infoLine}>
           <MapPin size={16} color={colors.primary} />
           <View style={styles.infoLineTextCol}>
             <Text style={styles.infoLineLabel}>Địa điểm tập luyện</Text>
             <Text style={styles.infoLineValue}>{quote.location}</Text>
           </View>
-        </View>
+        </View> : null}
       </Card>
 
       {/* Card 2: Payment Breakdown */}
@@ -135,7 +135,7 @@ export function ConfirmHoldPresentation({
       <View style={styles.policyBox}>
         <AlertCircle size={16} color={colors.textSecondary} />
         <Text style={styles.policyText}>
-          Chính sách hủy lịch: Bạn có thể hủy và yêu cầu hoàn tiền trước buổi tập 24 giờ. Tiền hoàn
+          Chính sách hủy lịch: Bạn có thể hủy và yêu cầu hoàn tiền trước buổi tập ít nhất 48 giờ. Tiền hoàn
           sẽ được ghi nhận vào lịch sử giao dịch minh bạch.
         </Text>
       </View>

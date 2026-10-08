@@ -1,15 +1,15 @@
 {
   "baseline": "PROD-2026-09-22-v1",
-  "capturedAt": "2026-10-05",
+  "capturedAt": "2026-10-08",
   "backendRepository": "FitmateAI_BE",
-  "backendFrozenRevision": "8dfede909461a567b858302c848a564f1cc9eaeb",
+  "backendFrozenRevision": "94a3467+worktree",
   "openapiSource": "FitmateAI_BE/docs/backend-release/openapi/fitmate-v1.yaml",
-  "openapiSha256": "6B13563F81912D5505837B39289A2EDFAA63ABAF01C83C36FDB9FF6026885E63",
+  "openapiSha256": "4EA08A4479D57C290A6E03B9DDD3F7711A77CCA7682E9F2E8D342E6009F0AC2F",
   "contractStatus": "FROZEN-V1",
   "hashEncoding": "raw file bytes (no normalization)",
   "refreshWhen": "The backend OpenAPI revision changes; recalculate SHA256 and update this file before integration.",
-  "contractMeaning": "OpenAPI is the wire source of truth. Community feed supports optional server-side query search, including tag-only searches prefixed with #. Authenticated user search excludes self and blocked accounts; friend suggestions also exclude Admin accounts, existing friends and pending requests. Verified payment auto-confirms a published PT slot; members self-cancel at least 24 hours before start; PT completion awaits member confirmation or dispute for 24 hours; payout remains blocked for another 24 hours after final completion.",
-  "verifiedCore": "BE-801..807, BE-811..816, and BE-819 recorded VERIFIED. Release build 0 errors, 879/879 unit tests, 99/99 contract tests, 61/61 HTTP integration tests pass.",
+  "contractMeaning": "OpenAPI is the wire source of truth. The PT service now records purpose, delivery mode, audience, equipment, deliverable and a fixed direct-session location. A member can self-cancel or reschedule a single booking only at least 48 hours before start. Package checkout and online Meet booking remain gated.",
+  "verifiedCore": "Local code verification on 2026-10-08: backend 941/941 unit and 65/65 isolated PostgreSQL integration tests, mobile TypeScript check passed. This is not release approval or live provider verification.",
   "openGates": "BE-808..810 and BE-400 payment/payOS re-verification; BE-817 AI capability readiness; BE-826 three-repo UAT; BE-827 release approval.",
-  "disabledCapabilities": ["ai.companion_chat", "ai.workout_adjust", "ai.food_scan (runtime gated)", "vip_purchase", "reward_cashout", "pt_automatic_payout"]
+  "disabledCapabilities": ["ai.companion_chat", "ai.workout_adjust", "ai.food_scan (runtime gated)", "vip_purchase", "reward_cashout", "pt_automatic_payout", "pt_package_checkout", "pt_online_booking"]
 }

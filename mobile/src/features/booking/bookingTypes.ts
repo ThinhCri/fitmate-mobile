@@ -10,10 +10,16 @@ export interface BookingServiceViewModel {
   description: string;
   locationName: string;
   locationAddress: string;
+  serviceKind?: 'one_to_one' | 'assessment_and_plan';
+  targetAudience?: string;
+  requiredEquipment?: string;
+  deliverable?: string;
 }
 
 export interface BookingSlotViewModel {
   id: string;
+  durationMinutes?: number;
+  dateString?: string;
   startTime: string; // e.g. "08:00"
   endTime: string;   // e.g. "09:00"
   period: 'morning' | 'afternoon' | 'evening';
@@ -33,6 +39,7 @@ export interface CoachSummaryViewModel {
 
 export interface BookingHoldQuoteViewModel {
   bookingId: string;
+  slotStartUtc?: string;
   coach: CoachSummaryViewModel;
   service: BookingServiceViewModel;
   selectedDate: string; // e.g. "Thứ Hai, 28/09/2026"

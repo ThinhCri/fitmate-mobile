@@ -181,6 +181,13 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
                     {srv.description}
                   </Text>
                 ) : null}
+                <Text style={[typography.caption, styles.serviceMetaText]}>
+                  {srv.serviceKind === 'assessment_and_plan' ? 'Buổi đánh giá & bàn giao kế hoạch' : 'Buổi tập 1–1'} · {srv.deliveryMode === 'online' ? 'Online' : 'Trực tiếp'}
+                </Text>
+                {!!srv.targetAudience && <Text style={[typography.caption, styles.serviceMetaText]}>Phù hợp: {srv.targetAudience}</Text>}
+                {!!srv.requiredEquipment && <Text style={[typography.caption, styles.serviceMetaText]}>Chuẩn bị: {srv.requiredEquipment}</Text>}
+                {!!srv.deliverable && <Text style={[typography.caption, styles.serviceMetaText]}>Bạn nhận được: {srv.deliverable}</Text>}
+                {!!srv.locationName && <Text style={[typography.caption, styles.serviceMetaText]}>Địa điểm: {srv.locationName}, {srv.locationAddress}</Text>}
                 <View style={styles.serviceMetaRow}>
                   <Clock size={14} color={colors.textSecondary} />
                   <Text style={[typography.caption, styles.serviceMetaText]}>

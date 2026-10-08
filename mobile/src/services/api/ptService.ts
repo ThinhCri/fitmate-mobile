@@ -53,6 +53,15 @@ export const ptService = {
     if (input.duration_minutes < 15 || input.duration_minutes > 240) {
       throw new Error('Thời lượng buổi tập phải từ 15 đến 240 phút');
     }
+    if (input.description.trim().length < 20) {
+      throw new Error('Vui lòng mô tả buổi tập ít nhất 20 ký tự');
+    }
+    if (!input.target_audience.trim() || !input.required_equipment.trim() || !input.deliverable.trim()) {
+      throw new Error('Vui lòng điền đối tượng phù hợp, dụng cụ và kết quả bàn giao');
+    }
+    if (input.delivery_mode === 'in_person' && (!input.location_name?.trim() || !input.location_address?.trim())) {
+      throw new Error('Buổi tập trực tiếp cần tên và địa chỉ địa điểm cố định');
+    }
 
     return apiClient<Service>('/me/services', {
       method: 'POST',
@@ -77,6 +86,12 @@ export const ptService = {
       (input.duration_minutes < 15 || input.duration_minutes > 240)
     ) {
       throw new Error('Thời lượng buổi tập phải từ 15 đến 240 phút');
+    }
+    if (input.description !== undefined && input.description.trim().length < 20) {
+      throw new Error('Vui lòng mô tả buổi tập ít nhất 20 ký tự');
+    }
+    if (input.target_audience !== undefined && !input.target_audience.trim()) {
+      throw new Error('Vui lòng nhập đối tượng phù hợp');
     }
 
     try {

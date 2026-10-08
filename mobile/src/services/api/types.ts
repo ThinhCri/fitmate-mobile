@@ -22,6 +22,7 @@ export interface UserProfile {
   avatar_url?: string | null;
   bio?: string | null;
   phone?: string | null;
+  phone_verified?: boolean;
   gender?: 'male' | 'female' | 'other';
   birthday?: string | null;
   height_cm?: number | null;
@@ -147,20 +148,30 @@ export interface Service {
   price_vnd: number;
   duration_minutes: number;
   is_active: boolean;
+  service_kind?: 'one_to_one' | 'assessment_and_plan';
+  delivery_mode?: 'in_person' | 'online';
+  target_audience?: string | null;
+  required_equipment?: string | null;
+  deliverable?: string | null;
+  location_name?: string | null;
+  location_address?: string | null;
 }
 
 export interface ServiceInput {
   name: string;
-  description?: string;
+  description: string;
   price_vnd: number;
   duration_minutes: number;
+  service_kind: 'one_to_one' | 'assessment_and_plan';
+  delivery_mode: 'in_person' | 'online';
+  target_audience: string;
+  required_equipment: string;
+  deliverable: string;
+  location_name?: string;
+  location_address?: string;
 }
 
-export interface ServiceUpdate {
-  name?: string;
-  description?: string;
-  price_vnd?: number;
-  duration_minutes?: number;
+export interface ServiceUpdate extends Partial<ServiceInput> {
   is_active?: boolean;
 }
 
@@ -289,6 +300,13 @@ export interface TrainerServiceViewModel {
   priceVnd: number;
   durationMinutes: number;
   isActive: boolean;
+  serviceKind?: 'one_to_one' | 'assessment_and_plan';
+  deliveryMode?: 'in_person' | 'online';
+  targetAudience?: string;
+  requiredEquipment?: string;
+  deliverable?: string;
+  locationName?: string;
+  locationAddress?: string;
 }
 
 export interface TrainerReviewViewModel {
@@ -352,6 +370,13 @@ export function mapPTPublicDetailToDetail(
     priceVnd: s.price_vnd,
     durationMinutes: s.duration_minutes,
     isActive: s.is_active,
+    serviceKind: s.service_kind ?? 'one_to_one',
+    deliveryMode: s.delivery_mode ?? 'in_person',
+    targetAudience: s.target_audience ?? '',
+    requiredEquipment: s.required_equipment ?? '',
+    deliverable: s.deliverable ?? '',
+    locationName: s.location_name ?? '',
+    locationAddress: s.location_address ?? '',
   }));
 
   const reviews: TrainerReviewViewModel[] = (dto.reviews || []).map((r) => ({

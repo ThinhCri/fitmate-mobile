@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Clock, MapPin, Star, CheckCircle2, ChevronRight } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
@@ -32,8 +32,22 @@ export function SelectServiceSlotPresentation({
   const [selectedSlotId, setSelectedSlotId] = useState<string>(
     timeSlots.find((s) => s.isAvailable)?.id ?? ''
   );
-
   const selectedService = services.find((s) => s.id === selectedServiceId) ?? services[0];
+  const visibleSlots = timeSlots.filter((slot) =>
+    (!slot.dateString || slot.dateString === selectedDate) &&
+    (!selectedService || slot.durationMinutes === undefined || slot.durationMinutes >= selectedService.durationMinutes));
+
+  useEffect(() => {
+    if (!services.some((service) => service.id === selectedServiceId)) {
+      setSelectedServiceId(services[0]?.id ?? '');
+    }
+  }, [services, selectedServiceId]);
+
+  useEffect(() => {
+    if (!visibleSlots.some((slot) => slot.id === selectedSlotId && slot.isAvailable)) {
+      setSelectedSlotId('');
+    }
+  }, [selectedDate, selectedServiceId, selectedSlotId, timeSlots]);
 
   const handleContinue = () => {
     if (selectedServiceId && selectedDate && selectedSlotId) {
@@ -125,6 +139,9 @@ export function SelectServiceSlotPresentation({
                     </View>
 
                     <Text style={styles.serviceDesc}>{srv.description}</Text>
+                    {!!srv.targetAudience && <Text style={styles.serviceDesc}>Phù hợp: {srv.targetAudience}</Text>}
+                    {!!srv.requiredEquipment && <Text style={styles.serviceDesc}>Chuẩn bị: {srv.requiredEquipment}</Text>}
+                    {!!srv.deliverable && <Text style={styles.serviceDesc}>Bạn nhận được: {srv.deliverable}</Text>}
 
                     <View style={styles.serviceLocRow}>
                       <MapPin size={14} color={colors.primary} />
@@ -185,7 +202,7 @@ export function SelectServiceSlotPresentation({
           </View>
 
           <View style={styles.slotsGrid}>
-            {timeSlots.map((slot) => {
+            {visibleSlots.length === 0 ? <Text style={styles.serviceDesc}>HLV chưa mở giờ trống cho ngày này. Hãy chọn ngày khác.</Text> : visibleSlots.map((slot) => {
               const isSelected = slot.id === selectedSlotId;
               return (
                 <TouchableOpacity

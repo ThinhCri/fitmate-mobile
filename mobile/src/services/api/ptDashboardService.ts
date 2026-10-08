@@ -14,7 +14,7 @@ export const ptDashboardService = {
       getTrainerRepository().getTrainer(me.id),
       bookingService.listMyTrainerBookings({ page: 1, pageSize: 20 }),
     ]);
-    const upcoming = bookings.items.filter((item) => ['Held', 'Pending', 'Confirmed'].includes(item.status)).map((item) => ({ id: item.id, clientName: `Hội viên ${item.member_id.slice(0, 8)}`, serviceName: `Dịch vụ ${item.service_id.slice(0, 8)}`, timeString: new Date(item.slot_start_utc).toLocaleString('vi-VN'), location: 'Theo thông tin lịch hẹn' }));
+    const upcoming = bookings.items.filter((item) => ['Confirmed', 'InProgress', 'AwaitingMemberConfirmation'].includes(item.status)).map((item) => ({ id: item.id, clientName: `Hội viên ${item.member_id.slice(0, 8)}`, serviceName: publicProfile.services.find((service) => service.id === item.service_id)?.name || 'Buổi huấn luyện', timeString: new Date(item.slot_start_utc).toLocaleString('vi-VN'), location: '' }));
     return { ptName: publicProfile.name, isVerified: publicProfile.isVerified, certificateName: publicProfile.isVerified ? 'Chứng chỉ đã xác minh' : 'Chứng chỉ chưa xác minh', rating: publicProfile.rating, reviewCount: publicProfile.reviewCount, isAcceptingClients: publicProfile.services.some((service) => service.isActive), pendingTasks: [], upcomingSessions: upcoming };
   },
   async getRevenue(range = '30d') {
