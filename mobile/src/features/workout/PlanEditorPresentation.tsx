@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import {
   ArrowLeft,
@@ -18,16 +20,24 @@ import {
   ChevronDown,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
-import { WorkoutPlanViewModel, ExerciseItemViewModel } from './workoutTypes';
+import {
+  WorkoutPlanViewModel,
+  ExerciseItemViewModel,
+  ExerciseCatalogItemViewModel,
+} from './workoutTypes';
 import { InputField } from '@/components/design-system/Inputs';
 import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
 import { Card } from '@/components/design-system/Card';
+import { estimateExerciseKcal, estimatePlanKcal } from './calorieEstimate';
 
 export interface PlanEditorPresentationProps {
   initialPlan?: Partial<WorkoutPlanViewModel>;
   onBack: () => void;
   onSave: (plan: Partial<WorkoutPlanViewModel>) => void;
   isSaving?: boolean;
+  catalog: ExerciseCatalogItemViewModel[];
+  catalogLoading?: boolean;
+  weightKg?: number;
 }
 
 export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
@@ -35,50 +45,65 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
   onBack,
   onSave,
   isSaving = false,
+  catalog,
+  catalogLoading = false,
+  weightKg = 0,
 }) => {
   const [title, setTitle] = useState(initialPlan?.title ?? '');
-  const [category, setCategory] = useState(initialPlan?.category ?? 'Sức mạnh • Thân trên');
-  const [description, setDescription] = useState(initialPlan?.description ?? '');
+  const currentDayIndex = (new Date().getDay() + 6) % 7;
+  const weekDays = [
+    { label: 'T2', value: 'Mon' }, { label: 'T3', value: 'Tue' },
+    { label: 'T4', value: 'Wed' }, { label: 'T5', value: 'Thu' },
+    { label: 'T6', value: 'Fri' }, { label: 'T7', value: 'Sat' },
+    { label: 'CN', value: 'Sun' },
+  ];
+  const [category, setCategory] = useState(initialPlan?.category ?? weekDays[currentDayIndex].value);
   const [durationMinutes, setDurationMinutes] = useState(
     initialPlan?.durationMinutes ? String(initialPlan.durationMinutes) : '45'
   );
   const [exercises, setExercises] = useState<ExerciseItemViewModel[]>(
-    initialPlan?.exercises ?? [
-      {
-        id: 'ex-1',
-        name: 'Hít đất (Push-up)',
-        type: 'reps',
-        sets: 3,
-        repsPerSet: 12,
-        restSeconds: 45,
-        caloriesEstimate: 60,
-      },
-      {
-        id: 'ex-2',
-        name: 'Plank siết cơ bụng',
-        type: 'time',
-        sets: 3,
-        durationSeconds: 45,
-        restSeconds: 30,
-        caloriesEstimate: 45,
-      },
-    ]
+    initialPlan?.exercises ?? []
   );
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [catalogQuery, setCatalogQuery] = useState('');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleAddExercise = () => {
-    const newEx: ExerciseItemViewModel = {
-      id: `ex-${Date.now()}`,
-      name: 'Bài tập mới',
-      type: 'reps',
-      sets: 3,
-      repsPerSet: 10,
-      restSeconds: 60,
-      caloriesEstimate: 50,
-    };
-    setExercises((prev) => [...prev, newEx]);
+    setCatalogOpen((value) => !value);
   };
+
+  const addFromCatalog = (item: ExerciseCatalogItemViewModel) => {
+    const newExercise: ExerciseItemViewModel = {
+      id: `catalog-${item.id}-${Date.now()}`,
+      catalogId: item.id,
+      name: item.nameVi,
+      type: item.type,
+      sets: 3,
+      repsPerSet: item.type === 'reps' ? 10 : undefined,
+      durationSeconds: item.type === 'time' ? 30 : undefined,
+      restSeconds: 45,
+      caloriesEstimate: estimateExerciseKcal({
+        type: item.type, sets: 3, repsPerSet: 10, durationSeconds: 30,
+      }, weightKg),
+      instructions: item.instructionsVi.join(' '),
+      targetMuscle: item.primaryMuscles[0],
+      difficulty: item.difficulty,
+      equipment: item.equipment,
+      imageStartUrl: item.imageStartUrl,
+      imageEndUrl: item.imageEndUrl,
+      mediaSource: `${item.source} (${item.sourceLicense})`,
+    };
+    setExercises((current) => [...current, newExercise]);
+    setCatalogOpen(false);
+    setCatalogQuery('');
+  };
+
+  const visibleCatalog = catalog.filter((item) => {
+    const query = catalogQuery.trim().toLocaleLowerCase('vi');
+    return !query || item.nameVi.toLocaleLowerCase('vi').includes(query) ||
+      item.nameEn.toLocaleLowerCase('en').includes(query);
+  });
 
   const handleRemoveExercise = (id: string) => {
     setExercises((prev) => prev.filter((e) => e.id !== id));
@@ -104,10 +129,13 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
     onSave({
       title: title.trim(),
       category,
-      description: description.trim(),
+      description: `${exercises.length} bài tập`,
       durationMinutes: Number(durationMinutes) || 45,
-      caloriesEstimate: exercises.reduce((acc, e) => acc + e.caloriesEstimate, 0),
-      exercises,
+      caloriesEstimate: estimatePlanKcal(exercises, weightKg),
+      exercises: exercises.map((exercise) => ({
+        ...exercise,
+        caloriesEstimate: estimateExerciseKcal(exercise, weightKg),
+      })),
     });
   };
 
@@ -155,20 +183,23 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
             error={errors.title}
           />
 
-          <InputField
-            label="Phân loại / Mục tiêu"
-            placeholder="Ví dụ: Tăng cơ, Giảm mỡ, Thể lực..."
-            value={category}
-            onChangeText={setCategory}
-          />
-
-          <InputField
-            label="Mô tả tóm tắt"
-            placeholder="Mô tả mục tiêu và nhóm cơ tác động chính..."
-            value={description}
-            onChangeText={setDescription}
-            multiline
-          />
+          <View style={styles.dayPickerSection}>
+            <Text style={styles.fieldLabel}>Ngày tập *</Text>
+            <View style={styles.dayPickerRow}>
+              {weekDays.map((day) => (
+                <TouchableOpacity
+                  key={day.value}
+                  onPress={() => setCategory(day.value)}
+                  style={[styles.dayPickerItem, category === day.value && styles.dayPickerItemActive]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: category === day.value }}
+                  accessibilityLabel={`Chọn ngày ${day.label}`}
+                >
+                  <Text style={[styles.dayPickerText, category === day.value && styles.dayPickerTextActive]}>{day.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
           <InputField
             label="Thời lượng ước tính (phút)"
@@ -198,6 +229,57 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
             <Text style={[typography.caption, { color: colors.danger }]}>{errors.exercises}</Text>
           ) : null}
 
+          {catalogOpen ? (
+            <Card padding="md" style={styles.catalogCard}>
+              <InputField
+                label="Tìm trong thư viện"
+                placeholder="Ví dụ: squat, plank, ngực..."
+                value={catalogQuery}
+                onChangeText={setCatalogQuery}
+              />
+              {catalogLoading ? (
+                <ActivityIndicator color={colors.primary} />
+              ) : visibleCatalog.length === 0 ? (
+                <Text style={[typography.body, styles.catalogEmpty]}>
+                  Không tìm thấy bài tập phù hợp.
+                </Text>
+              ) : (
+                visibleCatalog.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.catalogItem}
+                    onPress={() => addFromCatalog(item)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Thêm ${item.nameVi}`}
+                  >
+                    {item.imageStartUrl ? (
+                      <Image
+                        source={{ uri: item.imageStartUrl }}
+                        style={styles.catalogThumbnail}
+                        resizeMode="cover"
+                        accessibilityRole="image"
+                        accessibilityLabel={`Tư thế bắt đầu của ${item.nameVi}`}
+                      />
+                    ) : (
+                      <View style={styles.catalogThumbnailFallback}>
+                        <Dumbbell size={20} color={colors.primaryDark} />
+                      </View>
+                    )}
+                    <View style={styles.catalogItemText}>
+                      <Text style={[typography.bodyBold, styles.catalogName]}>
+                        {item.nameVi}
+                      </Text>
+                      <Text style={[typography.caption, styles.catalogMeta]}>
+                        {item.nameEn} • {item.equipment || 'Không dụng cụ'} • {item.difficulty}
+                      </Text>
+                    </View>
+                    <Plus size={18} color={colors.primary} />
+                  </TouchableOpacity>
+                ))
+              )}
+            </Card>
+          ) : null}
+
           {exercises.map((ex, idx) => (
             <Card key={ex.id} padding="md" style={styles.exerciseEditorCard}>
               <View style={styles.exerciseHeaderRow}>
@@ -213,6 +295,23 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
                   <Trash2 size={16} color={colors.danger} />
                 </TouchableOpacity>
               </View>
+
+              {ex.imageStartUrl || ex.imageEndUrl ? (
+                <View style={styles.exerciseMediaRow}>
+                  {ex.imageStartUrl ? (
+                    <View style={styles.exerciseMediaItem}>
+                      <Image source={{ uri: ex.imageStartUrl }} style={styles.exerciseMediaImage} resizeMode="cover" accessibilityRole="image" accessibilityLabel={`Tư thế bắt đầu của ${ex.name}`} />
+                      <Text style={styles.exerciseMediaLabel}>Bắt đầu</Text>
+                    </View>
+                  ) : null}
+                  {ex.imageEndUrl ? (
+                    <View style={styles.exerciseMediaItem}>
+                      <Image source={{ uri: ex.imageEndUrl }} style={styles.exerciseMediaImage} resizeMode="cover" accessibilityRole="image" accessibilityLabel={`Tư thế kết thúc của ${ex.name}`} />
+                      <Text style={styles.exerciseMediaLabel}>Kết thúc</Text>
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
 
               <InputField
                 label="Tên động tác"
@@ -352,9 +451,39 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: colors.textPrimary,
   },
+  dayPickerSection: { gap: spacing.sm },
+  fieldLabel: { ...typography.captionMedium, color: colors.textSecondary },
+  dayPickerRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.xs },
+  dayPickerItem: { flex: 1, minHeight: 44, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceSubtle, borderWidth: 1, borderColor: colors.borderSubtle },
+  dayPickerItemActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  dayPickerText: { ...typography.captionMedium, color: colors.textSecondary },
+  dayPickerTextActive: { color: colors.white },
   exercisesSection: {
     gap: spacing.sm,
   },
+  catalogCard: {
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+  },
+  catalogEmpty: {
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingVertical: spacing.md,
+  },
+  catalogItem: {
+    minHeight: 76,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingVertical: spacing.sm,
+  },
+  catalogThumbnail: { width: 60, height: 60, borderRadius: radius.md, backgroundColor: colors.surfaceSubtle },
+  catalogThumbnailFallback: { width: 60, height: 60, borderRadius: radius.md, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  catalogItemText: { flex: 1, gap: 2 },
+  catalogName: { color: colors.textPrimary },
+  catalogMeta: { color: colors.textSecondary },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -377,6 +506,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     backgroundColor: colors.surface,
   },
+  exerciseMediaRow: { flexDirection: 'row', gap: spacing.sm },
+  exerciseMediaItem: { flex: 1, gap: spacing.xs },
+  exerciseMediaImage: { width: '100%', aspectRatio: 1.5, borderRadius: radius.md, backgroundColor: colors.surfaceSubtle },
+  exerciseMediaLabel: { ...typography.captionMedium, color: colors.textSecondary, textAlign: 'center' },
   exerciseHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',

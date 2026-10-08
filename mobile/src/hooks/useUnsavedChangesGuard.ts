@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigation } from 'expo-router';
 
-type PendingNavigationAction = Parameters<ReturnType<typeof useNavigation>['dispatch']>[0];
+type PendingNavigationAction = { type: string; payload?: object; source?: string; target?: string };
+type GuardNavigation = {
+  dispatch: (action: PendingNavigationAction) => void;
+  addListener: (event: 'beforeRemove', callback: (event: { preventDefault: () => void; data: { action: PendingNavigationAction } }) => void) => () => void;
+};
 
 export function useUnsavedChangesGuard(shouldPrevent: boolean, onDiscard: () => void) {
-  const navigation = useNavigation();
+  const navigation = useNavigation<GuardNavigation>();
   const [pendingAction, setPendingAction] = useState<PendingNavigationAction | null>(null);
   const [visible, setVisible] = useState(false);
 

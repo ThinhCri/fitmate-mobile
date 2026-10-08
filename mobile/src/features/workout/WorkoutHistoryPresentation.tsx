@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Calendar, ChevronDown, Check, Cloud, Dumbbell, Flame, Timer, TrendingUp, Inbox } from 'lucide-react-native';
+import { Calendar, ChevronLeft, ChevronRight, Dumbbell, Flame, Timer, TrendingUp, Inbox } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
 import { WorkoutHistoryItemViewModel } from './workoutTypes';
@@ -17,6 +17,8 @@ export interface WorkoutHistoryPresentationProps {
   };
   onSelectSession: (sessionId: string) => void;
   onFilterMonth?: () => void;
+  onNextMonth?: () => void;
+  onConfigureGoals?: () => void;
 }
 
 export function WorkoutHistoryPresentation({
@@ -24,13 +26,14 @@ export function WorkoutHistoryPresentation({
   monthlyStats,
   onSelectSession,
   onFilterMonth,
+  onNextMonth,
+  onConfigureGoals,
 }: WorkoutHistoryPresentationProps) {
-  const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'synced'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'completed' | 'endedEarly'>('all');
 
-  const pendingCount = sessions.filter((s) => s.syncStatus === 'pending').length;
   const filteredSessions = sessions.filter((s) => {
-    if (activeFilter === 'pending') return s.syncStatus === 'pending';
-    if (activeFilter === 'synced') return s.syncStatus === 'synced';
+    if (activeFilter === 'completed') return s.status === 'completed';
+    if (activeFilter === 'endedEarly') return s.status === 'endedEarly';
     return true;
   });
 
@@ -57,12 +60,13 @@ export function WorkoutHistoryPresentation({
             style={styles.monthChip}
             onPress={onFilterMonth}
             accessibilityRole="button"
-            accessibilityLabel={`Chọn tháng, đang chọn ${monthlyStats.monthYear}`}
+            accessibilityLabel={`Tháng trước, đang xem ${monthlyStats.monthYear}`}
           >
+            <ChevronLeft size={16} color={colors.textSecondary} />
             <Calendar size={18} color={colors.primary} />
             <Text style={styles.monthChipText}>{monthlyStats.monthYear}</Text>
-            <ChevronDown size={16} color={colors.textSecondary} />
           </TouchableOpacity>
+          {onNextMonth ? <TouchableOpacity style={styles.monthChip} onPress={onNextMonth} accessibilityRole="button" accessibilityLabel="Tháng tiếp theo"><ChevronRight size={18} color={colors.primary} /></TouchableOpacity> : null}
 
           {/* All Filter */}
           <TouchableOpacity
@@ -96,47 +100,37 @@ export function WorkoutHistoryPresentation({
             </View>
           </TouchableOpacity>
 
-          {/* Pending Sync Filter */}
+          {/* Completed sessions */}
           <TouchableOpacity
-            style={[styles.filterChip, activeFilter === 'pending' && styles.filterChipActive]}
-            onPress={() => setActiveFilter('pending')}
+            style={[styles.filterChip, activeFilter === 'completed' && styles.filterChipActive]}
+            onPress={() => setActiveFilter('completed')}
             accessibilityRole="button"
-            accessibilityLabel="Lọc các buổi tập chờ đồng bộ"
+            accessibilityLabel="Lọc các buổi tập hoàn thành"
           >
-            <View style={styles.pendingDot} />
             <Text
               style={[
                 styles.filterChipText,
-                activeFilter === 'pending' && styles.filterChipTextActive,
+                activeFilter === 'completed' && styles.filterChipTextActive,
               ]}
             >
-              Chờ đồng bộ
+              Hoàn thành
             </Text>
-            {pendingCount > 0 && (
-              <View style={styles.filterBadge}>
-                <Text style={styles.filterBadgeText}>{pendingCount}</Text>
-              </View>
-            )}
           </TouchableOpacity>
 
-          {/* Synced Filter */}
+          {/* Early-ended sessions */}
           <TouchableOpacity
-            style={[styles.filterChip, activeFilter === 'synced' && styles.filterChipActive]}
-            onPress={() => setActiveFilter('synced')}
+            style={[styles.filterChip, activeFilter === 'endedEarly' && styles.filterChipActive]}
+            onPress={() => setActiveFilter('endedEarly')}
             accessibilityRole="button"
-            accessibilityLabel="Lọc các buổi tập đã đồng bộ"
+            accessibilityLabel="Lọc các buổi tập kết thúc sớm"
           >
-            <Cloud
-              size={16}
-              color={activeFilter === 'synced' ? '#FFFFFF' : '#16A34A'}
-            />
             <Text
               style={[
                 styles.filterChipText,
-                activeFilter === 'synced' && styles.filterChipTextActive,
+                activeFilter === 'endedEarly' && styles.filterChipTextActive,
               ]}
             >
-              Đã đồng bộ
+              Kết thúc sớm
             </Text>
           </TouchableOpacity>
         </ScrollView>
@@ -152,12 +146,17 @@ export function WorkoutHistoryPresentation({
             <Text style={styles.summaryTitle}>Tổng kết {monthlyStats.monthYear}</Text>
             <Text style={styles.summarySubtitle}>Tiến độ tập luyện &amp; thích nghi cơ bắp</Text>
           </View>
-          <View style={styles.achievementTag}>
-            <Text style={styles.achievementTagText}>
-              {Math.round((monthlyStats.completedCount / (monthlyStats.targetCount || 1)) * 100)}%
-              mục tiêu
-            </Text>
-          </View>
+          {monthlyStats.targetCount > 0 ? (
+            <View style={styles.achievementTag}>
+              <Text style={styles.achievementTagText}>
+                {Math.round((monthlyStats.completedCount / monthlyStats.targetCount) * 100)}% mục tiêu
+              </Text>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.achievementTag} onPress={onConfigureGoals}>
+              <Text style={styles.achievementTagText}>Thiết lập mục tiêu</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.bentoGrid}>
@@ -168,18 +167,9 @@ export function WorkoutHistoryPresentation({
             </View>
             <Text style={styles.bentoValue}>
               {monthlyStats.completedCount}
-              <Text style={styles.bentoSubValue}>/ {monthlyStats.targetCount} buổi</Text>
-            </Text>
-          </View>
-
-          <View style={styles.bentoCell}>
-            <View style={styles.bentoLabelRow}>
-              <TrendingUp size={16} color="#D97706" />
-              <Text style={styles.bentoLabel}>Khối lượng nâng</Text>
-            </View>
-            <Text style={styles.bentoValue}>
-              {monthlyStats.totalVolumeKg.toLocaleString('vi-VN')}
-              <Text style={styles.bentoSubValue}> kg</Text>
+              <Text style={styles.bentoSubValue}>
+                {monthlyStats.targetCount > 0 ? `/ ${monthlyStats.targetCount} buổi` : ' buổi'}
+              </Text>
             </Text>
           </View>
 
@@ -238,25 +228,21 @@ export function WorkoutHistoryPresentation({
                   </View>
                   <View
                     style={[
-                      styles.syncBadge,
-                      session.syncStatus === 'synced'
-                        ? styles.syncBadgeSynced
-                        : styles.syncBadgePending,
+                      styles.statusBadge,
+                      session.status === 'completed'
+                        ? styles.statusBadgeCompleted
+                        : styles.statusBadgeEndedEarly,
                     ]}
                   >
-                    <Cloud
-                      size={14}
-                      color={session.syncStatus === 'synced' ? '#16A34A' : '#D97706'}
-                    />
                     <Text
                       style={[
-                        styles.syncBadgeText,
-                        session.syncStatus === 'synced'
-                          ? styles.syncBadgeTextSynced
-                          : styles.syncBadgeTextPending,
+                        styles.statusBadgeText,
+                        session.status === 'completed'
+                          ? styles.statusBadgeTextCompleted
+                          : styles.statusBadgeTextEndedEarly,
                       ]}
                     >
-                      {session.syncStatus === 'synced' ? 'Đã đồng bộ' : 'Chờ đồng bộ'}
+                      {session.status === 'endedEarly' ? 'Kết thúc sớm' : 'Hoàn thành'}
                     </Text>
                   </View>
                 </View>
@@ -492,7 +478,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 2,
   },
-  syncBadge: {
+  statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -500,20 +486,20 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: radius.full,
   },
-  syncBadgeSynced: {
+  statusBadgeCompleted: {
     backgroundColor: '#DCFCE7',
   },
-  syncBadgePending: {
+  statusBadgeEndedEarly: {
     backgroundColor: '#FEF3C7',
   },
-  syncBadgeText: {
+  statusBadgeText: {
     fontSize: 10,
     fontWeight: '600',
   },
-  syncBadgeTextSynced: {
+  statusBadgeTextCompleted: {
     color: '#16A34A',
   },
-  syncBadgeTextPending: {
+  statusBadgeTextEndedEarly: {
     color: '#D97706',
   },
   sessionMetricsRow: {

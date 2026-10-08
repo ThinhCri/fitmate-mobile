@@ -3,19 +3,56 @@ import {
   WorkoutHistoryItemViewModel,
   WorkoutSessionSummaryViewModel,
   WeightRecordViewModel,
+  ActiveWorkoutResult,
+  ExerciseCatalogItemViewModel,
 } from '@/features/workout/workoutTypes';
-import type { IWorkoutRepository, MonthlyWorkoutStats } from '../workoutRepository';
+import type { IWorkoutRepository, MonthlyWorkoutStats, WorkoutGoals } from '../workoutRepository';
 import { apiClient } from '@/services/api/client';
 import { createUuid } from '@/utils/uuid';
 
 export class ApiWorkoutRepository implements IWorkoutRepository {
+  async listExerciseCatalog(query?: string): Promise<ExerciseCatalogItemViewModel[]> {
+    const params = new URLSearchParams({ page: '1', pageSize: '100' });
+    if (query?.trim()) params.set('query', query.trim());
+    const raw = await apiClient<{ items: any[] }>(`/exercises?${params.toString()}`);
+    return (raw.items ?? []).map((item) => ({
+      id: item.id,
+      slug: item.slug,
+      nameVi: item.name_vi,
+      nameEn: item.name_en,
+      type: item.type === 'time' ? 'time' : 'reps',
+      difficulty: item.difficulty,
+      equipment: item.equipment ?? undefined,
+      primaryMuscles: item.primary_muscles ?? [],
+      secondaryMuscles: item.secondary_muscles ?? [],
+      instructionsVi: item.instructions_vi ?? [],
+      imageStartUrl: item.image_start_url ?? undefined,
+      imageEndUrl: item.image_end_url ?? undefined,
+      source: item.source,
+      sourceLicense: item.source_license,
+    }));
+  }
+
   private toPlanPayload(plan: Partial<WorkoutPlanViewModel>) {
     return {
       day_of_week: plan.category,
       workout_name: plan.title,
       duration_minutes: plan.durationMinutes,
       target_calories_burn: plan.caloriesEstimate ?? 0,
-      exercises: (plan.exercises || []).map((item) => ({ name: item.name, type: item.type, sets: item.sets, reps: item.repsPerSet, duration_sec: item.durationSeconds, rest_sec: item.restSeconds, calories: item.caloriesEstimate, notes: item.instructions })),
+      exercises: (plan.exercises || []).map((item) => ({
+        name: item.name,
+        type: item.type,
+        sets: item.sets,
+        reps: item.repsPerSet,
+        duration_sec: item.durationSeconds,
+        rest_sec: item.restSeconds,
+        calories: item.caloriesEstimate,
+        notes: item.instructions,
+        media_url: item.imageStartUrl,
+        media_type: item.imageStartUrl ? 'image' : undefined,
+        media_source: item.mediaSource,
+        tags: [item.targetMuscle, item.difficulty, item.equipment].filter(Boolean),
+      })),
     };
   }
 
@@ -76,6 +113,11 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
         restSeconds: ex.rest_sec ?? 0,
         caloriesEstimate: ex.calories ?? 0,
         instructions: ex.notes,
+        imageStartUrl: ex.media_url,
+        mediaSource: ex.media_source,
+        targetMuscle: Array.isArray(ex.tags) ? ex.tags[0] : undefined,
+        difficulty: Array.isArray(ex.tags) ? ex.tags[1] : undefined,
+        equipment: Array.isArray(ex.tags) ? ex.tags[2] : undefined,
       })),
     };
   }
@@ -84,18 +126,17 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
     sessions: WorkoutHistoryItemViewModel[];
     stats: MonthlyWorkoutStats;
   }> {
-    const raw = await apiClient<{ items: any[] }>('/me/workout/sessions');
+    const [raw, goals] = await Promise.all([
+      apiClient<{ items: any[] }>('/me/workout/sessions'),
+      this.getWorkoutGoals(),
+    ]);
     const items = raw.items || [];
 
     let totalVolume = 0;
-    let totalCalories = 0;
-    let totalDuration = 0;
 
     const sessions: WorkoutHistoryItemViewModel[] = items.map((item: any) => {
       const durSec = (item.duration_min || 0) * 60;
       const cal = item.calories_burned || 0;
-      totalCalories += cal;
-      totalDuration += item.duration_min || 0;
 
       return {
         id: item.id,
@@ -109,18 +150,27 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
         completedSets: item.completed_sets || 0,
         totalSets: item.planned_sets || item.completed_sets || 0,
         syncStatus: 'synced',
+        status: item.status === 'ended_early' ? 'endedEarly' : 'completed',
       };
     });
 
-    const count = sessions.length;
-    const avgDuration = count > 0 ? Math.round(totalDuration / count) : 0;
+    const now = new Date();
+    const monthlySessions = sessions.filter((session) => {
+      const date = new Date(session.completedAt);
+      return !Number.isNaN(date.getTime()) && date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth() && session.status === 'completed';
+    });
+    const count = monthlySessions.length;
+    const avgDuration = count > 0
+      ? Math.round(monthlySessions.reduce((sum, session) => sum + session.durationSeconds, 0) / 60 / count)
+      : 0;
 
     const stats: MonthlyWorkoutStats = {
       monthYear: 'Tháng này',
       completedCount: count,
-      targetCount: 0,
+      targetCount: goals.monthlyWorkoutTarget ?? 0,
       totalVolumeKg: totalVolume,
-      caloriesBurned: totalCalories,
+      caloriesBurned: monthlySessions.reduce((sum, session) => sum + session.caloriesBurned, 0),
       averageDurationMinutes: avgDuration,
     };
 
@@ -137,14 +187,17 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
       endedAt: raw.created_at || raw.date,
       durationSeconds: (raw.duration_min || 0) * 60,
       caloriesBurned: raw.calories_burned || 0,
-      totalExercises: raw.exercises || 0,
+      totalExercises: raw.items?.length ?? raw.exercises ?? 0,
       completedExercises: raw.exercises || 0,
       totalSets: raw.planned_sets || raw.completed_sets || 0,
       completedSets: raw.completed_sets || 0,
       syncStatus: 'synced',
+      status: raw.status === 'ended_early' ? 'endedEarly' : 'completed',
       records: (raw.items || []).map((it: any) => ({
         exerciseId: it.id,
         exerciseName: it.exercise_name,
+        plannedReps: it.planned_reps,
+        plannedDurationSeconds: it.planned_duration_sec,
         sets: (it.set_results || []).map((s: any, idx: number) => ({
           setNumber: s.set_index || idx + 1,
           repsCompleted: s.actual_reps,
@@ -185,7 +238,8 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
     });
 
     const currentWeightKg = records.length > 0 ? records[0].weightKg : 0;
-    const goalWeightKg = 0;
+    const goals = await this.getWorkoutGoals();
+    const goalWeightKg = goals.targetWeightKg ?? 0;
     const changeLast7DaysKg =
       records.length > 1
         ? Math.round(
@@ -232,7 +286,37 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
     });
   }
 
+  async getWorkoutGoals(): Promise<WorkoutGoals> {
+    const value = await apiClient<{
+      target_weight_kg?: number | null;
+      monthly_workout_target?: number | null;
+    }>('/users/me/preferences');
+    return {
+      targetWeightKg: value.target_weight_kg ?? null,
+      monthlyWorkoutTarget: value.monthly_workout_target ?? null,
+    };
+  }
+
+  async updateWorkoutGoals(goals: Partial<WorkoutGoals>): Promise<WorkoutGoals> {
+    const value = await apiClient<{
+      target_weight_kg?: number | null;
+      monthly_workout_target?: number | null;
+    }>('/users/me/preferences', {
+      method: 'PUT',
+      body: JSON.stringify({
+        target_weight_kg: goals.targetWeightKg,
+        monthly_workout_target: goals.monthlyWorkoutTarget,
+      }),
+    });
+    return {
+      targetWeightKg: value.target_weight_kg ?? null,
+      monthlyWorkoutTarget: value.monthly_workout_target ?? null,
+    };
+  }
+
   async recordWorkoutCompletion(params: {
+    clientId?: string;
+    date?: string;
     planId?: string;
     day?: string;
     name?: string;
@@ -241,21 +325,35 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
     completedSets: number;
     plannedSets: number;
     status: 'completed' | 'endedEarly';
+    results: ActiveWorkoutResult[];
   }): Promise<string> {
-    const dateStr = new Date().toISOString().slice(0, 10);
-    const clientId = createUuid();
+    const dateStr = params.date ?? new Date().toISOString().slice(0, 10);
+    const clientId = params.clientId ?? createUuid();
     const result = await apiClient<{ id: string }>('/me/workout/sessions', {
       method: 'POST',
+      headers: { 'Idempotency-Key': clientId },
       body: JSON.stringify({
         client_id: clientId,
         plan_id: params.planId,
         date: dateStr,
         duration_min: params.durationMinutes,
         calories_burned: params.caloriesBurned,
-        exercises: Math.max(1, Math.round(params.completedSets / 3)),
+        exercises: params.results.filter((item) =>
+          item.sets.some((set) => set.status === 'completed' || set.status === 'partial')
+        ).length,
         status: params.status === 'completed' ? 'completed' : 'ended_early',
         completed_sets: params.completedSets,
         planned_sets: params.plannedSets,
+        exercise_items: params.results.map((item, exerciseIndex) => ({
+          exercise_id: item.exerciseId,
+          order_index: exerciseIndex,
+          sets: item.sets.map((set) => ({
+            set_index: set.setNumber,
+            status: set.status,
+            actual_reps: set.repsCompleted,
+            actual_duration_sec: set.durationSeconds,
+          })),
+        })),
       }),
     });
     return result.id;

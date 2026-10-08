@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SessionDetailPresentation } from '../../../src/features/workout/SessionDetailPresentation';
 import { WorkoutSessionSummaryViewModel } from '../../../src/features/workout/workoutTypes';
 import { getWorkoutRepository } from '@/repositories/workoutRepository';
+import { colors } from '@/theme/designTokens';
 
 export default function SessionDetailScreen() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function SessionDetailScreen() {
   const [session, setSession] = useState<WorkoutSessionSummaryViewModel | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const goBack = () => router.canGoBack() ? router.back() : router.dismissTo('/(tabs)/workout');
 
   useEffect(() => {
     if (!id) return;
@@ -39,6 +41,7 @@ export default function SessionDetailScreen() {
   if (error || !session) {
     return (
       <View style={[styles.container, styles.center]}>
+        <TouchableOpacity onPress={goBack} accessibilityRole="button" accessibilityLabel="Quay lại"><Text style={styles.backText}>← Quay lại</Text></TouchableOpacity>
         <Text style={styles.errorText}>{error || 'Không tìm thấy buổi tập'}</Text>
       </View>
     );
@@ -48,8 +51,7 @@ export default function SessionDetailScreen() {
     <View style={styles.container}>
       <SessionDetailPresentation
         session={session}
-        totalVolumeKg={3450}
-        onBack={() => router.back()}
+        onBack={goBack}
       />
     </View>
   );
@@ -70,4 +72,5 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     textAlign: 'center',
   },
+  backText: { color: colors.primary, fontSize: 16, fontWeight: '600', padding: 16 },
 });

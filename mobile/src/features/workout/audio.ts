@@ -9,9 +9,8 @@
  * IMPORTANT:
  *  - We call `Speech.stop()` aggressively on cleanup so cues do not continue
  *    after the user leaves the workout screen.
- *  - We use `onDone` to chain follow-up cues without overlapping the
- *    current utterance.
- *  - The audio toggle is purely a UI flag; cues are skipped when off.
+ *  - A new cue stops the previous utterance so they do not overlap.
+ *  - The audio toggle controls real voice cues and stops playback when off.
  */
 import * as Speech from 'expo-speech';
 
@@ -46,12 +45,9 @@ export interface AudioController {
 
 export function createAudioController(initialEnabled = true): AudioController {
   let enabled = initialEnabled;
-  let stopped = false;
-
   const stop = () => {
-    stopped = true;
     try {
-      Speech.stop();
+      void Speech.stop();
     } catch {
       // Speech engine may throw if it has not been initialized. Ignore.
     }
@@ -66,10 +62,11 @@ export function createAudioController(initialEnabled = true): AudioController {
       if (!enabled) stop();
     },
     speak: async (kind: CueKind) => {
-      if (!enabled || stopped) return;
+      if (!enabled) return;
       const text = CUE_TEXT[kind];
       try {
-        await Speech.speak(text, {
+        await Speech.stop();
+        Speech.speak(text, {
           language: 'vi-VN',
           rate: 1.0,
           pitch: 1.0,

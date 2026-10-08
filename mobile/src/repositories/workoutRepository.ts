@@ -3,6 +3,8 @@ import {
   WorkoutHistoryItemViewModel,
   WorkoutSessionSummaryViewModel,
   WeightRecordViewModel,
+  ActiveWorkoutResult,
+  ExerciseCatalogItemViewModel,
 } from '@/features/workout/workoutTypes';
 import { getDataSourceMode } from './repositoryTypes';
 import { apiWorkoutRepository } from './api/apiWorkoutRepository';
@@ -17,7 +19,13 @@ export interface MonthlyWorkoutStats {
   averageDurationMinutes: number;
 }
 
+export interface WorkoutGoals {
+  targetWeightKg: number | null;
+  monthlyWorkoutTarget: number | null;
+}
+
 export interface IWorkoutRepository {
+  listExerciseCatalog(query?: string): Promise<ExerciseCatalogItemViewModel[]>;
   listPlans(): Promise<WorkoutPlanViewModel[]>;
   getPlan(id: string): Promise<WorkoutPlanViewModel>;
   createPlan(plan: Partial<WorkoutPlanViewModel>): Promise<string>;
@@ -36,7 +44,11 @@ export interface IWorkoutRepository {
   }>;
   addWeightRecord(weightKg: number, notes?: string): Promise<WeightRecordViewModel>;
   deleteWeightRecord(id: string): Promise<void>;
+  getWorkoutGoals(): Promise<WorkoutGoals>;
+  updateWorkoutGoals(goals: Partial<WorkoutGoals>): Promise<WorkoutGoals>;
   recordWorkoutCompletion(params: {
+    clientId?: string;
+    date?: string;
     planId?: string;
     day?: string;
     name?: string;
@@ -45,6 +57,7 @@ export interface IWorkoutRepository {
     completedSets: number;
     plannedSets: number;
     status: 'completed' | 'endedEarly';
+    results: ActiveWorkoutResult[];
   }): Promise<string>;
   saveMedicalSurvey(conditions: string[], notes: string): Promise<void>;
 }

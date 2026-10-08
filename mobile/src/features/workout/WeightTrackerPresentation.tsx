@@ -14,6 +14,7 @@ export interface WeightTrackerPresentationProps {
   records: WeightRecordViewModel[];
   onAddRecord: (weightKg: number, notes?: string) => void;
   onDeleteRecord?: (id: string) => void;
+  onUpdateGoal?: (weightKg: number) => Promise<void> | void;
 }
 
 export function WeightTrackerPresentation({
@@ -24,13 +25,17 @@ export function WeightTrackerPresentation({
   records,
   onAddRecord,
   onDeleteRecord,
+  onUpdateGoal,
 }: WeightTrackerPresentationProps) {
   const [selectedRange, setSelectedRange] = useState<'7d' | '1m' | '3m' | '1y'>('7d');
   const [inputWeight, setInputWeight] = useState('');
   const [inputNotes, setInputNotes] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  const [goalInput, setGoalInput] = useState(goalWeightKg > 0 ? String(goalWeightKg) : '');
+  const [goalError, setGoalError] = useState<string | null>(null);
 
-  const remainingToGoal = Math.abs(currentWeightKg - goalWeightKg);
+  const hasGoal = goalWeightKg > 0;
+  const remainingToGoal = hasGoal ? Math.abs(currentWeightKg - goalWeightKg) : 0;
 
   const handleSave = () => {
     const val = parseFloat(inputWeight.replace(',', '.'));
@@ -90,12 +95,12 @@ export function WeightTrackerPresentation({
         <View style={styles.insightsRow}>
           <View style={styles.insightCell}>
             <Text style={styles.insightLabel}>Mục tiêu</Text>
-            <Text style={styles.insightValue}>
-              {goalWeightKg.toFixed(1)} kg{' '}
-              <Text style={styles.insightHighlight}>
-                ({currentWeightKg > goalWeightKg ? 'Giảm' : 'Tăng'} {remainingToGoal.toFixed(1)} kg)
-              </Text>
-            </Text>
+            <Text style={styles.insightValue}>{hasGoal ? `${goalWeightKg.toFixed(1)} kg` : 'Chưa thiết lập'}</Text>
+            {hasGoal ? <Text style={styles.insightHighlight}>
+              {currentWeightKg === goalWeightKg
+                ? 'Đã đạt mục tiêu'
+                : `${currentWeightKg > goalWeightKg ? 'Cần giảm' : 'Cần tăng'} ${remainingToGoal.toFixed(1)} kg`}
+            </Text> : null}
           </View>
 
           <View style={styles.insightCell}>
@@ -110,6 +115,36 @@ export function WeightTrackerPresentation({
           <Clock size={14} color={colors.textSecondary} />
           <Text style={styles.lastMeasuredText}>Lần đo cuối: {lastMeasuredText}</Text>
         </View>
+      </Card>
+
+      <Card style={styles.addFormCard}>
+        <Text style={styles.addFormTitle}>Thiết lập cân nặng mục tiêu</Text>
+        <View style={styles.inputRow}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Mục tiêu (kg)</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Ví dụ: 65"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="decimal-pad"
+              value={goalInput}
+              onChangeText={setGoalInput}
+            />
+          </View>
+          <PrimaryButton
+            label="Lưu mục tiêu"
+            onPress={() => {
+              const value = Number(goalInput.replace(',', '.'));
+              if (value < 20 || value > 400) {
+                setGoalError('Mục tiêu cân nặng phải từ 20 đến 400 kg');
+                return;
+              }
+              setGoalError(null);
+              void onUpdateGoal?.(value);
+            }}
+          />
+        </View>
+        {goalError ? <Text style={styles.errorText}>{goalError}</Text> : null}
       </Card>
 
       {/* Range Filter Tabs */}

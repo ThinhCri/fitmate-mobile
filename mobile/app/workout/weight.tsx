@@ -6,9 +6,9 @@ import { getWorkoutRepository } from '@/repositories/workoutRepository';
 
 export default function WeightTrackerScreen() {
   const [records, setRecords] = useState<WeightRecordViewModel[]>([]);
-  const [currentWeight, setCurrentWeight] = useState(67.8);
-  const [goalWeight, setGoalWeight] = useState(65.0);
-  const [changeLast7Days, setChangeLast7Days] = useState(-0.4);
+  const [currentWeight, setCurrentWeight] = useState(0);
+  const [goalWeight, setGoalWeight] = useState(0);
+  const [changeLast7Days, setChangeLast7Days] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,6 +75,14 @@ export default function WeightTrackerScreen() {
         records={records}
         onAddRecord={handleAddRecord}
         onDeleteRecord={handleDeleteRecord}
+        onUpdateGoal={async (value) => {
+          try {
+            const goals = await getWorkoutRepository().updateWorkoutGoals({ targetWeightKg: value });
+            setGoalWeight(goals.targetWeightKg ?? value);
+          } catch (err: any) {
+            setError(err?.message || 'Không thể lưu mục tiêu cân nặng');
+          }
+        }}
       />
     </View>
   );

@@ -4,6 +4,7 @@
 
 export interface ExerciseItemViewModel {
   id: string;
+  catalogId?: string;
   name: string;
   type: 'reps' | 'time';
   sets: number;
@@ -13,6 +14,28 @@ export interface ExerciseItemViewModel {
   caloriesEstimate: number;
   instructions?: string;
   targetMuscle?: string;
+  difficulty?: string;
+  equipment?: string;
+  imageStartUrl?: string;
+  imageEndUrl?: string;
+  mediaSource?: string;
+}
+
+export interface ExerciseCatalogItemViewModel {
+  id: string;
+  slug: string;
+  nameVi: string;
+  nameEn: string;
+  type: 'reps' | 'time';
+  difficulty: string;
+  equipment?: string;
+  primaryMuscles: string[];
+  secondaryMuscles: string[];
+  instructionsVi: string[];
+  imageStartUrl?: string;
+  imageEndUrl?: string;
+  source: string;
+  sourceLicense: string;
 }
 
 export interface WorkoutPlanViewModel {
@@ -39,6 +62,13 @@ export interface CompletedSetRecord {
 export interface CompletedExerciseRecord {
   exerciseId: string;
   exerciseName: string;
+  plannedReps?: number | null;
+  plannedDurationSeconds?: number | null;
+  sets: CompletedSetRecord[];
+}
+
+export interface ActiveWorkoutResult {
+  exerciseId: string;
   sets: CompletedSetRecord[];
 }
 
@@ -55,6 +85,7 @@ export interface WorkoutSessionSummaryViewModel {
   totalSets: number;
   completedSets: number;
   syncStatus: 'synced' | 'pending' | 'failed';
+  status?: 'completed' | 'endedEarly';
   records: CompletedExerciseRecord[];
 }
 
@@ -78,6 +109,7 @@ export interface WorkoutHistoryItemViewModel {
   completedSets: number;
   totalSets: number;
   syncStatus: 'synced' | 'pending' | 'failed';
+  status?: 'completed' | 'endedEarly';
 }
 
 export interface AiWorkoutChangeItem {

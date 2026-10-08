@@ -170,6 +170,25 @@ let previewWeightRecords: WeightRecordViewModel[] = [
 ];
 
 export class PreviewWorkoutRepository implements IWorkoutRepository {
+  async listExerciseCatalog() {
+    return MOCK_PLAN.exercises.map((exercise) => ({
+      id: exercise.id,
+      slug: exercise.id,
+      nameVi: exercise.name,
+      nameEn: exercise.name,
+      type: exercise.type,
+      difficulty: 'beginner',
+      equipment: undefined,
+      primaryMuscles: exercise.targetMuscle ? [exercise.targetMuscle] : [],
+      secondaryMuscles: [],
+      instructionsVi: exercise.instructions ? [exercise.instructions] : [],
+      imageStartUrl: undefined,
+      imageEndUrl: undefined,
+      source: 'development-preview',
+      sourceLicense: 'preview-only',
+    }));
+  }
+
   async createPlan(_plan: Partial<WorkoutPlanViewModel>): Promise<string> { return `preview-plan-${Date.now()}`; }
   async updatePlan(_id: string, _plan: Partial<WorkoutPlanViewModel>): Promise<void> {}
   async deletePlan(_id: string): Promise<void> {}
@@ -232,6 +251,17 @@ export class PreviewWorkoutRepository implements IWorkoutRepository {
     previewWeightRecords = previewWeightRecords.filter((r) => r.id !== id);
   }
 
+  async getWorkoutGoals() {
+    return { targetWeightKg: 65, monthlyWorkoutTarget: 12 };
+  }
+
+  async updateWorkoutGoals(goals: { targetWeightKg?: number | null; monthlyWorkoutTarget?: number | null }) {
+    return {
+      targetWeightKg: goals.targetWeightKg ?? 65,
+      monthlyWorkoutTarget: goals.monthlyWorkoutTarget ?? 12,
+    };
+  }
+
   async recordWorkoutCompletion(params: {
     planId?: string;
     day?: string;
@@ -241,6 +271,7 @@ export class PreviewWorkoutRepository implements IWorkoutRepository {
     completedSets: number;
     plannedSets: number;
     status: 'completed' | 'endedEarly';
+    results: import('@/features/workout/workoutTypes').ActiveWorkoutResult[];
   }): Promise<string> {
     const user = await mockUserService.getCurrentUser();
     if (user) {

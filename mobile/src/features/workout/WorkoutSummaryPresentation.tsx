@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Cloud, CheckCircle, Timer, Dumbbell, Flame, Check } from 'lucide-react-native';
+import { CheckCircle, Timer, Dumbbell, Flame, Check } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
 import { Card } from '@/components/design-system/Card';
 import { WorkoutSessionSummaryViewModel } from './workoutTypes';
+import { setResultLabel } from './setResultLabel';
 
 export interface WorkoutSummaryPresentationProps {
   summary: WorkoutSessionSummaryViewModel;
@@ -25,24 +26,6 @@ export function WorkoutSummaryPresentation({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Offline Sync Status Banner */}
-      {summary.syncStatus === 'pending' && (
-        <View style={styles.syncBanner}>
-          <Cloud size={22} color="#D97706" />
-          <View style={styles.syncBannerText}>
-            <View style={styles.syncBadgeRow}>
-              <Text style={styles.syncTitle}>Chờ đồng bộ đám mây</Text>
-              <View style={styles.offlineTag}>
-                <Text style={styles.offlineTagText}>Offline first</Text>
-              </View>
-            </View>
-            <Text style={styles.syncSubtitle}>
-              Dữ liệu đã lưu an toàn trên bộ nhớ thiết bị. Hệ thống sẽ tự động đồng bộ khi có mạng ổn định.
-            </Text>
-          </View>
-        </View>
-      )}
-
       {/* Completion Trophy Card */}
       <Card style={styles.trophyCard}>
         <View style={styles.trophyRow}>
@@ -53,9 +36,9 @@ export function WorkoutSummaryPresentation({
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryBadgeText}>{summary.planTitle}</Text>
             </View>
-            <Text style={styles.trophyTitle}>Buổi tập đã hoàn thành!</Text>
+            <Text style={styles.trophyTitle}>{summary.status === 'endedEarly' ? 'Đã lưu buổi tập' : 'Buổi tập đã hoàn thành!'}</Text>
             <Text style={styles.trophySubtitle}>
-              Rất tuyệt vời! Bạn đã hoàn thành {summary.completedSets}/{summary.totalSets} hiệp mục tiêu.
+              Bạn đã thực hiện {summary.completedSets}/{summary.totalSets} hiệp. Kết quả đã được lưu vào lịch sử.
             </Text>
           </View>
         </View>
@@ -122,7 +105,7 @@ export function WorkoutSummaryPresentation({
                 <View key={s.setNumber} style={styles.setRow}>
                   <Text style={styles.setRowLabel}>Hiệp {s.setNumber}</Text>
                   <Text style={styles.setRowDetail}>
-                    {s.repsCompleted != null ? `${s.repsCompleted} reps` : `${s.durationSeconds}s`}
+                    {setResultLabel(s, rec)}
                   </Text>
                   <View
                     style={[
@@ -168,44 +151,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.md,
     paddingBottom: spacing.xl,
-  },
-  syncBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    backgroundColor: '#FEF3C7',
-    padding: spacing.md,
-    borderRadius: radius.lg,
-  },
-  syncBannerText: {
-    flex: 1,
-  },
-  syncBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  syncTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#92400E',
-  },
-  offlineTag: {
-    backgroundColor: 'rgba(217, 119, 6, 0.2)',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: radius.full,
-  },
-  offlineTagText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#B45309',
-  },
-  syncSubtitle: {
-    fontSize: 12,
-    color: '#78350F',
-    marginTop: 2,
-    lineHeight: 16,
   },
   trophyCard: {
     padding: spacing.md,

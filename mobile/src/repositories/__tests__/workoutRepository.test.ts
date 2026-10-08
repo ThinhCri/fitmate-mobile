@@ -46,7 +46,7 @@ describe('Workout Repository & Data Source Isolation', () => {
     const previewSpy = vi.spyOn(previewWorkoutRepository, 'getPlan');
 
     await expect(apiWorkoutRepository.getPlan('plan-1')).rejects.toThrow(
-      'Internal Server Error'
+      'Hệ thống đang gặp sự cố. Vui lòng thử lại sau.'
     );
     expect(previewSpy).not.toHaveBeenCalled();
     global.fetch = originalFetch;

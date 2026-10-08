@@ -107,7 +107,7 @@ export const PlanDetailPresentation: React.FC<PlanDetailPresentationProps> = ({
               <View style={styles.metricHeader}>
                 <Flame size={16} color={colors.warning} />
                 <Text style={[typography.bodyBold, styles.metricVal]}>
-                  ~{plan.caloriesEstimate} kcal
+                  {plan.caloriesEstimate > 0 ? `~${plan.caloriesEstimate} kcal` : 'Chưa ước tính'}
                 </Text>
               </View>
               <Text style={[typography.caption, styles.metricLabel]}>Tiêu hao ước tính</Text>
@@ -198,7 +198,7 @@ export const PlanDetailPresentation: React.FC<PlanDetailPresentationProps> = ({
               </View>
 
               <Text style={[typography.captionMedium, styles.exerciseKcal]}>
-                ~{ex.caloriesEstimate} kcal
+                {ex.caloriesEstimate > 0 ? `~${ex.caloriesEstimate} kcal` : 'Chưa ước tính'}
               </Text>
             </TouchableOpacity>
           ))}

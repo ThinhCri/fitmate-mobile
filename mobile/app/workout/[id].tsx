@@ -49,9 +49,17 @@ export default function PlanDetailScreen() {
       <PlanDetailPresentation
         plan={plan}
         onBack={() => router.back()}
-        onStartSession={() => router.push(`/workout/active-session?planId=${encodeURIComponent(plan.id)}` as any)}
+        onStartSession={() => router.push(`/workout/prepare?planId=${encodeURIComponent(plan.id)}` as never)}
+        onExercisePress={() => router.push(`/workout/prepare?planId=${encodeURIComponent(plan.id)}` as never)}
         onEditPlan={() => router.push(`/workout/editor?id=${encodeURIComponent(plan.id)}` as any)}
-        onDeletePlan={async () => { try { await getWorkoutRepository().deletePlan(plan.id); router.replace('/(tabs)/workout' as never); } catch (err) { Alert.alert('Không thể xóa giáo án', err instanceof Error ? err.message : 'Vui lòng thử lại.'); } }}
+        onDeletePlan={async () => {
+          try {
+            await getWorkoutRepository().deletePlan(plan.id);
+            router.dismissTo('/(tabs)/workout');
+          } catch (err) {
+            Alert.alert('Không thể xóa giáo án', err instanceof Error ? err.message : 'Vui lòng thử lại.');
+          }
+        }}
       />
     </View>
   );

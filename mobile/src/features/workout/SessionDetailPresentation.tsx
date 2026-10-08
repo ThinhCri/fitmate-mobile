@@ -1,19 +1,19 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { CheckCircle2, Cloud, History, Dumbbell, Calendar, Clock, AlertTriangle, Lock, Timer, Flame, Check } from 'lucide-react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { ArrowLeft, History, Dumbbell, Calendar, Clock, Lock, Timer, Flame, Check } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
 import { WorkoutSessionSummaryViewModel } from './workoutTypes';
+import { setResultLabel } from './setResultLabel';
 
 export interface SessionDetailPresentationProps {
   session: WorkoutSessionSummaryViewModel;
-  totalVolumeKg?: number;
   onBack: () => void;
 }
 
 export function SessionDetailPresentation({
   session,
-  totalVolumeKg = 0,
+  onBack,
 }: SessionDetailPresentationProps) {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -23,46 +23,20 @@ export function SessionDetailPresentation({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Top Context Sub-bar */}
-      <View style={styles.topContextBar}>
-        <View style={styles.sessionIdRow}>
-          <CheckCircle2 size={18} color={colors.primary} />
-          <Text style={styles.sessionIdLabel}>
-            Mã phiên:{' '}
-            <Text style={styles.sessionIdValue}>#{session.id.slice(0, 10).toUpperCase()}</Text>
-          </Text>
-        </View>
-
-        <View
-          style={[
-            styles.syncTag,
-            session.syncStatus === 'synced' ? styles.syncTagSynced : styles.syncTagPending,
-          ]}
-        >
-          <Cloud
-            size={14}
-            color={session.syncStatus === 'synced' ? '#16A34A' : '#D97706'}
-          />
-          <Text
-            style={[
-              styles.syncTagText,
-              session.syncStatus === 'synced'
-                ? styles.syncTagTextSynced
-                : styles.syncTagTextPending,
-            ]}
-          >
-            {session.syncStatus === 'synced' ? 'Đã đồng bộ đám mây' : 'Lưu cục bộ an toàn'}
-          </Text>
-        </View>
+      <View style={styles.navigationHeader}>
+        <TouchableOpacity onPress={onBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Quay lại">
+          <ArrowLeft size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.navigationTitle}>Chi tiết buổi tập</Text>
+        <View style={styles.headerSpacer} />
       </View>
-
       {/* Hero Historical Snapshot Card */}
       <Card style={styles.heroCard}>
         <View style={styles.heroTop}>
           <View style={styles.heroTitleBox}>
             <View style={styles.snapshotBadge}>
               <History size={14} color={colors.primary} />
-              <Text style={styles.snapshotBadgeText}>BẢN GHI NGUYÊN BẢN</Text>
+              <Text style={styles.snapshotBadgeText}>KẾT QUẢ ĐÃ LƯU</Text>
             </View>
             <Text style={styles.heroTitle}>{session.planTitle}</Text>
           </View>
@@ -83,38 +57,11 @@ export function SessionDetailPresentation({
           </Text>
         </View>
 
-        {/* Sync Status Notice */}
-        {session.syncStatus === 'pending' ? (
-          <View style={styles.syncNoticePending}>
-            <AlertTriangle size={18} color="#D97706" />
-            <View style={styles.syncNoticeText}>
-              <Text style={styles.syncNoticeTitle}>Chờ đồng bộ đám mây</Text>
-              <Text style={styles.syncNoticeDesc}>
-                Đã lưu trữ an toàn vào bộ nhớ nội bộ. Hệ thống sẽ tự đẩy lên máy chủ khi có kết nối
-                mạng.
-              </Text>
-            </View>
-          </View>
-        ) : (
-          <View style={styles.syncNoticeSynced}>
-            <CheckCircle2 size={18} color="#16A34A" />
-            <View style={styles.syncNoticeText}>
-              <Text style={[styles.syncNoticeTitle, { color: '#16A34A' }]}>
-                Đã xác nhận trên máy chủ
-              </Text>
-              <Text style={[styles.syncNoticeDesc, { color: '#15803D' }]}>
-                Bản ghi đã được đồng bộ với hệ thống Fitmate Cloud.
-              </Text>
-            </View>
-          </View>
-        )}
-
         {/* Immutability Security Note */}
         <View style={styles.immutabilityBox}>
           <Lock size={16} color={colors.textMuted} />
           <Text style={styles.immutabilityText}>
-            Dữ liệu phiên tập được đóng băng nguyên vẹn tại thời điểm hoàn thành. Các chỉnh sửa giáo
-            án sau này không làm thay đổi bản ghi lịch sử này.
+            Kết quả buổi tập này sẽ không thay đổi khi bạn chỉnh sửa kế hoạch tập sau này.
           </Text>
         </View>
       </Card>
@@ -142,18 +89,6 @@ export function SessionDetailPresentation({
               <Text style={styles.bentoSub}>/ {session.totalSets}</Text>
             </Text>
             <Text style={styles.bentoSubLabel}>hiệp đã hoàn thành</Text>
-          </Card>
-
-          <Card style={styles.bentoCell}>
-            <View style={styles.bentoHeader}>
-              <Text style={styles.bentoLabel}>Tổng tải khối</Text>
-              <Dumbbell size={16} color="#0284C7" />
-            </View>
-            <Text style={styles.bentoValue}>
-              {totalVolumeKg > 0 ? totalVolumeKg.toLocaleString('vi-VN') : '—'}
-              <Text style={styles.bentoSub}>{totalVolumeKg > 0 ? ' kg' : ''}</Text>
-            </Text>
-            <Text style={styles.bentoSubLabel}>khối lượng tích luỹ</Text>
           </Card>
 
           <Card style={styles.bentoCell}>
@@ -198,7 +133,7 @@ export function SessionDetailPresentation({
                 <View key={s.setNumber} style={styles.setRow}>
                   <Text style={styles.setNumberLabel}>Hiệp {s.setNumber}</Text>
                   <Text style={styles.setDetail}>
-                    {s.repsCompleted != null ? `${s.repsCompleted} reps` : `${s.durationSeconds}s`}
+                    {setResultLabel(s, rec)}
                   </Text>
                   <View
                     style={[
@@ -230,6 +165,10 @@ export function SessionDetailPresentation({
 }
 
 const styles = StyleSheet.create({
+  navigationHeader: { minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  navigationTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
+  headerSpacer: { width: 48 },
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -238,48 +177,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.lg,
     paddingBottom: spacing.xl,
-  },
-  topContextBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sessionIdRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  sessionIdLabel: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  sessionIdValue: {
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  syncTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.full,
-  },
-  syncTagSynced: {
-    backgroundColor: '#DCFCE7',
-  },
-  syncTagPending: {
-    backgroundColor: '#FEF3C7',
-  },
-  syncTagText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  syncTagTextSynced: {
-    color: '#16A34A',
-  },
-  syncTagTextPending: {
-    color: '#D97706',
   },
   heroCard: {
     padding: spacing.md,
@@ -331,38 +228,6 @@ const styles = StyleSheet.create({
   metaTextBold: {
     fontWeight: '600',
     color: colors.textPrimary,
-  },
-  syncNoticePending: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.xs,
-    backgroundColor: '#FEF3C7',
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    marginTop: spacing.xs,
-  },
-  syncNoticeSynced: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.xs,
-    backgroundColor: '#DCFCE7',
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    marginTop: spacing.xs,
-  },
-  syncNoticeText: {
-    flex: 1,
-  },
-  syncNoticeTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#92400E',
-  },
-  syncNoticeDesc: {
-    fontSize: 11,
-    color: '#78350F',
-    marginTop: 2,
-    lineHeight: 15,
   },
   immutabilityBox: {
     flexDirection: 'row',
