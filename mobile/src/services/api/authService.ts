@@ -153,4 +153,18 @@ export const authService = {
   async getMe(): Promise<UserProfile> {
     return apiClient<UserProfile>('/users/me');
   },
+
+  async requestPtPhoneCode(phoneNumber: string): Promise<{ expires_at_utc: string; retry_after_seconds: number }> {
+    return apiClient('/me/phone/verification', {
+      method: 'POST',
+      body: JSON.stringify({ phone_number: phoneNumber }),
+    });
+  },
+
+  async confirmPtPhoneCode(code: string): Promise<void> {
+    return apiClient<void>('/me/phone/verification/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  },
 };
