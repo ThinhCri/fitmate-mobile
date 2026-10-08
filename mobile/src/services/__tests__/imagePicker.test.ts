@@ -81,7 +81,8 @@ describe('ImagePickerService', () => {
       expect(result).toBeNull();
       expect(Alert.alert).toHaveBeenCalledWith(
         'Cần quyền truy cập thư viện ảnh',
-        expect.stringContaining('Vui lòng cấp quyền truy cập')
+        expect.stringContaining('Vui lòng cấp quyền truy cập'),
+        expect.arrayContaining([expect.objectContaining({ text: 'Mở Cài đặt', onPress: expect.any(Function) })])
       );
       expect(ImagePicker.launchImageLibraryAsync).not.toHaveBeenCalled();
     });
@@ -164,7 +165,8 @@ describe('ImagePickerService', () => {
       expect(result).toBeNull();
       expect(Alert.alert).toHaveBeenCalledWith(
         'Cần quyền máy ảnh',
-        expect.stringContaining('Vui lòng cấp quyền sử dụng máy ảnh')
+        expect.stringContaining('Vui lòng cấp quyền sử dụng máy ảnh'),
+        expect.arrayContaining([expect.objectContaining({ text: 'Mở Cài đặt', onPress: expect.any(Function) })])
       );
       expect(ImagePicker.launchCameraAsync).not.toHaveBeenCalled();
     });

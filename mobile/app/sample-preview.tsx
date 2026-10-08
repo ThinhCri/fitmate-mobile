@@ -204,7 +204,6 @@ function DevSamplePreviewContent() {
                   }
                 : memberHomeFixture
             }
-            onFindTrainerPress={() => setActiveScreen('trainerList')}
             onWorkoutDetailPress={(_id: string) => {}}
           />
         ) : activeScreen === 'trainerList' ? (

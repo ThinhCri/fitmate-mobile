@@ -46,7 +46,7 @@ describe('Nutrition Repository & Data Source Isolation', () => {
     const previewSpy = vi.spyOn(previewNutritionRepository, 'getDaySummary');
 
     await expect(apiNutritionRepository.getDaySummary()).rejects.toThrow(
-      'Internal Server Error'
+      'Hệ thống đang gặp sự cố. Vui lòng thử lại sau.'
     );
     expect(previewSpy).not.toHaveBeenCalled();
     global.fetch = originalFetch;

@@ -46,7 +46,7 @@ describe('Support Repository & Data Source Isolation', () => {
     });
     const previewSpy = vi.spyOn(previewSupportRepository, 'getNotifications');
 
-    await expect(apiSupportRepository.getNotifications()).rejects.toThrow('Internal Server Error');
+    await expect(apiSupportRepository.getNotifications()).rejects.toThrow('Hệ thống đang gặp sự cố. Vui lòng thử lại sau.');
     expect(previewSpy).not.toHaveBeenCalled();
   });
 

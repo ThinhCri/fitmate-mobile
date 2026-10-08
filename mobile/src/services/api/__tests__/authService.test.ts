@@ -352,6 +352,7 @@ describe('AuthService & ApiClient (MOB-800)', () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 429,
+        headers: new Headers({ 'Retry-After': '1' }),
         json: async () => ({ detail: 'Rate limit exceeded. Please try again later.' }),
       } as unknown as Response);
 

@@ -19,6 +19,7 @@ export const memberHomeFixture: MemberDashboardSummary = {
   },
   streakDays: 5,
   todayWorkout: {
+    resourceType: 'plan',
     id: 'workout-today-1',
     title: 'Thân trên & Cơ lõi (Upper Body)',
     durationMinutes: 45,

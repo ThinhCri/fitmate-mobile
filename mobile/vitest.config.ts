@@ -9,6 +9,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      'expo-file-system/legacy': path.resolve(__dirname, 'src/test/expoFileSystemLegacy.ts'),
+      'expo-file-system': path.resolve(__dirname, 'src/test/expoFileSystem.ts'),
+      'expo/fetch': path.resolve(__dirname, 'src/test/expoFetch.ts'),
+      'expo-constants': path.resolve(__dirname, 'src/test/expoConstants.ts'),
     },
   },
 });
