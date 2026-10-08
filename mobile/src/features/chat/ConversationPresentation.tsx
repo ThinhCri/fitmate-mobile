@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   messageImages: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 4 },
   messageImageFrame: { width: 120, height: 120, borderRadius: radius.md, overflow: 'hidden', backgroundColor: colors.surfaceSubtle },
   messageImage: { width: '100%', height: '100%' },
-  imageErrorOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: colors.surfaceSubtle },
+  imageErrorOverlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: colors.surfaceSubtle },
   imageErrorText: { fontSize: 10, color: colors.textMuted },
   messageFooter: {
     flexDirection: 'row',

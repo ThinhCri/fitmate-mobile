@@ -1,4 +1,4 @@
-import { CommunityPostViewModel, CreatePostFormValues, FriendItemViewModel, PostCommentViewModel, ReportRequest, UserPublicProfileViewModel } from '@/features/community';
+import { CommunityPostViewModel, CreatePostFormValues, FriendItemViewModel, PostCommentViewModel, PostImageInput, ReportRequest, UserPublicProfileViewModel } from '@/features/community';
 import { ConversationDetailViewModel, ConversationItemViewModel, ChatImageInput, ChatMessageViewModel } from '@/features/chat';
 import type { ISocialRepository } from '../socialRepository';
 import { ApiError, apiClient, apiUploadFile } from '@/services/api/client';
@@ -79,6 +79,8 @@ interface CommentWire {
   author: { id: string; display_name: string; avatar_url?: string | null };
   text: string;
   created_at: string;
+  likes_count?: number;
+  liked_by_viewer?: boolean;
 }
 
 function mapComment(wire: CommentWire, currentUserId?: string): PostCommentViewModel {
@@ -176,7 +178,7 @@ export class ApiSocialRepository implements ISocialRepository {
   }
 
   async createPost(values: CreatePostFormValues): Promise<CommunityPostViewModel> {
-    const mediaFiles = (values.mediaFiles?.length
+    const mediaFiles: PostImageInput[] = (values.mediaFiles?.length
       ? values.mediaFiles
       : (values.mediaUrls?.length ? values.mediaUrls : values.mediaUrl ? [values.mediaUrl] : []).map((uri) => ({ uri }))).slice(0, 5);
     const storageKeys: string[] = [];

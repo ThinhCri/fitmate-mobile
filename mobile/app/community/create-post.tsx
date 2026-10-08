@@ -38,7 +38,7 @@ export default function CreatePostScreen() {
     mediaUrl: editingPost.mediaUrl,
     mediaUrls: editingPost.mediaUrls,
     mediaStorageKeys: editingPost.mediaStorageKeys,
-    category: editingPost.category,
+    category: editingPost.category === 'friends' ? 'all' as const : editingPost.category,
     visibility: 'public' as const,
     isKnowledgeSharing: editingPost.isKnowledgeSharing,
     workoutTags: editingPost.workoutTags || [],

@@ -46,7 +46,7 @@ describe('Social Repository & Data Source Isolation', () => {
     });
     const previewSpy = vi.spyOn(previewSocialRepository, 'getFriends');
 
-    await expect(apiSocialRepository.getFriends()).rejects.toThrow('Internal Server Error');
+    await expect(apiSocialRepository.getFriends()).rejects.toThrow('Hệ thống đang gặp sự cố. Vui lòng thử lại sau.');
     expect(previewSpy).not.toHaveBeenCalled();
   });
 
@@ -126,11 +126,13 @@ describe('Social Repository & Data Source Isolation', () => {
     expect(result.friends[0].relationship).toBe('friend');
 
     expect(result.pendingRequests).toHaveLength(1);
-    expect(result.pendingRequests[0].id).toBe('req-inc-1');
+    expect(result.pendingRequests[0].id).toBe('user-sender-uuid');
+    expect(result.pendingRequests[0].requestId).toBe('req-inc-1');
     expect(result.pendingRequests[0].relationship).toBe('received_request');
 
     expect(result.sentRequests).toHaveLength(1);
-    expect(result.sentRequests[0].id).toBe('req-out-1');
+    expect(result.sentRequests[0].id).toBe('user-recip-uuid');
+    expect(result.sentRequests[0].requestId).toBe('req-out-1');
     expect(result.sentRequests[0].relationship).toBe('sent_request');
 
     expect(result.discoverUsers).toHaveLength(1);
@@ -222,7 +224,11 @@ describe('Social Repository & Data Source Isolation', () => {
 
   it('sends message via API with idempotent client message id', async () => {
     delete process.env.EXPO_PUBLIC_DATA_SOURCE;
-    const fetchSpy = vi.fn().mockResolvedValue({
+    const fetchSpy = vi.fn().mockImplementation(async (url: string) => url.includes('/chat/friends/conversations/') ? {
+      ok: false,
+      status: 404,
+      json: async () => ({ detail: 'Not found' }),
+    } : ({
       ok: true,
       status: 200,
       json: async () => ({
@@ -233,7 +239,7 @@ describe('Social Repository & Data Source Isolation', () => {
         created_at: '2026-10-02T08:05:00Z',
         client_message_id: 'msg-client-uuid',
       }),
-    });
+    }));
     global.fetch = fetchSpy;
 
     const msg = await apiSocialRepository.sendMessage('peer-uuid', 'Vâng ạ!');

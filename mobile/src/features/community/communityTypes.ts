@@ -91,6 +91,7 @@ export interface UserPublicProfileViewModel {
 }
 
 export interface FriendItemViewModel {
+  avatarUrl?: string;
   id: string;
   requestId?: string;
   name: string;
