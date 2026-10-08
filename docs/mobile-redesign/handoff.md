@@ -879,3 +879,91 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - “Buổi tập hôm nay” is added only when the dashboard has a concrete plan/session to open directly.
 - “Lịch hẹn sắp tới” is added only when a concrete appointment exists.
 - Removed the workout-tab and trainer-marketplace fallback cards from the quick grid because those destinations already exist in bottom navigation.
+# Workout flow implementation — 2026-10-06
+
+- Workout plan editing now loads the backend exercise catalog and copies Vietnamese instructions, difficulty, equipment, licensed source metadata, and image media into the selected plan exercise.
+- Active workouts now persist an account-device checkpoint, restore the current exercise/set/phase after interruption, pause correctly when backgrounded, and send actual completed/partial/skipped set results to the backend.
+- Weight tracking now uses real empty defaults, supports backend soft deletion, and lets the member store a target weight. Workout history uses the stored monthly session target and links to a dedicated workout-goals screen.
+- Added the workout goals route for target weight and monthly session count. Unset goals render as an explicit setup action instead of a fabricated zero-percent result.
+- Status is `IMPLEMENTED_UNVERIFIED`: repository policy prohibited agent-run mobile typecheck/lint/test/Expo. Operator must run the documented commands and device flow after applying backend migrations.
+
+# Workout overview discoverability — 2026-10-07
+
+- The workout overview now loads real monthly completion statistics, workout goals and current weight alongside plans, while auxiliary-stat failures no longer hide the core plan list.
+- Added visible entry points for workout goals and weight tracking, plus a monthly progress card. Returning from those routes refreshes the overview through focus-aware loading.
+- The weekday ribbon is now interactive and filters plans by canonical backend weekday values (`Mon`..`Sun`). Creating a plan from a selected day carries that day into the editor.
+- The plan editor now uses an explicit weekday selector instead of sending a free-text goal as `day_of_week`.
+- Exercise catalog rows show the R2 start-position thumbnail, and selected exercises show labeled start/end reference images.
+- Removed the duplicate create-plan CTA in the empty state. Mobile runtime/typecheck/lint commands were not run per repository instructions; operator verification is still required.
+
+# Workout safe-area correction — 2026-10-07
+
+- Added a route-level `workout/_layout.tsx` SafeAreaView wrapper for every nested workout screen, covering both the Android status bar at the top and gesture/three-button navigation at the bottom.
+- Removed the goals screen's redundant local safe-area wrapper to prevent double top padding under the shared workout layout.
+- This applies consistently to plan detail/editor, active session, summary, history, weight, goals, AI-unavailable and session-detail routes. Runtime verification remains operator-owned per repository policy.
+
+# Workout calorie and session save follow-up — 2026-10-07
+
+- Fixed workout-session POST to send the backend-required `Idempotency-Key`. A stable client UUID and frozen completion payload are stored in the checkpoint so a retry cannot duplicate or conflict with the original save.
+- New/edited plans estimate exercise energy from the member's latest recorded weight and moderate resistance exercise (3.5 MET); rep-based exercises assume 3 seconds per rep. Rest time is excluded. This is a rough estimate, not measured energy. Missing weight displays “Chưa ước tính” instead of a misleading `0 kcal` on plan cards/details.
+- Active session now shows progress, estimated completed energy, exercise media, and editable actual repetitions. Paused and preparation phases no longer present the active “Xong hiệp” action.
+- Status remains `IMPLEMENTED_UNVERIFIED`: mobile typecheck/lint/runtime/device tests must be run by the operator per repository policy. Verify a new plan with a weight record and session save/retry on Android.
+
+# Plan deletion navigation — 2026-10-07
+
+- After a successful plan deletion, use Expo Router `dismissTo('/(tabs)/workout')` to return to the existing workout tab route rather than replacing the current nested workout screen and exposing the dashboard tab. Device verification remains pending under the mobile manual-execution policy.
+- The post-session “Về lịch tập” action had the same nested-stack `replace` call; aligned it to the same `dismissTo` route. Verify both actions on-device because the prior deletion fix has not yet been runtime-tested.
+
+# Workout preflight and guided session — 2026-10-07
+
+- Plan detail now enters `/workout/prepare` before starting. The preflight loads the current plan and exercise catalog, shows start/end-position images and Vietnamese instructions, and asks about each required equipment type. If equipment is unavailable, it offers only bodyweight catalog items with the same primary muscle; the member explicitly selects a substitution, or opens the plan editor when no suitable item exists. Chosen substitutions are saved to the plan only on “Bắt đầu buổi tập”. No AI/personalized medical recommendation is claimed.
+- Active session refreshes catalog metadata to display both position images when available. For plans whose exercise name no longer matches the catalog, the stored first image remains a fallback; end-position media may be unavailable. The app does not guarantee image loading without access to the signed R2 URL.
+- The first exercise starts immediately after preflight. Between exercises, the five-second preparation countdown now has a working “Bắt đầu bài” action. The restore checkpoint is offered explicitly rather than silently resumed; discarding it starts a fresh session. Checkpoint storage is scoped to the authenticated user ID so another account cannot resume it. Existing Vietnamese speech cues were wired to the visible audio toggle.
+- Estimated session kcal now uses recorded repetitions or timed seconds for each non-skipped set, so 8 actual reps no longer count as 10 planned reps. It is still a rough 3.5-MET estimate, not a measured calorie value.
+- Workout overview now labels a plan “Đã tập hôm nay” from completed server sessions for the local day; the plan remains reusable. Monthly completed count excludes early-ended sessions and sessions from other months.
+- `IMPLEMENTED_UNVERIFIED`: no mobile install/build/typecheck/lint/test/Expo/device run was performed under repository policy. Operator must verify equipment yes/no, substitution persistence, 2 signed images, actual-rep kcal, checkpoint resume/discard, voice, save/summary, and today/month badges on Android.
+
+# Automated mobile verification and code fixes — 2026-10-07
+
+- At the user's explicit request, ran mobile `npm run type-check`, `npm run lint`, and `npm test -- --run`. TypeScript passes, lint exits successfully with 0 errors and 151 pre-existing warnings, and all 199 tests across 28 files pass.
+- Fixed stale community/chat typings and preview fixture, corrected design-token and React Native style references, and isolated native Expo modules from Node-only unit tests without changing runtime imports. Updated test expectations for Vietnamese API errors, permission-setting actions, social request IDs, and the current backend contract revision.
+- Automated verification does not prove on-device behavior. Android checks remain necessary for the workout preflight, images, session save, navigation, and signed media URLs.
+
+# Workout history and skip confirmation — 2026-10-07
+
+- Added a visible back button to workout history, including its loading and error states; it returns to the workout tab.
+- Skipping an exercise now asks for confirmation. Cancel keeps the current exercise; confirm marks only unperformed sets skipped. The backend still receives null actual reps/duration for skipped sets, which truthfully means no performance was recorded.
+- Summary and session detail display the planned reps or duration for skipped sets instead of rendering null/undefined; actual completed sets still display their actual values. This uses the backend's planned fields in the session-detail response.
+- Mobile `npm run type-check` passed and `npm test -- --run` passed (202/202, 29 files). Android interaction verification remains pending. No commit or push was made.
+
+# Workout history follow-up — 2026-10-07
+
+- Session detail now has a visible back action (also on its error state). Removed the hard-coded 3,450 kg volume metric from the detail screen and corrected the total exercise count to use the session snapshot item count rather than duplicating the completed count.
+- History can navigate to previous months and back to the current month, recalculating the visible session list and month metrics. Its filters now use actual completed/ended-early status rather than a non-existent pending-offline synchronization flow. Removed the always-zero volume summary and changed list badges to real workout status.
+- Mobile `npm run type-check` passed and `npm test -- --run` passed (202/202, 29 files) after stabilizing the rate-limit test's Retry-After fixture. On-device visual/navigation verification is still pending. No commit or push was made.
+
+# Workout copy for members — 2026-10-07
+
+- Removed technical cloud/offline/sync banners from the workout result and session-detail screens. Session detail now shows a simple “Kết quả đã lưu” label and explains that editing a plan later does not change past results.
+- The result screen says the workout is saved to history, and uses neutral saved wording when a session ended early instead of claiming full completion. History badges still distinguish completed from ended-early sessions without sync terminology.
+- Mobile `npm run type-check` passed; `npm test -- --run` passed (202/202, 29 files). Device review remains pending; no commit or push was made.
+# PT booking integration follow-up — 2026-10-08
+
+- Replaced mock booking slots/services with actual verified-trainer services and open availability. Hold creation now uses the selected server UTC slot and cannot proceed from fallback sample data.
+- Booking confirmation loads the server hold/appointment and quoted price; payment creation sends a stable Idempotency-Key based on the hold ID.
+- Replaced the PT session screen's fictional learner, price, venue, status, and local-only action buttons with owner-scoped appointment details and real confirm/start/complete/cancel mutations. Completion now correctly waits for member confirmation. Removed the unsaved coaching-notes input because no write contract exists.
+- Removed invented five-star/verified PT fallback and invented gym location in appointment presentation. PT overview now excludes unpaid holds from upcoming sessions and resolves the service name from the actual PT profile.
+- Mobile `npm run type-check` passes; `npm test -- --run` passes (202/202). Android, backend integration, payOS callbacks, cancellation/refund, and admin settlement were not verified in this session. These flows must not be called release-complete yet. Existing unrelated workout changes were preserved; no commit or push was made.
+
+# PT service information and booking selection — 2026-10-08
+
+- PT service editor now collects purpose (1–1 or assessment/plan), direct/online mode, audience, equipment, deliverable and one fixed venue/address for direct sessions; it validates a meaningful description. Online services are clearly labelled draft/unbookable until backend Google Meet integration is ready.
+- Trainer detail and booking cards show the PT-supplied content instead of a fabricated venue. Booking only lists active direct services with a real venue/address, hides published slots shorter than the chosen service, filters starts inside 30 minutes, and clears a stale selected slot/service when data changes.
+- Mobile TypeScript check PASS; focused PT API/booking tests PASS 17/17. Backend PostgreSQL integration tests for PT bookability PASS on an isolated test database. Device visual and end-to-end booking/checkout verification remains pending. No commit or push.
+- Refreshed the pinned backend OpenAPI hash after the PT contract update; the complete mobile unit suite now passes 203/203 across 29 files. This remains local code verification only, not device or live payOS/Meet/SMS verification.
+
+# Mobile commit handoff — 2026-10-08
+
+- Committed PT booking/service UI and API alignment (`2607a5e`) and the phone verification API calls (`fee9901`).
+- Committed workout session, preflight and history changes (`ccae3d7`), community/chat compatibility fixes (`5918dfd`), and preview/native test fixtures (`ce574ac`).
+- These commits do not establish Android device, live payment, SMS or Google Meet release readiness. No push or production deployment was performed.
