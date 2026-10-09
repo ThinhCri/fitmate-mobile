@@ -81,7 +81,8 @@ export default function SelectSlotScreen() {
       });
 
       setServices(
-          (detail.services || []).filter((service) => service.isActive && service.deliveryMode === 'in_person' && !!service.locationName && !!service.locationAddress).map((s) => ({
+          (detail.services || []).filter((service) => service.isActive &&
+            (service.deliveryMode === 'online' || (!!service.locationName && !!service.locationAddress))).map((s) => ({
             id: s.id,
             name: s.name,
             durationMinutes: s.durationMinutes,
@@ -89,6 +90,7 @@ export default function SelectSlotScreen() {
             description: s.description,
             locationName: s.locationName ?? '',
             locationAddress: s.locationAddress ?? '',
+            deliveryMode: s.deliveryMode,
             serviceKind: s.serviceKind,
             targetAudience: s.targetAudience,
             requiredEquipment: s.requiredEquipment,

@@ -967,3 +967,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Committed PT booking/service UI and API alignment (`2607a5e`) and the phone verification API calls (`fee9901`).
 - Committed workout session, preflight and history changes (`ccae3d7`), community/chat compatibility fixes (`5918dfd`), and preview/native test fixtures (`ce574ac`).
 - These commits do not establish Android device, live payment, SMS or Google Meet release readiness. No push or production deployment was performed.
+
+# PT online single-session client — 2026-10-10
+
+- PT service editor now offers Google Meet connect/disconnect and explicit status refresh. OAuth opens the backend-provided URL; no Google secret is stored in the app.
+- Trainer booking selection includes active online services. After verified payment and confirmation, appointment detail fetches the participant-scoped Meet URL and opens it in the device browser/app. The existing under-48-hour pre-payment warning remains.
+- Updated the OpenAPI pin to match the backend's additive Google Meet and booking-link operations. Local verification before this handoff: TypeScript type-check PASS and mobile 203/203 tests PASS; no real Android/OAuth/Meet/payOS transaction has been exercised.
+- Package 4/8 checkout and package-stop remain unimplemented; do not expose them from mobile. Live SMS/Google/payOS credentials, backend app DB migration and two-account device testing remain operator gates.

@@ -42,6 +42,10 @@ export interface ProfileServicesPresentationProps {
   services: Service[];
   loading: boolean;
   error: string | null;
+  meetConnected: boolean;
+  meetBusy: boolean;
+  onConnectMeet: () => void;
+  onDisconnectMeet: () => void;
   onRefresh: () => void;
   onBack: () => void;
   onCreateService: (input: ServiceInput) => Promise<void>;
@@ -60,6 +64,10 @@ export function ProfileServicesPresentation({
   services,
   loading,
   error,
+  meetConnected,
+  meetBusy,
+  onConnectMeet,
+  onDisconnectMeet,
   onRefresh,
   onBack,
   onCreateService,
@@ -389,6 +397,28 @@ export function ProfileServicesPresentation({
           </View>
         </View>
 
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Google Meet cho buổi tập online</Text>
+          <Text style={styles.serviceDescription}>
+            {meetConnected
+              ? 'Đã kết nối. Fitmate tạo link riêng khi học viên giữ chỗ; chỉ hai bên thấy link sau thanh toán.'
+              : 'Kết nối tài khoản Google của bạn trước khi mở bán dịch vụ online. Dịch vụ trực tiếp không cần bước này.'}
+          </Text>
+          <Pressable
+            style={styles.addServiceButton}
+            disabled={meetBusy}
+            onPress={meetConnected ? onDisconnectMeet : onConnectMeet}
+            accessibilityRole="button"
+          >
+            <Text style={styles.addServiceButtonText}>
+              {meetBusy ? 'Đang xử lý...' : meetConnected ? 'Ngắt kết nối' : 'Kết nối Google Meet'}
+            </Text>
+          </Pressable>
+          <Pressable onPress={onRefresh} accessibilityRole="button">
+            <Text style={styles.editBioText}>Kiểm tra lại trạng thái kết nối</Text>
+          </Pressable>
+        </View>
+
         {/* Section 2: Services List */}
         <View style={styles.servicesHeaderRow}>
           <View style={styles.sectionTitleWithIcon}>
@@ -603,7 +633,7 @@ export function ProfileServicesPresentation({
                     <Text>Online</Text>
                   </Pressable>
                 </View>
-                {deliveryMode === 'online' && <Text style={styles.serviceDescription}>Lưu bản nháp; chưa nhận đặt lịch khi tính năng tạo Google Meet chưa kết nối.</Text>}
+                {deliveryMode === 'online' && <Text style={styles.serviceDescription}>{meetConnected ? 'Link Google Meet sẽ được tạo riêng cho từng buổi khi học viên giữ chỗ.' : 'Hãy kết nối Google Meet trước khi bật dịch vụ online.'}</Text>}
               </View>
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Phù hợp với ai? *</Text>

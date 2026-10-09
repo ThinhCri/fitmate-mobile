@@ -58,6 +58,12 @@ export const bookingService = {
     return apiClient<AppointmentWire>('/me/bookings/' + encodeURIComponent(id));
   },
 
+  async getMeetingLink(id: string): Promise<string> {
+    const response = await apiClient<{ meeting_url: string }>(
+      '/me/bookings/' + encodeURIComponent(id) + '/meeting');
+    return response.meeting_url;
+  },
+
   /**
    * Create temporary hold (TTL 10 minutes)
    * Operation: createBookingHold

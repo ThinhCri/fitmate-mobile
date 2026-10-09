@@ -24,6 +24,8 @@ export interface AppointmentDetailPresentationProps {
   onContactSupport?: () => void;
   onConfirmCompletion?: () => void;
   onDisputeCompletion?: () => void;
+  meetingUrl?: string | null;
+  onJoinMeeting?: () => void;
 }
 
 export function AppointmentDetailPresentation({
@@ -35,6 +37,8 @@ export function AppointmentDetailPresentation({
   onContactSupport,
   onConfirmCompletion,
   onDisputeCompletion,
+  meetingUrl,
+  onJoinMeeting,
 }: AppointmentDetailPresentationProps) {
   const getBookingStatusBadge = (status: BookingAppointmentViewModel['bookingStatus']) => {
     switch (status) {
@@ -158,6 +162,14 @@ export function AppointmentDetailPresentation({
           </View>
         </View>}
       </Card>
+
+      {meetingUrl && onJoinMeeting && (
+        <Card style={styles.card}>
+          <Text style={styles.cardSectionTitle}>Buổi tập online</Text>
+          <Text style={styles.detailLineValue}>Link Google Meet chỉ dành cho bạn và huấn luyện viên.</Text>
+          <PrimaryButton label="Vào phòng Google Meet" onPress={onJoinMeeting} />
+        </Card>
+      )}
 
       {/* Financial Breakdown Card */}
       <Card style={styles.card}>

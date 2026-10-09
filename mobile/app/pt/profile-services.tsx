@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { AppState, Alert, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/services/AuthContext';
 import { ptService } from '@/services/api/ptService';
@@ -19,6 +20,16 @@ export default function ProfileServicesRoute() {
   const [trainerDetail, setTrainerDetail] = useState<PTPublicDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [meetConnected, setMeetConnected] = useState(false);
+  const [meetBusy, setMeetBusy] = useState(false);
+
+  const fetchMeetConnection = useCallback(async () => {
+    try {
+      setMeetConnected((await ptService.getGoogleMeetConnection()).connected);
+    } catch {
+      setMeetConnected(false);
+    }
+  }, []);
 
   const fetchServices = useCallback(async () => {
     setLoading(true);
@@ -52,7 +63,41 @@ export default function ProfileServicesRoute() {
   useEffect(() => {
     fetchServices();
     fetchTrainerDetail();
-  }, [fetchServices, fetchTrainerDetail]);
+    fetchMeetConnection();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void fetchMeetConnection();
+    });
+    return () => subscription.remove();
+  }, [fetchServices, fetchTrainerDetail, fetchMeetConnection]);
+
+  const handleConnectMeet = async () => {
+    setMeetBusy(true);
+    try {
+      const { authorization_url } = await ptService.startGoogleMeetConnection();
+      await Linking.openURL(authorization_url);
+    } catch (err) {
+      Alert.alert('Không thể kết nối Google Meet', err instanceof Error ? err.message : 'Vui lòng thử lại.');
+    } finally {
+      setMeetBusy(false);
+    }
+  };
+
+  const handleDisconnectMeet = () => Alert.alert('Ngắt kết nối Google Meet?',
+    'Dịch vụ online sẽ ngừng nhận lịch mới. Lịch đã thanh toán vẫn được giữ.', [
+      { text: 'Để sau', style: 'cancel' },
+      { text: 'Ngắt kết nối', style: 'destructive', onPress: async () => {
+        setMeetBusy(true);
+        try {
+          await ptService.disconnectGoogleMeet();
+          setMeetConnected(false);
+          await fetchServices();
+        } catch (err) {
+          Alert.alert('Không thể ngắt kết nối', err instanceof Error ? err.message : 'Vui lòng thử lại.');
+        } finally {
+          setMeetBusy(false);
+        }
+      } },
+    ]);
 
   const handleCreateService = async (input: ServiceInput) => {
     const created = await ptService.createService(input);
@@ -88,9 +133,14 @@ export default function ProfileServicesRoute() {
       services={services}
       loading={loading}
       error={error}
+      meetConnected={meetConnected}
+      meetBusy={meetBusy}
+      onConnectMeet={handleConnectMeet}
+      onDisconnectMeet={handleDisconnectMeet}
       onRefresh={() => {
         fetchServices();
         fetchTrainerDetail();
+        fetchMeetConnection();
       }}
       onBack={() => {
         if (router.canGoBack()) {

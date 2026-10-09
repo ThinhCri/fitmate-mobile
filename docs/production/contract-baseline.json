@@ -1,15 +1,15 @@
 {
   "baseline": "PROD-2026-09-22-v1",
-  "capturedAt": "2026-10-08",
+  "capturedAt": "2026-10-10",
   "backendRepository": "FitmateAI_BE",
-  "backendFrozenRevision": "94a3467+worktree",
+  "backendFrozenRevision": "8eceeb0",
   "openapiSource": "FitmateAI_BE/docs/backend-release/openapi/fitmate-v1.yaml",
-  "openapiSha256": "4EA08A4479D57C290A6E03B9DDD3F7711A77CCA7682E9F2E8D342E6009F0AC2F",
+  "openapiSha256": "07F3752A34CAA9E7CC08879F5AE8D4657AD464473245F1D335FE2785F8019827",
   "contractStatus": "FROZEN-V1",
   "hashEncoding": "raw file bytes (no normalization)",
   "refreshWhen": "The backend OpenAPI revision changes; recalculate SHA256 and update this file before integration.",
-  "contractMeaning": "OpenAPI is the wire source of truth. The PT service now records purpose, delivery mode, audience, equipment, deliverable and a fixed direct-session location. A member can self-cancel or reschedule a single booking only at least 48 hours before start. Package checkout and online Meet booking remain gated.",
-  "verifiedCore": "Local code verification on 2026-10-08: backend 941/941 unit and 65/65 isolated PostgreSQL integration tests, mobile TypeScript check passed. This is not release approval or live provider verification.",
-  "openGates": "BE-808..810 and BE-400 payment/payOS re-verification; BE-817 AI capability readiness; BE-826 three-repo UAT; BE-827 release approval.",
-  "disabledCapabilities": ["ai.companion_chat", "ai.workout_adjust", "ai.food_scan (runtime gated)", "vip_purchase", "reward_cashout", "pt_automatic_payout", "pt_package_checkout", "pt_online_booking"]
+  "contractMeaning": "OpenAPI is the wire source of truth. PT services record purpose, delivery mode, audience, equipment, deliverable and a fixed direct-session location. Online single bookings now require a connected PT Google Meet account and receive a private per-appointment link; access remains payment-gated. Member self-cancellation or rescheduling requires at least 48 hours. Package checkout remains gated.",
+  "verifiedCore": "Local code verification on 2026-10-09: backend 949/949 unit tests and focused isolated PostgreSQL bookability test, mobile TypeScript check passed. Google OAuth, Meet creation, SMS delivery and payOS were not live-verified. This is not release approval.",
+  "openGates": "Google OAuth/Meet and SpeedSMS live verification; package checkout and refund ledger; BE-808..810 and BE-400 payment/payOS re-verification; BE-817 AI capability readiness; BE-826 three-repo UAT; BE-827 release approval.",
+  "disabledCapabilities": ["ai.companion_chat", "ai.workout_adjust", "ai.food_scan (runtime gated)", "vip_purchase", "reward_cashout", "pt_automatic_payout", "pt_package_checkout"]
 }

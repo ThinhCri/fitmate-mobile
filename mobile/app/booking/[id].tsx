@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity, Alert, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AppointmentDetailPresentation } from '../../src/features/booking/AppointmentDetailPresentation';
 import { BookingAppointmentViewModel } from '../../src/features/booking/bookingTypes';
 import { getBookingRepository } from '@/repositories/bookingRepository';
 import { colors, spacing, typography } from '@/theme/designTokens';
+import { bookingService } from '@/services/api/bookingService';
 
 export default function AppointmentDetailScreen() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function AppointmentDetailScreen() {
   const [appointment, setAppointment] = useState<BookingAppointmentViewModel | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [meetingUrl, setMeetingUrl] = useState<string | null>(null);
 
   const fetchAppointment = useCallback(async () => {
     if (!id) return;
@@ -21,6 +23,14 @@ export default function AppointmentDetailScreen() {
       const repo = getBookingRepository();
       const data = await repo.getAppointmentDetail(id);
       setAppointment(data);
+      setMeetingUrl(null);
+      if (['confirmed', 'in_progress', 'completed', 'awaiting_member_confirmation'].includes(data.bookingStatus)) {
+        try {
+          setMeetingUrl(await bookingService.getMeetingLink(id));
+        } catch {
+          // In-person sessions have no Meet room; booking detail remains usable.
+        }
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Không thể tải chi tiết lịch hẹn.'
@@ -66,6 +76,11 @@ export default function AppointmentDetailScreen() {
     <View style={styles.container}>
       <AppointmentDetailPresentation
         appointment={appointment}
+        meetingUrl={meetingUrl}
+        onJoinMeeting={() => {
+          if (meetingUrl) void Linking.openURL(meetingUrl).catch(() =>
+            Alert.alert('Không mở được Google Meet', 'Vui lòng kiểm tra ứng dụng hoặc trình duyệt trên thiết bị.'));
+        }}
         onCancelBooking={() => router.push(`/booking/cancel-refund?id=${appointment.id}` as any)}
         onReschedule={() => router.push(`/booking/select-slot?coachId=${appointment.coach.id}&rescheduleBookingId=${appointment.id}` as any)}
         onReviewPt={() => router.push(`/booking/review?bookingId=${appointment.id}&ptId=${appointment.coach.id}&coachName=${encodeURIComponent(appointment.coach.name)}` as any)}

@@ -146,7 +146,7 @@ export function SelectServiceSlotPresentation({
                     <View style={styles.serviceLocRow}>
                       <MapPin size={14} color={colors.primary} />
                       <Text style={styles.serviceLocText} numberOfLines={1}>
-                        {srv.locationName}
+                        {srv.deliveryMode === 'online' ? 'Online qua Google Meet' : srv.locationName}
                       </Text>
                     </View>
                   </Card>

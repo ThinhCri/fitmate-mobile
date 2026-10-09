@@ -10,6 +10,7 @@ export interface BookingServiceViewModel {
   description: string;
   locationName: string;
   locationAddress: string;
+  deliveryMode?: 'in_person' | 'online';
   serviceKind?: 'one_to_one' | 'assessment_and_plan';
   targetAudience?: string;
   requiredEquipment?: string;

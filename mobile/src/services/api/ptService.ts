@@ -28,6 +28,20 @@ const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
 const MAX_CERTIFICATE_FILE_SIZE = 5 * 1024 * 1024; // 5 MiB
 
 export const ptService = {
+  async getGoogleMeetConnection(): Promise<{ connected: boolean }> {
+    return apiClient<{ connected: boolean }>('/me/integrations/google-meet');
+  },
+
+  async startGoogleMeetConnection(): Promise<{ authorization_url: string }> {
+    return apiClient<{ authorization_url: string }>('/me/integrations/google-meet/authorization', {
+      method: 'POST',
+    });
+  },
+
+  async disconnectGoogleMeet(): Promise<void> {
+    return apiClient<void>('/me/integrations/google-meet', { method: 'DELETE' });
+  },
+
   /**
    * Get list of services offered by current PT
    * Operation: listMyServices
