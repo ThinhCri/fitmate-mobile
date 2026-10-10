@@ -981,3 +981,7 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Added Member and PT package list/detail routes, member refund preview/reason/request/withdraw, and assigned-PT acceptance. The UI displays each session's current allocation and distinguishes an approved refund request from a completed bank transfer. It refreshes after a 409 and retains the same key on an uncertain network outcome.
 - Git: FitmateAI_FE `main`, prior HEAD `6aa12b1`; the owner explicitly requested implementation and commit in the next turn. `npm run type-check` PASS, `npm test -- --run` PASS (206/206), `npm run lint` 0 errors / 147 warnings across the repo before removing one new array-style warning. Expo and Android device UAT were NOT RUN. No package payment or production service was called.
 - Next: test Member/PT on Android with existing server package data; verify 409 quote changes, uncertain POST outcomes and reason-field keyboard behavior. Checkout remains blocked pending BE public route, incident/penalty flow and live provider gates. Do not present these screens as release-ready.
+
+# OpenAPI pin after Admin package read — 2026-10-10
+
+- BE `d2689e2` added only Admin package list/detail routes and kept the Mobile package wire shape. Updated the raw-file OpenAPI SHA-256 pin. Mobile contract-drift test must pass against this sibling BE checkout; no new Mobile runtime change was needed.
