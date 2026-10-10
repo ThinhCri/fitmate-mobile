@@ -20,6 +20,39 @@ describe('Support Repository & Data Source Isolation', () => {
     vi.restoreAllMocks();
   });
 
+  it('sends the linked booking ID when opening a booking support case', async () => {
+    delete process.env.EXPO_PUBLIC_DATA_SOURCE;
+    const bookingId = '550e8400-e29b-41d4-a716-446655440010';
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: '550e8400-e29b-41d4-a716-446655440020',
+        user_id: '550e8400-e29b-41d4-a716-446655440030',
+        booking_id: bookingId,
+        subject: 'Sự cố buổi tập',
+        category: 'booking_dispute',
+        priority: 'High',
+        status: 'Open',
+        created_at: '2026-10-10T10:00:00Z',
+        updated_at: '2026-10-10T10:00:00Z',
+        messages: [],
+      }),
+    });
+
+    const ticket = await apiSupportRepository.createTicket({
+      subject: 'Sự cố buổi tập',
+      category: 'booking_dispute',
+      message: 'PT không xuất hiện trong buổi tập.',
+      linkedBookingId: bookingId,
+    });
+
+    expect(ticket.linkedBookingId).toBe(bookingId);
+    expect(JSON.parse(vi.mocked(global.fetch).mock.calls[0][1]!.body as string)).toMatchObject({
+      booking_id: bookingId,
+    });
+  });
+
   it('defaults to apiSupportRepository in production mode', () => {
     delete process.env.EXPO_PUBLIC_DATA_SOURCE;
     const repo = getSupportRepository();

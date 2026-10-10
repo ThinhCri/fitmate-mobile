@@ -21,6 +21,7 @@ interface NotificationWire {
 
 interface SupportTicketSummaryWire {
   id: string;
+  booking_id?: string | null;
   subject: string;
   category: string;
   priority?: string | null;
@@ -41,6 +42,7 @@ interface SupportTicketMessageWire {
 interface SupportTicketDetailWire {
   id: string;
   user_id: string;
+  booking_id?: string | null;
   subject: string;
   category: string;
   priority: string;
@@ -115,8 +117,8 @@ export class ApiSupportRepository implements ISupportRepository {
       subject: t.subject,
       category: t.category === 'booking_dispute' ? 'booking_dispute' : 'app_bug',
       categoryLabel: t.category === 'booking_dispute' ? 'Tranh chấp lịch hẹn' : 'Hỗ trợ kỹ thuật',
-      status: t.status === 'resolved' || t.status === 'closed' ? 'resolved' : 'open',
-      statusLabel: t.status === 'resolved' || t.status === 'closed' ? 'Đã giải quyết' : 'Chờ phản hồi',
+      status: ['resolved', 'closed'].includes(t.status.toLowerCase()) ? 'resolved' : 'open',
+      statusLabel: ['resolved', 'closed'].includes(t.status.toLowerCase()) ? 'Đã giải quyết' : 'Chờ phản hồi',
       lastUpdatedAt: new Date(t.updated_at || t.created_at).toLocaleDateString('vi-VN'),
       createdAt: new Date(t.created_at).toLocaleDateString('vi-VN'),
     }));
@@ -133,9 +135,10 @@ export class ApiSupportRepository implements ISupportRepository {
       subject: t.subject,
       category: t.category === 'booking_dispute' ? 'booking_dispute' : 'app_bug',
       categoryLabel: t.category === 'booking_dispute' ? 'Tranh chấp lịch hẹn' : 'Hỗ trợ kỹ thuật',
-      status: t.status === 'resolved' || t.status === 'closed' ? 'resolved' : 'open',
-      statusLabel: t.status === 'resolved' || t.status === 'closed' ? 'Đã giải quyết' : 'Chờ phản hồi',
+      status: ['resolved', 'closed'].includes(t.status.toLowerCase()) ? 'resolved' : 'open',
+      statusLabel: ['resolved', 'closed'].includes(t.status.toLowerCase()) ? 'Đã giải quyết' : 'Chờ phản hồi',
       createdAt: new Date(t.created_at).toLocaleDateString('vi-VN'),
+      linkedBookingId: t.booking_id ?? undefined,
       messages: (t.messages || []).map((m) => ({
         id: m.id,
         sender: m.is_admin ? 'support' : 'user',
@@ -153,6 +156,7 @@ export class ApiSupportRepository implements ISupportRepository {
         subject: values.subject,
         category: values.category,
         message: values.message,
+        booking_id: values.linkedBookingId || undefined,
       }),
     });
 
@@ -165,6 +169,7 @@ export class ApiSupportRepository implements ISupportRepository {
       status: 'open',
       statusLabel: 'Chờ phản hồi',
       createdAt: new Date(res.created_at).toLocaleDateString('vi-VN'),
+      linkedBookingId: res.booking_id ?? undefined,
       messages: (res.messages || []).map((m) => ({
         id: m.id,
         sender: m.is_admin ? 'support' : 'user',

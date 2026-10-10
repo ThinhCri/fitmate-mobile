@@ -66,13 +66,17 @@ export function CreateTicketPresentation({
   onSubmit,
 }: CreateTicketPresentationProps) {
   const [category, setCategory] = useState<TicketCategory>(
-    initialValues?.category || 'booking_dispute'
+    initialValues?.category || 'other'
   );
   const [subject, setSubject] = useState(initialValues?.subject || '');
   const [message, setMessage] = useState(initialValues?.message || '');
   const linkedBookingId = initialValues?.linkedBookingId;
 
   const handleSubmit = () => {
+    if (category === 'booking_dispute' && !linkedBookingId) {
+      Alert.alert('Chọn buổi tập', 'Vui lòng mở buổi tập gặp sự cố trong Lịch hẹn và chọn “Yêu cầu hỗ trợ” để hồ sơ được liên kết đúng.');
+      return;
+    }
     if (!subject.trim()) {
       Alert.alert('Thiếu thông tin', 'Vui lòng nhập tiêu đề yêu cầu.');
       return;
