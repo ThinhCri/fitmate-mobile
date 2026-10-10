@@ -138,6 +138,21 @@ export function TicketDetailPresentation({
               </Text>
             </TouchableOpacity>
           )}
+          {ticket.bookingResolution && (
+            <View style={styles.resolutionNotice}>
+              <Text style={styles.resolutionTitle}>
+                {ticket.bookingResolution === 'PtNoShow'
+                  ? 'Đã xác minh PT vắng mặt'
+                  : ticket.bookingResolution === 'MemberNoShow'
+                    ? 'Đã xác minh hội viên vắng mặt'
+                    : 'Đã xác minh buổi tập diễn ra'}
+              </Text>
+              {ticket.bookingResolution === 'PtNoShow' && (
+                <Text style={styles.resolutionBody}>Yêu cầu hoàn tiền đang chờ duyệt và chuyển khoản thủ công. Chưa có tiền được chuyển chỉ vì phiếu đã giải quyết.</Text>
+              )}
+              {!!ticket.bookingResolutionReason && <Text style={styles.resolutionBody}>{ticket.bookingResolutionReason}</Text>}
+            </View>
+          )}
         </Card>
 
         {/* Message Thread */}
@@ -318,6 +333,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: colors.primary,
+  },
+  resolutionNotice: {
+    backgroundColor: colors.primaryLight,
+    borderRadius: radius.sm,
+    padding: spacing.sm,
+    gap: 4,
+    marginTop: 4,
+  },
+  resolutionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primaryDark,
+  },
+  resolutionBody: {
+    fontSize: 11,
+    lineHeight: 17,
+    color: colors.textSecondary,
   },
   threadSection: {
     gap: spacing.sm,

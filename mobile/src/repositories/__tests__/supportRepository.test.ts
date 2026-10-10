@@ -53,6 +53,24 @@ describe('Support Repository & Data Source Isolation', () => {
     });
   });
 
+  it('shows the verified PT incident outcome from the support detail', async () => {
+    delete process.env.EXPO_PUBLIC_DATA_SOURCE;
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true, status: 200,
+      json: async () => ({
+        id: 'ticket-1', user_id: 'member-1', booking_id: 'booking-1',
+        booking_resolution: 'PtNoShow',
+        booking_resolution_reason: 'PT vắng mặt, đã xác minh hai bên.',
+        subject: 'Sự cố buổi tập', category: 'booking_dispute', priority: 'High',
+        status: 'Resolved', created_at: '2026-10-11T10:00:00Z',
+        updated_at: '2026-10-11T10:00:00Z', messages: [],
+      }),
+    });
+    const ticket = await apiSupportRepository.getTicketDetail('ticket-1');
+    expect(ticket.bookingResolution).toBe('PtNoShow');
+    expect(ticket.bookingResolutionReason).toContain('đã xác minh');
+  });
+
   it('defaults to apiSupportRepository in production mode', () => {
     delete process.env.EXPO_PUBLIC_DATA_SOURCE;
     const repo = getSupportRepository();

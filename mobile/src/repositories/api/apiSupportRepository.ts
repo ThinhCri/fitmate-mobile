@@ -43,6 +43,8 @@ interface SupportTicketDetailWire {
   id: string;
   user_id: string;
   booking_id?: string | null;
+  booking_resolution?: 'SessionDelivered' | 'MemberNoShow' | 'PtNoShow' | null;
+  booking_resolution_reason?: string | null;
   subject: string;
   category: string;
   priority: string;
@@ -139,6 +141,8 @@ export class ApiSupportRepository implements ISupportRepository {
       statusLabel: ['resolved', 'closed'].includes(t.status.toLowerCase()) ? 'Đã giải quyết' : 'Chờ phản hồi',
       createdAt: new Date(t.created_at).toLocaleDateString('vi-VN'),
       linkedBookingId: t.booking_id ?? undefined,
+      bookingResolution: t.booking_resolution ?? undefined,
+      bookingResolutionReason: t.booking_resolution_reason ?? undefined,
       messages: (t.messages || []).map((m) => ({
         id: m.id,
         sender: m.is_admin ? 'support' : 'user',

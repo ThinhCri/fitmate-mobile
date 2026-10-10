@@ -53,6 +53,8 @@ export interface SupportTicketDetailViewModel {
   statusLabel: string;
   createdAt: string;
   linkedBookingId?: string;
+  bookingResolution?: 'SessionDelivered' | 'MemberNoShow' | 'PtNoShow';
+  bookingResolutionReason?: string;
   messages: SupportMessageViewModel[];
 }
 
