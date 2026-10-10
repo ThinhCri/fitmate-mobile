@@ -203,6 +203,10 @@ export default function SelectSlotScreen() {
         availableDates={availableDates}
         timeSlots={timeSlots}
         onContinue={handleContinue}
+        onBookPackage={params.rescheduleBookingId ? undefined : (serviceId) => router.push({
+          pathname: '/booking/package-create' as never,
+          params: { ptId: coach.id, serviceId },
+        })}
         onViewCoachProfile={() => router.back()}
       />
     </View>

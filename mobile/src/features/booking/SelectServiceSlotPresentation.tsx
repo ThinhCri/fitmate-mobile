@@ -16,6 +16,7 @@ export interface SelectServiceSlotPresentationProps {
   availableDates: { dateString: string; dayLabel: string; dateNum: string }[];
   timeSlots: BookingSlotViewModel[];
   onContinue: (serviceId: string, date: string, slotId: string) => void;
+  onBookPackage?: (serviceId: string) => void;
   onViewCoachProfile?: () => void;
 }
 
@@ -25,6 +26,7 @@ export function SelectServiceSlotPresentation({
   availableDates,
   timeSlots,
   onContinue,
+  onBookPackage,
   onViewCoachProfile,
 }: SelectServiceSlotPresentationProps) {
   const [selectedServiceId, setSelectedServiceId] = useState<string>(services[0]?.id ?? '');
@@ -237,6 +239,13 @@ export function SelectServiceSlotPresentation({
       </ScrollView>
 
       {/* Sticky Bottom Bar */}
+      {onBookPackage && selectedServiceId && (
+          <TouchableOpacity onPress={() => onBookPackage(selectedServiceId)}
+            accessibilityRole="button" accessibilityLabel="Đặt gói bốn hoặc tám buổi với dịch vụ đã chọn"
+            style={styles.packageBar}>
+            <Text style={{ color: colors.primary, fontWeight: '700', textAlign: 'center' }}>Chọn gói 4 hoặc 8 buổi</Text>
+          </TouchableOpacity>
+        )}
       <View style={styles.bottomBar}>
         <View style={styles.bottomPriceCol}>
           <Text style={styles.bottomLabel}>Tổng tạm tính:</Text>
@@ -529,6 +538,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     gap: spacing.md,
+  },
+  packageBar: {
+    position: 'absolute', bottom: 80, left: 0, right: 0,
+    minHeight: 44, justifyContent: 'center', backgroundColor: colors.surface,
+    borderTopWidth: 1, borderTopColor: colors.border,
+    paddingHorizontal: spacing.md,
   },
   bottomPriceCol: {
     flex: 1,

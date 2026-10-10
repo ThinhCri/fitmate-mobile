@@ -59,9 +59,32 @@ export interface SessionPackageStopPreviewWire {
   }[];
 }
 
+export interface SessionPackageCheckoutWire {
+  package_id: string;
+  payment_id: string;
+  amount_vnd: number;
+  status: string;
+  redirect_url: string | null;
+}
+
 const path = (id: string) => `/me/session-packages/${encodeURIComponent(id)}`;
 
 export const sessionPackageService = {
+  createHold(body: { pt_user_id: string; service_id: string;
+    delivery_mode: 'in_person' | 'online'; slot_starts_utc: string[] },
+    idempotencyKey: string): Promise<SessionPackageWire> {
+    return apiClient<SessionPackageWire>('/me/session-packages/holds', {
+      method: 'POST', headers: { 'Idempotency-Key': idempotencyKey },
+      body: JSON.stringify(body),
+    });
+  },
+  createPayment(id: string, acknowledgeShortNotice: boolean,
+    idempotencyKey: string): Promise<SessionPackageCheckoutWire> {
+    return apiClient<SessionPackageCheckoutWire>(`${path(id)}/payment-requests`, {
+      method: 'POST', headers: { 'Idempotency-Key': idempotencyKey },
+      body: JSON.stringify({ acknowledge_short_notice: acknowledgeShortNotice }),
+    });
+  },
   listMine(page = 1): Promise<SessionPackagePageWire> {
     return apiClient<SessionPackagePageWire>(`/me/session-packages?page=${page}&pageSize=25`);
   },

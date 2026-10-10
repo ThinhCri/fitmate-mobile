@@ -985,3 +985,8 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 # OpenAPI pin after Admin package read — 2026-10-10
 
 - BE `d2689e2` added only Admin package list/detail routes and kept the Mobile package wire shape. Updated the raw-file OpenAPI SHA-256 pin. Mobile contract-drift test must pass against this sibling BE checkout; no new Mobile runtime change was needed.
+
+# PT package purchase path — 2026-10-11
+
+- Added a Member route to choose 4 or 8 open PT slots, create one server-side package hold, and continue to participant detail. Detail shows the server-calculated package total and opens only an HTTPS PayOS checkout after an explicit confirmation, including the under-48-hour cancellation warning. Return to the app reloads package/payment status; it never marks the package Paid from a redirect.
+- Updated the OpenAPI hash pin against the sibling BE working tree. Mobile typecheck passed; lint passed with pre-existing warnings. Backend isolated tests passed 967 unit and 91 integration. Real Android, PayOS, Meet, SMS and operator UAT were not run. The app database still needs an approved backup and migration before this new server code can serve real users.

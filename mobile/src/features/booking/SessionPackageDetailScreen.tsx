@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
@@ -80,6 +80,32 @@ export function SessionPackageDetailScreen({ id, asPt }: { id: string; asPt: boo
     finally { setBusy(false); }
   };
 
+  const checkout = () => {
+    if (!item || busy || asPt) return;
+    const shortNotice = item.sessions.some(session =>
+      Date.parse(session.slot_start_utc) < Date.now() + 48 * 60 * 60 * 1000);
+    const warning = shortNotice
+      ? '\n\nCó buổi bắt đầu trong vòng 48 giờ. Nếu bạn tự bận hoặc vắng mặt, buổi đó không được tự động hoàn tiền hoặc giữ lượt.'
+      : '';
+    Alert.alert('Xác nhận thanh toán gói',
+      `Gói ${item.session_count} buổi: ${money(item.total_price_vnd)}. Sau khi thanh toán, chỉ máy chủ mới xác nhận đã trả tiền.${warning}`,
+      [{ text: 'Xem lại', style: 'cancel' }, { text: 'Đến PayOS', onPress: async () => {
+        if (busy) return;
+        setBusy(true);
+        try {
+          const result = await sessionPackageService.createPayment(item.id, shortNotice,
+            keyFor(`pay:${item.id}:${shortNotice}`));
+          if (!result.redirect_url) throw new Error('Chưa có liên kết thanh toán. Hãy tải lại trạng thái gói.');
+          const url = new URL(result.redirect_url);
+          if (url.protocol !== 'https:' || !/(^|\.)payos\.vn$/.test(url.hostname))
+            throw new Error('Liên kết thanh toán không hợp lệ.');
+          await Linking.openURL(result.redirect_url);
+          await load();
+        } catch (cause) { onMutationError(cause); }
+        finally { setBusy(false); }
+      } }]);
+  };
+
   const submit = () => {
     if (!preview || busy) return;
     const trimmed = reason.trim();
@@ -145,6 +171,11 @@ export function SessionPackageDetailScreen({ id, asPt }: { id: string; asPt: boo
             <Text style={styles.line}>Giá gói: {money(item.total_price_vnd)}</Text>
             <Text style={styles.line}>Đã hoàn: {money(item.refunded_so_far_vnd)}</Text>
             <Text style={styles.note}>Trạng thái thanh toán: {item.payment_status ?? 'Chưa có thanh toán'}</Text>
+            {!asPt && (item.status === 'Held' || item.status === 'PaymentPending') &&
+              Date.parse(item.hold_expires_at_utc) > Date.now() ?
+              <Pressable disabled={busy} onPress={checkout} style={styles.action} accessibilityRole="button">
+                <Text style={styles.actionText}>{busy ? 'Đang chuẩn bị...' : item.status === 'Held' ? 'Thanh toán qua PayOS' : 'Mở lại trang thanh toán'}</Text>
+              </Pressable> : null}
           </View>
           <Text style={typography.title2}>Lịch trong gói</Text>
           {item.sessions.map((session) => <Pressable key={session.appointment_id} style={styles.card}
