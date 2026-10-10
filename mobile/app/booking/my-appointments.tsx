@@ -64,6 +64,7 @@ export default function MyAppointmentsScreen() {
         appointments={appointments}
         onSelectAppointment={(id) => router.push(`/booking/${id}` as any)}
         onExploreTrainers={() => router.push('/(tabs)/marketplace' as any)}
+        onOpenPackages={() => router.push('/booking/packages' as never)}
       />
     </View>
   );

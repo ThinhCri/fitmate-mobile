@@ -27,6 +27,7 @@ Mỗi task cần data/error/empty/loading/disabled states, role tests, contract 
 - Scope: Checkout server quote, hold expiry, accept/start/complete/cancel/reschedule, provider return polling; revenue PT server.
 - Acceptance: Luồng 100k→10k/90k và refund/payout hiển thị đúng; không mark Paid từ deep link.
 - Evidence: Commit `bac928e`, 177 unit tests passed across 25 files (`vitest run`), `tsc --noEmit` 0 errors, `expo lint` 0 errors. Real endpoints mapped: `GET /me/bookings`, `POST /bookings/holds`, `POST /payments`, `POST /me/bookings/{id}/cancel`, `POST /bookings/{id}/reschedule-requests`, `POST /trainers/{id}/reviews`. Fail-closed on errors, strict preview isolation.
+- PT package stop extension (2026-10-10): `IMPLEMENTED_UNVERIFIED`. Member/PT package lists, detail, stop preview, request/withdraw and PT accept were added against BE `edba4ce`. This extension is not covered by the older VERIFIED evidence; Mobile checks and device UAT remain pending. Package checkout stays disabled.
 
 ## MOB-803 — Workout, weight và dashboard
 - Plan: [Plan triển khai](plans/MOB-803.md).

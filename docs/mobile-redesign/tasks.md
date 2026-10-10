@@ -693,3 +693,9 @@ Moi muc khi phat sinh them vao day voi tag phu hop:
 
 
 > **TRANG THAI HIEN TAI (2026-09-18, Batch 5)**: Toan bo MOB-XXX da IMPLEMENTED (code done) sau 4 batches (6776129, a1b371a, 4ae282b, 6ba45a4) + Batch 5 refactor + features/. Can verify runtime: `cd mobile && npm install`, `npx tsc --noEmit`, `npx expo start` emulator + contrast WebAIM tool. Sau do moi set DONE theo AGENTS.md.
+
+## MOB-802 follow-up — PT package stop (2026-10-10)
+
+- Status: **IMPLEMENTED_UNVERIFIED**. Member/PT có lối vào danh sách gói và chi tiết các buổi; hội viên xem trước hoàn tiền, gửi lý do, rút yêu cầu; PT chấp nhận yêu cầu đang chờ. Backend đối chiếu báo giá lúc xác nhận, trả 409 nếu đã đổi.
+- Không mở checkout gói: backend chưa có route công khai và chưa nghiệm thu payOS/Meet/SMS thật. Màn danh sách chỉ hiển thị gói đã tồn tại trên server, không dựng gói giả.
+- `npm run type-check` PASS, `npm test -- --run` PASS (206/206), `npm run lint` hoàn thành với 0 errors và 147 warnings toàn repo (2026-10-10). Android runtime chưa chạy. Cần kiểm tra cả hai tài khoản, 409 báo giá đổi, mạng ngắt sau POST và bàn phím nhập lý do trước khi nâng trạng thái.

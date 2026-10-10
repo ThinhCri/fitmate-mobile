@@ -10,12 +10,14 @@ export interface MyAppointmentsPresentationProps {
   appointments: BookingAppointmentViewModel[];
   onSelectAppointment: (bookingId: string) => void;
   onExploreTrainers: () => void;
+  onOpenPackages: () => void;
 }
 
 export function MyAppointmentsPresentation({
   appointments,
   onSelectAppointment,
   onExploreTrainers,
+  onOpenPackages,
 }: MyAppointmentsPresentationProps) {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
 
@@ -48,6 +50,10 @@ export function MyAppointmentsPresentation({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <TouchableOpacity style={styles.packagesLink} onPress={onOpenPackages} accessibilityRole="button" accessibilityLabel="Xem gói tập PT của tôi">
+        <Text style={typography.bodyBold}>Gói tập PT của tôi</Text>
+        <ChevronRight size={18} color={colors.primary} />
+      </TouchableOpacity>
       {/* Tab Switcher */}
       <View style={styles.tabTrack}>
         <TouchableOpacity
@@ -165,6 +171,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingBottom: spacing.xl,
   },
+  packagesLink: { minHeight: 56, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radius.lg, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   tabTrack: {
     flexDirection: 'row',
     backgroundColor: '#F1F5F9',

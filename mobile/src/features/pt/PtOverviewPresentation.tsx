@@ -36,6 +36,7 @@ export interface PtOverviewPresentationProps {
   onNavigateToCertificates: () => void;
   onNavigateToSessions: () => void;
   onNavigateToRevenue: () => void;
+  onNavigateToPackages: () => void;
   onSelectSession: (id: string) => void;
 }
 
@@ -54,6 +55,7 @@ export function PtOverviewPresentation({
   onNavigateToCertificates,
   onNavigateToSessions,
   onNavigateToRevenue,
+  onNavigateToPackages,
   onSelectSession,
 }: PtOverviewPresentationProps) {
   return (
@@ -192,6 +194,14 @@ export function PtOverviewPresentation({
           </View>
           <Text style={styles.shortcutLabel}>Doanh thu</Text>
           <Text style={styles.shortcutSub}>Quyết toán 90% PT</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.shortcutTile} onPress={onNavigateToPackages} accessibilityRole="button" accessibilityLabel="Xem gói tập phụ trách">
+          <View style={[styles.shortcutIconBox, { backgroundColor: colors.primaryLight }]}>
+            <Briefcase size={22} color={colors.primary} />
+          </View>
+          <Text style={styles.shortcutLabel}>Gói phụ trách</Text>
+          <Text style={styles.shortcutSub}>Lịch và yêu cầu dừng</Text>
         </TouchableOpacity>
       </View>
 
