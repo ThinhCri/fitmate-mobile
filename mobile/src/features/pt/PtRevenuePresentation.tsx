@@ -26,6 +26,7 @@ export interface PtRevenuePresentationProps {
   bookings: PtRevenueBookingItemViewModel[];
   onSelectBookingPayout: (bookingId: string) => void;
   onFilterPeriod?: () => void;
+  onManagePayoutAccount?: () => void;
 }
 
 export function PtRevenuePresentation({
@@ -38,6 +39,7 @@ export function PtRevenuePresentation({
   bookings,
   onSelectBookingPayout,
   onFilterPeriod,
+  onManagePayoutAccount,
 }: PtRevenuePresentationProps) {
   const getPayoutBadge = (status: PtRevenueBookingItemViewModel['payoutStatus']) => {
     switch (status) {
@@ -62,6 +64,11 @@ export function PtRevenuePresentation({
           tập theo chu kỳ thanh toán.
         </Text>
       </View>
+      {onManagePayoutAccount && (
+        <TouchableOpacity style={styles.accountButton} onPress={onManagePayoutAccount} accessibilityRole="button">
+          <Text style={styles.accountButtonText}>Tài khoản nhận tiền</Text><ChevronRight size={18} color={colors.primary} />
+        </TouchableOpacity>
+      )}
 
       {/* Main Revenue Card */}
       <Card style={styles.heroCard}>
@@ -271,6 +278,18 @@ const styles = StyleSheet.create({
   bookingsList: {
     gap: spacing.sm,
   },
+  accountButton: {
+    minHeight: 46,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  accountButtonText: { fontSize: 14, fontWeight: '700', color: colors.primary },
   bookingCard: {
     padding: spacing.md,
     gap: spacing.xs,

@@ -1,5 +1,12 @@
 # Handoff — Ban giao hien tai
 
+## 2026-10-11 — Luong tai khoan nhan tien va lich su chi PT
+
+- PT co the mo `Doanh thu -> Tai khoan nhan tien`, chon ngan hang, nhap so tai khoan va luu sau khi Backend tra ve ten chu tai khoan da xac minh.
+- Chi tiet khoan chi dung du lieu revenue that: so tien, trang thai, ma giao dich, thoi gian chuyen va tai khoan da che; da bo du lieu ngan hang/mã chi gia.
+- Mobile khong tu xac minh ten tai khoan va khong giu provider secret. Can Backend cau hinh VietQR Lookup, PT da xac minh so dien thoai va migration payout da apply.
+- Verification: `npm run type-check` PASS; Vitest 208/208 PASS sau khi cap nhat OpenAPI baseline. Can nghiem thu API/provider that tren thiet bi sau khi operator them secret.
+
 ## Muc tieu hien tai
 
 **Hoan thanh refactor + features/ + FP-001, FP-017..020, FP-024, FP-025, Settings, ImagePickerService, 4 Cursor rule .mdc** theo yeu cau user ngay 2026-09-18 (sau batch 4 fix, review toan bo docs). Trang thai: IMPLEMENTED (code done), can runtime verification (npm install + tsc + emulator) de set DONE theo AGENTS.md.

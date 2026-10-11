@@ -17,6 +17,7 @@ export interface PtPayoutDetailPresentationProps {
   payoutStatus: 'pending' | 'on_hold' | 'approved' | 'paid_out';
   maskedBankInfo?: string;
   referenceNumber?: string;
+  paidAt?: string;
   onContactSupport?: () => void;
 }
 
@@ -30,8 +31,9 @@ export function PtPayoutDetailPresentation({
   ptShare90Vnd,
   refundAdjustedVnd = 0,
   payoutStatus,
-  maskedBankInfo = 'Vietcombank •••• 5678 (Chính chủ HLV)',
-  referenceNumber = 'PAY-20260928-8921',
+  maskedBankInfo = 'Chưa chốt tài khoản thụ hưởng',
+  referenceNumber = 'Chưa có',
+  paidAt,
   onContactSupport,
 }: PtPayoutDetailPresentationProps) {
   const getStatusText = (status: PtPayoutDetailPresentationProps['payoutStatus']) => {
@@ -144,7 +146,9 @@ export function PtPayoutDetailPresentation({
                   ? 'Chuyển khoản thành công'
                   : 'Đang chuyển về tài khoản'}
               </Text>
-              <Text style={styles.timelineTime}>{getStatusText(payoutStatus)}</Text>
+              <Text style={styles.timelineTime}>
+                {payoutStatus === 'paid_out' && paidAt ? `Đã chuyển lúc ${paidAt}` : getStatusText(payoutStatus)}
+              </Text>
             </View>
           </View>
         </View>

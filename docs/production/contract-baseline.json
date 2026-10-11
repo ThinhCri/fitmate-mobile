@@ -4,12 +4,12 @@
   "backendRepository": "FitmateAI_BE",
   "backendFrozenRevision": "1729449+worktree",
   "openapiSource": "FitmateAI_BE/docs/backend-release/openapi/fitmate-v1.yaml",
-  "openapiSha256": "6A9769C0F83C1D8FAD854F54328FE1C7BED09423D52C9BC6F49D6E23C6765425",
+  "openapiSha256": "15BC1EF7115BB8A6A774BE7CF2E08F9327D8410FB8420290DF0D3B770F5B3B27",
   "contractStatus": "FROZEN-V1",
   "hashEncoding": "raw file bytes (no normalization)",
   "refreshWhen": "The backend OpenAPI revision changes; recalculate SHA256 and update this file before integration.",
-  "contractMeaning": "OpenAPI is the wire source of truth. PT package and booking contracts remain operator-gated. AI Plus is a separate Google Play digital subscription: GET /me/ai-subscription reports server-verified status and POST /me/ai-subscription/verify checks an Android purchase token. GET /me/ai-usage reports free or Plus daily quota. Native purchase and provider credentials are still unverified until Play Console internal testing; this contract does not authorize production sales.",
-  "verifiedCore": "Backend local verification on 2026-10-10: 963/963 unit and 85/85 isolated PostgreSQL integration tests passed for the current package contract. Mobile package screens are IMPLEMENTED_UNVERIFIED; Google OAuth, Meet creation, SMS delivery and payOS were not live-verified. This is not release approval.",
+  "contractMeaning": "OpenAPI is the wire source of truth. PT package and booking contracts remain operator-gated. Manual PT payout requires a verified payout account, immutable payee snapshot and Admin-recorded bank receipt. AI Plus remains a separate Google Play digital subscription. Provider credentials are still unverified until operator UAT; this contract does not authorize production sales.",
+  "verifiedCore": "Backend local verification on 2026-10-11: 970/970 unit and 96/96 isolated PostgreSQL integration tests passed. Mobile type-check passed and Admin production build plus 127/127 tests passed. VietQR Lookup, SMS, Google Meet and payOS were not live-verified. This is not release approval.",
   "openGates": "Google OAuth/Meet and SpeedSMS live verification; package checkout and refund ledger; BE-808..810 and BE-400 payment/payOS re-verification; BE-817 AI capability readiness; BE-826 three-repo UAT; BE-827 release approval.",
   "disabledCapabilities": ["ai.companion_chat", "ai.workout_adjust", "ai.food_scan (runtime gated)", "vip_purchase", "reward_cashout", "pt_automatic_payout"]
 }
