@@ -9,6 +9,7 @@ const CODE_MESSAGES: Record<string, string> = {
   'FITMATE.AI.UNAVAILABLE': 'Dịch vụ AI đang tạm thời chưa sẵn sàng. Vui lòng thử lại sau.',
   'FITMATE.AI.INVALID_OUTPUT': 'AI chưa thể xử lý yêu cầu này. Vui lòng diễn đạt lại hoặc thử nội dung khác.',
   'FITMATE.AI.RATE_LIMITED': 'AI đang xử lý quá nhiều yêu cầu. Vui lòng chờ một lát rồi thử lại.',
+  'FITMATE.AI.QUOTA_EXCEEDED': 'Bạn đã dùng hết lượt AI hôm nay. Hạn mức sẽ làm mới lúc 00:00 giờ Việt Nam.',
 };
 
 const STATUS_MESSAGES: Record<number, string> = {

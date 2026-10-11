@@ -990,3 +990,15 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 
 - Added a Member route to choose 4 or 8 open PT slots, create one server-side package hold, and continue to participant detail. Detail shows the server-calculated package total and opens only an HTTPS PayOS checkout after an explicit confirmation, including the under-48-hour cancellation warning. Return to the app reloads package/payment status; it never marks the package Paid from a redirect.
 - Updated the OpenAPI hash pin against the sibling BE working tree. Mobile typecheck passed; lint passed with pre-existing warnings. Backend isolated tests passed 967 unit and 91 integration. Real Android, PayOS, Meet, SMS and operator UAT were not run. The app database still needs an approved backup and migration before this new server code can serve real users.
+
+# AI Plus account entry — 2026-10-11
+
+- Added a read-only `Gói AI của tôi` entry and screen backed by `GET /me/ai-usage`. It distinguishes loading, error, disabled enforcement and active usage; it states explicitly that AI Plus is not yet on sale. It does not show a fake price or purchase-success button. The Backend OpenAPI working-tree hash was pinned in `docs/production/contract-baseline.json`.
+- No native IAP library was installed and no build/typecheck/device test was run under the repository's manual-execution workflow. Before selling, use a compatible native Billing integration in a Play internal-testing build, wire purchase-token verification and entitlement status to BE, then verify price/restore/cancel/refund on real accounts. Expo Go cannot test native purchases.
+
+# AI Plus native Google Play flow — 2026-10-11
+
+- Added `expo-iap` 6.0.0 plus its Expo config plugin and converted the AI-plan screen from read-only inventory to a real Google Play flow. It reads the localized monthly price/offer from Play, buys `fitmate_ai_plus`, sends the purchase token to authenticated Backend verification, restores purchases, and opens Play subscription management. It never grants Plus from the client callback and never stores Google credentials in Mobile.
+- The screen hides native checkout in Expo Go and when Backend billing is disabled. Plus/free usage and expiry come from Backend. Pending transactions remain pending; canceled renewal can remain Plus until verified expiry. A native development/internal-testing build installed through Google Play is required for real purchase UAT.
+- Updated the contract pin for `/me/ai-subscription` and `/verify`. Evidence: TypeScript passed; targeted billing lint passed; full lint returned 0 errors and 146 existing warnings; all 208 tests passed; Expo config introspection included `expo-iap`. `npm audit` still reports transitive Expo/Metro findings (including critical `shell-quote`); force-fix would make breaking SDK changes and was not applied.
+- External gates: create Play app/package/product/base plan, set localized price, add license testers, configure Android Publisher service account only on Backend, build/sign/upload AAB, then test purchase/restore/cancel/renew/refund on real Play accounts. No live purchase has occurred and the changes are uncommitted.
