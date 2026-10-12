@@ -10,6 +10,7 @@ import { KeyboardAvoidingView, Platform } from 'react-native';
 import { ThemeProvider } from '@/theme';
 import { AuthProvider } from '@/services/AuthContext';
 import { PtVerificationGate } from '@/services/PtVerificationGate';
+import { AnalyticsTracker } from '@/services/AnalyticsTracker';
 import { ToastHost } from '@/components/ui';
 
 export default function RootLayout() {
@@ -19,6 +20,7 @@ export default function RootLayout() {
         <ThemeProvider>
           <AuthProvider>
             <PtVerificationGate />
+            <AnalyticsTracker />
             <StatusBar style="dark" />
             <KeyboardAvoidingView
               style={{ flex: 1 }}

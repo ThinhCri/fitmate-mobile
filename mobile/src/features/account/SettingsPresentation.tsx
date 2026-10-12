@@ -33,6 +33,9 @@ export interface SettingsPresentationProps {
   settings: SettingsViewModel;
   onNotificationsChange: (value: boolean) => void;
   onEmailAlertsChange: (value: boolean) => void;
+  analyticsConsent?: boolean;
+  analyticsAvailable?: boolean;
+  onAnalyticsConsentChange?: (value: boolean) => void;
   onExportPress: () => void;
   onDeleteAccountPress: () => void;
   onCancelDeletionPress: () => void;
@@ -49,6 +52,9 @@ export function SettingsPresentation({
   settings,
   onNotificationsChange,
   onEmailAlertsChange,
+  analyticsConsent = false,
+  analyticsAvailable = false,
+  onAnalyticsConsentChange,
   onExportPress,
   onDeleteAccountPress,
   onCancelDeletionPress,
@@ -142,6 +148,18 @@ export function SettingsPresentation({
             <View style={styles.row}>
               <Text style={styles.rowTitle}>Thông báo qua email</Text>
               <Switch value={settings.emailAlertsEnabled} onValueChange={onEmailAlertsChange} />
+            </View>
+
+            <View style={styles.divider} />
+            <View style={styles.row}>
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <Text style={styles.rowTitle}>Chia sẻ thống kê sử dụng ẩn danh</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 3 }}>
+                  {analyticsAvailable ? 'Giúp cải thiện app; có thể tắt bất kỳ lúc nào.' : 'Chỉ khả dụng trong bản Android đã cấu hình Analytics.'}
+                </Text>
+              </View>
+              <Switch accessibilityLabel="Chia sẻ thống kê sử dụng ẩn danh" value={analyticsAvailable && analyticsConsent}
+                disabled={!analyticsAvailable} onValueChange={onAnalyticsConsentChange} />
             </View>
 
             <View style={styles.divider} />
