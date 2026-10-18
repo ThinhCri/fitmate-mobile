@@ -64,6 +64,12 @@ export const ptService = {
     if (input.price_vnd < 0) {
       throw new Error('Giá dịch vụ không được là số âm');
     }
+    if ((input.package_4_price_vnd ?? 0) < 0 ||
+        (input.package_8_price_vnd ?? 0) < 0 ||
+        (input.package_4_price_vnd ?? 0) > input.price_vnd * 4 ||
+        (input.package_8_price_vnd ?? 0) > input.price_vnd * 8) {
+      throw new Error('Giá gói phải từ 0 đến tổng giá mua lẻ tương ứng');
+    }
     if (input.duration_minutes < 15 || input.duration_minutes > 240) {
       throw new Error('Thời lượng buổi tập phải từ 15 đến 240 phút');
     }
@@ -94,6 +100,10 @@ export const ptService = {
     }
     if (input.price_vnd !== undefined && input.price_vnd < 0) {
       throw new Error('Giá dịch vụ không được là số âm');
+    }
+    if ((input.package_4_price_vnd !== undefined && input.package_4_price_vnd < 0) ||
+        (input.package_8_price_vnd !== undefined && input.package_8_price_vnd < 0)) {
+      throw new Error('Giá gói không được là số âm');
     }
     if (
       input.duration_minutes !== undefined &&

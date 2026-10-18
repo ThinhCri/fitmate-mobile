@@ -52,6 +52,17 @@ export function SessionPackageDetailScreen({ id, asPt }: { id: string; asPt: boo
     void load();
   }, [load]));
 
+  useFocusEffect(useCallback(() => {
+    if (item?.status !== 'PaymentPending') return;
+    let checks = 0;
+    const timer = setInterval(() => {
+      checks += 1;
+      void load();
+      if (checks >= 12) clearInterval(timer);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [item?.status, load]));
+
   const keyFor = (signature: string) => {
     if (pendingKey.current?.signature !== signature)
       pendingKey.current = { signature, key: newKey() };
@@ -171,6 +182,12 @@ export function SessionPackageDetailScreen({ id, asPt }: { id: string; asPt: boo
             <Text style={styles.line}>Giá gói: {money(item.total_price_vnd)}</Text>
             <Text style={styles.line}>Đã hoàn: {money(item.refunded_so_far_vnd)}</Text>
             <Text style={styles.note}>Trạng thái thanh toán: {item.payment_status ?? 'Chưa có thanh toán'}</Text>
+            {item.status === 'PaymentPending' ? <>
+              <Text style={styles.note}>Nếu bạn vừa chuyển tiền, hệ thống đang chờ xác nhận từ PayOS. Đừng thanh toán lần nữa khi trạng thái chưa rõ.</Text>
+              <Pressable disabled={busy} onPress={() => void load()} style={styles.secondaryAction} accessibilityRole="button">
+                <Text style={styles.secondaryText}>Cập nhật trạng thái thanh toán</Text>
+              </Pressable>
+            </> : null}
             {!asPt && (item.status === 'Held' || item.status === 'PaymentPending') &&
               Date.parse(item.hold_expires_at_utc) > Date.now() ?
               <Pressable disabled={busy} onPress={checkout} style={styles.action} accessibilityRole="button">

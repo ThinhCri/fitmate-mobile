@@ -239,7 +239,8 @@ export function SelectServiceSlotPresentation({
       </ScrollView>
 
       {/* Sticky Bottom Bar */}
-      {onBookPackage && selectedServiceId && (
+      {onBookPackage && selectedServiceId &&
+        ((selectedService?.package4PriceVnd ?? 0) > 0 || (selectedService?.package8PriceVnd ?? 0) > 0) && (
           <TouchableOpacity onPress={() => onBookPackage(selectedServiceId)}
             accessibilityRole="button" accessibilityLabel="Đặt gói bốn hoặc tám buổi với dịch vụ đã chọn"
             style={styles.packageBar}>

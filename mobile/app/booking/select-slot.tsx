@@ -87,6 +87,8 @@ export default function SelectSlotScreen() {
             name: s.name,
             durationMinutes: s.durationMinutes,
             priceVnd: s.priceVnd,
+            package4PriceVnd: s.package4PriceVnd,
+            package8PriceVnd: s.package8PriceVnd,
             description: s.description,
             locationName: s.locationName ?? '',
             locationAddress: s.locationAddress ?? '',

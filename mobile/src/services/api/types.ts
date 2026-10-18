@@ -146,6 +146,8 @@ export interface Service {
   name: string;
   description: string;
   price_vnd: number;
+  package_4_price_vnd: number;
+  package_8_price_vnd: number;
   duration_minutes: number;
   is_active: boolean;
   service_kind?: 'one_to_one' | 'assessment_and_plan';
@@ -161,6 +163,8 @@ export interface ServiceInput {
   name: string;
   description: string;
   price_vnd: number;
+  package_4_price_vnd?: number;
+  package_8_price_vnd?: number;
   duration_minutes: number;
   service_kind: 'one_to_one' | 'assessment_and_plan';
   delivery_mode: 'in_person' | 'online';
@@ -298,6 +302,8 @@ export interface TrainerServiceViewModel {
   name: string;
   description: string;
   priceVnd: number;
+  package4PriceVnd: number;
+  package8PriceVnd: number;
   durationMinutes: number;
   isActive: boolean;
   serviceKind?: 'one_to_one' | 'assessment_and_plan';
@@ -368,6 +374,8 @@ export function mapPTPublicDetailToDetail(
     name: s.name,
     description: s.description || '',
     priceVnd: s.price_vnd,
+    package4PriceVnd: s.package_4_price_vnd ?? 0,
+    package8PriceVnd: s.package_8_price_vnd ?? 0,
     durationMinutes: s.duration_minutes,
     isActive: s.is_active,
     serviceKind: s.service_kind ?? 'one_to_one',

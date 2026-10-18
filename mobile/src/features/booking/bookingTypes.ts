@@ -7,6 +7,8 @@ export interface BookingServiceViewModel {
   name: string;
   durationMinutes: number;
   priceVnd: number;
+  package4PriceVnd?: number;
+  package8PriceVnd?: number;
   description: string;
   locationName: string;
   locationAddress: string;

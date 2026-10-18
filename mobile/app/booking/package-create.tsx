@@ -40,8 +40,12 @@ export default function PackageCreateScreen() {
       const trainer = mapPTPublicDetailToDetail(raw);
       const matching = trainer.services.find(s => s.id === serviceId && s.isActive);
       if (!trainer.isVerified || !matching) throw new Error('Dịch vụ này không còn nhận lịch.');
+      if (matching.package4PriceVnd <= 0 && matching.package8PriceVnd <= 0)
+        throw new Error('PT chưa mở bán gói 4 hoặc 8 buổi cho dịch vụ này.');
       setTrainerName(trainer.name);
       setService(matching);
+      setCount(matching.package4PriceVnd > 0 ? 4 : 8);
+      setSelected([]);
       setSlots(availability.filter(s => s.status === 'open' &&
         Date.parse(s.slot_start_utc) >= Date.now() + 30 * 60 * 1000 &&
         s.duration_minutes >= matching.durationMinutes).sort((a, b) =>
@@ -60,7 +64,8 @@ export default function PackageCreateScreen() {
   };
 
   const createHold = () => {
-    if (!ptId || !service || selected.length !== count || busy) return;
+    if (!ptId || !service || selected.length !== count || busy ||
+        (count === 4 ? service.package4PriceVnd : service.package8PriceVnd) <= 0) return;
     const shortNotice = selected.some(x => Date.parse(x) < Date.now() + 48 * 60 * 60 * 1000);
     const message = `Bạn chọn ${count} buổi với ${trainerName}. Giá và thời hạn giữ chỗ sẽ được máy chủ xác nhận trước thanh toán. Bản thân bạn sẽ chọn lịch ngay bây giờ.` +
       (shortNotice ? '\n\nCó buổi bắt đầu trong vòng 48 giờ. Nếu tự bận hoặc vắng mặt, buổi đó không được hoàn tiền/giữ lượt.' : '');
@@ -95,11 +100,18 @@ export default function PackageCreateScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.card}><Text style={typography.title2}>{trainerName}</Text><Text style={typography.bodyBold}>{service.name}</Text>
           <Text style={styles.note}>{service.deliveryMode === 'online' ? 'Trực tuyến qua Google Meet' : `${service.locationName} · ${service.locationAddress}`}</Text>
-          <Text style={styles.note}>Giá gói chính thức sẽ hiện sau khi giữ lịch. Bạn chưa bị thu tiền ở bước này.</Text></View>
+          <Text style={styles.note}>Giá do PT đặt; máy chủ sẽ chốt và phân bổ theo từng buổi khi giữ lịch. Bạn chưa bị thu tiền ở bước này.</Text></View>
         <Text style={typography.title2}>Chọn số buổi</Text>
-        <View style={styles.row}>{([4, 8] as const).map(n => <Pressable key={n} onPress={() => { setCount(n); setSelected([]); request.current = null; }} style={[styles.choice, count === n && styles.active]}><Text style={count === n ? styles.activeText : styles.choiceText}>{n} buổi</Text></Pressable>)}</View>
+        <View style={styles.row}>{([4, 8] as const).map(n => {
+          const price = n === 4 ? service.package4PriceVnd : service.package8PriceVnd;
+          return <Pressable key={n} disabled={price <= 0} onPress={() => { setCount(n); setSelected([]); request.current = null; }}
+            style={[styles.choice, count === n && styles.active, price <= 0 && styles.disabled]} accessibilityRole="button">
+            <Text style={count === n ? styles.activeText : styles.choiceText}>{n} buổi · {price > 0 ? `${price.toLocaleString('vi-VN')} ₫` : 'Chưa mở bán'}</Text>
+          </Pressable>;
+        })}</View>
         <Text style={typography.title2}>Chọn {count} khung giờ ({selected.length}/{count})</Text>
-        {slots.length === 0 ? <Text style={styles.note}>PT chưa có đủ lịch trống trong 4 tuần tới.</Text> : slots.map(slot => <Pressable key={slot.id} onPress={() => toggle(slot.slot_start_utc)}
+        {slots.length < count ? <Text style={styles.note}>PT hiện có {slots.length} khung giờ phù hợp trong 4 tuần tới; cần ít nhất {count} khung giờ để đặt gói này. Bạn có thể chọn gói ít buổi hơn hoặc quay lại sau.</Text> : null}
+        {slots.map(slot => <Pressable key={slot.id} onPress={() => toggle(slot.slot_start_utc)}
           accessibilityRole="checkbox" accessibilityState={{ checked: selected.includes(slot.slot_start_utc) }} style={[styles.slot, selected.includes(slot.slot_start_utc) && styles.active]}>
           <Text style={selected.includes(slot.slot_start_utc) ? styles.activeText : styles.choiceText}>{displayTime(slot.slot_start_utc)} · {slot.duration_minutes} phút</Text>
         </Pressable>)}

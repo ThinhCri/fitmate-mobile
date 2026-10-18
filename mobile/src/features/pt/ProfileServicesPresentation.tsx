@@ -84,6 +84,8 @@ export function ProfileServicesPresentation({
   const [serviceName, setServiceName] = useState('');
   const [serviceDescription, setServiceDescription] = useState('');
   const [servicePrice, setServicePrice] = useState('');
+  const [package4Price, setPackage4Price] = useState('');
+  const [package8Price, setPackage8Price] = useState('');
   const [serviceDuration, setServiceDuration] = useState('60');
   const [serviceKind, setServiceKind] = useState<ServiceInput['service_kind']>('one_to_one');
   const [deliveryMode, setDeliveryMode] = useState<ServiceInput['delivery_mode']>('in_person');
@@ -100,6 +102,8 @@ export function ProfileServicesPresentation({
     setServiceName('');
     setServiceDescription('');
     setServicePrice('300000');
+    setPackage4Price('');
+    setPackage8Price('');
     setServiceDuration('60');
     setServiceKind('one_to_one');
     setDeliveryMode('in_person');
@@ -116,6 +120,8 @@ export function ProfileServicesPresentation({
     setServiceName(service.name);
     setServiceDescription(service.description || '');
     setServicePrice(service.price_vnd.toString());
+    setPackage4Price(service.package_4_price_vnd ? String(service.package_4_price_vnd) : '');
+    setPackage8Price(service.package_8_price_vnd ? String(service.package_8_price_vnd) : '');
     setServiceDuration(service.duration_minutes.toString());
     setServiceKind(service.service_kind ?? 'one_to_one');
     setDeliveryMode(service.delivery_mode ?? 'in_person');
@@ -127,18 +133,32 @@ export function ProfileServicesPresentation({
     setEditModalVisible(true);
   };
 
+  const readPackagePrices = (singlePrice: number): { four: number; eight: number } | null => {
+    const parse = (value: string) => value.trim() === '' ? 0 : Number(value.trim());
+    const four = parse(package4Price);
+    const eight = parse(package8Price);
+    if (![four, eight].every(Number.isSafeInteger) || four < 0 || eight < 0 ||
+        four > singlePrice * 4 || eight > singlePrice * 8) {
+      Alert.alert('Giá gói không hợp lệ', 'Để trống nếu chưa mở bán. Giá gói phải lớn hơn 0 và không cao hơn tổng giá mua lẻ.');
+      return null;
+    }
+    return { four, eight };
+  };
+
   const handleCreateSubmit = async () => {
-    const price = parseInt(servicePrice, 10);
+    const price = Number(servicePrice.trim());
+    const packagePrices = readPackagePrices(price);
     const duration = parseInt(serviceDuration, 10);
 
     if (!serviceName.trim()) {
       Alert.alert('Lỗi', 'Vui lòng nhập tên gói dịch vụ');
       return;
     }
-    if (isNaN(price) || price < 0) {
+    if (!Number.isSafeInteger(price) || price < 0) {
       Alert.alert('Lỗi', 'Giá dịch vụ không hợp lệ');
       return;
     }
+    if (!packagePrices) return;
     if (isNaN(duration) || duration < 15 || duration > 240) {
       Alert.alert('Lỗi', 'Thời lượng phải từ 15 đến 240 phút');
       return;
@@ -152,6 +172,8 @@ export function ProfileServicesPresentation({
         name: serviceName.trim(),
         description: serviceDescription.trim(),
         price_vnd: price,
+        package_4_price_vnd: packagePrices.four,
+        package_8_price_vnd: packagePrices.eight,
         duration_minutes: duration,
         ...details,
       });
@@ -165,17 +187,19 @@ export function ProfileServicesPresentation({
 
   const handleEditSubmit = async () => {
     if (!editingService) return;
-    const price = parseInt(servicePrice, 10);
+    const price = Number(servicePrice.trim());
+    const packagePrices = readPackagePrices(price);
     const duration = parseInt(serviceDuration, 10);
 
     if (!serviceName.trim()) {
       Alert.alert('Lỗi', 'Vui lòng nhập tên gói dịch vụ');
       return;
     }
-    if (isNaN(price) || price < 0) {
+    if (!Number.isSafeInteger(price) || price < 0) {
       Alert.alert('Lỗi', 'Giá dịch vụ không hợp lệ');
       return;
     }
+    if (!packagePrices) return;
     if (isNaN(duration) || duration < 15 || duration > 240) {
       Alert.alert('Lỗi', 'Thời lượng phải từ 15 đến 240 phút');
       return;
@@ -189,6 +213,8 @@ export function ProfileServicesPresentation({
         name: serviceName.trim(),
         description: serviceDescription.trim(),
         price_vnd: price,
+        package_4_price_vnd: packagePrices.four,
+        package_8_price_vnd: packagePrices.eight,
         duration_minutes: duration,
         ...details,
       });
@@ -507,6 +533,9 @@ export function ProfileServicesPresentation({
                 </View>
               </View>
 
+              <Text style={styles.serviceDescription}>Gói 4 buổi: {item.package_4_price_vnd > 0 ? `${formatVnd(item.package_4_price_vnd)} đ` : 'Chưa mở bán'}</Text>
+              <Text style={styles.serviceDescription}>Gói 8 buổi: {item.package_8_price_vnd > 0 ? `${formatVnd(item.package_8_price_vnd)} đ` : 'Chưa mở bán'}</Text>
+
               {/* Snapshot Note */}
               <View style={styles.snapshotNote}>
                 <Info size={14} color={colors.textMuted} style={{ marginRight: 6, marginTop: 2 }} />
@@ -686,6 +715,18 @@ export function ProfileServicesPresentation({
                     keyboardType="numeric"
                   />
                 </View>
+              </View>
+
+              <Text style={styles.serviceDescription}>Giá gói 4/8 buổi do bạn đặt. Để trống để chưa mở bán; giá gói không được cao hơn mua lẻ. Hội viên chọn đủ lịch trước khi trả tiền.</Text>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Giá trọn gói 4 buổi (VNĐ)</Text>
+                <TextInput style={styles.textInput} value={package4Price} onChangeText={setPackage4Price}
+                  placeholder="Chưa mở bán" placeholderTextColor={colors.textMuted} keyboardType="numeric" />
+              </View>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Giá trọn gói 8 buổi (VNĐ)</Text>
+                <TextInput style={styles.textInput} value={package8Price} onChangeText={setPackage8Price}
+                  placeholder="Chưa mở bán" placeholderTextColor={colors.textMuted} keyboardType="numeric" />
               </View>
 
               <View style={styles.modalActions}>
