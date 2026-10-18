@@ -3,10 +3,9 @@ import { getUserFacingApiErrorMessage } from './errorMessages';
 import * as FileSystem from 'expo-file-system/legacy';
 import { File as ExpoFile } from 'expo-file-system';
 import { fetch as expoFetch } from 'expo/fetch';
+import { getApiBaseUrl } from './baseUrl';
 
-const RAW_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8080/api/v1';
-const API_BASE_URL = RAW_BASE_URL.replace(/\/+$/, '');
+const API_BASE_URL = getApiBaseUrl();
 let rateLimitedUntil = 0;
 
 async function waitForRateLimitWindow(signal: AbortSignal): Promise<void> {

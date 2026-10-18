@@ -14,10 +14,10 @@ export type AsyncData<T> =
 
 /**
  * Checks if preview data source is explicitly enabled via environment variable.
- * Must evaluate strictly to 'preview'. Any other value or undefined defaults to production API mode.
+ * Preview data must never be selected in a release build.
  */
 export function isPreviewMode(): boolean {
-  return process.env.EXPO_PUBLIC_DATA_SOURCE === 'preview';
+  return __DEV__ && process.env.EXPO_PUBLIC_DATA_SOURCE === 'preview';
 }
 
 /**
@@ -30,6 +30,9 @@ export function getDataSourceMode(): 'api' | 'preview' {
     return 'api';
   }
   if (source === 'preview') {
+    if (!__DEV__) {
+      throw new Error('Dữ liệu xem trước không được phép trong bản phát hành.');
+    }
     return 'preview';
   }
   throw new Error(`Cấu hình nguồn dữ liệu không hợp lệ: "${source}". Ứng dụng từ chối tải dữ liệu (Fail Closed).`);

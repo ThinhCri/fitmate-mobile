@@ -1,10 +1,11 @@
 import { AppState } from 'react-native';
 import { sessionManager } from '@/services/session/sessionManager';
+import { getApiBaseUrl } from '@/services/api/baseUrl';
 
 type RealtimeHandler = (payload: unknown) => void;
 
 const RECORD_SEPARATOR = '\u001e';
-const RAW_API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8080/api/v1';
+const RAW_API_BASE_URL = getApiBaseUrl();
 
 function buildHubUrl(token: string): string {
   const apiUrl = new URL(RAW_API_BASE_URL.replace(/\/+$/, ''));

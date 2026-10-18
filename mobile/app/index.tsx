@@ -74,8 +74,8 @@ export default function Index() {
     );
   }
 
-  // Explicit preview flag (not unconditional __DEV__)
-  if (process.env.EXPO_PUBLIC_ENABLE_SAMPLE_PREVIEW === 'true') {
+  // Sample content is available only in development builds.
+  if (__DEV__ && process.env.EXPO_PUBLIC_ENABLE_SAMPLE_PREVIEW === 'true') {
     return <Redirect href="/sample-preview" />;
   }
 
