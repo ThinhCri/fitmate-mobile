@@ -1,8 +1,6 @@
 import { CommunityPostViewModel, CreatePostFormValues, FriendItemViewModel, PostCommentViewModel, ReportRequest, UserPublicProfileViewModel } from '@/features/community';
 import { ConversationDetailViewModel, ConversationItemViewModel, ChatImageInput, ChatMessageViewModel } from '@/features/chat';
-import { getDataSourceMode } from './repositoryTypes';
 import { apiSocialRepository } from './api/apiSocialRepository';
-import { previewSocialRepository } from './preview/previewSocialRepository';
 
 export interface ISocialRepository {
   listPosts(scope?: 'public' | 'friends', query?: string): Promise<CommunityPostViewModel[]>;
@@ -39,9 +37,5 @@ export interface ISocialRepository {
 }
 
 export function getSocialRepository(): ISocialRepository {
-  const mode = getDataSourceMode();
-  if (mode === 'preview') {
-    return previewSocialRepository;
-  }
   return apiSocialRepository;
 }

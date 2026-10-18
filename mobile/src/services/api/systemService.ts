@@ -1,5 +1,4 @@
 import { apiClient } from './client';
-import { isPreviewMode } from '@/repositories/repositoryTypes';
 
 export interface FeatureCapabilityStatus {
   enabled: boolean;
@@ -41,26 +40,6 @@ let cachedCapabilities: SystemCapabilities | null = null;
 
 export const systemService = {
   async getCapabilities(): Promise<SystemCapabilities> {
-    if (isPreviewMode()) {
-      return {
-        api_version: '1.0.0-preview',
-        environment: 'preview',
-        ai: {
-          enabled: false,
-          food_scan: false,
-          companion_chat: false,
-          workout_adjust: false,
-          status_reason: 'AI engine in preview mock mode',
-        },
-        vip_purchase: { enabled: false, reason: 'Chưa hỗ trợ mua VIP trong phiên bản này' },
-        reward_cashout: { enabled: false, reason: 'Chưa hỗ trợ quy đổi điểm thưởng sang tiền mặt' },
-        pt_automatic_payout: { enabled: false, reason: 'Quy trình chi trả PT thực hiện qua đối soát thủ công' },
-        push_notifications_enabled: true,
-        payments_enabled: true,
-        storage_provider: 'local',
-      };
-    }
-
     if (cachedCapabilities) {
       return cachedCapabilities;
     }

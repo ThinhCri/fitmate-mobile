@@ -2,11 +2,10 @@
  * Index — Entry point redirection based on auth & onboarding state.
  *
  * Rules:
- * 1. Sample preview only opens if EXPO_PUBLIC_ENABLE_SAMPLE_PREVIEW === 'true' (not unconditional __DEV__).
- * 2. If unauthenticated:
+ * 1. If unauthenticated:
  *    - First time (hasSeenWelcome === false): /(auth)/welcome
  *    - Returning user (hasSeenWelcome === true): /(auth)/login
- * 3. If authenticated:
+ * 2. If authenticated:
  *    - Member/PT: /(tabs)/dashboard
  *    - Admin: Blocked from mobile app with logout notice.
  */
@@ -72,11 +71,6 @@ export default function Index() {
         <ActivityIndicator size="large" color={resolveColor(theme, 'primary')} />
       </View>
     );
-  }
-
-  // Sample content is available only in development builds.
-  if (__DEV__ && process.env.EXPO_PUBLIC_ENABLE_SAMPLE_PREVIEW === 'true') {
-    return <Redirect href="/sample-preview" />;
   }
 
   // Unauthenticated routing

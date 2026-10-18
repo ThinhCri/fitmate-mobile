@@ -3,9 +3,7 @@ import {
   FoodItemViewModel,
   PlannedMealSlotViewModel,
 } from '@/features/nutrition/nutritionTypes';
-import { getDataSourceMode } from './repositoryTypes';
 import { apiNutritionRepository } from './api/apiNutritionRepository';
-import { previewNutritionRepository } from './preview/previewNutritionRepository';
 
 export interface INutritionRepository {
   getDaySummary(dateString?: string): Promise<DayNutritionSummaryViewModel>;
@@ -22,9 +20,5 @@ export interface INutritionRepository {
 }
 
 export function getNutritionRepository(): INutritionRepository {
-  const mode = getDataSourceMode();
-  if (mode === 'preview') {
-    return previewNutritionRepository;
-  }
   return apiNutritionRepository;
 }

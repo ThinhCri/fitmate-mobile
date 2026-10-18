@@ -1021,3 +1021,11 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Centralized API base URL validation: development may use the emulator default; release requires an explicit HTTPS `/api/v1` URL and rejects local loopback hosts. This prevents a distributable build from silently targeting an emulator-only API.
 - Mobile type-check passed; lint completed with 0 errors and 143 warnings. Tests passed 207/208; the one failing contract-drift check reports that the backend OpenAPI hash differs from the pinned mobile baseline. Do not update the hash without reconciling the contract.
 - Existing user change to `mobile/package.json` was not included. This cleanup does not certify Play signing, backend/admin UAT, payOS operations, or production release.
+
+# Remove mobile fixture data — 2026-10-18
+
+- Removed the sample-preview route, seven preview repositories, mock user service, and fixture users/content. All seven repository selectors now resolve only to API implementations; the capabilities request no longer returns preview-only payment/notification flags. Kept real media preview UI (e.g. selected image previews).
+- Replaced preview-specific repository tests with API-only selection checks and updated the capabilities test to verify fail-closed behavior even with an old preview flag.
+- Reconciled the OpenAPI drift: BE `25bbf8b..10d58cc` adds only payOS webhook probe wording and two browser return/cancel handoff GET routes. No mobile wire type used by existing callers changed. Updated the SHA-256 pin to `10d58cc`; this does not constitute payment UAT or release approval.
+- Type-check passed and full tests passed 166/166 after the pin update. Reduced test count reflects deleted preview-only scenarios; the API-only selection checks remain. Existing user change to `mobile/package.json` remains excluded from the cleanup commit.
+- The current generated (Git-ignored) `mobile/android/app/build.gradle` was changed locally to reject release signing with the debug keystore and require four `FITMATE_UPLOAD_*` variables. This is **not persistent across `expo prebuild --clean`** and cannot count as a repository-level release fix until implemented in a tracked config plugin or EAS build profile. The owner must hold an upload keystore securely. No signed AAB or Play device UAT has been run.

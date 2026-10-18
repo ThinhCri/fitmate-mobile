@@ -5,9 +5,7 @@ import {
   SupportMessageViewModel,
   CreateTicketFormValues,
 } from '@/features/support/supportTypes';
-import { getDataSourceMode } from './repositoryTypes';
 import { apiSupportRepository } from './api/apiSupportRepository';
-import { previewSupportRepository } from './preview/previewSupportRepository';
 
 export interface ISupportRepository {
   getNotifications(): Promise<NotificationItemViewModel[]>;
@@ -20,9 +18,5 @@ export interface ISupportRepository {
 }
 
 export function getSupportRepository(): ISupportRepository {
-  const mode = getDataSourceMode();
-  if (mode === 'preview') {
-    return previewSupportRepository;
-  }
   return apiSupportRepository;
 }

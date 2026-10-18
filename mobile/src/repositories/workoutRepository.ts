@@ -6,9 +6,7 @@ import {
   ActiveWorkoutResult,
   ExerciseCatalogItemViewModel,
 } from '@/features/workout/workoutTypes';
-import { getDataSourceMode } from './repositoryTypes';
 import { apiWorkoutRepository } from './api/apiWorkoutRepository';
-import { previewWorkoutRepository } from './preview/previewWorkoutRepository';
 
 export interface MonthlyWorkoutStats {
   monthYear: string;
@@ -63,9 +61,5 @@ export interface IWorkoutRepository {
 }
 
 export function getWorkoutRepository(): IWorkoutRepository {
-  const mode = getDataSourceMode();
-  if (mode === 'preview') {
-    return previewWorkoutRepository;
-  }
   return apiWorkoutRepository;
 }

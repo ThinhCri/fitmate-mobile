@@ -1,12 +1,8 @@
 /**
  * Storage wrapper — AsyncStorage with typed get/set/remove.
  *
- * Used by mock services (services/mockUserService.ts) to persist the demo
- * user DB across app restarts. Matches web localStorage API shape but JSON
- * stringified (AsyncStorage stores strings only).
- *
- * Production note: `secureStorage` is reserved for tokens (auth), uses
- * expo-secure-store. UI mock state goes through `storage` (AsyncStorage).
+ * Stores non-secret UI preferences as JSON in AsyncStorage.
+ * Authentication tokens use secureStorage (expo-secure-store) instead.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

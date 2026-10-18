@@ -237,9 +237,3 @@ export function isSelfOf(viewer: User | null, target: User): boolean {
   if (!viewer) return false;
   return viewer.email === target.email;
 }
-
-export interface PreviewAccountFixture {
-  email: string;
-  previewPassword: string;
-  user: User;
-}

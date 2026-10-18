@@ -2,9 +2,7 @@ import {
   BookingAppointmentViewModel,
   RefundTrackingViewModel,
 } from '@/features/booking/bookingTypes';
-import { getDataSourceMode } from './repositoryTypes';
 import { apiBookingRepository } from './api/apiBookingRepository';
-import { previewBookingRepository } from './preview/previewBookingRepository';
 
 export interface IBookingRepository {
   listMyAppointments(filter?: { status?: string }): Promise<BookingAppointmentViewModel[]>;
@@ -32,9 +30,5 @@ export interface IBookingRepository {
 }
 
 export function getBookingRepository(): IBookingRepository {
-  const mode = getDataSourceMode();
-  if (mode === 'preview') {
-    return previewBookingRepository;
-  }
   return apiBookingRepository;
 }

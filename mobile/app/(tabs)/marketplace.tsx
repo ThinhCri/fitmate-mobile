@@ -17,7 +17,7 @@ const SPECIALTY_OPTIONS = [
 /**
  * MarketplaceScreen (Production Route)
  *
- * Uses getTrainerRepository() (isolated API in production, preview in explicit preview mode).
+ * Uses getTrainerRepository() to load trainer data from the API.
  * NEVER falls back to mock fixture upon API failure.
  */
 export default function MarketplaceScreen() {

@@ -1,10 +1,10 @@
 {
   "baseline": "PROD-2026-09-22-v1",
-  "capturedAt": "2026-10-12",
+  "capturedAt": "2026-10-18",
   "backendRepository": "FitmateAI_BE",
-  "backendFrozenRevision": "25bbf8b",
+  "backendFrozenRevision": "10d58cc",
   "openapiSource": "FitmateAI_BE/docs/backend-release/openapi/fitmate-v1.yaml",
-  "openapiSha256": "CEB64977A0C67B43BFC680FF9EA2A42382A0B0DBCAB0BE6E4DD3C103628F06F2",
+  "openapiSha256": "379898A0CD9B08C90D38BDCCCEFF07F7E7EE3725995775128A3E2201376CDEE1",
   "contractStatus": "FROZEN-V1",
   "hashEncoding": "raw file bytes (no normalization)",
   "refreshWhen": "The backend OpenAPI revision changes; recalculate SHA256 and update this file before integration.",

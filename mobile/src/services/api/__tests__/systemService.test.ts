@@ -68,14 +68,14 @@ describe('System Capabilities & Production Gating (MOB-807)', () => {
     expect(caps.payments_enabled).toBe(false);
   });
 
-  it('returns isolated capabilities in preview mode without calling fetch', async () => {
+  it('does not return fake capabilities when an old preview flag is set', async () => {
     process.env.EXPO_PUBLIC_DATA_SOURCE = 'preview';
-    const fetchSpy = vi.fn();
+    const fetchSpy = vi.fn().mockRejectedValue(new Error('offline'));
     global.fetch = fetchSpy;
 
     const caps = await systemService.getCapabilities();
-    expect(caps.environment).toBe('preview');
+    expect(caps.payments_enabled).toBe(false);
     expect(caps.ai.enabled).toBe(false);
-    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalled();
   });
 });

@@ -4,9 +4,7 @@ import {
   HealthProfileData,
   SettingsViewModel,
 } from '@/features/account/accountTypes';
-import { getDataSourceMode } from './repositoryTypes';
 import { apiAccountRepository } from './api/apiAccountRepository';
-import { previewAccountRepository } from './preview/previewAccountRepository';
 
 export interface AccountDeletionStatusViewModel {
   userId: string;
@@ -42,12 +40,8 @@ export interface IAccountRepository {
 
 /**
  * Composition root resolver for Account repository.
- * Enforces production default with strict preview isolation.
+ * Uses the server-backed repository in every build.
  */
 export function getAccountRepository(): IAccountRepository {
-  const mode = getDataSourceMode();
-  if (mode === 'preview') {
-    return previewAccountRepository;
-  }
   return apiAccountRepository;
 }
