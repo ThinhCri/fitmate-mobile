@@ -21,6 +21,7 @@ export const aiUsageService = {
 export interface AiSubscriptionStatus {
   plan: 'free' | 'plus';
   billing_available: boolean;
+  restore_available: boolean;
   product_id: string;
   base_plan_id: string;
   state: string;

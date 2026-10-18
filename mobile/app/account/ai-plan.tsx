@@ -69,17 +69,17 @@ export default function AiPlanScreen() {
         ) : null}
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>AI Plus theo tháng</Text>
-          <Text style={styles.body}>Tăng hạn mức chat và quét món mỗi ngày; hạn mức thực tế hiển thị ở phía trên sau khi Google xác nhận. Gói PT và lịch tập 1–1 không nằm trong quyền lợi này.</Text>
+          <Text style={styles.cardTitle}>AI Plus trả trước 1 tháng</Text>
+          <Text style={styles.body}>Thanh toán một lần cho một tháng sử dụng, không tự gia hạn. Tăng hạn mức chat và quét món mỗi ngày; hạn mức thực tế hiển thị ở phía trên sau khi Google xác nhận. Gói PT và lịch tập 1–1 không nằm trong quyền lợi này.</Text>
           {subscription?.expires_at_utc && subscription.plan === 'plus' ? <Text style={styles.caption}>Có hiệu lực đến {new Date(subscription.expires_at_utc).toLocaleString('vi-VN')} theo Google Play.</Text> : null}
-          {subscription?.billing_available && Platform.OS === 'android' && Constants.appOwnership !== 'expo' ? (
+          {subscription && (subscription.billing_available || subscription.restore_available) && Platform.OS === 'android' && Constants.appOwnership !== 'expo' ? (
             <BillingActions subscription={subscription} onVerified={load} />
           ) : (
             <View style={styles.notice}><Text style={styles.noticeText}>{subscription?.billing_available
               ? 'Mua gói cần bản Android cài từ Google Play hoặc bản thử nghiệm có tích hợp Play Billing; Expo Go không hỗ trợ.'
               : 'Chưa mở bán. Giá sẽ lấy trực tiếp từ Google Play khi gói được cấu hình.'}</Text></View>
           )}
-          <Text style={styles.caption}>Có thể hủy gia hạn trong Google Play; quyền lợi đã thanh toán còn hiệu lực đến hết kỳ Google xác nhận. Hủy trên Play không tự hoàn tiền.</Text>
+          <Text style={styles.caption}>Hết hạn, gói tự dừng. Nếu Fitmate còn mở bán, bạn có thể chủ động mua kỳ mới; không bị trừ tiền tự động.</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -136,7 +136,7 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
     : undefined;
 
   const buy = async () => {
-    if (!connected || !offer?.offerTokenAndroid) return;
+    if (!subscription.billing_available || !connected || !offer?.offerTokenAndroid) return;
     setBusy(true);
     setMessage(null);
     try {
@@ -177,8 +177,11 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
   };
 
   return <View style={styles.billingActions}>
-    {offer?.displayPrice ? <Text style={styles.price}>{offer.displayPrice} / tháng</Text> : <Text style={styles.caption}>Chưa tải được giá từ Google Play; hiện không thể mua.</Text>}
-    {subscription.plan !== 'plus' ? <Pressable accessibilityRole="button" disabled={busy || !connected || !offer?.offerTokenAndroid}
+    {subscription.billing_available ? (offer?.displayPrice
+      ? <Text style={styles.price}>{offer.displayPrice} / tháng</Text>
+      : <Text style={styles.caption}>Chưa tải được giá từ Google Play; hiện không thể mua.</Text>)
+      : <Text style={styles.caption}>Fitmate tạm ngừng bán kỳ mới. Gói đã mua vẫn có thể khôi phục và dùng đến ngày hết hạn.</Text>}
+    {subscription.billing_available && subscription.plan !== 'plus' ? <Pressable accessibilityRole="button" disabled={busy || !connected || !offer?.offerTokenAndroid}
       onPress={() => void buy()} style={[styles.primaryButton, (busy || !connected || !offer?.offerTokenAndroid) && styles.disabled]}>
       <Text style={styles.primaryButtonText}>Mua qua Google Play</Text>
     </Pressable> : null}
@@ -186,7 +189,7 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
       <Text style={styles.retryText}>Khôi phục gói đã mua</Text>
     </Pressable>
     <Pressable accessibilityRole="button" onPress={() => void manage()} style={styles.retry}>
-      <Text style={styles.retryText}>Quản lý / hủy gia hạn</Text>
+      <Text style={styles.retryText}>Xem gói trên Google Play</Text>
     </Pressable>
     {busy ? <ActivityIndicator color={colors.primary} accessibilityLabel="Đang xác minh giao dịch" /> : null}
     {message ? <Text style={styles.caption}>{message}</Text> : null}
