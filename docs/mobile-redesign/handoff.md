@@ -9,6 +9,7 @@
 
 - Refresh-token writes and credential deletion no longer swallow secure-store errors. Access tokens are exposed in memory only after the refresh-token write completes; clearing the session attempts every credential deletion and reports a failure if any deletion fails. Added source tests for failed write/delete paths.
 - Mobile tests and Android runtime were not run under the manual-execution rule. In particular, a device-level forced secure-storage failure and server-side logout/revocation still need UAT; the client cannot guarantee local erasure if the OS secure store itself refuses deletion.
+- Follow-up static review found an account-switch window retaining the previous in-memory access token. Session setup now clears the old token immediately and clears prior secure credentials before writing the next refresh token; a storage failure aborts the switch. Added a source test for this path.
 
 ## 2026-10-20 — Isolate retired PT revenue demo code (IMPLEMENTED_UNVERIFIED)
 

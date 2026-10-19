@@ -68,6 +68,18 @@ describe('SessionManager (MOB-800)', () => {
     expect(secureStoreMock.get('fitmate_refresh_token')).toBeUndefined();
   });
 
+  it('drops the prior account token before switching accounts', async () => {
+    await sessionManager.setSession('old-access', 'old-refresh', {
+      id: 'old-user', email: 'old@fitmate.vn', full_name: 'Old', role: 'member',
+    });
+    vi.mocked(SecureStore.deleteItemAsync).mockRejectedValueOnce(new Error('device storage unavailable'));
+    await expect(sessionManager.setSession('new-access', 'new-refresh', {
+      id: 'new-user', email: 'new@fitmate.vn', full_name: 'New', role: 'member',
+    })).rejects.toThrow('Không thể xóa');
+    expect(sessionManager.getAccessToken()).toBeNull();
+    expect(secureStoreMock.get('fitmate_refresh_token')).toBeUndefined();
+  });
+
   it('reports failed credential deletion instead of pretending logout completed', async () => {
     secureStoreMock.set('fitmate_refresh_token', 'refresh');
     vi.mocked(SecureStore.deleteItemAsync).mockRejectedValueOnce(new Error('device storage unavailable'));

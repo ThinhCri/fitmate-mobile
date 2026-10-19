@@ -119,9 +119,11 @@ class SessionManager {
     // 2. Advance generation to invalidate stale in-flight responses
     const sessionGen = ++this.generation;
     this.refreshPromise = null;
+    this.inMemoryAccessToken = null;
 
     // 3. Commit new tokens and session cache
     await this.enqueueStorageOp(sessionGen, async () => {
+      await clearAuth();
       await setRefreshToken(refreshToken);
       await setCachedSessionUser(user);
       if (user.email) {
