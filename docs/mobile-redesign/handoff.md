@@ -1,5 +1,12 @@
 # Handoff — Ban giao hien tai
 
+## 2026-10-19 — Auth visual refresh (IMPLEMENTED_UNVERIFIED)
+
+- Simplified welcome, login and registration presentation around a small code-drawn Fitmate mark. Authentication and registration API behavior was not changed.
+- Removed unverifiable member/medical claims from welcome. Replaced the dashboard's decorative orbs and watermark with a subtle static gradient.
+- Added short entrance motion with Android reduce-motion support. Existing local changes in `mobile/package.json` and `mobile/build-release.ps1` were not touched.
+- Static review only. Per repository instructions, the agent did not run type-check, lint, tests, Expo or Android build. Device review is still needed, especially at 360dp width, large text and keyboard open.
+
 ## 2026-10-11 — Luong tai khoan nhan tien va lich su chi PT
 
 - PT co the mo `Doanh thu -> Tai khoan nhan tien`, chon ngan hang, nhap so tai khoan va luu sau khi Backend tra ve ten chu tai khoan da xac minh.

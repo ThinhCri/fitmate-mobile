@@ -24,21 +24,18 @@ import { router, useLocalSearchParams } from 'expo-router';
 import {
   ArrowLeft,
   ArrowRight,
-  Dumbbell,
-  ShieldCheck,
   Mail,
   Lock,
   Eye,
   EyeOff,
   AlertCircle,
-  User,
-  Award,
 } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { authService } from '@/services/api/authService';
 import { ApiError } from '@/services/api/client';
+import { AuthIntro } from '@/features/auth/AuthIntro';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -128,27 +125,7 @@ export default function LoginScreen() {
         keyboardDismissMode="on-drag"
         automaticallyAdjustKeyboardInsets
       >
-        {/* Subtle decorative ambient header visual */}
-        <View style={styles.headerVisualCard}>
-          <View style={styles.headerIconWrapper}>
-            <Dumbbell size={26} color={colors.primary} />
-          </View>
-          <View style={styles.headerVisualTexts}>
-            <Text style={styles.headerVisualTitle}>Chào mừng trở lại!</Text>
-            <Text style={styles.headerVisualSubtitle}>
-              Đồng hành cùng mục tiêu sức khỏe & thể hình
-            </Text>
-          </View>
-        </View>
-
-        {/* Role Auto-Detection Info Banner */}
-        <View style={styles.infoBanner}>
-          <ShieldCheck size={20} color={colors.info} style={styles.infoBannerIcon} />
-          <Text style={styles.infoBannerText}>
-            Hỗ trợ đăng nhập cho cả <Text style={styles.boldPrimary}>Hội viên</Text> và{' '}
-            <Text style={styles.boldPrimary}>Huấn luyện viên</Text>. Quyền tài khoản được tự động nhận diện từ hệ thống.
-          </Text>
-        </View>
+        <AuthIntro title="Chào mừng trở lại" subtitle="Đăng nhập để tiếp tục hành trình của bạn." />
 
         {/* Error Alert Banner */}
         {displayedError ? (
@@ -251,37 +228,6 @@ export default function LoginScreen() {
               </>
             )}
           </TouchableOpacity>
-        </View>
-
-        {/* Dual-Role Recognition Visual Indicator Card */}
-        <View style={styles.roleCard}>
-          <View style={styles.roleCardHeader}>
-            <Text style={styles.roleCardTitle}>Nhận diện không gian</Text>
-            <View style={styles.systemBadge}>
-              <View style={styles.systemBadgeDot} />
-              <Text style={styles.systemBadgeText}>Hệ thống tự động</Text>
-            </View>
-          </View>
-          <View style={styles.roleCardGrid}>
-            <View style={styles.roleSubCard}>
-              <View style={styles.roleSubIconCircle}>
-                <User size={16} color={colors.primary} />
-              </View>
-              <View style={styles.roleSubTexts}>
-                <Text style={styles.roleSubTitle}>Hội viên</Text>
-                <Text style={styles.roleSubDesc}>Dinh dưỡng & Tập</Text>
-              </View>
-            </View>
-            <View style={styles.roleSubCard}>
-              <View style={[styles.roleSubIconCircle, { backgroundColor: colors.warningLight }]}>
-                <Award size={16} color={colors.warning} />
-              </View>
-              <View style={styles.roleSubTexts}>
-                <Text style={styles.roleSubTitle}>Huấn luyện viên</Text>
-                <Text style={styles.roleSubDesc}>Lịch dạy & Khách</Text>
-              </View>
-            </View>
-          </View>
         </View>
 
         {/* Sign Up Navigation Link */}

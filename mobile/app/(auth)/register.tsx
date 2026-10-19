@@ -38,6 +38,7 @@ import {
 import { useAuth } from '@/services/AuthContext';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
+import { AuthIntro } from '@/features/auth/AuthIntro';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LEN = 12;
@@ -216,6 +217,11 @@ export default function RegisterScreen() {
         keyboardDismissMode="on-drag"
         automaticallyAdjustKeyboardInsets
       >
+        <AuthIntro
+          key={currentStep}
+          title={currentStep === 1 ? 'Tạo tài khoản' : 'Hoàn tất hồ sơ'}
+          subtitle={currentStep === 1 ? 'Bắt đầu theo dõi tập luyện và dinh dưỡng theo cách của bạn.' : 'Thêm một vài thông tin để Fitmate phù hợp với bạn hơn.'}
+        />
         {/* Stepper Indicator */}
         <View style={styles.stepperCard}>
           <View style={styles.stepperTrack}>
