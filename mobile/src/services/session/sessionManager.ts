@@ -94,8 +94,8 @@ class SessionManager {
     this.sessionExpiredListeners.forEach((cb) => {
       try {
         cb();
-      } catch (err) {
-        console.warn('[SessionManager] listener error', err);
+      } catch {
+        console.warn('[SessionManager] listener error');
       }
     });
   }

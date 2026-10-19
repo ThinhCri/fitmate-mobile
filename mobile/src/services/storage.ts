@@ -13,8 +13,8 @@ export async function get<T>(key: string): Promise<T | null> {
     const raw = await AsyncStorage.getItem(STORAGE_PREFIX + key);
     if (raw == null) return null;
     return JSON.parse(raw) as T;
-  } catch (err) {
-    console.warn(`[storage.get] ${key} parse failed`, err);
+  } catch {
+    console.warn('[storage.get] parse failed');
     return null;
   }
 }
@@ -22,16 +22,16 @@ export async function get<T>(key: string): Promise<T | null> {
 export async function set<T>(key: string, value: T): Promise<void> {
   try {
     await AsyncStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
-  } catch (err) {
-    console.warn(`[storage.set] ${key} write failed`, err);
+  } catch {
+    console.warn('[storage.set] write failed');
   }
 }
 
 export async function remove(key: string): Promise<void> {
   try {
     await AsyncStorage.removeItem(STORAGE_PREFIX + key);
-  } catch (err) {
-    console.warn(`[storage.remove] ${key} delete failed`, err);
+  } catch {
+    console.warn('[storage.remove] delete failed');
   }
 }
 
@@ -54,8 +54,8 @@ export async function multiGet<T extends Record<string, unknown>>(
       }
     });
     return out;
-  } catch (err) {
-    console.warn('[storage.multiGet] failed', err);
+  } catch {
+    console.warn('[storage.multiGet] failed');
     return {};
   }
 }
@@ -67,8 +67,8 @@ export async function multiSet(entries: Record<string, unknown>): Promise<void> 
       JSON.stringify(v),
     ]);
     await AsyncStorage.multiSet(pairs);
-  } catch (err) {
-    console.warn('[storage.multiSet] failed', err);
+  } catch {
+    console.warn('[storage.multiSet] failed');
   }
 }
 
@@ -77,8 +77,8 @@ export async function clearAll(): Promise<void> {
     const keys = await AsyncStorage.getAllKeys();
     const prefixed = keys.filter((k) => k.startsWith(STORAGE_PREFIX));
     await AsyncStorage.multiRemove(prefixed);
-  } catch (err) {
-    console.warn('[storage.clearAll] failed', err);
+  } catch {
+    console.warn('[storage.clearAll] failed');
   }
 }
 

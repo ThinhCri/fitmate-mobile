@@ -1,5 +1,10 @@
 # Handoff — Ban giao hien tai
 
+## 2026-10-20 — Minimize mobile error logs (IMPLEMENTED_UNVERIFIED)
+
+- Removed raw exception objects and arbitrary storage keys from production-path `console.warn` calls in auth/session, storage and account hub. Logs retain only a fixed failure label; API behavior is unchanged.
+- Static audit found PT revenue demo fixtures and calculations referenced only by unit tests, not by runtime screens. They were retained as test fixtures rather than silently deleting test coverage. Existing owner changes in `mobile/package.json` and `mobile/build-release.ps1` remain untouched. No mobile commands/device QA were run under the repository manual-execution rule.
+
 ## 2026-10-19 — Unified Fitmate brand mark (IMPLEMENTED_UNVERIFIED)
 
 - Added one-color vector F-forward mark, Google Play 512px icon, Expo/app 1024px icon, and Android adaptive PNG variants. Native launcher/splash resources were refreshed locally but `mobile/android/` is gitignored; a fresh checkout must regenerate its native project from `app.json`. The mobile auth mark now uses the same path and teal `#0F766E`.

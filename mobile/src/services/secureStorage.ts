@@ -15,8 +15,8 @@ export async function getAuthEmail(): Promise<string | null> {
 export async function setAuthEmail(email: string): Promise<void> {
   try {
     await SecureStore.setItemAsync(KEY_AUTH_EMAIL, email);
-  } catch (err) {
-    console.warn('[secureStore.setAuthEmail] failed', err);
+  } catch {
+    console.warn('[secureStore.setAuthEmail] failed');
   }
 }
 
@@ -31,16 +31,16 @@ export async function getRefreshToken(): Promise<string | null> {
 export async function setRefreshToken(token: string): Promise<void> {
   try {
     await SecureStore.setItemAsync(KEY_REFRESH_TOKEN, token);
-  } catch (err) {
-    console.warn('[secureStore.setRefreshToken] failed', err);
+  } catch {
+    console.warn('[secureStore.setRefreshToken] failed');
   }
 }
 
 export async function deleteRefreshToken(): Promise<void> {
   try {
     await SecureStore.deleteItemAsync(KEY_REFRESH_TOKEN);
-  } catch (err) {
-    console.warn('[secureStore.deleteRefreshToken] failed', err);
+  } catch {
+    console.warn('[secureStore.deleteRefreshToken] failed');
   }
 }
 
@@ -56,16 +56,16 @@ export async function getCachedSessionUser<T>(): Promise<T | null> {
 export async function setCachedSessionUser<T>(user: T): Promise<void> {
   try {
     await SecureStore.setItemAsync(KEY_SESSION_USER, JSON.stringify(user));
-  } catch (err) {
-    console.warn('[secureStore.setCachedSessionUser] failed', err);
+  } catch {
+    console.warn('[secureStore.setCachedSessionUser] failed');
   }
 }
 
 export async function deleteCachedSessionUser(): Promise<void> {
   try {
     await SecureStore.deleteItemAsync(KEY_SESSION_USER);
-  } catch (err) {
-    console.warn('[secureStore.deleteCachedSessionUser] failed', err);
+  } catch {
+    console.warn('[secureStore.deleteCachedSessionUser] failed');
   }
 }
 
@@ -74,7 +74,7 @@ export async function clearAuth(): Promise<void> {
     await SecureStore.deleteItemAsync(KEY_AUTH_EMAIL);
     await SecureStore.deleteItemAsync(KEY_REFRESH_TOKEN);
     await SecureStore.deleteItemAsync(KEY_SESSION_USER);
-  } catch (err) {
-    console.warn('[secureStore.clearAuth] failed', err);
+  } catch {
+    console.warn('[secureStore.clearAuth] failed');
   }
 }

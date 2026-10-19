@@ -270,8 +270,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const profile = await authService.getMe();
       setUser(mapToDomainUser(cachedSummary, profile));
-    } catch (err) {
-      console.warn('[AuthContext.refresh] failed to refresh profile', err);
+    } catch {
+      console.warn('[AuthContext.refresh] failed to refresh profile');
     }
   }, []);
 

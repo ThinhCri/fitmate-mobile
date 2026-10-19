@@ -24,8 +24,8 @@ export default function AccountHubScreen() {
       .then((data) => {
         if (active) setAccount(data);
       })
-      .catch((err) => {
-        console.warn('Could not load account hub:', err);
+      .catch(() => {
+        console.warn('Could not load account hub');
       });
     return () => {
       active = false;
