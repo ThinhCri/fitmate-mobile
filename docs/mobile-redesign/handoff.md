@@ -5,6 +5,11 @@
 - Removed raw exception objects and arbitrary storage keys from production-path `console.warn` calls in auth/session, storage and account hub. Logs retain only a fixed failure label; API behavior is unchanged.
 - Static audit found PT revenue demo fixtures and calculations referenced only by unit tests, not by runtime screens. They were retained as test fixtures rather than silently deleting test coverage. Existing owner changes in `mobile/package.json` and `mobile/build-release.ps1` remain untouched. No mobile commands/device QA were run under the repository manual-execution rule.
 
+## 2026-10-20 — Fail closed on secure token storage errors (IMPLEMENTED_UNVERIFIED)
+
+- Refresh-token writes and credential deletion no longer swallow secure-store errors. Access tokens are exposed in memory only after the refresh-token write completes; clearing the session attempts every credential deletion and reports a failure if any deletion fails. Added source tests for failed write/delete paths.
+- Mobile tests and Android runtime were not run under the manual-execution rule. In particular, a device-level forced secure-storage failure and server-side logout/revocation still need UAT; the client cannot guarantee local erasure if the OS secure store itself refuses deletion.
+
 ## 2026-10-19 — Unified Fitmate brand mark (IMPLEMENTED_UNVERIFIED)
 
 - Added one-color vector F-forward mark, Google Play 512px icon, Expo/app 1024px icon, and Android adaptive PNG variants. Native launcher/splash resources were refreshed locally but `mobile/android/` is gitignored; a fresh checkout must regenerate its native project from `app.json`. The mobile auth mark now uses the same path and teal `#0F766E`.

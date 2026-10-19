@@ -10,6 +10,7 @@
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { sessionManager } from '../sessionManager';
+import * as SecureStore from 'expo-secure-store';
 
 const secureStoreMock = new Map<string, string>();
 
@@ -56,6 +57,23 @@ describe('SessionManager (MOB-800)', () => {
     // Only refresh token and user metadata are stored
     expect(secureStoreMock.get('fitmate_refresh_token')).toBe('test-refresh-token-456');
     expect(secureStoreMock.get('fitmate_session_user')).toContain('usr-123');
+  });
+
+  it('does not expose an access token when secure refresh-token storage fails', async () => {
+    vi.mocked(SecureStore.setItemAsync).mockRejectedValueOnce(new Error('device storage unavailable'));
+    await expect(sessionManager.setSession('access', 'refresh', {
+      id: 'usr-1', email: 'member@fitmate.vn', full_name: 'Member', role: 'member',
+    })).rejects.toThrow();
+    expect(sessionManager.getAccessToken()).toBeNull();
+    expect(secureStoreMock.get('fitmate_refresh_token')).toBeUndefined();
+  });
+
+  it('reports failed credential deletion instead of pretending logout completed', async () => {
+    secureStoreMock.set('fitmate_refresh_token', 'refresh');
+    vi.mocked(SecureStore.deleteItemAsync).mockRejectedValueOnce(new Error('device storage unavailable'));
+    await expect(sessionManager.clearSession()).rejects.toThrow('Không thể xóa');
+    expect(sessionManager.getAccessToken()).toBeNull();
+    expect(secureStoreMock.get('fitmate_refresh_token')).toBeUndefined();
   });
 
   it('2. Coalesces concurrent 401 refresh calls into a single-flight network request', async () => {

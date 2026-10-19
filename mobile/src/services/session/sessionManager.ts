@@ -1,6 +1,5 @@
 import {
   clearAuth,
-  deleteRefreshToken,
   getRefreshToken,
   setAuthEmail,
   setCachedSessionUser,
@@ -122,7 +121,6 @@ class SessionManager {
     this.refreshPromise = null;
 
     // 3. Commit new tokens and session cache
-    this.inMemoryAccessToken = accessToken;
     await this.enqueueStorageOp(sessionGen, async () => {
       await setRefreshToken(refreshToken);
       await setCachedSessionUser(user);
@@ -130,6 +128,10 @@ class SessionManager {
         await setAuthEmail(user.email);
       }
     });
+    if (this.generation !== sessionGen) {
+      throw new Error('Phiên đã thay đổi hoặc bị hủy');
+    }
+    this.inMemoryAccessToken = accessToken;
   }
 
   /**
@@ -177,8 +179,6 @@ class SessionManager {
           throw new Error('Phiên đã thay đổi hoặc bị hủy');
         }
 
-        this.inMemoryAccessToken = data.access_token;
-
         await this.enqueueStorageOp(requestGeneration, async () => {
           if (data.refresh_token) {
             await setRefreshToken(data.refresh_token);
@@ -187,6 +187,11 @@ class SessionManager {
             await setCachedSessionUser(data.user);
           }
         });
+
+        if (this.generation !== requestGeneration || requestSignal.aborted) {
+          throw new Error('Phiên đã thay đổi hoặc bị hủy');
+        }
+        this.inMemoryAccessToken = data.access_token;
 
         return data.access_token;
       } catch (err) {
@@ -228,7 +233,6 @@ class SessionManager {
 
     // 4. Clear stored refresh token and user via generation-guarded queue
     await this.enqueueStorageOp(clearGen, async () => {
-      await deleteRefreshToken();
       await clearAuth();
     });
   }
