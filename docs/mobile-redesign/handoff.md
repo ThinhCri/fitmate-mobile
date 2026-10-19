@@ -1,5 +1,11 @@
 # Handoff — Ban giao hien tai
 
+## 2026-10-19 — Unified Fitmate brand mark (IMPLEMENTED_UNVERIFIED)
+
+- Added one-color vector F-forward mark, Google Play 512px icon, Expo/app 1024px icon, and Android adaptive PNG variants. Native launcher/splash resources were refreshed locally but `mobile/android/` is gitignored; a fresh checkout must regenerate its native project from `app.json`. The mobile auth mark now uses the same path and teal `#0F766E`.
+- Admin web favicon, sidebar, login and public legal page headers use the same logo geometry. Web build, type-check and lint passed locally; mobile build/device validation remains for the operator per AGENTS.md.
+- Existing user changes to `mobile/package.json` and `mobile/build-release.ps1` were preserved. Trademark similarity has not been legally cleared.
+
 ## 2026-10-19 — Auth visual refresh (IMPLEMENTED_UNVERIFIED)
 
 - Simplified welcome, login and registration presentation around a small code-drawn Fitmate mark. Authentication and registration API behavior was not changed.
@@ -1053,3 +1059,8 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Owner chose separate PT-set prices for four- and eight-session packages. The PT service form now accepts each optional price; blank/zero disables that package size. The member package page shows Backend-provided totals and only offers enabled sizes, while still requiring all four/eight slots before checkout. The service-selection CTA is hidden when neither package size is offered.
 - Mirrored the additive Backend service fields in API types and updated the pinned OpenAPI SHA-256. Package hold and PayOS totals remain server-authoritative; Mobile does not calculate the charge from unit prices or mark a browser return as paid.
 - No Mobile install/build/typecheck/test/Expo run or live payment was performed here under the repository's manual-execution rule. Existing user edit to `mobile/package.json` remains untouched. Run those checks, apply the Backend migration to the intended database after backup, then complete PT/member real-device package checkout and Admin refund/settlement UAT before release approval.
+# Brand color alignment — 2026-10-19
+
+- Aligned the Stitch-derived mobile `primary`, `primaryDark`, and `primaryLight` tokens with the approved Fitmate mark (`#0F766E`) and existing Soft Energy palette. The in-app BrandMark now reads the primary token. Screen background remains light; `success` remains a separate green semantic color.
+- Updated the design-token assertions. Static `git diff --check` found no whitespace errors. Per the repository manual-execution rule, no mobile build, typecheck, test, or device QA was run; visual verification is pending. Existing unrelated `mobile/package.json` and `mobile/build-release.ps1` changes were preserved. No commit or push.
+

@@ -9,9 +9,9 @@ export function BrandMark({ compact = false, light = false }: BrandMarkProps) {
   const size = compact ? 40 : 68;
   return (
     <View style={styles.row} accessible accessibilityLabel="Fitmate">
-      <View style={[styles.symbol, { width: size, height: size, borderRadius: compact ? 12 : 20 }]}>
-        <Svg width={size * 0.62} height={size * 0.62} viewBox="0 0 48 48" accessibilityElementsHidden>
-          <Path d="M9 7h26l8 8-8 8v-7H19v8h15l-6 9h-9v12H9V7Z" fill="#FFFFFF" />
+      <View style={[styles.symbol, { width: size, height: size, borderRadius: compact ? 9 : 15 }]}>
+        <Svg width={size} height={size} viewBox="0 0 96 96" accessibilityElementsHidden>
+          <Path d="M24 20H62L75 32L62 44H39V53H56L65 62L56 71H39V80H24V20Z" fill="#FFFFFF" />
         </Svg>
       </View>
       <Text style={[styles.wordmark, compact && styles.compactWordmark, light && styles.lightWordmark]}>Fitmate</Text>

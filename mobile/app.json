@@ -5,6 +5,7 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "fitmate",
+    "icon": "./assets/brand/app-icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
@@ -12,6 +13,11 @@
     },
     "android": {
       "package": "vn.fitmate.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/adaptive-foreground.png",
+        "backgroundColor": "#0F766E",
+        "monochromeImage": "./assets/brand/adaptive-monochrome.png"
+      },
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "android.permission.POST_NOTIFICATIONS"
