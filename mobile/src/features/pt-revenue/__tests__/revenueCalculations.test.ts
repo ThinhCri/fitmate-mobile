@@ -30,8 +30,8 @@ import {
   todayAsia,
   type BookingForPT,
   type RefundEvent,
-} from '../revenueCalculations';
-import { PT_REVENUE_FIXTURES, getBookingsForPT } from '../revenueFixtures';
+} from './revenueCalculations';
+import { PT_REVENUE_FIXTURES, getBookingsForPT } from './revenueFixtures';
 
 beforeAll(() => {
   vi.useFakeTimers();
