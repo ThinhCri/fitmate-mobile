@@ -1,5 +1,9 @@
 # Handoff — Ban giao hien tai
 
+## 2026-10-20 — Mobile CI and onboarding documentation (IMPLEMENTED_UNVERIFIED)
+- Replaced stale root/mobile READMEs, removed demo credentials from onboarding, and added source-only GitHub Actions checks for typecheck, lint and unit tests.
+- Kept the existing owner edits to `mobile/package.json` and untracked `mobile/build-release.ps1` out of this change. No mobile command or device build was run under the repository manual-execution rule; GitHub workflow result remains pending.
+
 ## 2026-10-20 — Minimize mobile error logs (IMPLEMENTED_UNVERIFIED)
 
 - Removed raw exception objects and arbitrary storage keys from production-path `console.warn` calls in auth/session, storage and account hub. Logs retain only a fixed failure label; API behavior is unchanged.

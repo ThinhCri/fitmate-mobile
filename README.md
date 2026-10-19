@@ -1,75 +1,13 @@
-﻿# FitmateAI
+# Fitmate Android
 
-> Ung dung theo doi suc khoe, dinh duong va tap luyen (Android, React Native + Expo).
+Android client for Fitmate members and personal trainers, built with React Native, Expo SDK 57, TypeScript and Expo Router. The backend owns account access, bookings, payments and durable records; the app presents those server results and must not substitute demo data when an API fails.
 
-Repo nay gom:
+## Start here
 
-- `mobile/` — ung dung Android (React Native + Expo + TypeScript + Expo Router).
-- `design-reference/stitch-export/` — nguon tham chieu giao dien Stitch.
-- `docs/mobile-redesign/` — tai lieu thiet ke, parity matrix, decisions, tasks, handoff, audit.
+The runnable project is [`mobile/`](mobile/README.md). Read [production integration notes](docs/production/README.md), [mobile release status](docs/mobile-redesign/handoff.md) and [contributor rules](AGENTS.md) before changing behavior. `design-reference/stitch-export/` is a visual reference, not an API or business-rule source.
 
-Frontend web prototype da duoc loai bo sau khi hoan tat chuyen giao giao dien. Khi can doi chieu noi dung cu, dung tai lieu migration hoac lich su Git; khong khoi phuc web runtime vao production tree.
+## Verification and release boundary
 
-Xem `AGENTS.md` de biet quy tac lam viec cua moi AI agent tren repo nay.
+The GitHub Actions workflow installs the locked dependencies and runs TypeScript, lint and unit tests. It does **not** sign or publish an Android App Bundle, deploy the backend, exercise payOS, or replace physical-device UAT. A release requires the approved backend contract, reachable HTTPS API, native Firebase/IAP configuration where enabled, upload signing key, Play Console setup and a real end-to-end check. No test account or password is bundled in this README.
 
-## Quick start (mobile)
-
-`
-cd mobile
-npm install
-npx tsc --noEmit
-npx expo start
-`
-
-App Android se mo o emulator (can co Android Studio + AVD) hoac qua Expo Go (quet QR).
-
-### Demo users
-
-- `user@fitmate.vn` / `123456` (member)
-- `pt@fitmate.vn` / `123456` (PT da verify)
-- `mentor1@fitmate.vn` / `123456` (mentor)
-
-Password gia dinh, chi dung cho demo. KHONG su dung cho production.
-
-## Tech stack (mobile)
-
-- React Native 0.86 + Expo SDK 57.
-- Expo Router (file-based routing).
-- TypeScript strict mode.
-- Theme: **Soft Energy** (light-only) — `mobile/src/theme/`. Xem `docs/mobile-redesign/design-system.md`.
-- Storage: AsyncStorage wrapper + expo-secure-store.
-- Icons: lucide-react-native.
-- Bottom sheet: @gorhom/bottom-sheet.
-- Toast: react-native-toast-message.
-
-## Feature parity voi web
-
-Xem `docs/mobile-redesign/feature-parity-matrix.md` (FP-001..040). Trang thai hien tai: **IMPLEMENTED** (code done), can runtime verification de set DONE.
-
-## Docs
-
-| File | Muc dich |
-|---|---|
-| `AGENTS.md` | Onboarding AI agent + quy tac |
-| `docs/mobile-redesign/README.md` | Tong quan migration |
-| `docs/mobile-redesign/decisions.md` | DEC-001..020 (quyet dinh + ly do) |
-| `docs/mobile-redesign/design-system.md` | Tokens (Soft Energy), typography, components |
-| `docs/mobile-redesign/feature-parity-matrix.md` | FP-001..040 (parity voi web) |
-| `docs/mobile-redesign/screen-specs.md` | Wireframes + nav map |
-| `docs/mobile-redesign/tasks.md` | MOB-XXX (status, deliverable, commit) |
-| `docs/mobile-redesign/acceptance-checklist.md` | F-* test scenarios |
-| `docs/mobile-redesign/audit-mobile-vs-docs.md` | Audit code vs docs |
-| `docs/mobile-redesign/handoff.md` | Ban giao hien tai (commit, FP done, next step) |
-
-## Quy tac commit
-
-- Conventional Commits: `<type>(<scope>): <desc> [MOB-XXX]`
-- KHONG push, merge, amend, rebase, reset --hard.
-- KHONG commit secrets.
-- Demo auth chi dung `user@fitmate.vn` / `pt@fitmate.vn` / `mentor1@fitmate.vn`.
-
-## Lien he nhanh
-
-- Trang thai task: `docs/mobile-redesign/tasks.md`.
-- Handoff: `docs/mobile-redesign/handoff.md`.
-- Audit: `docs/mobile-redesign/audit-mobile-vs-docs.md`.
+Never commit `.env`, signing keys, provider credentials or user data. Variables named `EXPO_PUBLIC_*` are embedded in the client and therefore are **public configuration**, not secrets.
