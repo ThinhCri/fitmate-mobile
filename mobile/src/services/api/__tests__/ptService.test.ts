@@ -21,6 +21,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { ptService } from '../ptService';
 import { ApiError } from '../client';
 import { sessionManager } from '@/services/session/sessionManager';
+import * as FileSystem from 'expo-file-system/legacy';
 import type { ServiceInput } from '../types';
 
 const validServiceDetails: Omit<ServiceInput, 'name' | 'price_vnd' | 'duration_minutes'> = {
@@ -44,6 +45,11 @@ vi.mock('expo-secure-store', () => ({
   deleteItemAsync: vi.fn(async (key: string) => {
     secureStoreMock.delete(key);
   }),
+}));
+
+vi.mock('expo-file-system/legacy', () => ({
+  FileSystemUploadType: { MULTIPART: 1 },
+  uploadAsync: vi.fn(),
 }));
 
 describe('ptService (MOB-801)', () => {
@@ -398,18 +404,15 @@ describe('ptService (MOB-801)', () => {
         status: 'pending',
       };
 
-      global.fetch = vi
-        .fn()
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 201,
-          json: async () => uploadResponse,
-        } as unknown as Response)
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 201,
-          json: async () => createdCert,
-        } as unknown as Response);
+      vi.mocked(FileSystem.uploadAsync).mockResolvedValue({
+        status: 201,
+        body: JSON.stringify(uploadResponse),
+      } as never);
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 201,
+        json: async () => createdCert,
+      } as unknown as Response);
 
       const result = await ptService.submitCertificate({
         title: 'ACE Fitness Coach',
@@ -426,18 +429,22 @@ describe('ptService (MOB-801)', () => {
 
       expect(result.id).toBe('cert-new');
       expect(result.status).toBe('pending');
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(global.fetch).toHaveBeenCalledTimes(1);
 
       // Verify Step 1 endpoint was /uploads
-      expect(global.fetch).toHaveBeenNthCalledWith(
-        1,
+      expect(FileSystem.uploadAsync).toHaveBeenCalledWith(
         expect.stringContaining('/uploads'),
-        expect.objectContaining({ method: 'POST' })
+        'file://cert.jpg',
+        expect.objectContaining({
+          httpMethod: 'POST',
+          uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+          parameters: { category: 'certificates' },
+          headers: expect.objectContaining({ Authorization: 'Bearer valid-pt-access-token' }),
+        })
       );
 
       // Verify Step 2 endpoint was /me/certificates
-      expect(global.fetch).toHaveBeenNthCalledWith(
-        2,
+      expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/me/certificates'),
         expect.objectContaining({ method: 'POST' })
       );

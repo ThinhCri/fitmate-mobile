@@ -564,10 +564,15 @@ describe('Per-PT data isolation', () => {
   });
 
   it('KPI của PT 1 KHÔNG chứa booking của PT 2', () => {
-    const p1Bookings = PT_REVENUE_FIXTURES['pt@fitmate.vn'];
-    const kpi1 = computeRevenueKPI(p1Bookings, 'this_month');
-    const kpi2 = computeRevenueKPI(PT_REVENUE_FIXTURES['ptlong@fitmate.vn'], 'this_month');
-    // KPI khác nhau giữa 2 PT
+    // Fixtures are created at module import time, before the fake clock is set.
+    // Put both owners in the same test period so this assertion stays meaningful.
+    const inTestPeriod = (bookings: BookingForPT[]) => bookings
+      .filter((booking) => booking.appointmentStatus === 'completed')
+      .map((booking) => ({ ...booking, date: '2026-09-20', refunds: [] }));
+    const kpi1 = computeRevenueKPI(inTestPeriod(PT_REVENUE_FIXTURES['pt@fitmate.vn']), 'this_month');
+    const kpi2 = computeRevenueKPI(inTestPeriod(PT_REVENUE_FIXTURES['ptlong@fitmate.vn']), 'this_month');
+    expect(kpi1.completedEarnings).toBeGreaterThan(0);
+    expect(kpi2.completedEarnings).toBeGreaterThan(0);
     expect(kpi1.completedEarnings).not.toBe(kpi2.completedEarnings);
   });
 });

@@ -19,6 +19,8 @@ import {
   useMemo,
   useState,
   type ReactNode,
+  type Dispatch,
+  type SetStateAction,
 } from 'react';
 import type { User } from '@/types';
 import { authService } from '@/services/api/authService';
@@ -66,7 +68,7 @@ export interface AuthContextValue {
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
   saveUser: (user: User) => Promise<void>;
-  setUser: (user: User | null) => void;
+  setUser: Dispatch<SetStateAction<User | null>>;
   clearError: () => void;
 }
 

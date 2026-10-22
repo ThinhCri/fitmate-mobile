@@ -1,4 +1,4 @@
-import { apiClient, ApiError } from './client';
+import { apiClient, apiUploadFile, ApiError } from './client';
 import {
   AvailabilitySlot,
   AvailabilitySlotInput,
@@ -281,21 +281,13 @@ export const ptService = {
       );
     }
 
-    const formData = new FormData();
-    formData.append('category', 'certificates');
-
-    const rnFile = {
-      uri: file.uri,
-      name: file.name || 'certificate.jpg',
-      type: file.type || 'image/jpeg',
-    };
-    formData.append('file', rnFile as unknown as Blob);
-
     try {
-      return await apiClient<UploadResponse>('/uploads', {
-        method: 'POST',
-        body: formData,
-      });
+      return await apiUploadFile<UploadResponse>(
+        '/uploads',
+        file.uri,
+        file.type || 'image/jpeg',
+        { category: 'certificates' }
+      );
     } catch (err) {
       if (err instanceof ApiError && err.status === 413) {
         throw new ApiError(

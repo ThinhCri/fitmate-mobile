@@ -9,7 +9,8 @@ import { getAccountRepository } from '@/repositories/accountRepository';
 import { useAuth } from '@/services/AuthContext';
 
 export default function AccountHubScreen() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const ptIsApproved = user?.ptVerificationStatus === 'approved';
   const [account, setAccount] = useState<AccountHubViewModel>({
     id: 'user-current',
     name: 'Đang tải...',
@@ -42,7 +43,8 @@ export default function AccountHubScreen() {
         }}
         onEditProfilePress={() => router.push('/account/edit-profile' as any)}
         onAppointmentsPress={() => router.push('/booking/my-appointments' as any)}
-        onPtSpacePress={() => router.push('/pt' as any)}
+        ptIsApproved={ptIsApproved}
+        onPtSpacePress={() => router.push((ptIsApproved ? '/pt' : '/pt/certificates') as any)}
         onHealthProfilePress={() => router.push('/account/health-profile' as any)}
         onSettingsPress={() => router.push('/account/settings' as any)}
         onSupportPress={() => router.push('/support' as any)}

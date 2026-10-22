@@ -31,6 +31,7 @@ export interface AccountHubPresentationProps {
   onEditProfilePress: () => void;
   onAppointmentsPress: () => void;
   onPtSpacePress?: () => void;
+  ptIsApproved?: boolean;
   onHealthProfilePress: () => void;
   onSettingsPress: () => void;
   onSupportPress: () => void;
@@ -45,6 +46,7 @@ export function AccountHubPresentation({
   onEditProfilePress,
   onAppointmentsPress,
   onPtSpacePress,
+  ptIsApproved,
   onHealthProfilePress,
   onSettingsPress,
   onSupportPress,
@@ -115,9 +117,9 @@ export function AccountHubPresentation({
                 <Briefcase size={20} color={colors.primary} />
               </View>
               <View style={styles.ptTextBox}>
-                <Text style={styles.ptSpaceTitle}>Không gian Huấn luyện viên (PT)</Text>
+                <Text style={styles.ptSpaceTitle}>{ptIsApproved ? 'Không gian Huấn luyện viên (PT)' : 'Hồ sơ Huấn luyện viên (PT)'}</Text>
                 <Text style={styles.ptSpaceSub}>
-                  Quản lý học viên, lịch dạy, chứng chỉ và doanh thu
+                  {ptIsApproved ? 'Quản lý học viên, lịch dạy, chứng chỉ và doanh thu' : 'Bổ sung số liên hệ và chứng chỉ để được xét duyệt'}
                 </Text>
               </View>
               <ChevronRight size={20} color={colors.primary} />

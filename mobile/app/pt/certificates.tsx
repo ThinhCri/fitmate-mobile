@@ -15,6 +15,7 @@ export default function CertificatesRoute() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [phoneVerified, setPhoneVerified] = useState<boolean | undefined>();
+  const [contactPhone, setContactPhone] = useState<string | null>();
 
   const fetchCertificates = useCallback(async () => {
     setLoading(true);
@@ -22,10 +23,15 @@ export default function CertificatesRoute() {
     try {
       const [data, profile] = await Promise.all([ptService.getMyCertificates(), authService.getMe()]);
       setPhoneVerified(profile.phone_verified === true);
+      setContactPhone(profile.phone || null);
       const items = data?.items || [];
       setCertificates(items);
       const hasApproved = items.some((item) => ['approved', '1'].includes(String(item.status).toLowerCase()));
-      if (hasApproved && user) setUser({ ...user, ptVerificationStatus: 'approved' });
+      if (hasApproved) {
+        setUser((current) => current && current.ptVerificationStatus !== 'approved'
+          ? { ...current, ptVerificationStatus: 'approved' }
+          : current);
+      }
     } catch (err) {
       setError(
         err instanceof Error
@@ -35,7 +41,7 @@ export default function CertificatesRoute() {
     } finally {
       setLoading(false);
     }
-  }, [setUser, user]);
+  }, [setUser]);
 
   useEffect(() => {
     fetchCertificates();
@@ -46,7 +52,9 @@ export default function CertificatesRoute() {
     try {
       const created = await ptService.submitCertificate(data);
       setCertificates((prev) => [created, ...prev]);
-      if (user) setUser({ ...user, ptVerificationStatus: 'pendingreview' });
+      setUser((current) => current && current.ptVerificationStatus !== 'pendingreview'
+        ? { ...current, ptVerificationStatus: 'pendingreview' }
+        : current);
     } finally {
       setSubmitting(false);
     }
@@ -73,6 +81,7 @@ export default function CertificatesRoute() {
       onSubmitCertificate={handleSubmitCertificate}
       verificationStatus={user?.ptVerificationStatus}
       phoneVerified={phoneVerified}
+      contactPhone={contactPhone}
       onVerifyPhone={() => router.push('/pt/verify-phone' as never)}
     />
   );

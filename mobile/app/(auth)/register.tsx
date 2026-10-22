@@ -18,6 +18,8 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Alert,
+  Linking,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
@@ -43,6 +45,8 @@ import { AuthIntro } from '@/features/auth/AuthIntro';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LEN = 12;
 const MAX_PASSWORD_LEN = 128;
+const TERMS_URL = 'https://fitmate.site/terms/';
+const PRIVACY_URL = 'https://fitmate.site/privacy/';
 
 type RoleType = 'member' | 'pt';
 
@@ -65,6 +69,14 @@ export default function RegisterScreen() {
   const [heightCm, setHeightCm] = useState('');
   const [weightKg, setWeightKg] = useState('');
   const [fitnessGoal, setFitnessGoal] = useState('');
+
+  const openLegalPage = async (url: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert('Không mở được tài liệu', 'Vui lòng kiểm tra kết nối mạng và thử lại.');
+    }
+  };
 
   // Password strength calculation
   const passwordStrength = useMemo(() => {
@@ -117,7 +129,7 @@ export default function RegisterScreen() {
       return;
     }
     if (!termsAccepted) {
-      setLocalError('Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách riêng tư');
+      setLocalError('Vui lòng đọc và đồng ý với Điều khoản, Quy định cộng đồng và Chính sách quyền riêng tư');
       return;
     }
 
@@ -497,16 +509,23 @@ export default function RegisterScreen() {
             activeOpacity={0.8}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: termsAccepted }}
+            accessibilityLabel="Tôi đồng ý với Điều khoản dịch vụ, Quy định cộng đồng và Chính sách quyền riêng tư"
           >
             <View style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}>
               {termsAccepted && <Check size={14} color={colors.white} strokeWidth={3} />}
             </View>
             <Text style={styles.checkboxLabel}>
-              Tôi đã đọc và đồng ý với{' '}
-              <Text style={styles.legalLink}>Điều khoản dịch vụ</Text> và{' '}
-              <Text style={styles.legalLink}>Chính sách riêng tư</Text> của Fitmate.
+              Tôi đã đọc và đồng ý với Điều khoản dịch vụ, Quy định cộng đồng và Chính sách quyền riêng tư của Fitmate.
             </Text>
           </TouchableOpacity>
+          <View style={styles.legalLinksRow}>
+            <TouchableOpacity style={styles.legalLinkTouch} onPress={() => void openLegalPage(TERMS_URL)} accessibilityRole="link" accessibilityLabel="Đọc Điều khoản dịch vụ và Quy định cộng đồng">
+              <Text style={styles.legalLink}>Đọc Điều khoản & Quy định cộng đồng</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.legalLinkTouch} onPress={() => void openLegalPage(PRIVACY_URL)} accessibilityRole="link" accessibilityLabel="Đọc Chính sách quyền riêng tư">
+              <Text style={styles.legalLink}>Đọc Chính sách quyền riêng tư</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Primary CTA Button (52dp) */}
           <TouchableOpacity
@@ -904,6 +923,14 @@ const styles = StyleSheet.create({
   legalLink: {
     color: colors.primary,
     fontWeight: '600',
+  },
+  legalLinksRow: {
+    marginLeft: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  legalLinkTouch: {
+    minHeight: 48,
+    justifyContent: 'center',
   },
   submitButton: {
     height: 52,

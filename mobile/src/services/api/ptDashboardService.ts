@@ -2,6 +2,8 @@ import { apiClient } from './client';
 import { authService } from './authService';
 import { bookingService } from './bookingService';
 import { getTrainerRepository } from '@/repositories/trainerRepository';
+import { ptService } from './ptService';
+import { ApiError } from './client';
 import type { PtRevenueBookingItemViewModel } from '@/features/pt/PtRevenuePresentation';
 
 interface RevenueOverview { range: string; total_gross_vnd: number; platform_fee_vnd: number; net_earnings_vnd: number; pending_payout_vnd: number; completed_payout_vnd: number; }
@@ -12,12 +14,16 @@ export interface PtPayoutAccount { bank_code: string; bank_name: string; account
 export const ptDashboardService = {
   async getOverview() {
     const me = await authService.getMe();
-    const [publicProfile, bookings] = await Promise.all([
-      getTrainerRepository().getTrainer(me.id),
+    const [services, bookings, publicProfile] = await Promise.all([
+      ptService.getMyServices(true),
       bookingService.listMyTrainerBookings({ page: 1, pageSize: 20 }),
+      getTrainerRepository().getTrainer(me.id).catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 404) return null;
+        throw error;
+      }),
     ]);
-    const upcoming = bookings.items.filter((item) => ['Confirmed', 'InProgress', 'AwaitingMemberConfirmation'].includes(item.status)).map((item) => ({ id: item.id, clientName: `Hội viên ${item.member_id.slice(0, 8)}`, serviceName: publicProfile.services.find((service) => service.id === item.service_id)?.name || 'Buổi huấn luyện', timeString: new Date(item.slot_start_utc).toLocaleString('vi-VN'), location: '' }));
-    return { ptName: publicProfile.name, isVerified: publicProfile.isVerified, certificateName: publicProfile.isVerified ? 'Chứng chỉ đã xác minh' : 'Chứng chỉ chưa xác minh', rating: publicProfile.rating, reviewCount: publicProfile.reviewCount, isAcceptingClients: publicProfile.services.some((service) => service.isActive), pendingTasks: [], upcomingSessions: upcoming };
+    const upcoming = bookings.items.filter((item) => ['Confirmed', 'InProgress', 'AwaitingMemberConfirmation'].includes(item.status)).map((item) => ({ id: item.id, clientName: `Hội viên ${item.member_id.slice(0, 8)}`, serviceName: services.find((service) => service.id === item.service_id)?.name || 'Buổi huấn luyện', timeString: new Date(item.slot_start_utc).toLocaleString('vi-VN'), location: '' }));
+    return { ptName: me.full_name, isVerified: true, certificateName: 'Chứng chỉ đã xác minh', rating: publicProfile?.rating ?? null, reviewCount: publicProfile?.reviewCount ?? null, isAcceptingClients: services.some((service) => service.is_active), pendingTasks: [], upcomingSessions: upcoming };
   },
   async getRevenue(range = '30d') {
     const [overview, history] = await Promise.all([

@@ -19,8 +19,8 @@ export interface PtOverviewPresentationProps {
   ptName: string;
   isVerified: boolean;
   certificateName: string;
-  rating: number;
-  reviewCount: number;
+  rating: number | null;
+  reviewCount: number | null;
   isAcceptingClients: boolean;
   pendingTasks: { id: string; title: string; type: 'warning' | 'info'; linkTarget: string }[];
   upcomingSessions: {
@@ -85,11 +85,11 @@ export function PtOverviewPresentation({
               <Text style={styles.certText}>{certificateName}</Text>
             </View>
 
-            <View style={styles.ratingRow}>
+            {rating !== null && reviewCount !== null && <View style={styles.ratingRow}>
               <Star size={14} color="#F59E0B" fill="#F59E0B" />
               <Text style={styles.ratingText}>{rating.toFixed(2)}</Text>
               <Text style={styles.reviewCountText}>({reviewCount}+ đánh giá)</Text>
-            </View>
+            </View>}
           </View>
         </View>
 
@@ -431,6 +431,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     paddingHorizontal: 2,
     paddingTop: spacing.xs,
+    alignItems: 'center',
   },
   sectionTitle: {
     fontSize: 15,
@@ -441,15 +442,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
+    justifyContent: 'center',
   },
   shortcutTile: {
     width: '48%',
+    minHeight: 112,
     backgroundColor: colors.surface,
     padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     gap: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   shortcutIconBox: {
     width: 44,
@@ -463,10 +468,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: colors.textPrimary,
+    textAlign: 'center',
   },
   shortcutSub: {
     fontSize: 11,
     color: colors.textSecondary,
+    textAlign: 'center',
   },
   emptySessionsCard: {
     padding: spacing.md,

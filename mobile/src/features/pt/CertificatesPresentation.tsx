@@ -43,6 +43,7 @@ export interface CertificatesPresentationProps {
   }) => Promise<void>;
   verificationStatus?: string;
   phoneVerified?: boolean;
+  contactPhone?: string | null;
   onVerifyPhone?: () => void;
 }
 
@@ -56,6 +57,7 @@ export function CertificatesPresentation({
   onSubmitCertificate,
   verificationStatus,
   phoneVerified,
+  contactPhone,
   onVerifyPhone,
 }: CertificatesPresentationProps) {
   // Form state for adding new certificate
@@ -198,13 +200,21 @@ export function CertificatesPresentation({
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
         {phoneVerified === false && onVerifyPhone ? (
-          <Pressable onPress={onVerifyPhone} accessibilityRole="button" style={styles.auditBanner}>
-            <AlertCircle size={22} color={colors.warning} />
+          <View style={styles.auditBanner}>
+            {contactPhone ? <CheckCircle2 size={22} color={colors.success} /> : <AlertCircle size={22} color={colors.warning} />}
             <View style={{ flex: 1 }}>
-              <Text style={styles.auditBannerTitle}>Xác minh số điện thoại PT</Text>
-              <Text style={styles.auditBannerText}>Admin chỉ có thể duyệt hồ sơ sau khi bạn xác minh số điện thoại bằng mã SMS. Nhấn để xác minh.</Text>
+              <Text style={styles.auditBannerTitle}>{contactPhone ? 'Đã lưu số liên hệ' : 'Thêm số điện thoại liên hệ'}</Text>
+              <Text style={styles.auditBannerText}>{contactPhone ? `${contactPhone} — Fitmate có thể liên hệ khi xét duyệt hồ sơ PT.` : 'Nhập số điện thoại bạn đang sử dụng để Fitmate có thể liên hệ khi cần.'}</Text>
+              <Pressable
+                onPress={onVerifyPhone}
+                accessibilityRole="button"
+                accessibilityLabel="Mở màn hình nhập số điện thoại liên hệ PT"
+                style={styles.verifyPhoneButton}
+              >
+                <Text style={styles.verifyPhoneButtonText}>{contactPhone ? 'Sửa số liên hệ →' : 'Nhập số liên hệ →'}</Text>
+              </Pressable>
             </View>
-          </Pressable>
+          </View>
         ) : null}
         {verificationStatus && verificationStatus !== 'approved' && (
           <View style={styles.auditBanner}>
@@ -483,6 +493,19 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     lineHeight: 18,
+  },
+  verifyPhoneButton: {
+    minHeight: 48,
+    marginTop: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  verifyPhoneButtonText: {
+    ...typography.bodyBold,
+    color: colors.white,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
