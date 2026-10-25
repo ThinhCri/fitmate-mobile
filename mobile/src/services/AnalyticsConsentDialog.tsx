@@ -48,8 +48,10 @@ const styles = StyleSheet.create({
   body: { ...typography.body, color: colors.textSecondary, marginBottom: spacing.md },
   error: { color: colors.danger, marginBottom: spacing.sm },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
-  button: { flexGrow: 1, minHeight: 48, padding: spacing.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignItems: 'center' },
+  button: { flexBasis: '45%', flexGrow: 1, flexShrink: 1, minWidth: 120, minHeight: 48, padding: spacing.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignItems: 'center' },
   accept: { backgroundColor: colors.primary, borderColor: colors.primary },
-  buttonText: { ...typography.body, color: colors.textPrimary, fontWeight: '600' },
+  // Give Android the full label width; don't shrink-wrap Vietnamese text to a
+  // rounded intrinsic measurement or force accents into a fixed line height.
+  buttonText: { width: '100%', textAlign: 'center', includeFontPadding: true, color: colors.textPrimary, fontSize: typography.body.fontSize, fontWeight: '600' },
   acceptText: { color: colors.white },
 });

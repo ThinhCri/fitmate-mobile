@@ -206,7 +206,7 @@ export default function RegisterScreen() {
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Đăng Ký</Text>
+        <Text style={styles.topBarTitle}>Đăng ký</Text>
         <View style={styles.topBarRightPlaceholder} />
       </View>
 
@@ -598,7 +598,8 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   topBar: {
-    height: 56,
+    minHeight: 56,
+    paddingVertical: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -615,7 +616,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
   },
   topBarTitle: {
-    ...typography.title2,
+    flex: 1,
+    minWidth: 0,
+    textAlign: 'center',
+    includeFontPadding: true,
+    fontSize: typography.title2.fontSize,
     color: colors.textPrimary,
     fontWeight: '700',
   },
@@ -921,7 +926,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   submitButton: {
-    height: 52,
+    minHeight: 52,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
     borderRadius: radius.lg,
     backgroundColor: colors.primary,
     flexDirection: 'row',
@@ -939,7 +946,11 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
   submitButtonText: {
-    ...typography.bodyBold,
+    flex: 1,
+    minWidth: 0,
+    textAlign: 'center',
+    includeFontPadding: true,
+    fontWeight: typography.bodyBold.fontWeight,
     color: colors.white,
     fontSize: 16,
   },
