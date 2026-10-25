@@ -41,6 +41,7 @@ import { useAuth } from '@/services/AuthContext';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { AuthIntro } from '@/features/auth/AuthIntro';
+import { assessPasswordStrength } from '@/features/auth/passwordStrength';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LEN = 12;
@@ -80,25 +81,8 @@ export default function RegisterScreen() {
 
   // Password strength calculation
   const passwordStrength = useMemo(() => {
-    if (!password) return { score: 0, text: 'Chưa nhập', color: colors.textMuted };
-    let score = 0;
-    if (password.length >= MIN_PASSWORD_LEN) score += 1;
-    if (/[A-Z]/.test(password)) score += 1;
-    if (/[0-9]/.test(password)) score += 1;
-    if (/[^A-Za-z0-9]/.test(password)) score += 1;
-
-    switch (score) {
-      case 1:
-        return { score: 1, text: 'Yếu', color: colors.danger };
-      case 2:
-        return { score: 2, text: 'Trung bình', color: colors.warning };
-      case 3:
-        return { score: 3, text: 'Khá', color: colors.info };
-      case 4:
-        return { score: 4, text: 'Mạnh', color: colors.success };
-      default:
-        return { score: 1, text: 'Yếu', color: colors.danger };
-    }
+    const result = assessPasswordStrength(password);
+    return { ...result, color: colors[result.color] };
   }, [password]);
 
   const handleSubmit = async () => {
@@ -126,6 +110,10 @@ export default function RegisterScreen() {
     }
     if (password !== confirmPassword) {
       setLocalError('Mật khẩu xác nhận không khớp');
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setLocalError('Mật khẩu cần có ít nhất một chữ số.');
       return;
     }
     if (!termsAccepted) {
@@ -457,7 +445,7 @@ export default function RegisterScreen() {
                 ))}
               </View>
               <Text style={styles.strengthPolicyHint}>
-                Quy định bảo mật Fitmate: Tối thiểu 12 ký tự, bao gồm cả chữ cái và số.
+                Bắt buộc: 12–128 ký tự và ít nhất một chữ số. Mức Mạnh: đủ độ dài, có chữ hoa, số và ký tự đặc biệt. Đây là gợi ý, không bảo đảm mật khẩu khó đoán; tránh dùng tên, ngày sinh hoặc chuỗi lặp.
               </Text>
             </View>
           </View>
