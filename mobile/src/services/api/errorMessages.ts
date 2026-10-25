@@ -1,6 +1,11 @@
 import { isProblemDetails } from './types';
 
 const CODE_MESSAGES: Record<string, string> = {
+  DELETION_OTP_REQUIRED: 'Vui lòng nhập mã OTP gồm 6 chữ số gửi đến email tài khoản.',
+  DELETION_OTP_INVALID: 'Mã OTP không đúng, đã hết hạn hoặc đã dùng. Vui lòng gửi lại mã nếu cần.',
+  DELETION_OTP_RESEND_TOO_SOON: 'Vui lòng chờ 60 giây trước khi gửi lại mã OTP.',
+  DELETION_ALREADY_REQUESTED: 'Tài khoản đã có yêu cầu xóa đang chờ xử lý.',
+  DELETION_OTP_FORBIDDEN: 'Tài khoản không thể yêu cầu xác thực xóa. Vui lòng kiểm tra trạng thái tài khoản và email.',
   'FITMATE.AUTH.EMAIL_NOT_VERIFIED':
     'Email của bạn chưa được xác minh. Vui lòng nhập mã đã được gửi đến email.',
   'FITMATE.AUTH.INVALID_CREDENTIALS': 'Email hoặc mật khẩu không chính xác.',

@@ -1,15 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { ActivityIndicator, Alert, Linking, ScrollView, Text, TouchableOpacity } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { ActivityIndicator, Alert, AppState, Linking, ScrollView, Text, TouchableOpacity } from 'react-native';
 import { SettingsPresentation } from '@/features/account';
 import { SettingsViewModel } from '@/features/account/accountTypes';
 import { getAccountRepository } from '@/repositories/accountRepository';
-import { ImagePickerService } from '@/services/imagePicker';
 import { useAuth } from '@/services/AuthContext';
 import { getAnalyticsConsent, isAnalyticsAvailable, updateAnalyticsConsent } from '@/services/analytics';
 import { AnalyticsPreference } from '@/features/account/AnalyticsPreference';
 import { colors, spacing, typography } from '@/theme/designTokens';
+import { PermissionStatus, readSettingsPermissions } from '@/services/settingsPermissions';
 
 export default function SettingsScreen() {
   const { user } = useAuth();
@@ -21,6 +21,23 @@ export default function SettingsScreen() {
   const [loadError, setLoadError] = useState(false);
   const [deletionKnown, setDeletionKnown] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [notificationPermission, setNotificationPermission] = useState<PermissionStatus>('unknown');
+  const [cameraPermission, setCameraPermission] = useState<PermissionStatus>('unknown');
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    let latest = 0;
+    const update = async () => {
+      const request = ++latest;
+      const permissions = await readSettingsPermissions();
+      if (active && request === latest) {
+        setNotificationPermission(permissions.notifications);
+        setCameraPermission(permissions.camera);
+      }
+    };
+    void update();
+    const listener = AppState.addEventListener('change', (state) => { if (state === 'active') void update(); });
+    return () => { active = false; listener.remove(); };
+  }, []));
   const goBack = () => { if (router.canGoBack()) router.back(); else router.replace('/account' as any); };
   useEffect(() => {
     let active = true;
@@ -63,6 +80,8 @@ export default function SettingsScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <SettingsPresentation
         settings={settings}
+        notificationPermission={notificationPermission}
+        cameraPermission={cameraPermission}
         onBack={goBack}
         onChangePasswordPress={() =>
           router.push('/account/change-password' as any)
@@ -71,7 +90,7 @@ export default function SettingsScreen() {
           void Linking.openSettings().catch(() => Alert.alert('Không thể mở cài đặt', 'Vui lòng vào Cài đặt điện thoại → Ứng dụng → Fitmate → Thông báo.'));
         }}
         onCameraSettingsPress={() => {
-          void ImagePickerService.requestCameraPermission(true);
+          void Linking.openSettings().catch(() => Alert.alert('Không thể mở cài đặt', 'Vui lòng vào Cài đặt điện thoại → Ứng dụng → Fitmate → Quyền → Máy ảnh.'));
         }}
         onPrivacyPress={() => void openPolicy(settings.privacyUrl, 'Dữ liệu & Quyền riêng tư')}
         onTermsPress={() => void openPolicy(settings.termsUrl, 'Điều khoản dịch vụ')}

@@ -1,5 +1,29 @@
 # Handoff — Ban giao hien tai
 
+## 2026-10-25 — Prepare committed closed-test update 0.1.1 (2)
+- Owner requested add/commit and build/Play instructions. Prepare expo.version 0.1.1/android.versionCode 2 and matching ignored native Gradle values; secure release script now checks both match before requesting password. Highest Play upload must still be 1; otherwise choose a higher unused code. Same upload key/package, no signing reset or prebuild --clean.
+- Commit latest settings permission/status + OTP failure/logout work, prior Vietnamese labels and reviewed Android R8/icon build fixes in scoped units. Preserve unrelated payout copy, store artwork and legacy unsigned/unreviewed build helper. See closed-testing-update.md for commands, paths, release notes and mandatory runtime checks.
+- No build/test/typecheck/install/Play upload/push/VPS rollout in this turn. Earlier R8 unsigned verification and old unit/type-check results do not verify the newest shared-provider/permission/OTP changes. VPS OTP route is still absent (404); operator-approved backend deployment and DB/email/device UAT must precede tester rollout. Do not claim a new AAB was created.
+
+## 2026-10-25 — Live permission status and deletion OTP failure clarity (IMPLEMENTED_UNVERIFIED)
+- Settings reads Android 33+ POST_NOTIFICATIONS permission and camera permission without prompting, on focus and AppState active. Shows small green enabled / red disabled text plus external icon in a reserved right slot. Read failures and unsupported notification checks (Android <33/iOS) remain unknown, not falsely enabled. No claim about delivery/provider readiness or individual notification channel settings.
+- OTP input and confirmation remain visible but disabled until a successful send; failed send shows inline error. Repository explains missing backend route (404/405) and validates response expiry. Explicit OTP error-code translations added. Only a successful verified deletion request signs out via AuthContext/session cleanup and redirects to login; failure does not sign out. Account-switch/unmount guards prevent a late response logging out another account.
+- Read-only VPS inspection found no deletion-otp route in deployed controller source; anonymous POST https://api.fitmate.site/api/v1/users/me/deletion-otp returned 404. No email/deletion sent. This explains an unavailable operation, not proof of the user's exact 500 without its trace. Backend OTP commit exists locally but is NOT deployed; operator approval and isolated DB tests/SMTP UAT are required before rollout.
+- Wrote four permission-reader tests; manual-execution workflow: no test/build/typecheck/commit/push/deploy in this follow-up. Operator checks: settings resume updates colors/text; OTP send -> email -> enter code -> confirm -> logout; wrong/expired/missing route does not log out. Do not claim completed end-to-end deletion until server rollout and UAT.
+
+## 2026-10-25 — Reserve external-action indicator outside text flow (IMPLEMENTED_UNVERIFIED)
+- Owner runtime screenshot still lacks notification external indicator although both permission rows have the icon in source. Reserve 36dp right padding on external rows and position the 24dp indicator within that reserved area, vertically centered relative to natural row height. Long text cannot consume or move its slot; entire row remains the action target. Applied consistently to notification/camera/privacy/terms.
+- Device verification still required; no claim that source inspection explains the exact native rendering failure. No build/test/commit/push performed.
+
+## 2026-10-25 — Distinguish navigation from external settings (IMPLEMENTED_UNVERIFIED)
+- Owner clarified that right chevrons mean another in-app screen. Notification/camera OS-settings entries and privacy/terms external URLs now use ExternalLink, in a fixed non-shrinking trailing slot. Notification copy explicitly names phone settings. Keep chevrons for change-password/deletion-OTP navigation; cancel-deletion action has no navigation chevron.
+- No test/build/runtime/commit/push in this follow-up. Verify trailing external indicators at 360dp/font1.5 on device; actual OS navigation remains subject to platform support.
+
+## 2026-10-25 — Correct settings permission row overflow (IMPLEMENTED_UNVERIFIED)
+- Owner screenshot showed notification description pushing the chevron to the card edge. Bound rowLeft/description with flex:1 and minWidth:0, added row gap and shrinkable Vietnamese text, preserved natural row height and font scaling; descriptions use readable secondary color without the external theme-note margin.
+- Removed the redundant account/security email explanatory row at owner request. Both notification and camera actions now open real OS app settings via Linking.openSettings with failure guidance. Previously camera permission action silently returned if permission was already granted; camera capture flows elsewhere retain their existing permission prompts.
+- Static source review only for this follow-up; no device/runtime verification or new test/build/commit/push. Check at 360dp/font1.5: chevrons remain inside card, descriptions wrap, both actions open Fitmate app settings, Android back returns correctly. This verifies neither notification delivery nor camera hardware by itself.
+
 ## 2026-10-25 — Email OTP deletion and truthful settings controls
 - Added account/deletion-otp: user explicitly requests account-email code, six-digit input, resend countdown and expiry, busy guard, keyboard-safe layout, confirm submits OTP to backend. No deletion request is created by sending a code. Copy accurately describes admin review rather than an immediate 30-day deletion clock.
 - Removed personal-data export action from Settings, merged duplicate notification controls into one OS-settings entry and replaced ineffective email toggle with explanatory security-email text. No claim of fixed duplicate delivery without actual reproduction.
@@ -1146,5 +1170,3 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Play Console advertising ID declaration is set to No. The previous signed AAB still contains `com.google.android.gms.permission.AD_ID` from Google measurement libraries. Added `android.blockedPermissions` in `mobile/app.json` and a native manifest merge removal rule for the current generated Android tree.
 - `:app:processDebugManifest` succeeded and its merged manifest excludes AD_ID. `:app:processReleaseManifest` cannot configure without upload-signing environment variables; the upload password is not available to the agent. The old AAB remains unchanged and must not be uploaded as the new build. Owner must run `mobile/build-release-secure.ps1`, enter the password locally, then inspect the release bundle manifest for AD_ID before Play upload.
 - Unrelated untracked `mobile/build-release.ps1` and both feature graphic files were preserved. No commit/push or production deployment.
-
-

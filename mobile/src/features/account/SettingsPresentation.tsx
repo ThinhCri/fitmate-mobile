@@ -9,6 +9,7 @@ import {
 import {
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
   KeyRound,
   Shield,
   Bell,
@@ -22,6 +23,16 @@ import { colors, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
 import { SettingsViewModel } from './accountTypes';
 import { AnalyticsPreference } from './AnalyticsPreference';
+import type { PermissionStatus } from '@/services/settingsPermissions';
+
+function PermissionIndicator({ status }: { status: PermissionStatus }) {
+  return <View style={styles.permissionIndicator}>
+    <Text style={[styles.permissionStatus, { color: status === 'enabled' ? colors.primary : status === 'disabled' ? colors.danger : colors.textSecondary }]}>
+      {status === 'enabled' ? 'Đang bật' : status === 'disabled' ? 'Đang tắt' : 'Chưa xác định'}
+    </Text>
+    <ExternalLink size={14} color={colors.textSecondary} />
+  </View>;
+}
 
 export interface SettingsPresentationProps {
   onBack: () => void;
@@ -31,6 +42,8 @@ export interface SettingsPresentationProps {
   onPrivacyPress: () => void;
   onTermsPress: () => void;
   settings: SettingsViewModel;
+  notificationPermission?: PermissionStatus;
+  cameraPermission?: PermissionStatus;
   analyticsConsent?: boolean;
   analyticsAvailable?: boolean;
   analyticsBusy?: boolean;
@@ -48,6 +61,8 @@ export function SettingsPresentation({
   onPrivacyPress,
   onTermsPress,
   settings,
+  notificationPermission = 'unknown',
+  cameraPermission = 'unknown',
   analyticsConsent = false,
   analyticsAvailable = false,
   analyticsBusy = false,
@@ -91,17 +106,17 @@ export function SettingsPresentation({
             <View style={styles.divider} />
             <TouchableOpacity style={styles.row} onPress={isDeletionPending ? onCancelDeletionPress : onDeleteAccountPress}>
               <Text style={[styles.rowTitle, { color: isDeletionPending ? colors.primary : colors.danger }]}>{isDeletionPending ? 'Hủy yêu cầu xóa tài khoản' : 'Yêu cầu xóa tài khoản'}</Text>
-              <ChevronRight size={18} color={colors.textMuted} />
+              {!isDeletionPending && <ChevronRight size={18} color={colors.textMuted} />}
             </TouchableOpacity>
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.row} onPress={onPrivacyPress}>
+            <TouchableOpacity style={[styles.row, styles.externalRow]} onPress={onPrivacyPress}>
               <View style={styles.rowLeft}>
                 <Shield size={18} color={colors.textSecondary} />
                 <Text style={styles.rowTitle}>Dữ liệu &amp; Quyền riêng tư</Text>
               </View>
-              <ChevronRight size={18} color={colors.textMuted} />
+              <View style={styles.externalIndicator}><ExternalLink size={18} color={colors.textSecondary} /></View>
             </TouchableOpacity>
           </Card>
         </View>
@@ -111,35 +126,34 @@ export function SettingsPresentation({
           <Text style={styles.sectionTitle}>Tùy chọn ứng dụng</Text>
           <Card style={styles.card}>
             <TouchableOpacity
-              style={styles.row}
+              style={[styles.row, styles.permissionRow]}
               onPress={onNotificationSettingsPress}
+              accessibilityRole="button"
+              accessibilityLabel="Thông báo trên điện thoại. Mở cài đặt ứng dụng Fitmate trên điện thoại."
             >
               <View style={styles.rowLeft}>
                 <Bell size={18} color={colors.textSecondary} />
                 <View style={styles.description}>
                   <Text style={styles.rowTitle}>Thông báo trên điện thoại</Text>
-                  <Text style={styles.themeNote}>Bật hoặc tắt trong cài đặt của điện thoại.</Text>
+                  <Text style={styles.rowDescription}>Mở cài đặt điện thoại để bật hoặc tắt thông báo.</Text>
                 </View>
               </View>
-              <ChevronRight size={18} color={colors.textMuted} />
+              <PermissionIndicator status={notificationPermission} />
             </TouchableOpacity>
 
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.row} onPress={onCameraSettingsPress}>
+            <TouchableOpacity style={[styles.row, styles.permissionRow]} onPress={onCameraSettingsPress}
+              accessibilityRole="button"
+              accessibilityLabel="Quyền máy ảnh. Mở cài đặt ứng dụng Fitmate trên điện thoại.">
               <View style={styles.rowLeft}>
                 <Camera size={18} color={colors.textSecondary} />
-                <Text style={styles.rowTitle}>Quyền máy ảnh</Text>
+                <View style={styles.description}>
+                  <Text style={styles.rowTitle}>Quyền máy ảnh</Text>
+                  <Text style={styles.rowDescription}>Quản lý quyền chụp ảnh trong cài đặt điện thoại.</Text>
+                </View>
               </View>
-              <ChevronRight size={18} color={colors.textMuted} />
+              <PermissionIndicator status={cameraPermission} />
             </TouchableOpacity>
-
-            <View style={styles.divider} />
-            <View style={styles.row}>
-              <View style={styles.description}>
-                <Text style={styles.rowTitle}>Email tài khoản &amp; bảo mật</Text>
-                <Text style={styles.themeNote}>Email xác thực, khôi phục mật khẩu và bảo mật vẫn được gửi khi cần. Hiện chưa hỗ trợ tùy chỉnh email khác.</Text>
-              </View>
-            </View>
 
             <View style={styles.divider} />
             <AnalyticsPreference available={analyticsAvailable} enabled={analyticsConsent}
@@ -174,12 +188,12 @@ export function SettingsPresentation({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin ứng dụng</Text>
           <Card style={styles.card}>
-            <TouchableOpacity style={styles.row} onPress={onTermsPress}>
+            <TouchableOpacity style={[styles.row, styles.externalRow]} onPress={onTermsPress}>
               <View style={styles.rowLeft}>
                 <FileText size={18} color={colors.textSecondary} />
                 <Text style={styles.rowTitle}>Điều khoản dịch vụ &amp; Chính sách</Text>
               </View>
-              <ChevronRight size={18} color={colors.textMuted} />
+              <View style={styles.externalIndicator}><ExternalLink size={18} color={colors.textSecondary} /></View>
             </TouchableOpacity>
 
             <View style={styles.divider} />
@@ -199,7 +213,24 @@ export function SettingsPresentation({
 }
 
 const styles = StyleSheet.create({
-  description: { flex: 1, gap: spacing.xs },
+  permissionRow: { position: 'relative', paddingRight: 112 },
+  permissionIndicator: {
+    position: 'absolute', right: 0, top: 0, bottom: 0, width: 104,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.xs,
+  },
+  permissionStatus: { fontSize: 12, fontWeight: '600', flexShrink: 1, includeFontPadding: true },
+  externalRow: { position: 'relative', paddingRight: 36 },
+  externalIndicator: {
+    position: 'absolute', right: 0, top: 0, bottom: 0, width: 24,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  description: { flex: 1, minWidth: 0, gap: spacing.xs },
+  rowDescription: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    flexShrink: 1,
+    includeFontPadding: true,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -248,13 +279,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.md,
+    minHeight: 48,
+    gap: spacing.sm,
   },
   rowLeft: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
   rowTitle: {
+    flexShrink: 1,
+    includeFontPadding: true,
     fontSize: 14,
     fontWeight: '500',
     color: colors.textPrimary,

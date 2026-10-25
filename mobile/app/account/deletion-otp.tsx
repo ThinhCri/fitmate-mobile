@@ -7,7 +7,7 @@ import { getAccountRepository } from '@/repositories/accountRepository';
 import { colors, spacing, typography } from '@/theme/designTokens';
 
 export default function DeletionOtpScreen() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const repository = getAccountRepository();
   const [otp, setOtp] = useState('');
   const [sent, setSent] = useState(false);
@@ -16,9 +16,15 @@ export default function DeletionOtpScreen() {
   const [expiresAt, setExpiresAt] = useState(0);
   const [now, setNow] = useState(Date.now());
   const locked = useRef(false);
+  const confirmed = useRef(false);
+  const [sendError, setSendError] = useState('');
   const accountId = useRef(user?.id);
+  const latestAccountId = useRef(user?.id);
+  latestAccountId.current = user?.id;
+  const active = useRef(true);
+  useEffect(() => () => { active.current = false; }, []);
   useEffect(() => {
-    if (accountId.current !== user?.id) router.replace('/account/settings' as any);
+    if (!confirmed.current && accountId.current !== user?.id) router.replace('/account/settings' as any);
   }, [user?.id]);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -29,23 +35,32 @@ export default function DeletionOtpScreen() {
   const expired = sent && now >= expiresAt;
   const send = async () => {
     if (locked.current || remaining > 0) return;
-    locked.current = true; setBusy(true);
+    locked.current = true; setBusy(true); setSendError('');
     try {
       const result = await repository.sendDeletionOtp();
+      if (!active.current || latestAccountId.current !== accountId.current) return;
       setOtp(''); setSent(true); setNow(Date.now());
       setRetryAt(Date.now() + result.resendAfterSeconds * 1000);
       setExpiresAt(Date.parse(result.expiresAt));
-    } catch (e) { Alert.alert('Không thể gửi mã', e instanceof Error ? e.message : 'Vui lòng thử lại.'); }
+    } catch (e) { setSendError(e instanceof Error ? e.message : 'Không thể gửi mã. Chưa có yêu cầu xóa nào được tạo. Vui lòng thử lại.'); }
     finally { locked.current = false; setBusy(false); }
   };
   const confirm = async () => {
-    if (locked.current || !/^\d{6}$/.test(otp) || expired) return;
+    if (locked.current || !sent || confirmed.current || !/^\d{6}$/.test(otp) || expired) return;
     locked.current = true; setBusy(true);
     try {
       await repository.requestAccountDeletion(otp);
+      if (!active.current || latestAccountId.current !== accountId.current) return;
+      confirmed.current = true;
       setOtp('');
-      Alert.alert('Đã gửi yêu cầu xóa tài khoản', 'Yêu cầu đang chờ quản trị viên xử lý. Đây chưa phải thao tác xóa tài khoản ngay lập tức.',
-        [{ text: 'Đóng', onPress: () => router.replace('/account/settings' as any) }]);
+      try { await logout(); }
+      catch {
+        router.replace('/(auth)/login' as any);
+        Alert.alert('Yêu cầu đã được gửi', 'Chưa hoàn tất dọn phiên đăng nhập. Vui lòng đóng và mở lại app. Không gửi lại yêu cầu xóa.');
+        return;
+      }
+      router.replace('/(auth)/login' as any);
+      Alert.alert('Đã gửi yêu cầu xóa tài khoản', 'Bạn đã được đăng xuất. Yêu cầu đang chờ quản trị viên xử lý; tài khoản chưa bị xóa ngay lập tức.');
     } catch (e) { Alert.alert('Không thể gửi yêu cầu', e instanceof Error ? e.message : 'Vui lòng kiểm tra mã OTP.'); }
     finally { locked.current = false; setBusy(false); }
   };
@@ -60,15 +75,14 @@ export default function DeletionOtpScreen() {
         <TouchableOpacity accessibilityRole="button" disabled={busy || remaining > 0} onPress={() => void send()} style={styles.button}>
           <Text style={styles.link}>{remaining > 0 ? `Gửi lại sau ${remaining} giây` : sent ? 'Gửi lại mã OTP' : 'Gửi mã OTP qua email'}</Text>
         </TouchableOpacity>
-        {sent && <>
-          <Text style={typography.body}>{expired ? 'Mã đã hết hạn. Vui lòng gửi lại mã.' : 'Kiểm tra hộp thư đến và thư rác để lấy mã OTP.'}</Text>
-          <TextInput accessibilityLabel="Mã OTP xóa tài khoản" value={otp} editable={!busy} onChangeText={(value) => setOtp(value.replace(/\D/g, '').slice(0, 6))}
+        {sendError ? <Text accessibilityRole="alert" style={styles.error}>{sendError}</Text> : null}
+          <Text style={typography.body}>{!sent ? 'Gửi mã thành công để kích hoạt bước xác nhận bên dưới.' : expired ? 'Mã đã hết hạn. Vui lòng gửi lại mã.' : 'Kiểm tra hộp thư đến và thư rác để lấy mã OTP.'}</Text>
+          <TextInput accessibilityLabel="Mã OTP xóa tài khoản" value={otp} editable={sent && !busy && !confirmed.current} onChangeText={(value) => setOtp(value.replace(/\D/g, '').slice(0, 6))}
             keyboardType="number-pad" autoComplete="one-time-code" textContentType="oneTimeCode" maxLength={6} placeholder="Nhập mã 6 chữ số" style={styles.input} />
-          <TouchableOpacity accessibilityRole="button" disabled={busy || otp.length !== 6 || expired} onPress={() => void confirm()}
-            style={[styles.confirm, (busy || otp.length !== 6 || expired) && styles.disabled]}>
+          <TouchableOpacity accessibilityRole="button" disabled={!sent || busy || confirmed.current || otp.length !== 6 || expired} onPress={() => void confirm()}
+            style={[styles.confirm, (!sent || busy || confirmed.current || otp.length !== 6 || expired) && styles.disabled]}>
             <Text style={styles.confirmText}>Xác nhận gửi yêu cầu xóa</Text>
           </TouchableOpacity>
-        </>}
         {busy && <ActivityIndicator accessibilityLabel="Đang xử lý" color={colors.primary} />}
       </ScrollView>
     </KeyboardAvoidingView>
@@ -76,6 +90,7 @@ export default function DeletionOtpScreen() {
 }
 
 const styles = StyleSheet.create({
+  error: { ...typography.body, color: colors.danger },
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, gap: spacing.lg },
   button: { minHeight: 48, justifyContent: 'center', paddingVertical: spacing.sm },

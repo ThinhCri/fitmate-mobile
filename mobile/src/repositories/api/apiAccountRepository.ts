@@ -6,7 +6,7 @@ import {
 } from '@/features/account/accountTypes';
 import { IAccountRepository, AccountDeletionStatusViewModel, UploadedAvatar } from '../accountRepository';
 import { authService } from '@/services/api/authService';
-import { apiClient, apiUploadFile, resolveApiResourceUrl } from '@/services/api/client';
+import { ApiError, apiClient, apiUploadFile, resolveApiResourceUrl } from '@/services/api/client';
 import Constants from 'expo-constants';
 import { bookingService } from '@/services/api/bookingService';
 import { apiSocialRepository } from './apiSocialRepository';
@@ -168,8 +168,16 @@ export class ApiAccountRepository implements IAccountRepository {
   }
 
   async sendDeletionOtp(): Promise<{ expiresAt: string; resendAfterSeconds: number }> {
-    const res = await apiClient<{ expires_at: string; resend_after_seconds: number }>('/users/me/deletion-otp', { method: 'POST' });
-    return { expiresAt: res.expires_at, resendAfterSeconds: res.resend_after_seconds };
+    try {
+      const res = await apiClient<{ expires_at: string; resend_after_seconds: number }>('/users/me/deletion-otp', { method: 'POST' });
+      if (!Number.isFinite(Date.parse(res.expires_at)) || !Number.isFinite(res.resend_after_seconds))
+        throw new Error('Máy chủ trả về thông tin mã xác thực không hợp lệ. Chưa thể xác nhận yêu cầu xóa.');
+      return { expiresAt: res.expires_at, resendAfterSeconds: res.resend_after_seconds };
+    } catch (e) {
+      if (e instanceof ApiError && (e.status === 404 || e.status === 405))
+        throw new Error('Máy chủ chưa được cập nhật chức năng OTP xóa tài khoản. Chưa gửi được mã; vui lòng thử lại sau khi máy chủ được cập nhật.');
+      throw e;
+    }
   }
 
   async requestAccountDeletion(otp: string, reason?: string): Promise<AccountDeletionStatusViewModel> {
