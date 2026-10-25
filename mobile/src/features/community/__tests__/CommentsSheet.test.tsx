@@ -1,7 +1,12 @@
 import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { createRequire } from 'node:module';
 import { describe, expect, it, vi } from 'vitest';
 import { CommentsSheet } from '../CommentsSheet';
+
+// Use the installed renderer without adding web-only ambient types to mobile.
+const { renderToStaticMarkup } = createRequire(import.meta.url)('react-dom/server') as {
+  renderToStaticMarkup: (element: React.ReactNode) => string;
+};
 
 vi.mock('react-native', async () => {
   const { createElement } = await import('react');

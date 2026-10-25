@@ -7,6 +7,6 @@ The icon combines an F stem with two forward-pointing bars. It uses one shape an
 - Expo/app icon: `app-icon.png`, 1024 × 1024.
 - Android adaptive: transparent foreground and monochrome PNGs in this folder. `mobile/android/` is gitignored; generated native resources on this machine are local only. Run Expo prebuild when preparing a fresh native checkout so `app.json` applies them.
 - In-app logo: `src/features/auth/BrandMark.tsx`; web logo and favicon use the same path. Keep the geometry synchronized if the mark changes.
-- Regenerate raster assets with `scripts/export_brand_assets.py` in a Python environment with Pillow. The script also refreshes native launcher and splash assets when the ignored Android project exists locally.
+- Android launcher/system-splash masking is overridden by the tracked Expo plugin `mobile/plugins/withAndroidBrandIcon.js`: it preserves the F path, uniformly scales it by 0.8 and centers its bounds inside the 66dp safe circle of the 108dp canvas. Both launcher shapes and monochrome use this vector. Raster Play/in-app logo geometry is unchanged. Do not run prebuild --clean over the locally configured release-signing project; native icon changes require an Android rebuild, not Metro refresh.
 
 The design has not received trademark clearance. Before public launch, search both the Fitmate name and visually similar marks via WIPO Global Brand Database and the Vietnamese trademark register.

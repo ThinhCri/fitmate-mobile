@@ -1,0 +1,14 @@
+// Non-publishable, unsigned build for checking the real release optimizer.
+// Does not alter release signing or bypass the upload-signing release guard.
+gradle.beforeProject { project ->
+    project.pluginManager.withPlugin('com.android.application') {
+        project.extensions.getByName('androidComponents').finalizeDsl { android ->
+            android.buildTypes.create('verification') {
+                initWith android.buildTypes.getByName('release')
+                signingConfig = null
+                debuggable = false
+                matchingFallbacks = ['release']
+            }
+        }
+    }
+}

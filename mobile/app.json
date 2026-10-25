@@ -2,7 +2,7 @@
   "expo": {
     "name": "Fitmate",
     "slug": "fitmate-mobile",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "orientation": "portrait",
     "scheme": "fitmate",
     "icon": "./assets/brand/app-icon.png",
@@ -12,6 +12,7 @@
       "bundleIdentifier": "vn.fitmate.app"
     },
     "android": {
+      "versionCode": 2,
       "package": "vn.fitmate.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/brand/adaptive-foreground.png",
@@ -31,6 +32,8 @@
       "output": "static"
     },
     "plugins": [
+      "./plugins/withAndroidReleaseOptimization",
+      "./plugins/withAndroidBrandIcon",
       "expo-router",
       "expo-secure-store",
       "expo-font",

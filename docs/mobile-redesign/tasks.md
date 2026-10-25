@@ -3,6 +3,10 @@
 ## Production integration backlog
 MOB-800..808 tại [integration plan](../production/integration-plan.md). DONE prototype dưới đây không là production integration.
 
+### 2026-10-25 — Release DEX optimization (MOB-808)
+- IN_PROGRESS / IMPLEMENTED_UNVERIFIED: enable R8 minification/resource shrinking and optimizing default via durable Expo plugin + local native correction; secure build mapping/metadata guard. Pre-existing release defaults left optimization disabled. Unit source added, tests/build/signed-device UAT/Play threshold evidence still pending. See [release optimization](android-release-optimization.md). No upload/version bump yet.
+- Subsequent authorized verification: unsigned release-equivalent bundle succeeded, R8 metadata/mapping inspected, DEX 48.10 -> 11.61 MiB; 197 tests/TypeScript passed, lint 0 errors (131 warnings). Version 0.1.1/code 2 subsequently prepared at owner request; still IN_PROGRESS pending current-code checks, signed-device UAT, VPS OTP rollout and actual Play bundle-score confirmation. No new signed AAB or upload yet.
+
 ### 2026-10-25 — Settings/analytics follow-up (MOB-800 / FP-030, FP-024)
 - IN_PROGRESS / IMPLEMENTED_UNVERIFIED: post-login consent prompt, remembered refusal, local analytics control independent of settings/deletion API errors, standard Firebase config detection and release guard. Pre-existing bugs: `app/account/settings.tsx` Promise.all failure retained permanent loading; `app.config.js` env-only gate disabled analytics despite an existing native config file. Test source added; execution/device evidence and the next mobile release remain pending. See handoff and [decision](analytics-consent.md).
 
