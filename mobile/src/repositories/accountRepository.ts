@@ -32,7 +32,8 @@ export interface IAccountRepository {
   changePassword(currentPassword: string, newPassword: string): Promise<void>;
   getSettings(): Promise<SettingsViewModel>;
   updateSettings(values: Partial<Pick<SettingsViewModel, 'notificationsEnabled' | 'emailAlertsEnabled' | 'pushNotificationsEnabled' | 'language' | 'theme'>>): Promise<SettingsViewModel>;
-  requestAccountDeletion(reason?: string): Promise<AccountDeletionStatusViewModel>;
+  sendDeletionOtp(): Promise<{ expiresAt: string; resendAfterSeconds: number }>;
+  requestAccountDeletion(otp: string, reason?: string): Promise<AccountDeletionStatusViewModel>;
   getDeletionStatus(): Promise<AccountDeletionStatusViewModel>;
   cancelAccountDeletion(): Promise<AccountDeletionStatusViewModel>;
   exportUserData(): Promise<{ downloadUrl?: string; requestedAt?: string; data?: unknown }>;

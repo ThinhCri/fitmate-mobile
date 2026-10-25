@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Switch,
 } from 'react-native';
 import {
   ChevronLeft,
@@ -19,7 +18,7 @@ import {
   FileText,
   Info,
 } from 'lucide-react-native';
-import { colors, radius, spacing, typography } from '@/theme/designTokens';
+import { colors, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
 import { SettingsViewModel } from './accountTypes';
 import { AnalyticsPreference } from './AnalyticsPreference';
@@ -32,13 +31,10 @@ export interface SettingsPresentationProps {
   onPrivacyPress: () => void;
   onTermsPress: () => void;
   settings: SettingsViewModel;
-  onNotificationsChange: (value: boolean) => void;
-  onEmailAlertsChange: (value: boolean) => void;
   analyticsConsent?: boolean;
   analyticsAvailable?: boolean;
   analyticsBusy?: boolean;
   onAnalyticsConsentChange?: (value: boolean) => void;
-  onExportPress: () => void;
   onDeleteAccountPress: () => void;
   onCancelDeletionPress: () => void;
   isDeletionPending?: boolean;
@@ -52,13 +48,10 @@ export function SettingsPresentation({
   onPrivacyPress,
   onTermsPress,
   settings,
-  onNotificationsChange,
-  onEmailAlertsChange,
   analyticsConsent = false,
   analyticsAvailable = false,
   analyticsBusy = false,
   onAnalyticsConsentChange,
-  onExportPress,
   onDeleteAccountPress,
   onCancelDeletionPress,
   isDeletionPending = false,
@@ -96,11 +89,6 @@ export function SettingsPresentation({
             </TouchableOpacity>
 
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.row} onPress={onExportPress}>
-              <Text style={styles.rowTitle}>Xuất dữ liệu cá nhân</Text>
-              <ChevronRight size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-            <View style={styles.divider} />
             <TouchableOpacity style={styles.row} onPress={isDeletionPending ? onCancelDeletionPress : onDeleteAccountPress}>
               <Text style={[styles.rowTitle, { color: isDeletionPending ? colors.primary : colors.danger }]}>{isDeletionPending ? 'Hủy yêu cầu xóa tài khoản' : 'Yêu cầu xóa tài khoản'}</Text>
               <ChevronRight size={18} color={colors.textMuted} />
@@ -128,7 +116,10 @@ export function SettingsPresentation({
             >
               <View style={styles.rowLeft}>
                 <Bell size={18} color={colors.textSecondary} />
-                <Text style={styles.rowTitle}>Quyền thông báo</Text>
+                <View style={styles.description}>
+                  <Text style={styles.rowTitle}>Thông báo trên điện thoại</Text>
+                  <Text style={styles.themeNote}>Bật hoặc tắt trong cài đặt của điện thoại.</Text>
+                </View>
               </View>
               <ChevronRight size={18} color={colors.textMuted} />
             </TouchableOpacity>
@@ -144,13 +135,10 @@ export function SettingsPresentation({
 
             <View style={styles.divider} />
             <View style={styles.row}>
-              <Text style={styles.rowTitle}>Nhận thông báo</Text>
-              <Switch value={settings.notificationsEnabled} onValueChange={onNotificationsChange} />
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.row}>
-              <Text style={styles.rowTitle}>Thông báo qua email</Text>
-              <Switch value={settings.emailAlertsEnabled} onValueChange={onEmailAlertsChange} />
+              <View style={styles.description}>
+                <Text style={styles.rowTitle}>Email tài khoản &amp; bảo mật</Text>
+                <Text style={styles.themeNote}>Email xác thực, khôi phục mật khẩu và bảo mật vẫn được gửi khi cần. Hiện chưa hỗ trợ tùy chỉnh email khác.</Text>
+              </View>
             </View>
 
             <View style={styles.divider} />
@@ -211,6 +199,7 @@ export function SettingsPresentation({
 }
 
 const styles = StyleSheet.create({
+  description: { flex: 1, gap: spacing.xs },
   container: {
     flex: 1,
     backgroundColor: colors.background,

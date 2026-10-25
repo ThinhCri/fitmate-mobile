@@ -167,10 +167,15 @@ export class ApiAccountRepository implements IAccountRepository {
     return this.getSettings();
   }
 
-  async requestAccountDeletion(reason?: string): Promise<AccountDeletionStatusViewModel> {
+  async sendDeletionOtp(): Promise<{ expiresAt: string; resendAfterSeconds: number }> {
+    const res = await apiClient<{ expires_at: string; resend_after_seconds: number }>('/users/me/deletion-otp', { method: 'POST' });
+    return { expiresAt: res.expires_at, resendAfterSeconds: res.resend_after_seconds };
+  }
+
+  async requestAccountDeletion(otp: string, reason?: string): Promise<AccountDeletionStatusViewModel> {
     const res = await apiClient<any>('/users/me/delete-request', {
       method: 'POST',
-      body: JSON.stringify({ reason }),
+      body: JSON.stringify({ reason, otp }),
     });
     return {
       userId: res.user_id,

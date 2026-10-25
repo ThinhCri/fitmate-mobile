@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ActivityIndicator, Alert, Linking, ScrollView, Share, Text, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, Linking, ScrollView, Text, TouchableOpacity } from 'react-native';
 import { SettingsPresentation } from '@/features/account';
 import { SettingsViewModel } from '@/features/account/accountTypes';
 import { getAccountRepository } from '@/repositories/accountRepository';
-import { requestNotificationPermission } from '@/services/initialPermissions';
 import { ImagePickerService } from '@/services/imagePicker';
 import { useAuth } from '@/services/AuthContext';
 import { getAnalyticsConsent, isAnalyticsAvailable, updateAnalyticsConsent } from '@/services/analytics';
@@ -35,7 +34,6 @@ export default function SettingsScreen() {
     return () => { active = false; };
   }, [repository, attempt]);
   useEffect(() => { if (user?.id) void getAnalyticsConsent(user.id).then(setAnalyticsConsent).catch(() => {}); }, [user?.id]);
-  const save = async (values: Partial<SettingsViewModel>) => { try { setSettings(await repository.updateSettings(values)); } catch (e) { Alert.alert('Không thể lưu cài đặt', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } };
   const openPolicy = async (url: string | undefined, label: string) => { if (!url) { Alert.alert(label, 'Máy chủ chưa công bố đường dẫn tài liệu này.'); return; } await Linking.openURL(url); };
   const changeAnalyticsConsent = useCallback(async (enabled: boolean) => {
     if (!user?.id || analyticsBusy) return;
@@ -43,7 +41,7 @@ export default function SettingsScreen() {
     try { await updateAnalyticsConsent(user.id, enabled); setAnalyticsConsent(enabled); }
     catch { Alert.alert('Không thể lưu lựa chọn thống kê', 'Vui lòng thử lại.'); }
     finally { setAnalyticsBusy(false); }
-  }, [user?.id, analyticsBusy]);
+  }, [user, analyticsBusy]);
   const checkDeletionStatus = () => {
     if (deletionKnown) return true;
     Alert.alert('Chưa tải được trạng thái tài khoản', 'Vui lòng thử lại trước khi yêu cầu hoặc hủy xóa tài khoản.',
@@ -70,22 +68,19 @@ export default function SettingsScreen() {
           router.push('/account/change-password' as any)
         }
         onNotificationSettingsPress={() => {
-          void requestNotificationPermission(true);
+          void Linking.openSettings().catch(() => Alert.alert('Không thể mở cài đặt', 'Vui lòng vào Cài đặt điện thoại → Ứng dụng → Fitmate → Thông báo.'));
         }}
         onCameraSettingsPress={() => {
           void ImagePickerService.requestCameraPermission(true);
         }}
         onPrivacyPress={() => void openPolicy(settings.privacyUrl, 'Dữ liệu & Quyền riêng tư')}
         onTermsPress={() => void openPolicy(settings.termsUrl, 'Điều khoản dịch vụ')}
-        onNotificationsChange={(value) => void save({ notificationsEnabled: value, pushNotificationsEnabled: value })}
-        onEmailAlertsChange={(value) => void save({ emailAlertsEnabled: value })}
         analyticsConsent={analyticsConsent}
         analyticsAvailable={isAnalyticsAvailable()}
         analyticsBusy={analyticsBusy}
         onAnalyticsConsentChange={(value) => { void changeAnalyticsConsent(value); }}
-        onExportPress={() => void repository.exportUserData().then(async (result) => { if (result.downloadUrl) await Linking.openURL(result.downloadUrl); else await Share.share({ title: 'Dữ liệu Fitmate của tôi', message: JSON.stringify(result.data, null, 2) }); }).catch((e) => Alert.alert('Không thể xuất dữ liệu', e.message))}
         isDeletionPending={deletionPending}
-        onDeleteAccountPress={() => { if (checkDeletionStatus()) Alert.alert('Yêu cầu xóa tài khoản', 'Tài khoản sẽ vào thời gian chờ xóa. Bạn có thể hủy yêu cầu trong thời gian này.', [{ text: 'Hủy', style: 'cancel' }, { text: 'Tiếp tục', style: 'destructive', onPress: () => void repository.requestAccountDeletion().then(() => setDeletionPending(true)).catch((e) => Alert.alert('Không thể gửi yêu cầu', e.message)) }]); }}
+        onDeleteAccountPress={() => { if (checkDeletionStatus()) router.push('/account/deletion-otp' as any); }}
         onCancelDeletionPress={() => { if (checkDeletionStatus()) void repository.cancelAccountDeletion().then(() => setDeletionPending(false)).catch((e) => Alert.alert('Không thể hủy yêu cầu', e.message)); }}
       />
     </SafeAreaView>

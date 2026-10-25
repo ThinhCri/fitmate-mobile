@@ -1,5 +1,10 @@
 # Handoff — Ban giao hien tai
 
+## 2026-10-25 — Email OTP deletion and truthful settings controls
+- Added account/deletion-otp: user explicitly requests account-email code, six-digit input, resend countdown and expiry, busy guard, keyboard-safe layout, confirm submits OTP to backend. No deletion request is created by sending a code. Copy accurately describes admin review rather than an immediate 30-day deletion clock.
+- Removed personal-data export action from Settings, merged duplicate notification controls into one OS-settings entry and replaced ineffective email toggle with explanatory security-email text. No claim of fixed duplicate delivery without actual reproduction.
+- Backend enforcement includes legacy DELETE alias, not just UI. Backend and new app must be rolled out together; no production rollout, version bump or Play upload in this task. TypeScript and targeted ESLint checked; physical-device OTP/SMTP and keyboard checks remain required.
+
 ## 2026-10-25 — Comments composer safe-area repair (IMPLEMENTED_UNVERIFIED)
 - Owner's physical Android screenshot shows the comment input/send control underneath the three-button system navigation bar. CommentsSheet had no modal-local safe-area handling and applied keyboard avoidance only to its fixed-height sheet.
 - Added SafeAreaProvider inside the native Modal and bottom/left/right SafeAreaView around the entire sheet. KeyboardAvoidingView now owns the available modal viewport, keeping composer outside the scrolling list and above the keyboard/system inset. Send/close controls have 48dp targets and accessible labels. Shared component covers Community and Saved Posts. No API/comment data behavior changed.
@@ -1141,4 +1146,5 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Play Console advertising ID declaration is set to No. The previous signed AAB still contains `com.google.android.gms.permission.AD_ID` from Google measurement libraries. Added `android.blockedPermissions` in `mobile/app.json` and a native manifest merge removal rule for the current generated Android tree.
 - `:app:processDebugManifest` succeeded and its merged manifest excludes AD_ID. `:app:processReleaseManifest` cannot configure without upload-signing environment variables; the upload password is not available to the agent. The old AAB remains unchanged and must not be uploaded as the new build. Owner must run `mobile/build-release-secure.ps1`, enter the password locally, then inspect the release bundle manifest for AD_ID before Play upload.
 - Unrelated untracked `mobile/build-release.ps1` and both feature graphic files were preserved. No commit/push or production deployment.
+
 
