@@ -3,6 +3,12 @@
 ## Production integration backlog
 MOB-800..808 tại [integration plan](../production/integration-plan.md). DONE prototype dưới đây không là production integration.
 
+### 2026-10-25 — Settings/analytics follow-up (MOB-800 / FP-030, FP-024)
+- IN_PROGRESS / IMPLEMENTED_UNVERIFIED: post-login consent prompt, remembered refusal, local analytics control independent of settings/deletion API errors, standard Firebase config detection and release guard. Pre-existing bugs: `app/account/settings.tsx` Promise.all failure retained permanent loading; `app.config.js` env-only gate disabled analytics despite an existing native config file. Test source added; execution/device evidence and the next mobile release remain pending. See handoff and [decision](analytics-consent.md).
+
+### 2026-10-25 — Comments composer (MOB-800 / FP-009)
+- IN_PROGRESS / IMPLEMENTED_UNVERIFIED, pre-existing-bug: `CommentsSheet.tsx` omitted modal-local bottom insets, letting the Android three-button bar cover the input/send control. Added modal SafeAreaProvider/View and viewport keyboard avoidance; structural test source added. Verify on device with keyboard open/closed and gesture/three-button navigation before release.
+
 > Moi task co ID on dinh. Status: TODO / IN_PROGRESS / BLOCKED / DONE. Moi task phai lien ket parity ID (FP-XXX).
 
 ---
