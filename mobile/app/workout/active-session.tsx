@@ -16,6 +16,7 @@ import { estimateSessionKcal } from '@/features/workout/calorieEstimate';
 import { findCatalogMatch } from '@/features/workout/workoutCatalog';
 import { createAudioController } from '@/features/workout/audio';
 import { useAuth } from '@/services/AuthContext';
+import { isValidRestSeconds, restSecondsOrDefault, restoredCountdown } from '@/features/workout/sessionTiming';
 
 const CHECKPOINT_KEY = 'fitmate_active_workout_v2';
 
@@ -80,12 +81,16 @@ export default function ActiveSessionScreen() {
       .then(([value, rawCheckpoint, catalog]) => {
         if (!active) return;
         if (!value.exercises.length) throw new Error('Kế hoạch chưa có bài tập.');
+        if (value.exercises.some(item => !isValidRestSeconds(item.restSeconds))) {
+          Alert.alert('Thời gian nghỉ chưa hợp lệ', 'Có bài tập có thời gian nghỉ ngoài khoảng 0–600 giây. Buổi này tạm dùng 45 giây cho bài đó; bạn có thể sửa lại trong kế hoạch.');
+        }
         setPlan({
           ...value,
           exercises: value.exercises.map((item) => {
             const source = findCatalogMatch(item, catalog);
             return {
               ...item,
+              restSeconds: restSecondsOrDefault(item.restSeconds),
               imageStartUrl: source?.imageStartUrl ?? item.imageStartUrl,
               imageEndUrl: source?.imageEndUrl ?? item.imageEndUrl,
               instructions: source?.instructionsVi.join(' ') ?? item.instructions,
@@ -136,13 +141,19 @@ export default function ActiveSessionScreen() {
   const resumeCheckpoint = () => {
     if (!plan || !restoreOffer) return;
     const checkpoint = restoreOffer;
-    setExerciseIndex(Math.min(checkpoint.exerciseIndex, plan.exercises.length - 1));
-    setSetIndex(checkpoint.setIndex);
-    setPhase(checkpoint.phase);
-    resumePhase.current = checkpoint.resumePhase ?? (
-      checkpoint.phase === 'paused' ? 'exercise' : checkpoint.phase
-    );
-    setRemaining(checkpoint.remainingSeconds);
+    const index = Number.isInteger(checkpoint.exerciseIndex)
+      ? Math.max(0, Math.min(checkpoint.exerciseIndex, plan.exercises.length - 1)) : 0;
+    const item = plan.exercises[index];
+    const restoredPhase = ['prepare', 'exercise', 'rest', 'paused'].includes(checkpoint.phase) ? checkpoint.phase : 'exercise';
+    const priorPhase = checkpoint.resumePhase && ['prepare', 'exercise', 'rest'].includes(checkpoint.resumePhase)
+      ? checkpoint.resumePhase : 'exercise';
+    const countdownPhase = restoredPhase === 'paused' ? priorPhase : restoredPhase;
+    setExerciseIndex(index);
+    setSetIndex(Number.isInteger(checkpoint.setIndex) ? Math.max(0, Math.min(checkpoint.setIndex, item.sets - 1)) : 0);
+    setPhase(restoredPhase);
+    resumePhase.current = restoredPhase === 'paused' ? priorPhase : restoredPhase;
+    setRemaining(restoredCountdown(checkpoint.remainingSeconds, countdownPhase === 'rest'
+      ? restSecondsOrDefault(item.restSeconds) : countdownPhase === 'prepare' ? 5 : item.type === 'time' ? item.durationSeconds ?? 30 : 0));
     setResults(checkpoint.results ?? []);
     startedAt.current = checkpoint.startedAt;
     clientId.current = checkpoint.clientId ?? createUuid();
@@ -216,7 +227,7 @@ export default function ActiveSessionScreen() {
     if (setIndex + 1 < exercise.sets) {
       setPhase('rest');
       resumePhase.current = 'rest';
-      setRemaining(exercise.restSeconds);
+      setRemaining(restSecondsOrDefault(exercise.restSeconds));
     } else if (exerciseIndex + 1 < plan.exercises.length) {
       setExerciseIndex(exerciseIndex + 1);
       setSetIndex(0);
@@ -318,6 +329,14 @@ export default function ActiveSessionScreen() {
 
   const skipPrepare = () => enterExercise(exerciseIndex, setIndex);
 
+  const refreshExerciseMedia = async () => {
+    const catalog = await getWorkoutRepository().listExerciseCatalog();
+    setPlan(current => current ? { ...current, exercises: current.exercises.map(item => {
+      const source = findCatalogMatch(item, catalog);
+      return source ? { ...item, imageStartUrl: source.imageStartUrl, imageEndUrl: source.imageEndUrl } : item;
+    }) } : current);
+  };
+
   const confirmSkipExercise = () => {
     if (!exercise || saving) return;
     Alert.alert(
@@ -367,7 +386,7 @@ export default function ActiveSessionScreen() {
     else if (phase === 'exercise' && exercise?.type === 'time') completeSet();
     // A zero countdown is the transition trigger; handlers intentionally use current state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, remaining]);
+  }, [ready, remaining, phase, exerciseIndex, setIndex]);
 
   useEffect(() => {
     if (!plan || !ready || !checkpointKey) return;
@@ -453,6 +472,7 @@ export default function ActiveSessionScreen() {
         })}
         onSkipExercise={confirmSkipExercise}
         onEndEarly={() => setEndModal(true)}
+        onRetryMedia={refreshExerciseMedia}
       />
       {restored ? (
         <View style={styles.recoveredBanner}>

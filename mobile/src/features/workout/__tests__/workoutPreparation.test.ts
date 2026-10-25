@@ -28,6 +28,12 @@ describe('workout preparation', () => {
     expect(findCatalogMatch({ ...exercise, name: 'Squat không tạ' }, catalog)?.imageEndUrl).toBeUndefined();
     expect(findCatalogMatch({ ...exercise, name: 'Squat không tạ' }, catalog)?.id).toBe('bodyweight');
   });
+  it('refreshes media for plans saved with an English catalog name or slug', () => {
+    const withMedia = [{ ...catalog[0], imageStartUrl: 'https://media.example/start.jpg', imageEndUrl: 'https://media.example/end.jpg' }];
+    expect(findCatalogMatch({ ...exercise, name: 'Bodyweight Squat' }, withMedia)?.imageEndUrl).toBe('https://media.example/end.jpg');
+    expect(findCatalogMatch({ ...exercise, name: 'bodyweight-squat' }, withMedia)?.imageStartUrl).toBe('https://media.example/start.jpg');
+    expect(findCatalogMatch({ ...exercise, name: 'Different exercise' }, withMedia)).toBeUndefined();
+  });
 
   it('uses actual repetitions, not planned repetitions, for calorie estimates', () => {
     const completed = [{ exerciseId: 'planned', sets: [1, 2, 3].map((setNumber) => ({

@@ -29,6 +29,7 @@ import { InputField } from '@/components/design-system/Inputs';
 import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
 import { Card } from '@/components/design-system/Card';
 import { estimateExerciseKcal, estimatePlanKcal } from './calorieEstimate';
+import { isValidRestSeconds, MAX_REST_SECONDS } from './sessionTiming';
 
 export interface PlanEditorPresentationProps {
   initialPlan?: Partial<WorkoutPlanViewModel>;
@@ -66,6 +67,7 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
   );
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [catalogQuery, setCatalogQuery] = useState('');
+  const [restDrafts, setRestDrafts] = useState<Record<string, string>>({});
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -122,6 +124,11 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
     }
     if (exercises.length === 0) {
       errs.exercises = 'Kế hoạch phải có ít nhất 1 bài tập';
+    }
+    for (const exercise of exercises) {
+      if (!isValidRestSeconds(exercise.restSeconds)) {
+        errs[`rest-${exercise.id}`] = `Nhập từ 0 đến ${MAX_REST_SECONDS} giây`;
+      }
     }
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
@@ -391,10 +398,14 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
                   <InputField
                     label="Nghỉ (giây)"
                     keyboardType="numeric"
-                    value={String(ex.restSeconds)}
-                    onChangeText={(t) =>
-                      handleUpdateExercise(ex.id, { restSeconds: Number(t) || 30 })
-                    }
+                    value={restDrafts[ex.id] ?? String(ex.restSeconds)}
+                    maxLength={4}
+                    error={errors[`rest-${ex.id}`]}
+                    onChangeText={(text) => {
+                      const digits = text.replace(/[^0-9]/g, '');
+                      setRestDrafts(current => ({ ...current, [ex.id]: digits }));
+                      handleUpdateExercise(ex.id, { restSeconds: digits === '' ? NaN : Number(digits) });
+                    }}
                   />
                 </View>
               </View>

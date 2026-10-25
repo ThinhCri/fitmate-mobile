@@ -7,7 +7,7 @@ import {
   ExerciseCatalogItemViewModel,
 } from '@/features/workout/workoutTypes';
 import type { IWorkoutRepository, MonthlyWorkoutStats, WorkoutGoals } from '../workoutRepository';
-import { apiClient } from '@/services/api/client';
+import { apiClient, resolveApiResourceUrl } from '@/services/api/client';
 import { createUuid } from '@/utils/uuid';
 
 export class ApiWorkoutRepository implements IWorkoutRepository {
@@ -26,8 +26,8 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
       primaryMuscles: item.primary_muscles ?? [],
       secondaryMuscles: item.secondary_muscles ?? [],
       instructionsVi: item.instructions_vi ?? [],
-      imageStartUrl: item.image_start_url ?? undefined,
-      imageEndUrl: item.image_end_url ?? undefined,
+      imageStartUrl: item.image_start_url ? resolveApiResourceUrl(item.image_start_url) : undefined,
+      imageEndUrl: item.image_end_url ? resolveApiResourceUrl(item.image_end_url) : undefined,
       source: item.source,
       sourceLicense: item.source_license,
     }));
@@ -113,7 +113,7 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
         restSeconds: ex.rest_sec ?? 0,
         caloriesEstimate: ex.calories ?? 0,
         instructions: ex.notes,
-        imageStartUrl: ex.media_url,
+        imageStartUrl: ex.media_url ? resolveApiResourceUrl(ex.media_url) : undefined,
         mediaSource: ex.media_source,
         targetMuscle: Array.isArray(ex.tags) ? ex.tags[0] : undefined,
         difficulty: Array.isArray(ex.tags) ? ex.tags[1] : undefined,

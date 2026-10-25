@@ -21,7 +21,9 @@ export function findCatalogMatch(
   catalog: ExerciseCatalogItemViewModel[]
 ): ExerciseCatalogItemViewModel | undefined {
   return catalog.find((item) => item.id === exercise.catalogId) ??
-    catalog.find((item) => item.nameVi.trim().toLowerCase() === exercise.name.trim().toLowerCase());
+    catalog.find((item) => [item.nameVi, item.nameEn, item.slug].some(
+      name => name.trim().toLowerCase() === exercise.name.trim().toLowerCase()
+    ));
 }
 
 export function bodyweightAlternatives(

@@ -4,6 +4,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { File as ExpoFile } from 'expo-file-system';
 import { fetch as expoFetch } from 'expo/fetch';
 import { getApiBaseUrl } from './baseUrl';
+import { normalizeApiResourceUrl } from './resourceUrl';
 
 const API_BASE_URL = getApiBaseUrl();
 let rateLimitedUntil = 0;
@@ -32,17 +33,7 @@ async function waitForRateLimitWindow(signal: AbortSignal): Promise<void> {
  * backend container's `localhost` address.
  */
 export function resolveApiResourceUrl(value: string): string {
-  try {
-    const resource = new URL(value);
-    if (!['localhost', '127.0.0.1', '10.0.2.2'].includes(resource.hostname)) {
-      return value;
-    }
-
-    const apiOrigin = new URL(API_BASE_URL).origin;
-    return apiOrigin + resource.pathname + resource.search + resource.hash;
-  } catch {
-    return value;
-  }
+  return normalizeApiResourceUrl(value, API_BASE_URL);
 }
 
 export class ApiError extends Error {

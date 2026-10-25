@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
   TextInput,
 } from 'react-native';
 import {
@@ -23,6 +22,8 @@ import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { ExerciseItemViewModel } from './workoutTypes';
 import { PrimaryButton } from '@/components/design-system/Buttons';
 import { Card } from '@/components/design-system/Card';
+import { ExerciseIllustration } from './ExerciseIllustration';
+import { formatWorkoutTimer } from './sessionTiming';
 
 export type SessionPhase = 'prepare' | 'exercise' | 'rest' | 'paused';
 
@@ -48,6 +49,7 @@ export interface ActiveSessionPresentationProps {
   onTogglePause: () => void;
   onSkipExercise: () => void;
   onEndEarly: () => void;
+  onRetryMedia?: () => Promise<void>;
 }
 
 export const ActiveSessionPresentation: React.FC<ActiveSessionPresentationProps> = ({
@@ -72,14 +74,9 @@ export const ActiveSessionPresentation: React.FC<ActiveSessionPresentationProps>
   onTogglePause,
   onSkipExercise,
   onEndEarly,
+  onRetryMedia,
 }) => {
   const [actualReps, setActualReps] = useState<number>(currentExercise.repsPerSet ?? 10);
-
-  const formatTimer = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
 
   const getPhaseMeta = () => {
     switch (phase) {
@@ -162,7 +159,7 @@ export const ActiveSessionPresentation: React.FC<ActiveSessionPresentationProps>
               { uri: currentExercise.imageEndUrl, label: 'Tư thế kết thúc' },
             ] as const).filter((item) => Boolean(item.uri)).map((item) => (
               <View key={item.label} style={styles.mediaCell}>
-                <Image source={{ uri: item.uri }} style={styles.exerciseImage} resizeMode="contain" accessibilityLabel={`${item.label} của ${currentExercise.name}`} />
+                <ExerciseIllustration uri={item.uri} label={`${item.label} của ${currentExercise.name}`} onRetry={onRetryMedia} />
                 <Text style={styles.mediaCaption}>{item.label}</Text>
               </View>
             ))}
@@ -182,8 +179,8 @@ export const ActiveSessionPresentation: React.FC<ActiveSessionPresentationProps>
         {/* Large Timer or Reps Display */}
         <View style={styles.timerCircle}>
           {phase === 'prepare' || phase === 'rest' || currentExercise.type === 'time' ? (
-            <Text style={[typography.display, styles.timerNumber]}>
-              {formatTimer(remainingSeconds)}
+            <Text style={[typography.display, styles.timerNumber]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
+              {formatWorkoutTimer(remainingSeconds)}
             </Text>
           ) : (
             <View style={styles.repsDisplayCol}>
@@ -311,7 +308,6 @@ const styles = StyleSheet.create({
   statsRow: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: spacing.sm },
   kcalRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statText: { ...typography.captionMedium, color: colors.textSecondary },
-  exerciseImage: { width: '100%', height: 170, borderRadius: radius.lg, backgroundColor: colors.surface },
   mediaRow: { width: '100%', flexDirection: 'row', gap: spacing.sm },
   mediaCell: { flex: 1, minWidth: 0, gap: spacing.xs },
   mediaCaption: { ...typography.captionMedium, color: colors.textSecondary, textAlign: 'center' },
@@ -354,6 +350,8 @@ const styles = StyleSheet.create({
     fontSize: 40,
     color: colors.primaryDark,
     fontWeight: '700',
+    textAlign: 'center',
+    maxWidth: '90%',
   },
   repsDisplayCol: {
     alignItems: 'center',
