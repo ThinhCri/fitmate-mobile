@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ActivityIndicator, Alert, Linking, Share, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, ScrollView, Share, Text, TouchableOpacity } from 'react-native';
 import { SettingsPresentation } from '@/features/account';
 import { SettingsViewModel } from '@/features/account/accountTypes';
 import { getAccountRepository } from '@/repositories/accountRepository';
@@ -9,6 +9,8 @@ import { requestNotificationPermission } from '@/services/initialPermissions';
 import { ImagePickerService } from '@/services/imagePicker';
 import { useAuth } from '@/services/AuthContext';
 import { getAnalyticsConsent, isAnalyticsAvailable, updateAnalyticsConsent } from '@/services/analytics';
+import { AnalyticsPreference } from '@/features/account/AnalyticsPreference';
+import { colors, spacing, typography } from '@/theme/designTokens';
 
 export default function SettingsScreen() {
   const { user } = useAuth();
@@ -16,16 +18,54 @@ export default function SettingsScreen() {
   const [settings, setSettings] = useState<SettingsViewModel | null>(null);
   const [deletionPending, setDeletionPending] = useState(false);
   const [analyticsConsent, setAnalyticsConsent] = useState(false);
-  useEffect(() => { Promise.all([repository.getSettings(), repository.getDeletionStatus()]).then(([s, d]) => { setSettings(s); setDeletionPending(d.isPendingDeletion); }).catch((e) => Alert.alert('Không thể tải cài đặt', e instanceof Error ? e.message : 'Vui lòng thử lại.')); }, []);
+  const [analyticsBusy, setAnalyticsBusy] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [deletionKnown, setDeletionKnown] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const goBack = () => { if (router.canGoBack()) router.back(); else router.replace('/account' as any); };
+  useEffect(() => {
+    let active = true;
+    setLoadError(false);
+    // A deletion-status failure must not block all settings or local consent.
+    void repository.getSettings().then((s) => { if (active) setSettings(s); })
+      .catch(() => { if (active) setLoadError(true); });
+    void repository.getDeletionStatus().then((d) => {
+      if (active) { setDeletionPending(d.isPendingDeletion); setDeletionKnown(true); }
+    }).catch(() => { if (active) setDeletionKnown(false); });
+    return () => { active = false; };
+  }, [repository, attempt]);
   useEffect(() => { if (user?.id) void getAnalyticsConsent(user.id).then(setAnalyticsConsent).catch(() => {}); }, [user?.id]);
   const save = async (values: Partial<SettingsViewModel>) => { try { setSettings(await repository.updateSettings(values)); } catch (e) { Alert.alert('Không thể lưu cài đặt', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } };
   const openPolicy = async (url: string | undefined, label: string) => { if (!url) { Alert.alert(label, 'Máy chủ chưa công bố đường dẫn tài liệu này.'); return; } await Linking.openURL(url); };
-  if (!settings) return <SafeAreaView style={{ flex: 1 }}><View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator /></View></SafeAreaView>;
+  const changeAnalyticsConsent = useCallback(async (enabled: boolean) => {
+    if (!user?.id || analyticsBusy) return;
+    setAnalyticsBusy(true);
+    try { await updateAnalyticsConsent(user.id, enabled); setAnalyticsConsent(enabled); }
+    catch { Alert.alert('Không thể lưu lựa chọn thống kê', 'Vui lòng thử lại.'); }
+    finally { setAnalyticsBusy(false); }
+  }, [user?.id, analyticsBusy]);
+  const checkDeletionStatus = () => {
+    if (deletionKnown) return true;
+    Alert.alert('Chưa tải được trạng thái tài khoản', 'Vui lòng thử lại trước khi yêu cầu hoặc hủy xóa tài khoản.',
+      [{ text: 'Đóng' }, { text: 'Thử lại', onPress: () => setAttempt((value) => value + 1) }]);
+    return false;
+  };
+  if (!settings) return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.md }}>
+      <TouchableOpacity accessibilityRole="button" onPress={goBack} style={{ minHeight: 48, justifyContent: 'center' }}><Text style={typography.body}>← Quay lại</Text></TouchableOpacity>
+      <Text style={typography.title1}>Cài đặt hệ thống</Text>
+      <AnalyticsPreference available={isAnalyticsAvailable()} enabled={analyticsConsent} busy={analyticsBusy}
+        onChange={(enabled) => { void changeAnalyticsConsent(enabled); }} />
+      {loadError ? <><Text style={typography.body}>Không tải được các cài đặt khác. Lựa chọn thống kê ở trên vẫn hoạt động.</Text>
+        <TouchableOpacity accessibilityRole="button" onPress={() => setAttempt((value) => value + 1)} style={{ minHeight: 48, justifyContent: 'center' }}><Text style={typography.body}>Thử lại</Text></TouchableOpacity></>
+        : <ActivityIndicator color={colors.primary} accessibilityLabel="Đang tải các cài đặt khác" />}
+    </ScrollView>
+  </SafeAreaView>;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <SettingsPresentation
         settings={settings}
-        onBack={() => router.back()}
+        onBack={goBack}
         onChangePasswordPress={() =>
           router.push('/account/change-password' as any)
         }
@@ -41,15 +81,12 @@ export default function SettingsScreen() {
         onEmailAlertsChange={(value) => void save({ emailAlertsEnabled: value })}
         analyticsConsent={analyticsConsent}
         analyticsAvailable={isAnalyticsAvailable()}
-        onAnalyticsConsentChange={(value) => {
-          if (!user?.id) return;
-          void updateAnalyticsConsent(user.id, value).then(() => setAnalyticsConsent(value))
-            .catch(() => Alert.alert('Không thể lưu lựa chọn Analytics', 'Vui lòng thử lại.'));
-        }}
+        analyticsBusy={analyticsBusy}
+        onAnalyticsConsentChange={(value) => { void changeAnalyticsConsent(value); }}
         onExportPress={() => void repository.exportUserData().then(async (result) => { if (result.downloadUrl) await Linking.openURL(result.downloadUrl); else await Share.share({ title: 'Dữ liệu Fitmate của tôi', message: JSON.stringify(result.data, null, 2) }); }).catch((e) => Alert.alert('Không thể xuất dữ liệu', e.message))}
         isDeletionPending={deletionPending}
-        onDeleteAccountPress={() => Alert.alert('Yêu cầu xóa tài khoản', 'Tài khoản sẽ vào thời gian chờ xóa. Bạn có thể hủy yêu cầu trong thời gian này.', [{ text: 'Hủy', style: 'cancel' }, { text: 'Tiếp tục', style: 'destructive', onPress: () => void repository.requestAccountDeletion().then(() => setDeletionPending(true)).catch((e) => Alert.alert('Không thể gửi yêu cầu', e.message)) }])}
-        onCancelDeletionPress={() => void repository.cancelAccountDeletion().then(() => setDeletionPending(false)).catch((e) => Alert.alert('Không thể hủy yêu cầu', e.message))}
+        onDeleteAccountPress={() => { if (checkDeletionStatus()) Alert.alert('Yêu cầu xóa tài khoản', 'Tài khoản sẽ vào thời gian chờ xóa. Bạn có thể hủy yêu cầu trong thời gian này.', [{ text: 'Hủy', style: 'cancel' }, { text: 'Tiếp tục', style: 'destructive', onPress: () => void repository.requestAccountDeletion().then(() => setDeletionPending(true)).catch((e) => Alert.alert('Không thể gửi yêu cầu', e.message)) }]); }}
+        onCancelDeletionPress={() => { if (checkDeletionStatus()) void repository.cancelAccountDeletion().then(() => setDeletionPending(false)).catch((e) => Alert.alert('Không thể hủy yêu cầu', e.message)); }}
       />
     </SafeAreaView>
   );

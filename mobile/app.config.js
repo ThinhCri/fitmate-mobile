@@ -2,7 +2,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const base = require('./app.json').expo;
 
-const androidConfig = process.env.FITMATE_FIREBASE_ANDROID_FILE;
+// Direct Gradle builds also evaluate this config. Do not silently disable the
+// JS analytics gate when the standard, gitignored native config already exists.
+const androidConfig = process.env.FITMATE_FIREBASE_ANDROID_FILE ||
+  (fs.existsSync(path.join(__dirname, 'google-services.json')) ? './google-services.json' : undefined);
 if (androidConfig) {
   const resolved = path.resolve(__dirname, androidConfig);
   if (!fs.existsSync(resolved)) {
