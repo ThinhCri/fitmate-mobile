@@ -1198,4 +1198,3 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 - Play Console advertising ID declaration is set to No. The previous signed AAB still contains `com.google.android.gms.permission.AD_ID` from Google measurement libraries. Added `android.blockedPermissions` in `mobile/app.json` and a native manifest merge removal rule for the current generated Android tree.
 - `:app:processDebugManifest` succeeded and its merged manifest excludes AD_ID. `:app:processReleaseManifest` cannot configure without upload-signing environment variables; the upload password is not available to the agent. The old AAB remains unchanged and must not be uploaded as the new build. Owner must run `mobile/build-release-secure.ps1`, enter the password locally, then inspect the release bundle manifest for AD_ID before Play upload.
 - Unrelated untracked `mobile/build-release.ps1` and both feature graphic files were preserved. No commit/push or production deployment.
-
