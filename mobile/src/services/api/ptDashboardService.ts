@@ -5,6 +5,7 @@ import { getTrainerRepository } from '@/repositories/trainerRepository';
 import { ptService } from './ptService';
 import { ApiError } from './client';
 import type { PtRevenueBookingItemViewModel } from '@/features/pt/PtRevenuePresentation';
+import { mapSettlementStatus } from './settlementStatus';
 
 interface RevenueOverview { range: string; total_gross_vnd: number; platform_fee_vnd: number; net_earnings_vnd: number; pending_payout_vnd: number; completed_payout_vnd: number; }
 export interface RevenueItem { appointment_id: string; date: string; gross_vnd: number; platform_fee_vnd: number; net_vnd: number; paid_out_vnd: number; settlement_status: string; transferred_at_utc: string | null; bank_reference: string | null; payee_bank_name: string | null; payee_account_number_masked: string | null; payee_account_name: string | null; }
@@ -57,12 +58,3 @@ export const ptDashboardService = {
     return apiClient<PtPayoutAccount>('/me/payout-account', { method: 'PUT', body: JSON.stringify({ bank_bin: bankBin, bank_name: bankName, account_number: accountNumber }) });
   },
 };
-
-export function mapSettlementStatus(status: string): PtRevenueBookingItemViewModel['payoutStatus'] {
-  switch (status) {
-    case 'paid': return 'paid_out';
-    case 'approved': return 'approved';
-    case 'on_hold': return 'on_hold';
-    default: return 'pending';
-  }
-}

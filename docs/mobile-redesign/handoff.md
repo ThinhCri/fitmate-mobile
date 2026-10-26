@@ -4,6 +4,7 @@
 - Added real server-paged PT sessions route, actionable pending-booking/service tasks, verified-profile lookup, focus refresh/retry guards. Revenue now has real pagination/period selection and exact settlement status; paid and pending amounts come from server, refunds are not fabricated from arithmetic.
 - Trainer missing price/experience stays null; malformed ratings/prices fail visibly instead of defaulting to five stars/free. Account hub no longer turns request failures into zero counts. Removed three invented public-profile earned badges and fake counters; unavailable profile posts are explicitly identified. These missing author-feed/public aggregate/badge APIs remain open work, not completed features.
 - Source tests added for trainer wire integrity; not executed, and no typecheck/build/Expo under manual-execution rule. Owner authorized local commits; no push/deploy/Play upload. Preserve unrelated feature-graphic PNGs and legacy build-release.ps1.
+- Settlement status mapper also rejects unsupported states (including `unpaid`/`partially_paid`) rather than labeling them pending or paid; added source regression cases, not executed.
 - Durable cross-role inventory and remaining provider keys: sibling `FitmateAI_BE/docs/backend-release/role-api-runtime-audit-20261026.md`. Backend updater still pending operator run; do not claim latest OTP runtime deployed or all providers working.
 
 ## 2026-10-26 — Audit remaining live-function gaps before next build
