@@ -11,6 +11,7 @@ import { ThemeProvider } from '@/theme';
 import { AuthProvider } from '@/services/AuthContext';
 import { PtVerificationGate } from '@/services/PtVerificationGate';
 import { AnalyticsTracker } from '@/services/AnalyticsTracker';
+import { PushLifecycle } from '@/services/PushLifecycle';
 import { ToastHost } from '@/components/ui';
 
 export default function RootLayout() {
@@ -21,6 +22,7 @@ export default function RootLayout() {
           <AuthProvider>
             <PtVerificationGate />
             <AnalyticsTracker />
+            <PushLifecycle />
             <StatusBar style="dark" />
             <KeyboardAvoidingView
               style={{ flex: 1 }}

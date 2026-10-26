@@ -19,7 +19,7 @@ module.exports = {
     ? { ...base.android, googleServicesFile: path.resolve(__dirname, androidConfig) }
     : base.android,
   plugins: androidConfig
-    ? [...base.plugins, '@react-native-firebase/app', '@react-native-firebase/analytics']
+    ? [...base.plugins, '@react-native-firebase/app', '@react-native-firebase/analytics', '@react-native-firebase/messaging']
     : base.plugins,
   extra: {
     ...base.extra,

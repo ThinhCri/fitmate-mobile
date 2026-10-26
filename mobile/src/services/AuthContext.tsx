@@ -26,6 +26,7 @@ import type { User } from '@/types';
 import { authService } from '@/services/api/authService';
 import { ApiError } from '@/services/api/client';
 import { sessionManager } from '@/services/session/sessionManager';
+import { stopPushSession } from '@/services/pushSession';
 import {
   getCachedSessionUser,
   getRefreshToken,
@@ -246,6 +247,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = useCallback(async () => {
     // 1. Capture snapshot needed for best-effort server revoke
     const tokenSnapshot = sessionManager.getAccessToken();
+    void stopPushSession(tokenSnapshot);
 
     // 2. Immediately switch UI to signed-out
     setUser(null);
