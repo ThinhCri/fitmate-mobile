@@ -17,7 +17,7 @@ export function ReviewPtPresentation({
   onSubmitReview,
   isSubmitting = false,
 }: ReviewPtPresentationProps) {
-  const [rating, setRating] = useState<number>(initialData.rating || 5);
+  const [rating, setRating] = useState<number>(initialData.rating ?? 0);
   const [feedback, setFeedback] = useState<string>(initialData.feedbackText || '');
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -67,7 +67,7 @@ export function ReviewPtPresentation({
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={styles.ratingDesc}>{ratingDescriptions[rating]}</Text>
+          <Text style={styles.ratingDesc}>{ratingDescriptions[rating] || 'Chọn số sao theo trải nghiệm thực tế của bạn'}</Text>
         </View>
 
         {/* Feedback Input */}
@@ -97,6 +97,7 @@ export function ReviewPtPresentation({
         <PrimaryButton
           label="Gửi đánh giá"
           loading={isSubmitting}
+          disabled={isSubmitting || rating < 1 || rating > 5}
           onPress={handleSubmit}
         />
       </Card>

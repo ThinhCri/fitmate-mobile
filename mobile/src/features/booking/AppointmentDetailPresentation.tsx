@@ -116,7 +116,7 @@ export function AppointmentDetailPresentation({
             <Text style={styles.coachTitle}>{appointment.coach.specialty}</Text>
             <View style={styles.ratingRow}>
               <Star size={13} color="#F59E0B" fill="#F59E0B" />
-              <Text style={styles.ratingValue}>{appointment.coach.rating.toFixed(1)}</Text>
+              <Text style={styles.ratingValue}>{appointment.coach.rating === null ? 'Chưa có số liệu' : appointment.coach.rating.toFixed(1)}</Text>
             </View>
           </View>
 

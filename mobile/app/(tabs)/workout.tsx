@@ -1,4 +1,7 @@
 import React, { useCallback, useState } from 'react';
+import { Text, TouchableOpacity } from 'react-native';
+import { colors, typography } from '@/theme/designTokens';
+import { systemService } from '@/services/api/systemService';
 import { router, useFocusEffect } from 'expo-router';
 import { AppTopBar } from '@/components/design-system/AppTopBar';
 import { ErrorState, LoadingSkeleton } from '@/components/design-system/FeedbackStates';
@@ -10,6 +13,7 @@ import type { MonthlyWorkoutStats, WorkoutGoals } from '@/repositories/workoutRe
 
 export default function WorkoutScreen() {
   const [plans, setPlans] = useState<WorkoutPlanViewModel[]>([]);
+  const [aiAvailable, setAiAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<MonthlyWorkoutStats | null>(null);
@@ -49,11 +53,17 @@ export default function WorkoutScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { void loadPlans(); }, [loadPlans]));
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    void loadPlans();
+    void systemService.getCapabilities().then(value => { if (active) setAiAvailable(value.ai.enabled && value.ai.workout_adjust); });
+    return () => { active = false; };
+  }, [loadPlans]));
 
   return (
     <ScreenContainer edges={['top']}>
       <AppTopBar title="Kế hoạch tập luyện" hideDivider />
+      {aiAvailable && <TouchableOpacity accessibilityRole="button" style={{ minHeight: 48, justifyContent: 'center', alignItems: 'center' }} onPress={() => router.push('/workout/ai-suggestions' as never)}><Text style={{ ...typography.body, color: colors.primary }}>Gợi ý tập luyện AI</Text></TouchableOpacity>}
       {loading ? (
         <LoadingSkeleton count={3} />
       ) : error ? (
@@ -67,7 +77,7 @@ export default function WorkoutScreen() {
           onOpenHistory={() => router.push('/workout/history' as any)}
           onOpenGoals={() => router.push('/workout/goals' as any)}
           onOpenWeight={() => router.push('/workout/weight' as any)}
-          monthlyCompleted={stats?.completedCount ?? 0}
+          monthlyCompleted={stats?.completedCount ?? null}
           monthlyTarget={goals?.monthlyWorkoutTarget ?? null}
           currentWeightKg={currentWeightKg}
           targetWeightKg={goals?.targetWeightKg ?? null}

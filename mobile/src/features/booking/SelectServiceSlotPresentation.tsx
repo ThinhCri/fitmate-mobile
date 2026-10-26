@@ -93,8 +93,8 @@ export function SelectServiceSlotPresentation({
               <Text style={styles.coachSpecialty}>{coach.specialty}</Text>
               <View style={styles.ratingRow}>
                 <Star size={14} color="#F59E0B" fill="#F59E0B" />
-                <Text style={styles.ratingValue}>{coach.rating.toFixed(1)}</Text>
-                <Text style={styles.reviewCount}>({coach.reviewCount} đánh giá)</Text>
+                <Text style={styles.ratingValue}>{coach.rating === null ? 'Chưa có số liệu' : coach.rating.toFixed(1)}</Text>
+                <Text style={styles.reviewCount}>({coach.reviewCount === null ? 'Chưa tải số' : coach.reviewCount} đánh giá)</Text>
               </View>
             </View>
 

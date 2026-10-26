@@ -86,7 +86,6 @@ export interface User {
   role: 'member' | 'pt' | 'admin'; // Normalized user role
   email: string;
   ptVerificationStatus?: 'pendingdocuments' | 'pendingreview' | 'needsmoreinformation' | 'approved' | 'rejectedfraud';
-  password?: string; // Preview/mock only; omitted in production authenticated User
   profile: Profile;
   // Dashboard state
   streak: number;

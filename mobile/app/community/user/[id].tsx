@@ -39,7 +39,7 @@ export default function PublicProfileScreen() {
       setProfile((current) => {
         if (!current || current.id !== id) return current;
         const posts = [...current.posts, ...page.items.filter((post) => !current.posts.some((item) => item.id === post.id))];
-        return { ...current, posts, postsNextCursor: page.nextCursor, postCount: page.nextCursor ? null : posts.length };
+        return { ...current, posts, postsNextCursor: page.nextCursor };
       });
     } catch (e) {
       if (generation.current === version) setPostsError(e instanceof Error ? e.message : 'Không tải được bài viết.');

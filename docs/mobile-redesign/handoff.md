@@ -1,5 +1,12 @@
 # Handoff — Ban giao hien tai
 
+## 2026-10-27 — Complete real provider and profile wiring (device UAT pending)
+- Added native Firebase messaging 26.4.0 + config plugin, disabled auto-init until permission/session, real FCM token registration/refresh/revoke and safe inbox navigation. Preserved GA4 analytics consent flags. npm ci/native rebuild required; Expo Go cannot supply the added native module. No dependency installation or mobile commands executed under manual-only rules.
+- Added real workout suggestions form/API and replaced ai-adjust placeholder route; shared server chat quota disclosed, no auto-save. Backend Gemini food scan and image-chat routing now implemented; keys/flags and provider test still required.
+- Profile counts/badges now come from server summary; completed workout count hidden for other users. Booking review fetches actual booking and PT instead of bk-2/route guesses; rating requires explicit selection. Unknown booking status/duration rejected; unavailable totals stay null. Deleted unreferenced camera/avatar prototype presenters and unreleased gift teaser; active camera/upload flows remain API-backed.
+- Added source tests for push ownership, booking wire integrity and runtime import boundaries; not run/typechecked/built. Backend unit 1,048 passed, integration project compile succeeded; isolated PostgreSQL execution pending. Owner authorized local commits, no push/deploy/build/Play upload.
+- Key and UAT instructions: sibling FitmateAI_BE/docs/backend-release/provider-setup-and-real-tests-20261027.md. Earlier "not implemented" profile/push notes below are history. Preserve unrelated untracked feature-graphic assets/build-release.ps1.
+
 ## 2026-10-26 — Connect public profile posts and exact account totals
 - Public profile fetches real author-filtered social feed, passes opaque cursor for next pages, retries errors and rejects servers returning other authors. Avatar renders actual URL; total visible posts becomes known only when paging completes. Focus/route generations prevent late responses overwriting another profile. Backend must be updated before this client.
 - Account hub sums per-status server totals (pageSize 1), supports more than 100 appointments without truncation; any count failure remains unavailable, not zero. Added profile-post API and hub-count source tests. No mobile tests/typecheck/build under manual-execution instructions.

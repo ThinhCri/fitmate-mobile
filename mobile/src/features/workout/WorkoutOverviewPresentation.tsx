@@ -24,7 +24,7 @@ export interface WorkoutOverviewPresentationProps {
   onOpenHistory: () => void;
   onOpenGoals: () => void;
   onOpenWeight: () => void;
-  monthlyCompleted: number;
+  monthlyCompleted: number | null;
   monthlyTarget: number | null;
   currentWeightKg: number | null;
   targetWeightKg: number | null;
@@ -95,14 +95,14 @@ export function WorkoutOverviewPresentation({
           <View>
             <Text style={styles.progressEyebrow}>TIẾN ĐỘ THÁNG NÀY</Text>
             <Text style={styles.progressValue}>
-              {monthlyCompleted}{monthlyTarget ? `/${monthlyTarget}` : ''} buổi tập
+              {monthlyCompleted === null ? 'Chưa tải được số liệu' : `${monthlyCompleted}${monthlyTarget ? `/${monthlyTarget}` : ''} buổi tập`}
             </Text>
           </View>
           <View style={styles.progressIcon}>
             <Target size={22} color={colors.primaryDark} />
           </View>
         </View>
-        {monthlyTarget ? (
+        {monthlyTarget && monthlyCompleted !== null ? (
           <View style={styles.progressTrack}>
             <View
               style={[

@@ -212,7 +212,7 @@ export function PublicProfilePresentation({
               <Text style={styles.statNumber}>{profile.postCount ?? '—'}</Text>
               <Text style={styles.statLabel}>Bài viết hiển thị</Text>
             </View>
-            <View style={styles.statDivider} />
+            {profile.completedWorkoutsCount !== null && profile.completedWorkoutsCount !== undefined && <><View style={styles.statDivider} />
             <View style={styles.statItem}>
               <View style={styles.fireStatRow}>
                 <Text style={[styles.statNumber, { color: colors.warning }]}>
@@ -221,7 +221,7 @@ export function PublicProfilePresentation({
                 <Flame size={14} color={colors.warning} />
               </View>
               <Text style={styles.statLabel}>Buổi tập</Text>
-            </View>
+            </View></>}
           </View>
 
           {/* PT Professional Profile Link */}
@@ -267,7 +267,7 @@ export function PublicProfilePresentation({
             <Text
               style={[styles.tabText, activeTab === 'badges' && styles.tabTextActive]}
             >
-              Huy hiệu
+              Huy hiệu ({profile.badges?.length ?? 0})
             </Text>
           </TouchableOpacity>
         </View>
@@ -311,7 +311,9 @@ export function PublicProfilePresentation({
           </View>
         ) : (
           <View style={styles.badgesList}>
-            <Text style={styles.emptyText}>Chưa có dữ liệu huy hiệu từ hệ thống.</Text>
+            {(profile.badges ?? []).length === 0 ? <Text style={styles.emptyText}>Chưa có huy hiệu hoạt động phù hợp.</Text> : profile.badges!.map(badge => <Card key={badge.id} style={styles.badgeCard}>
+              <Award size={24} color={colors.primary} /><View style={styles.badgeInfo}><Text style={styles.badgeName}>{badge.title}</Text><Text style={styles.badgeDesc}>{badge.description}</Text></View>
+            </Card>)}
           </View>
         )}
       </ScrollView>

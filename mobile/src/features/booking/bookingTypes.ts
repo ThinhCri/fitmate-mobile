@@ -34,8 +34,8 @@ export interface CoachSummaryViewModel {
   name: string;
   title: string;
   specialty: string;
-  rating: number;
-  reviewCount: number;
+  rating: number | null;
+  reviewCount: number | null;
   avatarUrl?: string;
   isVerified: boolean;
 }

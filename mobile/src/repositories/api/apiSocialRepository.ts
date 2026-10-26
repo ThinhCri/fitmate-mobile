@@ -46,6 +46,7 @@ interface ConversationWire {
 
 interface PublicProfileWire { id: string; full_name: string; avatar_url?: string | null; role: string; fitness_goal?: string | null; created_at: string }
 interface RelationWire { relation: 'none' | 'outgoing_pending' | 'incoming_pending' | 'friends' | 'blocked_either'; request_id?: string | null }
+interface SocialSummaryWire { post_count: number; friend_count: number; completed_workouts_count: number | null; badges: { id: string; title: string; description: string }[] }
 
 interface PostWire {
   id: string;
@@ -260,8 +261,10 @@ export class ApiSocialRepository implements ISocialRepository {
     const wire = await apiClient<PublicProfileWire>(`/users/${encodeURIComponent(userId)}/profile`);
     const relation: RelationWire = me.id === userId ? { relation: 'none' } : await apiClient<RelationWire>(`/social/friends/status/${encodeURIComponent(userId)}`);
     const friendshipStatus = relation.relation === 'friends' ? 'friend' : relation.relation === 'outgoing_pending' ? 'request_sent' : relation.relation === 'incoming_pending' ? 'request_received' : 'none';
-    const posts = await this.listProfilePosts(userId);
-    return { profile: { id: wire.id, name: wire.full_name, avatarUrl: wire.avatar_url || undefined, role: wire.role === 'pt' ? 'pt' : 'member', bio: wire.fitness_goal || '', friendshipStatus, postCount: posts.nextCursor ? null : posts.items.length, friendCount: null, posts: posts.items, postsNextCursor: posts.nextCursor, ptProfileId: wire.role === 'pt' ? wire.id : undefined }, requestId: relation.request_id || undefined };
+    const [posts, summary] = await Promise.all([this.listProfilePosts(userId), apiClient<SocialSummaryWire>(`/social/users/${encodeURIComponent(userId)}/summary`)]);
+    return { profile: { id: wire.id, name: wire.full_name, avatarUrl: wire.avatar_url || undefined, role: wire.role === 'pt' ? 'pt' : 'member', bio: wire.fitness_goal || '', friendshipStatus, postCount: summary.post_count, friendCount: summary.friend_count,
+      completedWorkoutsCount: me.id === userId ? summary.completed_workouts_count : null, badges: summary.badges,
+      posts: posts.items, postsNextCursor: posts.nextCursor, ptProfileId: wire.role === 'pt' ? wire.id : undefined }, requestId: relation.request_id || undefined };
   }
 
   async listProfilePosts(userId: string, cursor?: string): Promise<{ items: CommunityPostViewModel[]; nextCursor: string | null }> {

@@ -87,7 +87,8 @@ export interface UserPublicProfileViewModel {
   friendCount: number | null;
   postsUnavailable?: boolean;
   postsNextCursor?: string | null;
-  completedWorkoutsCount?: number;
+  completedWorkoutsCount?: number | null;
+  badges?: { id: string; title: string; description: string }[];
   posts: CommunityPostViewModel[];
   ptProfileId?: string; // If PT, link to professional profile
 }

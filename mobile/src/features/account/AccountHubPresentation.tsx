@@ -208,19 +208,6 @@ export function AccountHubPresentation({
         </Card>
       </View>
 
-      {/* Section 3: Coming Soon Perks */}
-      <View style={styles.section}>
-        <Card style={styles.perkCard}>
-          <View style={styles.perkHeader}>
-            <Sparkles size={16} color={colors.primary} />
-            <Text style={styles.perkTitle}>Hội viên thân thiết &amp; Quà tặng</Text>
-          </View>
-          <Text style={styles.perkText}>
-            Tính năng tích điểm đổi quà và đặc quyền hội viên đang được chuẩn bị hoàn thiện.
-          </Text>
-        </Card>
-      </View>
-
       {/* Logout Row */}
       <TouchableOpacity
         style={styles.logoutBtn}
@@ -410,26 +397,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#FFFFFF',
-  },
-  perkCard: {
-    padding: spacing.md,
-    backgroundColor: colors.surfaceSubtle,
-    gap: 4,
-  },
-  perkHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  perkTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  perkText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    lineHeight: 16,
   },
   logoutBtn: {
     flexDirection: 'row',

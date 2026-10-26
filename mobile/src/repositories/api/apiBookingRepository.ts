@@ -32,7 +32,8 @@ export function mapAppointmentWireToViewModel(
         hour12: false,
       });
 
-  const durationMin = wire.duration_minutes || 60;
+  const durationMin = wire.duration_minutes;
+  if (!Number.isInteger(durationMin) || durationMin <= 0) throw new Error('Thời lượng lịch hẹn từ máy chủ không hợp lệ.');
   const endDate = new Date(slotDate.getTime() + durationMin * 60000);
   const endTimeStr = isNaN(endDate.getTime())
     ? ''
@@ -42,7 +43,7 @@ export function mapAppointmentWireToViewModel(
         hour12: false,
       });
 
-  let bookingStatus: BookingStatus = 'confirmed';
+  let bookingStatus: BookingStatus;
   switch (wire.status) {
     case 'Held':
     case 'Pending':
@@ -71,7 +72,7 @@ export function mapAppointmentWireToViewModel(
       bookingStatus = 'no_show';
       break;
     default:
-      bookingStatus = 'confirmed';
+      throw new Error('Trạng thái lịch hẹn từ máy chủ chưa được hỗ trợ.');
   }
 
   let paymentStatus: PaymentStatus = 'unpaid';
@@ -88,14 +89,14 @@ export function mapAppointmentWireToViewModel(
     bookingCode: `BK-${wire.id.slice(0, 8).toUpperCase()}`,
     coach: coachSummary || {
       id: wire.pt_user_id,
-      name: 'Huấn luyện viên',
-      title: 'Huấn luyện viên',
+      name: `Mã PT ${wire.pt_user_id.slice(0, 8)}`,
+      title: 'Chưa tải được hồ sơ PT',
       specialty: '',
-      rating: 0,
-      reviewCount: 0,
+      rating: null,
+      reviewCount: null,
       isVerified: false,
     },
-    serviceName: 'Buổi huấn luyện',
+    serviceName: `Mã dịch vụ ${wire.service_id.slice(0, 8)}`,
     scheduledDate: formattedDate,
     scheduledTime: `${startTimeStr} - ${endTimeStr} (${durationMin} phút)`,
     location: '',
@@ -142,11 +143,11 @@ export class ApiBookingRepository implements IBookingRepository {
     } catch {
       const fallback: CoachSummaryViewModel = {
         id: ptId,
-        name: 'Huấn luyện viên',
-        title: 'Huấn luyện viên',
+        name: `Mã PT ${ptId.slice(0, 8)}`,
+        title: 'Chưa tải được hồ sơ PT',
         specialty: '',
-        rating: 0,
-        reviewCount: 0,
+        rating: null,
+        reviewCount: null,
         isVerified: false,
       };
       return fallback;
