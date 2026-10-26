@@ -4,7 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { PtRevenuePresentation, PtRevenueBookingItemViewModel } from '@/features/pt/PtRevenuePresentation';
 import { ptDashboardService } from '@/services/api/ptDashboardService';
 
-interface RevenueData { overview: { total_gross_vnd: number; platform_fee_vnd: number; net_earnings_vnd: number; pending_payout_vnd: number; completed_payout_vnd: number }; bookings: PtRevenueBookingItemViewModel[]; historyPage: number; historyTotal: number; historyPageSize: number }
+interface RevenueData { overview: { refund_adjustment_vnd?: number; total_gross_vnd: number; platform_fee_vnd: number; net_earnings_vnd: number; pending_payout_vnd: number; completed_payout_vnd: number }; bookings: PtRevenueBookingItemViewModel[]; historyPage: number; historyTotal: number; historyPageSize: number }
 export default function PtRevenueScreen() {
   const router = useRouter(); const [data, setData] = useState<RevenueData | null>(null); const [error, setError] = useState('');
   const [range, setRange] = useState('30d'); const [page, setPage] = useState(1); const [attempt, setAttempt] = useState(0);
@@ -20,7 +20,7 @@ export default function PtRevenueScreen() {
   return <View style={styles.container}>
     <PtRevenuePresentation periodLabel={range === 'all' ? 'Toàn thời gian' : `${parseInt(range, 10)} ngày`}
       grossGmvVnd={overview.total_gross_vnd} platformFee10PercentVnd={overview.platform_fee_vnd}
-      ptShare90PercentVnd={overview.net_earnings_vnd} refundsAdjustedVnd={null}
+      ptShare90PercentVnd={overview.net_earnings_vnd} refundsAdjustedVnd={overview.refund_adjustment_vnd ?? null}
       netPayoutVnd={overview.net_earnings_vnd} completedPayoutVnd={overview.completed_payout_vnd}
       pendingPayoutVnd={overview.pending_payout_vnd} historyPage={data.historyPage}
       historyTotal={data.historyTotal} historyPageSize={data.historyPageSize}

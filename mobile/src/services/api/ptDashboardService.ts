@@ -7,7 +7,7 @@ import { ApiError } from './client';
 import type { PtRevenueBookingItemViewModel } from '@/features/pt/PtRevenuePresentation';
 import { mapSettlementStatus } from './settlementStatus';
 
-interface RevenueOverview { range: string; total_gross_vnd: number; platform_fee_vnd: number; net_earnings_vnd: number; pending_payout_vnd: number; completed_payout_vnd: number; }
+interface RevenueOverview { refund_adjustment_vnd?: number; range: string; total_gross_vnd: number; platform_fee_vnd: number; net_earnings_vnd: number; pending_payout_vnd: number; completed_payout_vnd: number; }
 export interface RevenueItem { appointment_id: string; date: string; gross_vnd: number; platform_fee_vnd: number; net_vnd: number; paid_out_vnd: number; settlement_status: string; transferred_at_utc: string | null; bank_reference: string | null; payee_bank_name: string | null; payee_account_number_masked: string | null; payee_account_name: string | null; }
 interface RevenuePage { items: RevenueItem[]; total: number; page: number; pageSize: number }
 export interface PtPayoutAccount { bank_code: string; bank_name: string; account_number: string; masked_account_number: string; account_name: string; verified_at_utc: string; }

@@ -125,7 +125,7 @@ export function PtRevenuePresentation({
           </View>
 
           <View style={styles.breakdownCell}>
-            <Text style={styles.cellLabel}>Hoàn tiền / Khấu trừ</Text>
+            <Text style={styles.cellLabel}>Điều chỉnh hoàn tiền (phần PT)</Text>
             <Text style={styles.cellValue}>
               {refundsAdjustedVnd === null ? 'Chưa có số liệu riêng' : refundsAdjustedVnd > 0 ? `-${refundsAdjustedVnd.toLocaleString('vi-VN')} ₫` : '0 ₫'}
             </Text>

@@ -1,5 +1,11 @@
 # Handoff — Ban giao hien tai
 
+## 2026-10-26 — Connect public profile posts and exact account totals
+- Public profile fetches real author-filtered social feed, passes opaque cursor for next pages, retries errors and rejects servers returning other authors. Avatar renders actual URL; total visible posts becomes known only when paging completes. Focus/route generations prevent late responses overwriting another profile. Backend must be updated before this client.
+- Account hub sums per-status server totals (pageSize 1), supports more than 100 appointments without truncation; any count failure remains unavailable, not zero. Added profile-post API and hub-count source tests. No mobile tests/typecheck/build under manual-execution instructions.
+- Revenue now displays server `refund_adjustment_vnd` as trainer-share refund adjustment; older server missing the additive field stays explicitly unavailable. No frontend-derived financial amount. Backend exact-wire integration assertion updated; database execution pending.
+- Backend full unit 1029 passed including later monetary delta; integration project compiled before monetary delta, PostgreSQL tests pending (local port closed). Social Friends feed privacy leak fixed; cursor now precise and legacy-compatible. Updated backend release allowlist but old uploaded source archive must be prepared again. No push/deploy/Play upload.
+
 ## 2026-10-26 — Remove fabricated runtime statistics and connect PT lists
 - Added real server-paged PT sessions route, actionable pending-booking/service tasks, verified-profile lookup, focus refresh/retry guards. Revenue now has real pagination/period selection and exact settlement status; paid and pending amounts come from server, refunds are not fabricated from arithmetic.
 - Trainer missing price/experience stays null; malformed ratings/prices fail visibly instead of defaulting to five stars/free. Account hub no longer turns request failures into zero counts. Removed three invented public-profile earned badges and fake counters; unavailable profile posts are explicitly identified. These missing author-feed/public aggregate/badge APIs remain open work, not completed features.
