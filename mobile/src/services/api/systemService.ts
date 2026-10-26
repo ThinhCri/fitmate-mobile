@@ -37,10 +37,11 @@ export interface SystemCapabilities {
 }
 
 let cachedCapabilities: SystemCapabilities | null = null;
+let cachedAt = 0;
 
 export const systemService = {
   async getCapabilities(): Promise<SystemCapabilities> {
-    if (cachedCapabilities) {
+    if (cachedCapabilities && Date.now() - cachedAt < 60_000) {
       return cachedCapabilities;
     }
 
@@ -49,6 +50,7 @@ export const systemService = {
         method: 'GET',
       });
       cachedCapabilities = data;
+      cachedAt = Date.now();
       return data;
     } catch {
       // Fail-closed fallback: disable gated features when server capabilities call fails
@@ -74,5 +76,6 @@ export const systemService = {
 
   clearCache() {
     cachedCapabilities = null;
+    cachedAt = 0;
   },
 };

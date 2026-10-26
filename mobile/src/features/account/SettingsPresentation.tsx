@@ -176,7 +176,7 @@ export function SettingsPresentation({
                 <Sun size={18} color={colors.warning} />
                 <Text style={styles.rowTitle}>Giao diện</Text>
               </View>
-              <Text style={styles.rowValue}>{settings.theme === 'light' ? 'Giao diện sáng' : settings.theme}</Text>
+              <Text style={styles.rowValue}>Giao diện sáng</Text>
             </View>
           </Card>
           <Text style={styles.themeNote}>
