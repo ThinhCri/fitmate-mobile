@@ -86,6 +86,7 @@ export interface UserPublicProfileViewModel {
   postCount: number | null;
   friendCount: number | null;
   postsUnavailable?: boolean;
+  postsNextCursor?: string | null;
   completedWorkoutsCount?: number;
   posts: CommunityPostViewModel[];
   ptProfileId?: string; // If PT, link to professional profile

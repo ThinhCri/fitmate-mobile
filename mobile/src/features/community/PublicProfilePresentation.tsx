@@ -43,6 +43,9 @@ export interface PublicProfilePresentationProps {
   onMessagePress: () => void;
   onViewPtProfile?: (ptId: string) => void;
   onSelectPost: (postId: string) => void;
+  onLoadMorePosts?: () => void;
+  loadingPosts?: boolean;
+  postsError?: string;
   onReportPress: () => void;
   onBlockPress: () => void;
 }
@@ -59,6 +62,9 @@ export function PublicProfilePresentation({
   onMessagePress,
   onViewPtProfile,
   onSelectPost,
+  onLoadMorePosts,
+  loadingPosts,
+  postsError,
   onReportPress,
   onBlockPress,
 }: PublicProfilePresentationProps) {
@@ -179,7 +185,7 @@ export function PublicProfilePresentation({
         {/* Profile Card */}
         <Card style={styles.profileCard}>
           <View style={styles.avatarSection}>
-            <Avatar name={profile.name} size="lg" />
+            <Avatar name={profile.name} uri={profile.avatarUrl} size="lg" />
             <View style={styles.nameContainer}>
               <View style={styles.nameRow}>
                 <Text style={styles.nameText}>{profile.name}</Text>
@@ -204,7 +210,7 @@ export function PublicProfilePresentation({
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{profile.postCount ?? '—'}</Text>
-              <Text style={styles.statLabel}>Bài viết</Text>
+              <Text style={styles.statLabel}>Bài viết hiển thị</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
@@ -297,6 +303,11 @@ export function PublicProfilePresentation({
                 </TouchableOpacity>
               ))
             )}
+            {postsError ? <Text accessibilityRole="alert" style={{ color: colors.danger }}>{postsError}</Text> : null}
+            {profile.postsNextCursor && onLoadMorePosts && <TouchableOpacity accessibilityRole="button" disabled={loadingPosts}
+              onPress={onLoadMorePosts} style={{ minHeight: 48, justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ color: colors.primary }}>{loadingPosts ? 'Đang tải...' : postsError ? 'Thử tải lại' : 'Xem thêm bài viết'}</Text>
+            </TouchableOpacity>}
           </View>
         ) : (
           <View style={styles.badgesList}>

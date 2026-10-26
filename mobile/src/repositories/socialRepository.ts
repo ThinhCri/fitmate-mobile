@@ -15,6 +15,7 @@ export interface ISocialRepository {
   deletePost(postId: string): Promise<void>;
   blockUser(userId: string): Promise<void>;
   getPublicProfile(userId: string): Promise<{ profile: UserPublicProfileViewModel; requestId?: string }>;
+  listProfilePosts(userId: string, cursor?: string): Promise<{ items: CommunityPostViewModel[]; nextCursor: string | null }>;
   searchUsers(query: string): Promise<FriendItemViewModel[]>;
   listConversations(): Promise<ConversationItemViewModel[]>;
   reactToPost(postId: string, type: 'love' | 'fire' | 'smile'): Promise<{ active: boolean; count: number }>;

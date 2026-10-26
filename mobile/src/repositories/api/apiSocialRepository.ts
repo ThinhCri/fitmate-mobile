@@ -260,7 +260,19 @@ export class ApiSocialRepository implements ISocialRepository {
     const wire = await apiClient<PublicProfileWire>(`/users/${encodeURIComponent(userId)}/profile`);
     const relation: RelationWire = me.id === userId ? { relation: 'none' } : await apiClient<RelationWire>(`/social/friends/status/${encodeURIComponent(userId)}`);
     const friendshipStatus = relation.relation === 'friends' ? 'friend' : relation.relation === 'outgoing_pending' ? 'request_sent' : relation.relation === 'incoming_pending' ? 'request_received' : 'none';
-    return { profile: { id: wire.id, name: wire.full_name, role: wire.role === 'pt' ? 'pt' : 'member', bio: wire.fitness_goal || '', friendshipStatus, postCount: null, friendCount: null, posts: [], postsUnavailable: true, ptProfileId: wire.role === 'pt' ? wire.id : undefined }, requestId: relation.request_id || undefined };
+    const posts = await this.listProfilePosts(userId);
+    return { profile: { id: wire.id, name: wire.full_name, avatarUrl: wire.avatar_url || undefined, role: wire.role === 'pt' ? 'pt' : 'member', bio: wire.fitness_goal || '', friendshipStatus, postCount: posts.nextCursor ? null : posts.items.length, friendCount: null, posts: posts.items, postsNextCursor: posts.nextCursor, ptProfileId: wire.role === 'pt' ? wire.id : undefined }, requestId: relation.request_id || undefined };
+  }
+
+  async listProfilePosts(userId: string, cursor?: string): Promise<{ items: CommunityPostViewModel[]; nextCursor: string | null }> {
+    const query = new URLSearchParams({ author_id: userId, scope: 'friends', limit: '20' });
+    if (cursor) query.set('cursor', cursor);
+    const response = await apiClient<{ items: PostWire[]; nextCursor: string | null }>(`/social/posts?${query}`);
+    // Refuse an older server silently ignoring author_id rather than showing somebody else's posts.
+    if (!Array.isArray(response.items) || response.items.some((post) => post.author_id !== userId)) {
+      throw new Error('Máy chủ chưa hỗ trợ danh sách bài viết theo hồ sơ. Vui lòng cập nhật backend.');
+    }
+    return { items: response.items.map(mapPost), nextCursor: response.nextCursor };
   }
 
   async searchUsers(query: string): Promise<FriendItemViewModel[]> {
