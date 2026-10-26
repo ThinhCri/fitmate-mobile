@@ -83,8 +83,9 @@ export interface UserPublicProfileViewModel {
   bio: string;
   isVerified?: boolean;
   friendshipStatus: 'friend' | 'none' | 'request_sent' | 'request_received';
-  postCount: number;
-  friendCount: number;
+  postCount: number | null;
+  friendCount: number | null;
+  postsUnavailable?: boolean;
   completedWorkoutsCount?: number;
   posts: CommunityPostViewModel[];
   ptProfileId?: string; // If PT, link to professional profile

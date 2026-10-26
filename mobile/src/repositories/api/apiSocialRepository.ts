@@ -260,7 +260,7 @@ export class ApiSocialRepository implements ISocialRepository {
     const wire = await apiClient<PublicProfileWire>(`/users/${encodeURIComponent(userId)}/profile`);
     const relation: RelationWire = me.id === userId ? { relation: 'none' } : await apiClient<RelationWire>(`/social/friends/status/${encodeURIComponent(userId)}`);
     const friendshipStatus = relation.relation === 'friends' ? 'friend' : relation.relation === 'outgoing_pending' ? 'request_sent' : relation.relation === 'incoming_pending' ? 'request_received' : 'none';
-    return { profile: { id: wire.id, name: wire.full_name, role: wire.role === 'pt' ? 'pt' : 'member', bio: wire.fitness_goal || '', friendshipStatus, postCount: 0, friendCount: 0, posts: [], ptProfileId: wire.role === 'pt' ? wire.id : undefined }, requestId: relation.request_id || undefined };
+    return { profile: { id: wire.id, name: wire.full_name, role: wire.role === 'pt' ? 'pt' : 'member', bio: wire.fitness_goal || '', friendshipStatus, postCount: null, friendCount: null, posts: [], postsUnavailable: true, ptProfileId: wire.role === 'pt' ? wire.id : undefined }, requestId: relation.request_id || undefined };
   }
 
   async searchUsers(query: string): Promise<FriendItemViewModel[]> {

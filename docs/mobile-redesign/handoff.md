@@ -1,5 +1,11 @@
 # Handoff — Ban giao hien tai
 
+## 2026-10-26 — Remove fabricated runtime statistics and connect PT lists
+- Added real server-paged PT sessions route, actionable pending-booking/service tasks, verified-profile lookup, focus refresh/retry guards. Revenue now has real pagination/period selection and exact settlement status; paid and pending amounts come from server, refunds are not fabricated from arithmetic.
+- Trainer missing price/experience stays null; malformed ratings/prices fail visibly instead of defaulting to five stars/free. Account hub no longer turns request failures into zero counts. Removed three invented public-profile earned badges and fake counters; unavailable profile posts are explicitly identified. These missing author-feed/public aggregate/badge APIs remain open work, not completed features.
+- Source tests added for trainer wire integrity; not executed, and no typecheck/build/Expo under manual-execution rule. Owner authorized local commits; no push/deploy/Play upload. Preserve unrelated feature-graphic PNGs and legacy build-release.ps1.
+- Durable cross-role inventory and remaining provider keys: sibling `FitmateAI_BE/docs/backend-release/role-api-runtime-audit-20261026.md`. Backend updater still pending operator run; do not claim latest OTP runtime deployed or all providers working.
+
 ## 2026-10-26 — Audit remaining live-function gaps before next build
 - Owner requested exhaustive missing-key/readiness review and completion work. Backend readiness report is at ../FitmateAI_BE/docs/backend-release/mobile-update-audit-20261026.md (workspace sibling). New capabilities cache expires after 60s rather than indefinitely retaining outdated module gates; settings always reports the actual light-only interface, not raw server theme preference. These two mobile follow-ups are static-reviewed only, not tested/built in this turn.
 - VPS source lacks additional admin deletion/profile/cert fixes and migration files; staged operator rollout performs backup + isolated/migration preview before API replacement. Backend full unit suite 1,021 passed. It is NOT deployed yet. Do not ship new Android build until OTP server rollout and email/success/logout UAT pass. No extra SMTP key needed for deletion.

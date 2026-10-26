@@ -13,6 +13,7 @@ export interface AccountHubViewModel {
   friendCount?: number;
   unreadChatCount?: number;
   unreadNotifCount?: number;
+  summaryUnavailable?: boolean;
 }
 
 export interface UserProfileFormData {

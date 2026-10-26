@@ -129,6 +129,9 @@ export function AccountHubPresentation({
       )}
 
       {/* Section 1: Schedule */}
+      {account.summaryUnavailable && <Text style={{ ...typography.caption, color: colors.textSecondary }}>
+        Chưa có số liệu lịch hẹn đầy đủ. Bạn vẫn có thể mở Lịch hẹn của tôi để xem từng trang dữ liệu.
+      </Text>}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Lịch biểu</Text>
         <Card style={styles.menuCard}>

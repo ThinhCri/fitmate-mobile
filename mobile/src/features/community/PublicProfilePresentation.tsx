@@ -198,19 +198,19 @@ export function PublicProfilePresentation({
           {/* Stats Row */}
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{profile.friendCount}</Text>
+              <Text style={styles.statNumber}>{profile.friendCount ?? '—'}</Text>
               <Text style={styles.statLabel}>Bạn bè</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{profile.postCount}</Text>
+              <Text style={styles.statNumber}>{profile.postCount ?? '—'}</Text>
               <Text style={styles.statLabel}>Bài viết</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <View style={styles.fireStatRow}>
                 <Text style={[styles.statNumber, { color: colors.warning }]}>
-                  {profile.completedWorkoutsCount || 0}
+                  {profile.completedWorkoutsCount ?? '—'}
                 </Text>
                 <Flame size={14} color={colors.warning} />
               </View>
@@ -261,7 +261,7 @@ export function PublicProfilePresentation({
             <Text
               style={[styles.tabText, activeTab === 'badges' && styles.tabTextActive]}
             >
-              Huy hiệu (3)
+              Huy hiệu
             </Text>
           </TouchableOpacity>
         </View>
@@ -271,7 +271,7 @@ export function PublicProfilePresentation({
           <View style={styles.postsList}>
             {profile.posts.length === 0 ? (
               <View style={styles.emptyBox}>
-                <Text style={styles.emptyText}>Chưa có bài viết công khai nào.</Text>
+                <Text style={styles.emptyText}>{profile.postsUnavailable ? 'Chưa hỗ trợ tải bài viết theo hồ sơ này. Bạn có thể xem các bài viết được phép hiển thị tại Cộng đồng.' : 'Chưa có bài viết công khai nào.'}</Text>
               </View>
             ) : (
               profile.posts.map((post) => (
@@ -300,27 +300,7 @@ export function PublicProfilePresentation({
           </View>
         ) : (
           <View style={styles.badgesList}>
-            <Card style={styles.badgeCard}>
-              <Award size={24} color={colors.primary} />
-              <View style={styles.badgeInfo}>
-                <Text style={styles.badgeName}>Chiến binh kiên trì</Text>
-                <Text style={styles.badgeDesc}>Hoàn thành chuỗi tập 7 ngày liên tiếp</Text>
-              </View>
-            </Card>
-            <Card style={styles.badgeCard}>
-              <Award size={24} color={colors.warning} />
-              <View style={styles.badgeInfo}>
-                <Text style={styles.badgeName}>Dinh dưỡng thông thái</Text>
-                <Text style={styles.badgeDesc}>Ghi nhật ký calo chính xác liên tục 14 ngày</Text>
-              </View>
-            </Card>
-            <Card style={styles.badgeCard}>
-              <Award size={24} color="#8B5CF6" />
-              <View style={styles.badgeInfo}>
-                <Text style={styles.badgeName}>Cộng đồng năng nổ</Text>
-                <Text style={styles.badgeDesc}>Chia sẻ 10 kinh nghiệm bổ ích cho bạn bè</Text>
-              </View>
-            </Card>
+            <Text style={styles.emptyText}>Chưa có dữ liệu huy hiệu từ hệ thống.</Text>
           </View>
         )}
       </ScrollView>

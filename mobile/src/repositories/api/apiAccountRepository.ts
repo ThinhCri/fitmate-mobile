@@ -9,8 +9,6 @@ import { authService } from '@/services/api/authService';
 import { ApiError, apiClient, apiUploadFile, resolveApiResourceUrl } from '@/services/api/client';
 import Constants from 'expo-constants';
 import { bookingService } from '@/services/api/bookingService';
-import { apiSocialRepository } from './apiSocialRepository';
-import { apiSupportRepository } from './apiSupportRepository';
 import { systemService } from '@/services/api/systemService';
 
 export class ApiAccountRepository implements IAccountRepository {
@@ -30,22 +28,19 @@ export class ApiAccountRepository implements IAccountRepository {
   }
   async getAccountHub(): Promise<AccountHubViewModel> {
     const me = await authService.getMe();
-    const [bookings, social, conversations, notifications] = await Promise.all([
-      (me.role === 'pt' ? bookingService.listMyTrainerBookings({ page: 1, pageSize: 100 }) : bookingService.listMyBookings({ page: 1, pageSize: 100 })).catch(() => ({ items: [] } as any)),
-      apiSocialRepository.getFriends().catch(() => ({ friends: [], pendingRequests: [], sentRequests: [], discoverUsers: [] })),
-      apiSocialRepository.listConversations().catch(() => []),
-      apiSupportRepository.getNotifications().catch(() => []),
-    ]);
+    // Only the appointment badge is used here. Do not issue unrelated requests or turn failures into zeros.
+    const bookings = await (me.role === 'pt'
+      ? bookingService.listMyTrainerBookings({ page: 1, pageSize: 100 })
+      : bookingService.listMyBookings({ page: 1, pageSize: 100 })).catch(() => undefined);
+    const completePage = bookings && Number.isInteger(bookings.total) && bookings.total <= bookings.items.length;
     return {
       id: me.id,
       name: me.full_name || 'Người dùng',
       email: me.email,
       role: me.role === 'pt' ? 'pt' : 'member',
       avatarUrl: me.avatar_url ?? undefined,
-      upcomingBookingCount: (bookings.items || []).filter((item: any) => !['Completed', 'Cancelled', 'Rejected', 'Expired'].includes(item.status)).length,
-      friendCount: social.friends.length,
-      unreadChatCount: conversations.reduce((sum, item) => sum + item.unreadCount, 0),
-      unreadNotifCount: notifications.filter((item) => !item.isRead).length,
+      upcomingBookingCount: bookings && completePage ? bookings.items.filter((item) => ['Pending', 'Confirmed', 'InProgress', 'AwaitingMemberConfirmation'].includes(item.status)).length : undefined,
+      summaryUnavailable: !completePage,
     };
   }
 
