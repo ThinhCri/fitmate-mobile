@@ -115,7 +115,7 @@ export default function ProfileServicesRoute() {
   };
 
   const ptName = user?.profile?.name || 'Huấn luyện viên';
-  const experienceYears = user?.profile?.exp || 0;
+  const experienceYears = trainerDetail?.experience_years ?? user?.profile?.exp ?? null;
   const rating = trainerDetail?.rating;
   const reviewsCount = trainerDetail?.reviews_count;
   const specialties = user?.profile?.spec || [];

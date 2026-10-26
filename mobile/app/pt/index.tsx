@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { PtOverviewPresentation, PtOverviewPresentationProps } from '@/features/pt/PtOverviewPresentation';
 import { ptDashboardService } from '@/services/api/ptDashboardService';
 import { useAuth } from '@/services/AuthContext';
@@ -9,17 +9,20 @@ type Overview = Pick<PtOverviewPresentationProps, 'ptName' | 'isVerified' | 'cer
 export default function PtOverviewScreen() {
   const router = useRouter(); const [data, setData] = useState<Overview | null>(null); const [error, setError] = useState('');
   const { user, loading } = useAuth();
-  useEffect(() => {
+  const [attempt, setAttempt] = useState(0);
+  useFocusEffect(useCallback(() => {
     if (loading || !user) return;
     if (user.role !== 'pt' || user.ptVerificationStatus !== 'approved') {
       router.replace('/pt/certificates');
       return;
     }
-    ptDashboardService.getOverview().then(setData).catch((e) => {
-      setError(e instanceof Error ? e.message : 'Không thể tải tổng quan PT.');
+    let active = true; setData(null); setError('');
+    ptDashboardService.getOverview().then((value) => { if (active) setData(value); }).catch((e) => {
+      if (active) setError(e instanceof Error ? e.message : 'Không thể tải tổng quan PT.');
     });
-  }, [loading, router, user]);
-  if (!data) return <View style={[styles.container, styles.center]}>{error ? <Text style={styles.error}>{error}</Text> : <ActivityIndicator />}</View>;
-  return <View style={styles.container}><PtOverviewPresentation {...data} onToggleStatus={() => Alert.alert('Chưa hỗ trợ', 'Máy chủ chưa có API bật/tắt nhận học viên. Hãy quản lý từng dịch vụ trong hồ sơ PT.')} onNavigateToServices={() => router.push('/pt/profile-services' as never)} onNavigateToSchedule={() => router.push('/pt/schedule' as never)} onNavigateToCertificates={() => router.push('/pt/certificates' as never)} onNavigateToSessions={() => data.upcomingSessions[0] ? router.push(`/pt/session/${data.upcomingSessions[0].id}` as never) : Alert.alert('Chưa có buổi tập', 'Hiện không có lịch hẹn sắp tới.')} onNavigateToRevenue={() => router.push('/pt/revenue' as never)} onNavigateToPackages={() => router.push('/pt/packages' as never)} onSelectSession={(id) => router.push(`/pt/session/${id}` as never)} /></View>;
+    return () => { active = false; };
+  }, [loading, router, user, attempt]));
+  if (!data) return <View style={[styles.container, styles.center]}>{error ? <><Text style={styles.error}>{error}</Text><TouchableOpacity accessibilityRole="button" style={{ minHeight: 48, justifyContent: 'center' }} onPress={() => setAttempt((value) => value + 1)}><Text>Thử lại</Text></TouchableOpacity></> : <ActivityIndicator />}</View>;
+  return <View style={styles.container}><PtOverviewPresentation {...data} onToggleStatus={() => router.push('/pt/profile-services' as never)} onSelectTask={(target) => router.push(target as never)} onNavigateToServices={() => router.push('/pt/profile-services' as never)} onNavigateToSchedule={() => router.push('/pt/schedule' as never)} onNavigateToCertificates={() => router.push('/pt/certificates' as never)} onNavigateToSessions={() => router.push('/pt/sessions' as never)} onNavigateToRevenue={() => router.push('/pt/revenue' as never)} onNavigateToPackages={() => router.push('/pt/packages' as never)} onSelectSession={(id) => router.push(`/pt/session/${id}` as never)} /></View>;
 }
 const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#F8FAFC' }, center: { justifyContent: 'center', alignItems: 'center', padding: 24 }, error: { color: '#DC2626', textAlign: 'center' } });

@@ -19,8 +19,8 @@ export interface TrainerCardProps {
   specialties: string[];
   rating: number;
   reviewCount: number;
-  sessionPriceVnd: number;
-  experienceYears?: number;
+  sessionPriceVnd: number | null;
+  experienceYears?: number | null;
   isVerified?: boolean;
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
@@ -37,7 +37,7 @@ export const TrainerCard: React.FC<TrainerCardProps> = ({
   onPress,
   style,
 }) => {
-  const formattedPrice = new Intl.NumberFormat('vi-VN', {
+  const formattedPrice = sessionPriceVnd === null ? 'Chưa công bố giá' : new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
     maximumFractionDigits: 0,
@@ -110,7 +110,7 @@ export const TrainerCard: React.FC<TrainerCardProps> = ({
           <Text style={[typography.caption, styles.priceLabel]}>Giá buổi tập</Text>
           <Text style={[typography.bodyBold, styles.priceValue]}>
             {formattedPrice}
-            <Text style={[typography.caption, styles.pricePerSession]}>/buổi</Text>
+            {sessionPriceVnd !== null && <Text style={[typography.caption, styles.pricePerSession]}>/buổi</Text>}
           </Text>
         </View>
       </View>

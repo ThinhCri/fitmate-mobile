@@ -21,8 +21,15 @@ export interface PtRevenuePresentationProps {
   grossGmvVnd: number;
   platformFee10PercentVnd: number;
   ptShare90PercentVnd: number;
-  refundsAdjustedVnd: number;
+  refundsAdjustedVnd: number | null;
   netPayoutVnd: number;
+  completedPayoutVnd?: number;
+  pendingPayoutVnd?: number;
+  historyPage?: number;
+  historyTotal?: number;
+  historyPageSize?: number;
+  onPreviousPage?: () => void;
+  onNextPage?: () => void;
   bookings: PtRevenueBookingItemViewModel[];
   onSelectBookingPayout: (bookingId: string) => void;
   onFilterPeriod?: () => void;
@@ -36,6 +43,13 @@ export function PtRevenuePresentation({
   ptShare90PercentVnd,
   refundsAdjustedVnd,
   netPayoutVnd,
+  completedPayoutVnd,
+  pendingPayoutVnd,
+  historyPage = 1,
+  historyTotal,
+  historyPageSize = 20,
+  onPreviousPage,
+  onNextPage,
   bookings,
   onSelectBookingPayout,
   onFilterPeriod,
@@ -74,7 +88,7 @@ export function PtRevenuePresentation({
       <Card style={styles.heroCard}>
         <View style={styles.heroTopRow}>
           <View>
-            <Text style={styles.heroLabel}>Thu nhập thực nhận PT ({periodLabel})</Text>
+            <Text style={styles.heroLabel}>Thu nhập đã ghi nhận ({periodLabel})</Text>
             <Text style={styles.heroValue}>{netPayoutVnd.toLocaleString('vi-VN')} ₫</Text>
           </View>
           {onFilterPeriod && (
@@ -113,19 +127,24 @@ export function PtRevenuePresentation({
           <View style={styles.breakdownCell}>
             <Text style={styles.cellLabel}>Hoàn tiền / Khấu trừ</Text>
             <Text style={styles.cellValue}>
-              {refundsAdjustedVnd > 0 ? `-${refundsAdjustedVnd.toLocaleString('vi-VN')} ₫` : '0 ₫'}
+              {refundsAdjustedVnd === null ? 'Chưa có số liệu riêng' : refundsAdjustedVnd > 0 ? `-${refundsAdjustedVnd.toLocaleString('vi-VN')} ₫` : '0 ₫'}
             </Text>
           </View>
         </View>
       </Card>
 
+      <Text style={styles.sectionSub}>
+        Đã chuyển khoản: {completedPayoutVnd === undefined ? 'Chưa có số liệu' : `${completedPayoutVnd.toLocaleString('vi-VN')} ₫`}
+        {' · '}Chưa chi: {pendingPayoutVnd === undefined ? 'Chưa có số liệu' : `${pendingPayoutVnd.toLocaleString('vi-VN')} ₫`}
+      </Text>
       {/* Payout Details List */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Bảng kê lịch dạy &amp; Quyết toán</Text>
-        <Text style={styles.sectionSub}>{bookings.length} buổi hoàn thành</Text>
+        <Text style={styles.sectionSub}>Lịch sử toàn bộ thời gian · {historyTotal === undefined ? `${bookings.length} bản ghi đã tải` : `${historyTotal} bản ghi`}</Text>
       </View>
 
       <View style={styles.bookingsList}>
+        {bookings.length === 0 && <Text style={styles.sectionSub}>Không có khoản ghi nhận trong trang này.</Text>}
         {bookings.map((item) => {
           const badge = getPayoutBadge(item.payoutStatus);
           return (
@@ -173,11 +192,18 @@ export function PtRevenuePresentation({
           );
         })}
       </View>
+      {onPreviousPage && onNextPage && <View style={styles.pagination}>
+        <TouchableOpacity accessibilityRole="button" disabled={historyPage <= 1} onPress={onPreviousPage} style={styles.pageButton}><Text style={styles.sectionSub}>Trang trước</Text></TouchableOpacity>
+        <Text style={styles.sectionSub}>Trang {historyPage}</Text>
+        <TouchableOpacity accessibilityRole="button" disabled={historyTotal === undefined || historyPage * historyPageSize >= historyTotal} onPress={onNextPage} style={styles.pageButton}><Text style={styles.sectionSub}>Trang sau</Text></TouchableOpacity>
+      </View>}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  pagination: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  pageButton: { minHeight: 48, paddingHorizontal: spacing.sm, justifyContent: 'center' },
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',

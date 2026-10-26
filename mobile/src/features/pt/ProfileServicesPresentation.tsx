@@ -34,7 +34,7 @@ import type { Service, ServiceInput, ServiceUpdate } from '@/services/api/types'
 export interface ProfileServicesPresentationProps {
   ptName: string;
   avatarUrl: string | null;
-  experienceYears: number;
+  experienceYears: number | null;
   rating?: number;
   reviewsCount?: number;
   specialties: string[];
@@ -328,7 +328,7 @@ export function ProfileServicesPresentation({
                 <Text style={styles.ptName}>{ptName}</Text>
               </View>
               <Text style={styles.expText}>
-                {experienceYears > 0 ? `${experienceYears} năm kinh nghiệm` : 'Huấn luyện viên Fitmate'}
+                {experienceYears !== null ? `${experienceYears} năm kinh nghiệm` : 'Chưa cập nhật kinh nghiệm'}
               </Text>
               <View style={styles.ratingRow}>
                 {rating !== undefined && rating > 0 ? (
@@ -357,7 +357,7 @@ export function ProfileServicesPresentation({
               </View>
               <View style={styles.bentoTextCol}>
                 <Text style={styles.bentoLabel}>Kinh nghiệm</Text>
-                <Text style={styles.bentoValue}>{experienceYears} năm thực chiến</Text>
+                <Text style={styles.bentoValue}>{experienceYears !== null ? `${experienceYears} năm kinh nghiệm` : 'Chưa cập nhật'}</Text>
               </View>
             </View>
 

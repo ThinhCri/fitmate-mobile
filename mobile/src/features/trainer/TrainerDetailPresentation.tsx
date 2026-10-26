@@ -82,7 +82,7 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
     return <LoadingSkeleton count={3} />;
   }
 
-  const formattedPrice = new Intl.NumberFormat('vi-VN', {
+  const formattedPrice = trainer.sessionPriceVnd === null ? 'Chưa công bố giá' : new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
     maximumFractionDigits: 0,
@@ -130,7 +130,7 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
               </View>
 
               <Text style={[typography.caption, styles.experienceText]}>
-                Kinh nghiệm: {trainer.experienceYears}+ năm huấn luyện
+                {trainer.experienceYears === null ? 'Chưa cập nhật kinh nghiệm' : `Kinh nghiệm: ${trainer.experienceYears} năm huấn luyện`}
               </Text>
             </View>
           </View>
@@ -245,7 +245,7 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
           <Text style={[typography.caption, styles.priceSubtitle]}>Học phí tham khảo</Text>
           <Text style={[typography.title2, styles.priceMain]}>
             {formattedPrice}
-            <Text style={[typography.caption, styles.priceSub]}>/buổi</Text>
+            {trainer.sessionPriceVnd !== null && <Text style={[typography.caption, styles.priceSub]}>/buổi</Text>}
           </Text>
         </View>
 

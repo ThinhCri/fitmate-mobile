@@ -31,6 +31,7 @@ export interface PtOverviewPresentationProps {
     location: string;
   }[];
   onToggleStatus: () => void;
+  onSelectTask?: (linkTarget: string) => void;
   onNavigateToServices: () => void;
   onNavigateToSchedule: () => void;
   onNavigateToCertificates: () => void;
@@ -50,6 +51,7 @@ export function PtOverviewPresentation({
   pendingTasks,
   upcomingSessions,
   onToggleStatus,
+  onSelectTask,
   onNavigateToServices,
   onNavigateToSchedule,
   onNavigateToCertificates,
@@ -88,7 +90,7 @@ export function PtOverviewPresentation({
             {rating !== null && reviewCount !== null && <View style={styles.ratingRow}>
               <Star size={14} color="#F59E0B" fill="#F59E0B" />
               <Text style={styles.ratingText}>{rating.toFixed(2)}</Text>
-              <Text style={styles.reviewCountText}>({reviewCount}+ đánh giá)</Text>
+              <Text style={styles.reviewCountText}>({reviewCount} đánh giá)</Text>
             </View>}
           </View>
         </View>
@@ -102,11 +104,11 @@ export function PtOverviewPresentation({
               ]}
             />
             <Text style={styles.statusText}>
-              Trạng thái: {isAcceptingClients ? 'Sẵn sàng nhận khách' : 'Tạm dừng nhận khách'}
+              Dịch vụ: {isAcceptingClients ? 'Có dịch vụ đang mở' : 'Chưa có dịch vụ đang mở'}
             </Text>
           </View>
           <TouchableOpacity onPress={onToggleStatus} accessibilityRole="button">
-            <Text style={styles.switchStatusBtnText}>Đổi trạng thái</Text>
+            <Text style={styles.switchStatusBtnText}>Quản lý dịch vụ</Text>
           </TouchableOpacity>
         </View>
       </Card>
@@ -124,8 +126,10 @@ export function PtOverviewPresentation({
 
           <View style={styles.tasksList}>
             {pendingTasks.map((t) => (
-              <View
+              <TouchableOpacity
                 key={t.id}
+                accessibilityRole="button"
+                onPress={() => onSelectTask?.(t.linkTarget)}
                 style={[
                   styles.taskItem,
                   t.type === 'warning' ? styles.taskItemWarning : styles.taskItemInfo,
@@ -144,7 +148,7 @@ export function PtOverviewPresentation({
                   size={16}
                   color={t.type === 'warning' ? '#D97706' : colors.primary}
                 />
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </Card>
@@ -212,7 +216,7 @@ export function PtOverviewPresentation({
 
       {upcomingSessions.length === 0 ? (
         <Card style={styles.emptySessionsCard}>
-          <Text style={styles.emptySessionsText}>Hôm nay bạn không có lịch dạy nào.</Text>
+          <Text style={styles.emptySessionsText}>Chưa có lịch sắp tới trong trang dữ liệu này. Mở Buổi dạy để xem toàn bộ lịch.</Text>
         </Card>
       ) : (
         upcomingSessions.map((session) => (

@@ -134,8 +134,8 @@ export interface PTPublicProfile {
   full_name: string;
   avatar_url: string | null;
   specialty: string;
-  experience_years: number;
-  price_per_session_vnd: number;
+  experience_years: number | null;
+  price_per_session_vnd: number | null;
   rating: number;
   reviews_count: number;
   certificate_status: 'verified' | string;
@@ -292,8 +292,8 @@ export interface TrainerSummaryViewModel {
   specialties: string[];
   rating: number;
   reviewCount: number;
-  sessionPriceVnd: number;
-  experienceYears: number;
+  sessionPriceVnd: number | null;
+  experienceYears: number | null;
   isVerified: boolean;
 }
 
@@ -344,6 +344,12 @@ export interface AvailabilitySlotViewModel {
 export function mapPTPublicProfileToSummary(
   dto: PTPublicProfile
 ): TrainerSummaryViewModel {
+  if (!Number.isFinite(dto.rating) || dto.rating < 0 || dto.rating > 5 ||
+      !Number.isInteger(dto.reviews_count) || dto.reviews_count < 0 ||
+      (dto.price_per_session_vnd !== null && (!Number.isSafeInteger(dto.price_per_session_vnd) || dto.price_per_session_vnd < 0)) ||
+      (dto.experience_years !== null && (!Number.isInteger(dto.experience_years) || dto.experience_years < 0))) {
+    throw new Error('Thông tin huấn luyện viên từ máy chủ chưa hợp lệ. Vui lòng tải lại.');
+  }
   const specialties = dto.specialty
     ? dto.specialty
         .split(',')
@@ -355,11 +361,11 @@ export function mapPTPublicProfileToSummary(
     id: dto.id,
     name: dto.full_name,
     avatarUrl: dto.avatar_url,
-    specialties: specialties.length > 0 ? specialties : [dto.specialty || 'Thể hình'],
-    rating: typeof dto.rating === 'number' ? dto.rating : 5.0,
-    reviewCount: typeof dto.reviews_count === 'number' ? dto.reviews_count : 0,
-    sessionPriceVnd: dto.price_per_session_vnd || 0,
-    experienceYears: dto.experience_years || 0,
+    specialties: specialties.length > 0 ? specialties : ['Chưa cập nhật chuyên môn'],
+    rating: dto.rating,
+    reviewCount: dto.reviews_count,
+    sessionPriceVnd: dto.price_per_session_vnd,
+    experienceYears: dto.experience_years,
     isVerified: dto.certificate_status === 'verified',
   };
 }
