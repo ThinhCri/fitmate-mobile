@@ -9,6 +9,7 @@ import {
 import type { IWorkoutRepository, MonthlyWorkoutStats, WorkoutGoals } from '../workoutRepository';
 import { apiClient, resolveApiResourceUrl } from '@/services/api/client';
 import { createUuid } from '@/utils/uuid';
+import { exerciseInputErrors } from '@/features/workout/workoutLimits';
 
 export class ApiWorkoutRepository implements IWorkoutRepository {
   async listExerciseCatalog(query?: string): Promise<ExerciseCatalogItemViewModel[]> {
@@ -34,6 +35,8 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
   }
 
   private toPlanPayload(plan: Partial<WorkoutPlanViewModel>) {
+    if (plan.exercises?.some(item => Object.keys(exerciseInputErrors(item)).length > 0))
+      throw new Error('Kiểm tra giới hạn số hiệp, số lần và thời gian của từng bài tập.');
     return {
       day_of_week: plan.category,
       workout_name: plan.title,
@@ -43,8 +46,8 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
         name: item.name,
         type: item.type,
         sets: item.sets,
-        reps: item.repsPerSet,
-        duration_sec: item.durationSeconds,
+        reps: item.type === 'reps' ? item.repsPerSet : undefined,
+        duration_sec: item.type === 'time' ? item.durationSeconds : undefined,
         rest_sec: item.restSeconds,
         calories: item.caloriesEstimate,
         notes: item.instructions,

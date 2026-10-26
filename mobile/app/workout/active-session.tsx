@@ -16,7 +16,8 @@ import { estimateSessionKcal } from '@/features/workout/calorieEstimate';
 import { findCatalogMatch } from '@/features/workout/workoutCatalog';
 import { createAudioController } from '@/features/workout/audio';
 import { useAuth } from '@/services/AuthContext';
-import { isValidRestSeconds, restSecondsOrDefault, restoredCountdown } from '@/features/workout/sessionTiming';
+import { restSecondsOrDefault, restoredCountdown } from '@/features/workout/sessionTiming';
+import { exerciseInputErrors, wholeNumber } from '@/features/workout/workoutLimits';
 
 const CHECKPOINT_KEY = 'fitmate_active_workout_v2';
 
@@ -81,9 +82,8 @@ export default function ActiveSessionScreen() {
       .then(([value, rawCheckpoint, catalog]) => {
         if (!active) return;
         if (!value.exercises.length) throw new Error('Kế hoạch chưa có bài tập.');
-        if (value.exercises.some(item => !isValidRestSeconds(item.restSeconds))) {
-          Alert.alert('Thời gian nghỉ chưa hợp lệ', 'Có bài tập có thời gian nghỉ ngoài khoảng 0–600 giây. Buổi này tạm dùng 45 giây cho bài đó; bạn có thể sửa lại trong kế hoạch.');
-        }
+        if (value.exercises.some(item => Object.keys(exerciseInputErrors(item)).length > 0))
+          throw new Error('Kế hoạch có số liệu vượt giới hạn: 1–10 hiệp, 1–100 lần, tập 1–600 giây và nghỉ 0–600 giây. Hãy chỉnh lại kế hoạch trước khi bắt đầu.');
         setPlan({
           ...value,
           exercises: value.exercises.map((item) => {
@@ -238,7 +238,7 @@ export default function ActiveSessionScreen() {
   };
 
   const fillMissingSets = (
-    status: 'completed' | 'endedEarly',
+    _status: 'completed' | 'endedEarly',
     currentResults: ActiveWorkoutResult[]
   ) => {
     if (!plan) return currentResults;
@@ -250,13 +250,7 @@ export default function ActiveSessionScreen() {
           const setNumber = index + 1;
           return existing.find((set) => set.setNumber === setNumber) ?? {
             setNumber,
-            status: status === 'completed' ? 'completed' as const : 'skipped' as const,
-            repsCompleted: status === 'completed' && item.type === 'reps'
-              ? item.repsPerSet
-              : undefined,
-            durationSeconds: status === 'completed' && item.type === 'time'
-              ? item.durationSeconds
-              : undefined,
+            status: 'skipped' as const,
           };
         }),
       };
@@ -310,8 +304,8 @@ export default function ActiveSessionScreen() {
 
   const completeSet = (actualReps?: number) => {
     if (!exercise) return;
-    if (exercise.type === 'reps' && (!Number.isFinite(actualReps) || (actualReps ?? 0) <= 0)) {
-      Alert.alert('Chưa có số lần tập', 'Nhập số lần bạn thực hiện, hoặc chọn bỏ qua bài tập.');
+    if (exercise.type === 'reps' && !wholeNumber(actualReps, 1, 100)) {
+      Alert.alert('Số lần chưa hợp lệ', 'Nhập từ 1 đến 100 lần đã thực hiện, hoặc chọn bỏ qua nếu chưa tập.');
       return;
     }
     const nextResults = addSetResult(exercise.id, {
@@ -418,7 +412,7 @@ export default function ActiveSessionScreen() {
   if (!plan || !exercise) {
     return (
       <View style={[styles.container, styles.center]}>
-        {error ? <Text style={styles.error}>{error}</Text> : <ActivityIndicator />}
+        {error ? <><Text style={styles.error}>{error}</Text><Text accessibilityRole="button" style={{ padding: 16 }} onPress={() => router.replace(`/workout/editor?id=${encodeURIComponent(planId ?? '')}` as never)}>Chỉnh kế hoạch</Text><Text accessibilityRole="button" style={{ padding: 16 }} onPress={() => router.back()}>Quay lại</Text></> : <ActivityIndicator />}
       </View>
     );
   }

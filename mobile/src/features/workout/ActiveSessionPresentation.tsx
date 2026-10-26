@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  Alert,
 } from 'react-native';
 import {
   ArrowLeft,
@@ -24,6 +25,7 @@ import { PrimaryButton } from '@/components/design-system/Buttons';
 import { Card } from '@/components/design-system/Card';
 import { ExerciseIllustration } from './ExerciseIllustration';
 import { formatWorkoutTimer } from './sessionTiming';
+import { wholeNumber } from './workoutLimits';
 
 export type SessionPhase = 'prepare' | 'exercise' | 'rest' | 'paused';
 
@@ -76,7 +78,18 @@ export const ActiveSessionPresentation: React.FC<ActiveSessionPresentationProps>
   onEndEarly,
   onRetryMedia,
 }) => {
-  const [actualReps, setActualReps] = useState<number>(currentExercise.repsPerSet ?? 10);
+  const [actualReps, setActualReps] = useState('');
+  useEffect(() => { setActualReps(''); }, [currentExercise.id, currentSetIndex]);
+  const validReps = actualReps.trim() !== '' && wholeNumber(Number(actualReps), 1, 100);
+  const complete = () => {
+    const reps = Number(actualReps);
+    if (currentExercise.type === 'reps' && !validReps) return;
+    if (currentExercise.type === 'reps' && reps > 50) {
+      Alert.alert('Kiểm tra số lần', `Bạn đã thực hiện ${reps} lần trong hiệp này?`, [
+        { text: 'Chỉnh lại', style: 'cancel' }, { text: 'Đúng, xong hiệp', onPress: () => onCompleteSet(reps) },
+      ]);
+    } else onCompleteSet(currentExercise.type === 'reps' ? reps : undefined);
+  };
 
   const getPhaseMeta = () => {
     switch (phase) {
@@ -184,10 +197,10 @@ export const ActiveSessionPresentation: React.FC<ActiveSessionPresentationProps>
             </Text>
           ) : (
             <View style={styles.repsDisplayCol}>
-              <Text style={[typography.display, styles.repsNumber]}>
+              <Text style={[typography.display, styles.repsNumber]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
                 {currentExercise.repsPerSet ?? 10}
               </Text>
-              <Text style={[typography.captionMedium, styles.repsUnit]}>LẦN / HIỆP</Text>
+              <Text style={[typography.captionMedium, styles.repsUnit]}>MỤC TIÊU LẦN / HIỆP</Text>
             </View>
           )}
         </View>
@@ -195,7 +208,9 @@ export const ActiveSessionPresentation: React.FC<ActiveSessionPresentationProps>
         {phase === 'exercise' && currentExercise.type === 'reps' ? (
           <View style={styles.repsInputRow}>
             <Text style={styles.statText}>Bạn đã tập được bao nhiêu lần?</Text>
-            <TextInput value={String(actualReps)} onChangeText={(value) => setActualReps(Math.max(0, Number(value.replace(/[^0-9]/g, '')) || 0))} keyboardType="number-pad" style={styles.repsInput} accessibilityLabel="Số lần đã tập trong hiệp" />
+            <TextInput value={actualReps} onChangeText={setActualReps} placeholder="0–100" keyboardType="number-pad" style={styles.repsInput} accessibilityLabel="Số lần đã tập trong hiệp" />
+            {actualReps !== '' && !validReps && <Text style={{ color: colors.danger }}>Nhập 1–100 lần để hoàn thành. Nếu chưa tập, chọn bỏ qua.</Text>}
+            <TouchableOpacity accessibilityRole="button" onPress={() => setActualReps(String(currentExercise.repsPerSet))}><Text style={{ color: colors.primary }}>Đạt mục tiêu: {currentExercise.repsPerSet} lần</Text></TouchableOpacity>
           </View>
         ) : null}
 
@@ -241,7 +256,8 @@ export const ActiveSessionPresentation: React.FC<ActiveSessionPresentationProps>
             ) : (
               <PrimaryButton
                 label={isSaving ? 'Đang lưu…' : 'Xong hiệp'}
-                onPress={() => onCompleteSet(actualReps)}
+                onPress={complete}
+                disabled={isSaving || (currentExercise.type === 'reps' && !validReps)}
                 loading={isSaving}
                 fullWidth
                 leftIcon={<CheckCircle2 size={18} color={colors.white} />}
@@ -316,8 +332,8 @@ const styles = StyleSheet.create({
   guidanceTitle: { ...typography.bodyBold, color: colors.textPrimary },
   guidanceBody: { ...typography.body, color: colors.textPrimary },
   guidanceNote: { ...typography.caption, color: colors.textSecondary },
-  repsInputRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  repsInput: { minWidth: 72, minHeight: 48, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surface, textAlign: 'center', color: colors.textPrimary, fontSize: 20, fontWeight: '700' },
+  repsInputRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: spacing.md },
+  repsInput: { width: 96, minHeight: 48, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surface, textAlign: 'center', color: colors.textPrimary, fontSize: 20, fontWeight: '700' },
   phasePill: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,

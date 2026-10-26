@@ -1,5 +1,10 @@
 # Handoff — Ban giao hien tai
 
+## 2026-10-27 — Bound real workout plan and session inputs
+- Owner approved 1–10 sets, 1–100 reps, 1–600 timed seconds, 0–600 rest seconds; confirm >6 sets, >50 reps, >300 seconds. These are product limits, not exercise prescriptions. Shared validators guard editor, API payload and starting legacy plans. No silent clamping.
+- Active session now starts actual reps blank per set, shows target separately with explicit target shortcut, validates completion and scales rep text on one line. Missing results remain skipped rather than inheriting targets. Real plan/session API calls preserved; backend enforces corresponding bounds including actual results.
+- Added numeric boundary source tests; no mobile install/test/typecheck/build per manual-only rule. Backend tests are recorded in BE handoff; device/DB UAT and deployment still pending.
+
 ## 2026-10-27 — Complete real provider and profile wiring (device UAT pending)
 - Added native Firebase messaging 26.4.0 + config plugin, disabled auto-init until permission/session, real FCM token registration/refresh/revoke and safe inbox navigation. Preserved GA4 analytics consent flags. npm ci/native rebuild required; Expo Go cannot supply the added native module. No dependency installation or mobile commands executed under manual-only rules.
 - Added real workout suggestions form/API and replaced ai-adjust placeholder route; shared server chat quota disclosed, no auto-save. Backend Gemini food scan and image-chat routing now implemented; keys/flags and provider test still required.

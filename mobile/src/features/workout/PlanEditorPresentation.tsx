@@ -9,6 +9,7 @@ import {
   Platform,
   ActivityIndicator,
   Image,
+  Alert,
 } from 'react-native';
 import {
   ArrowLeft,
@@ -30,6 +31,7 @@ import { PrimaryButton, SecondaryButton } from '@/components/design-system/Butto
 import { Card } from '@/components/design-system/Card';
 import { estimateExerciseKcal, estimatePlanKcal } from './calorieEstimate';
 import { isValidRestSeconds, MAX_REST_SECONDS } from './sessionTiming';
+import { exerciseInputErrors, unusualExercise } from './workoutLimits';
 
 export interface PlanEditorPresentationProps {
   initialPlan?: Partial<WorkoutPlanViewModel>;
@@ -117,7 +119,7 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
     );
   };
 
-  const handleSave = () => {
+  const handleSave = (confirmed = false) => {
     const errs: Record<string, string> = {};
     if (!title.trim()) {
       errs.title = 'Vui lòng nhập tên kế hoạch';
@@ -126,12 +128,19 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
       errs.exercises = 'Kế hoạch phải có ít nhất 1 bài tập';
     }
     for (const exercise of exercises) {
+      for (const [field, message] of Object.entries(exerciseInputErrors(exercise))) errs[`${field}-${exercise.id}`] = message;
       if (!isValidRestSeconds(exercise.restSeconds)) {
         errs[`rest-${exercise.id}`] = `Nhập từ 0 đến ${MAX_REST_SECONDS} giây`;
       }
     }
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
+    if (!confirmed && exercises.some(unusualExercise)) {
+      Alert.alert('Kiểm tra lại mục tiêu', 'Có bài trên 50 lần, 6 hiệp hoặc thời gian tập/nghỉ trên 5 phút. Bạn có chủ ý nhập các số này không?', [
+        { text: 'Chỉnh lại', style: 'cancel' }, { text: 'Đúng, lưu kế hoạch', onPress: () => handleSave(true) },
+      ]);
+      return;
+    }
 
     onSave({
       title: title.trim(),
@@ -365,8 +374,9 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
                   <InputField
                     label="Số hiệp"
                     keyboardType="numeric"
-                    value={String(ex.sets)}
-                    onChangeText={(t) => handleUpdateExercise(ex.id, { sets: Number(t) || 1 })}
+                    value={restDrafts[`sets-${ex.id}`] ?? String(ex.sets)}
+                    error={exerciseInputErrors(ex).sets}
+                    onChangeText={(t) => { setRestDrafts(prev => ({ ...prev, [`sets-${ex.id}`]: t })); handleUpdateExercise(ex.id, { sets: t.trim() ? Number(t) : NaN }); }}
                   />
                 </View>
 
@@ -375,9 +385,10 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
                     <InputField
                       label="Lần / hiệp"
                       keyboardType="numeric"
-                      value={String(ex.repsPerSet ?? 10)}
+                      value={restDrafts[`reps-${ex.id}`] ?? String(ex.repsPerSet ?? '')}
+                      error={exerciseInputErrors(ex).reps}
                       onChangeText={(t) =>
-                        handleUpdateExercise(ex.id, { repsPerSet: Number(t) || 1 })
+                        { setRestDrafts(prev => ({ ...prev, [`reps-${ex.id}`]: t })); handleUpdateExercise(ex.id, { repsPerSet: t.trim() ? Number(t) : NaN }); }
                       }
                     />
                   </View>
@@ -386,9 +397,10 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
                     <InputField
                       label="Giây / hiệp"
                       keyboardType="numeric"
-                      value={String(ex.durationSeconds ?? 30)}
+                      value={restDrafts[`duration-${ex.id}`] ?? String(ex.durationSeconds ?? '')}
+                      error={exerciseInputErrors(ex).duration}
                       onChangeText={(t) =>
-                        handleUpdateExercise(ex.id, { durationSeconds: Number(t) || 1 })
+                        { setRestDrafts(prev => ({ ...prev, [`duration-${ex.id}`]: t })); handleUpdateExercise(ex.id, { durationSeconds: t.trim() ? Number(t) : NaN }); }
                       }
                     />
                   </View>
@@ -400,11 +412,10 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
                     keyboardType="numeric"
                     value={restDrafts[ex.id] ?? String(ex.restSeconds)}
                     maxLength={4}
-                    error={errors[`rest-${ex.id}`]}
+                    error={exerciseInputErrors(ex).rest}
                     onChangeText={(text) => {
-                      const digits = text.replace(/[^0-9]/g, '');
-                      setRestDrafts(current => ({ ...current, [ex.id]: digits }));
-                      handleUpdateExercise(ex.id, { restSeconds: digits === '' ? NaN : Number(digits) });
+                      setRestDrafts(current => ({ ...current, [ex.id]: text }));
+                      handleUpdateExercise(ex.id, { restSeconds: text.trim() === '' ? NaN : Number(text) });
                     }}
                   />
                 </View>
@@ -417,7 +428,7 @@ export const PlanEditorPresentation: React.FC<PlanEditorPresentationProps> = ({
         <View style={styles.ctaContainer}>
           <PrimaryButton
             label="Lưu kế hoạch tập"
-            onPress={handleSave}
+            onPress={() => handleSave()}
             loading={isSaving}
             fullWidth
           />
