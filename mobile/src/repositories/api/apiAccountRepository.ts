@@ -28,19 +28,21 @@ export class ApiAccountRepository implements IAccountRepository {
   }
   async getAccountHub(): Promise<AccountHubViewModel> {
     const me = await authService.getMe();
-    // Only the appointment badge is used here. Do not issue unrelated requests or turn failures into zeros.
-    const bookings = await (me.role === 'pt'
-      ? bookingService.listMyTrainerBookings({ page: 1, pageSize: 100 })
-      : bookingService.listMyBookings({ page: 1, pageSize: 100 })).catch(() => undefined);
-    const completePage = bookings && Number.isInteger(bookings.total) && bookings.total <= bookings.items.length;
+    // Read server totals rather than count an arbitrarily truncated first page.
+    const pages = await Promise.all(['Pending', 'Confirmed', 'InProgress', 'AwaitingMemberConfirmation'].map((status) =>
+      me.role === 'pt'
+        ? bookingService.listMyTrainerBookings({ status, page: 1, pageSize: 1 })
+        : bookingService.listMyBookings({ status, page: 1, pageSize: 1 })
+    )).catch(() => undefined);
+    const complete = pages?.every((page) => Number.isSafeInteger(page.total) && page.total >= 0) === true;
     return {
       id: me.id,
       name: me.full_name || 'Người dùng',
       email: me.email,
       role: me.role === 'pt' ? 'pt' : 'member',
       avatarUrl: me.avatar_url ?? undefined,
-      upcomingBookingCount: bookings && completePage ? bookings.items.filter((item) => ['Pending', 'Confirmed', 'InProgress', 'AwaitingMemberConfirmation'].includes(item.status)).length : undefined,
-      summaryUnavailable: !completePage,
+      upcomingBookingCount: pages && complete ? pages.reduce((total, page) => total + page.total, 0) : undefined,
+      summaryUnavailable: !complete,
     };
   }
 
