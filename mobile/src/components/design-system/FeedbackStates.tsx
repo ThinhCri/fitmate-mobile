@@ -35,12 +35,6 @@ export const LoadingSkeleton: React.FC<{
           </View>
         </View>
       ))}
-      <View style={styles.loadingSpinnerRow}>
-        <ActivityIndicator color={colors.primary} size="small" />
-        <Text style={[typography.caption, styles.loadingText]}>
-          Đang đồng bộ dữ liệu...
-        </Text>
-      </View>
     </View>
   );
 };

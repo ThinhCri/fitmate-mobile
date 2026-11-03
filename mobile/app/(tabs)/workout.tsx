@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Text, TouchableOpacity } from 'react-native';
 import { colors, typography } from '@/theme/designTokens';
 import { systemService } from '@/services/api/systemService';
@@ -20,18 +20,27 @@ export default function WorkoutScreen() {
   const [goals, setGoals] = useState<WorkoutGoals | null>(null);
   const [currentWeightKg, setCurrentWeightKg] = useState<number | null>(null);
   const [completedTodayPlanIds, setCompletedTodayPlanIds] = useState<string[]>([]);
+  const loaded = useRef(false);
+  const latestLoad = useRef(0);
 
   const loadPlans = useCallback(async () => {
-    setLoading(true);
+    const request = ++latestLoad.current;
+    setLoading(!loaded.current);
     try {
       const repository = getWorkoutRepository();
       const nextPlans = await repository.listPlans();
+      if (request !== latestLoad.current) return;
       setPlans(nextPlans);
+      // The plan list is usable before secondary history/weight requests finish.
+      loaded.current = true;
+      setLoading(false);
       const [history, workoutGoals, weight] = await Promise.allSettled([
         repository.getHistory(),
         repository.getWorkoutGoals(),
         repository.getWeightRecords(),
       ]);
+      if (request !== latestLoad.current) return;
+      loaded.current = true;
       setStats(history.status === 'fulfilled' ? history.value.stats : null);
       setCompletedTodayPlanIds(history.status === 'fulfilled'
         ? history.value.sessions.filter((session) =>
@@ -47,9 +56,10 @@ export default function WorkoutScreen() {
       );
       setError(null);
     } catch (cause) {
+      if (request !== latestLoad.current) return;
       setError(cause instanceof Error ? cause.message : 'Không thể tải kế hoạch tập luyện.');
     } finally {
-      setLoading(false);
+      if (request === latestLoad.current) setLoading(false);
     }
   }, []);
 
@@ -66,9 +76,11 @@ export default function WorkoutScreen() {
       {aiAvailable && <TouchableOpacity accessibilityRole="button" style={{ minHeight: 48, justifyContent: 'center', alignItems: 'center' }} onPress={() => router.push('/workout/ai-suggestions' as never)}><Text style={{ ...typography.body, color: colors.primary }}>Gợi ý tập luyện AI</Text></TouchableOpacity>}
       {loading ? (
         <LoadingSkeleton count={3} />
-      ) : error ? (
+      ) : error && !loaded.current ? (
         <ErrorState title="Không thể tải kế hoạch" description={error} onAction={() => void loadPlans()} />
       ) : (
+        <>
+        {error && <Text style={{ color: colors.danger, padding: 12 }}>Chưa cập nhật được dữ liệu mới. Đang hiển thị dữ liệu đã tải.</Text>}
         <WorkoutOverviewPresentation
           plans={plans}
           completedTodayPlanIds={completedTodayPlanIds}
@@ -82,6 +94,7 @@ export default function WorkoutScreen() {
           currentWeightKg={currentWeightKg}
           targetWeightKg={goals?.targetWeightKg ?? null}
         />
+        </>
       )}
     </ScreenContainer>
   );

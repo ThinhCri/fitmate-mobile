@@ -130,7 +130,7 @@ describe('Community & Social Presentation Logic (Stitch F01 - F06)', () => {
     profile = {
       ...profile,
       friendshipStatus: 'friend',
-      friendCount: profile.friendCount + 1,
+      friendCount: profile.friendCount! + 1,
     };
     expect(profile.friendshipStatus).toBe('friend');
     expect(profile.friendCount).toBe(11);
@@ -139,7 +139,7 @@ describe('Community & Social Presentation Logic (Stitch F01 - F06)', () => {
     profile = {
       ...profile,
       friendshipStatus: 'none',
-      friendCount: profile.friendCount - 1,
+      friendCount: profile.friendCount! - 1,
     };
     expect(profile.friendshipStatus).toBe('none');
     expect(profile.friendCount).toBe(10);

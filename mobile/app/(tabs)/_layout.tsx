@@ -21,6 +21,7 @@ import { useEffect, useState } from 'react';
 import { Tabs, useRouter, useSegments } from 'expo-router';
 import { Home, Apple, Dumbbell, Users, Briefcase } from 'lucide-react-native';
 import { FloatingTabBar, type TabItem } from '@/components/ui';
+import { useAuth } from '@/services/AuthContext';
 import {
   TabBarVisibilityProvider,
   useTabBarVisibility,
@@ -35,6 +36,7 @@ function TabsActiveWatcher({ activeRoute }: { activeRoute: string }) {
 }
 
 export default function TabsLayout() {
+  const { user } = useAuth();
   const router = useRouter();
   const segments = useSegments();
 
@@ -112,6 +114,7 @@ export default function TabsLayout() {
     <TabBarVisibilityProvider>
       <TabsActiveWatcher activeRoute={activeRoute} />
       <Tabs
+        key={user?.id ?? 'anonymous'}
         tabBar={() => <FloatingTabBar tabs={tabs} />}
         screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true } as never}
       >

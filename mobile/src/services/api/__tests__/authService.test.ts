@@ -100,7 +100,7 @@ describe('AuthService & ApiClient (MOB-800)', () => {
       expect(domainPt.profile.isVerified).toBe(false);
       expect(domainPt.profile.certificateStatus).toBe('pending');
       // Password must not be persisted in production domain user
-      expect(domainPt.password).toBeUndefined();
+      expect(domainPt).not.toHaveProperty('password');
     });
 
     it('ensures member registration maps to member role with unverified certificate status', () => {

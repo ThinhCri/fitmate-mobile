@@ -1,17 +1,24 @@
 {
   "baseline": "PROD-2026-09-22-v1",
-  "capturedAt": "2026-10-25",
+  "capturedAt": "2026-10-28",
   "backendRepository": "FitmateAI_BE",
-  "backendFrozenRevision": "57b6cea+worktree",
+  "backendFrozenRevision": "9b0d7aa+worktree",
   "openapiSource": "FitmateAI_BE/docs/backend-release/openapi/fitmate-v1.yaml",
-  "openapiSha256": "8FDE4A959E4877417B4F0119CCF56C76E73740C6C833ABF8E0AF9F78E7E2AEFF",
+  "openapiSha256": "98FB2A628B4BD88E723D5ACE919B31ACAE36BC579E9842D8833E6EA82F7615A0",
   "accountDeletionDelta": "2026-10-25: authenticated deletion now requires a six-digit email OTP from POST /users/me/deletion-otp; request body includes otp. Both POST delete-request and legacy DELETE /users/me enforce verification. Deploy backend before using this mobile flow; old clients cannot submit deletion without upgrading. Public email-link deletion remains available. This is local contract evidence, not production rollout approval.",
   "contractStatus": "FROZEN-V1",
   "hashEncoding": "raw file bytes (no normalization)",
   "refreshWhen": "The backend OpenAPI revision changes; recalculate SHA256 and update this file before integration.",
-  "reviewedWorktreeDelta": "2026-10-25: ExerciseInput.rest_sec maximum 600 seconds, covered by 25 focused WorkoutService tests; mobile editor and checkpoint handling match. Earlier pending source changes add optional GA4 source/realtime fields and remove obsolete payout-account SMS 409. These changes do not rename consumed workout DTO fields. This pins the reviewed local worktree, not a deployed API or release approval.",
+  "reviewedWorktreeDelta": "2026-10-28: Reviewed social profile DTOs, refund adjustment, hosted suggestions and numeric workout bounds. Shared catalog media_url writes now use stable storage:// identity; backend responses sign fresh URLs and recover legacy expired catalog URLs after ownership checks. No field rename or private-media re-signing. Backend unit 1063 and mobile 239 tests/type-check passed BEFORE this media delta; latest source-only changes await owner-run checks. This pins local source, not a deployed API or release approval.",
   "contractMeaning": "OpenAPI is the wire source of truth. PT package and booking contracts remain operator-gated. Manual PT payout requires a verified payout account, immutable payee snapshot and Admin-recorded bank receipt. AI Plus is a prepaid, non-renewing Google Play month with separate new-sale and restore availability. Provider credentials are still unverified until operator UAT; this contract does not authorize production sales.",
   "verifiedCore": "Historical backend verification on 2026-10-12: 974/974 unit and 101/101 isolated PostgreSQL integration tests passed; Admin type-check, build and 127/127 tests passed. Later GA4 VPS diagnostics confirmed landing realtime traffic on 2026-10-23; native Android collection remains unverified. Those results do not certify the current worktree or release.",
   "openGates": "Google OAuth/Meet and SpeedSMS live verification; package checkout and refund ledger; BE-808..810 and BE-400 payment/payOS re-verification; BE-817 AI capability readiness; BE-826 three-repo UAT; BE-827 release approval.",
-  "disabledCapabilities": ["ai.companion_chat", "ai.workout_adjust", "ai.food_scan (runtime gated)", "vip_purchase", "reward_cashout", "pt_automatic_payout"]
+  "disabledCapabilities": [
+    "ai.companion_chat",
+    "ai.workout_adjust",
+    "ai.food_scan (runtime gated)",
+    "vip_purchase",
+    "reward_cashout",
+    "pt_automatic_payout"
+  ]
 }

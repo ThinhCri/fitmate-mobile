@@ -27,9 +27,9 @@ export default function DashboardScreen() {
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const hasFocusedOnce = useRef(false);
   const notificationLoadInFlight = useRef(false);
-  const load = useCallback(async (refresh = false) => {
+  const load = useCallback(async (refresh = false, silent = false) => {
     if (refresh) setRefreshing(true);
-    else setLoading(true);
+    else if (!silent) setLoading(true);
     setError(null);
     try { setData(await dashboardService.getMemberDashboard()); }
     catch (err) { setError(err instanceof Error ? err.message : 'Không thể tải trang chủ.'); }
@@ -54,7 +54,7 @@ export default function DashboardScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadUnreadNotificationCount();
-      if (hasFocusedOnce.current) void load(true);
+      if (hasFocusedOnce.current) void load(false, true);
       else hasFocusedOnce.current = true;
       const unsubscribeRealtime = realtimeService.subscribe('notifications.updated', () => void loadUnreadNotificationCount());
       const timer = setInterval(() => { if (AppState.currentState === 'active') void loadUnreadNotificationCount(); }, 15000);

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -26,22 +26,27 @@ export default function NutritionScreen() {
   const [error, setError] = useState<string | null>(null);
   const [segment, setSegment] = useState<'diary' | 'menu'>('diary');
   const [refreshing, setRefreshing] = useState(false);
+  const loadedDate = useRef<string | null>(null);
+  const latestLoad = useRef(0);
 
   const fetchSummary = useCallback(async (date = selectedDate) => {
+    const request = ++latestLoad.current;
+    setLoading(loadedDate.current !== date);
     try {
       const data = await getNutritionRepository().getDaySummary(date);
+      if (request !== latestLoad.current) return;
+      loadedDate.current = date;
       setSummary(data);
       setError(null);
     } catch (err: any) {
+      if (request !== latestLoad.current) return;
       setError(err?.message || 'Không thể tải nhật ký dinh dưỡng');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (request === latestLoad.current) { setLoading(false); setRefreshing(false); }
     }
   }, [selectedDate]);
 
   useFocusEffect(useCallback(() => {
-    setLoading(true);
     void fetchSummary();
   }, [fetchSummary]));
 
@@ -81,7 +86,7 @@ export default function NutritionScreen() {
     );
   }
 
-  if (error || !summary) {
+  if (!summary || (error && loadedDate.current !== selectedDate)) {
     return (
       <ScreenContainer edges={['top']}>
         <AppTopBar title="Nhật ký dinh dưỡng" />
@@ -96,6 +101,7 @@ export default function NutritionScreen() {
     <ScreenContainer edges={['top']}>
       <AppTopBar title="Nhật ký dinh dưỡng" />
 
+      {error && <Text style={styles.errorText}>Chưa cập nhật được dữ liệu mới. Đang hiển thị dữ liệu đã tải.</Text>}
       <NutritionDiaryPresentation
         summary={summary}
         activeSegment={segment}

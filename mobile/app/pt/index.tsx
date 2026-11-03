@@ -16,7 +16,7 @@ export default function PtOverviewScreen() {
       router.replace('/pt/certificates');
       return;
     }
-    let active = true; setData(null); setError('');
+    let active = true; setError('');
     ptDashboardService.getOverview().then((value) => { if (active) setData(value); }).catch((e) => {
       if (active) setError(e instanceof Error ? e.message : 'Không thể tải tổng quan PT.');
     });

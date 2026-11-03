@@ -12,7 +12,7 @@ describe('booking wire integrity', () => {
     expect(view.bookingStatus).toBe('confirmed'); expect(view.coach.rating).toBeNull(); expect(view.coach.reviewCount).toBeNull();
   });
   it('rejects an unknown state instead of falsely confirming the booking', () => {
-    expect(() => mapAppointmentWireToViewModel({ ...appointment, status: 'Unknown' } as AppointmentWire)).toThrow();
+    expect(() => mapAppointmentWireToViewModel({ ...appointment, status: 'Unknown' } as unknown as AppointmentWire)).toThrow();
   });
   it('rejects a missing duration instead of inventing an hour-long session', () => {
     expect(() => mapAppointmentWireToViewModel({ ...appointment, duration_minutes: 0 })).toThrow();

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MessageCircle, UserSearch } from 'lucide-react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { AppTopBar } from '@/components/design-system/AppTopBar';
@@ -24,12 +24,14 @@ export default function SocialScreen() {
   const [reportPost, setReportPost] = useState<CommunityPostViewModel | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<{ type: 'delete' | 'block'; post: CommunityPostViewModel } | null>(null);
   const latestRequest = useRef(0);
+  const loaded = useRef(false);
 
   const loadPosts = useCallback(async (query = '') => {
     const requestId = ++latestRequest.current;
     try {
       const result = await getSocialRepository().listPosts('public', query);
       if (requestId !== latestRequest.current) return;
+      loaded.current = true;
       setPosts(result);
       setError(null);
     } catch (cause) {
@@ -94,9 +96,11 @@ export default function SocialScreen() {
       />
       {loading ? (
         <LoadingSkeleton count={3} />
-      ) : error ? (
+      ) : error && !loaded.current ? (
         <ErrorState title="Không thể tải cộng đồng" description={error} onAction={() => void loadPosts(debouncedQuery)} />
       ) : (
+        <>
+        {error && <Text style={{ color: colors.danger, padding: 12 }}>Chưa cập nhật được bảng tin. Đang hiển thị dữ liệu đã tải.</Text>}
         <CommunityFeedPresentation
           posts={posts}
           activeSegment="community"
@@ -113,6 +117,7 @@ export default function SocialScreen() {
           onReportPress={openOptions}
           onAuthorPress={(authorId) => router.push(`/community/user/${authorId}` as any)}
         />
+        </>
       )}
       <CommentsSheet visible={Boolean(commentPost)} post={commentPost} onClose={() => { setCommentPost(null); void loadPosts(debouncedQuery); }} onSend={async (text, parentId) => { if (!commentPost) return false; try { const comment = await getSocialRepository().addComment(commentPost.id, text, parentId); setCommentPost((current) => current ? { ...current, comments: [...(current.comments || []), comment], commentCount: current.commentCount + 1 } : current); return true; } catch (cause) { Alert.alert('Không thể bình luận', cause instanceof Error ? cause.message : 'Vui lòng thử lại.'); return false; } }} onLike={async (commentId) => { if (!commentPost) return; try { const result = await getSocialRepository().toggleCommentLike(commentId); setCommentPost((current) => current ? { ...current, comments: current.comments?.map((comment) => comment.id === commentId ? { ...comment, likesCount: result.count, likedByViewer: result.active } : comment) } : current); } catch (cause) { Alert.alert('Không thể thích bình luận', cause instanceof Error ? cause.message : 'Vui lòng thử lại.'); } }} />
       <SharePostSheet visible={Boolean(sharePost)} friends={friends} sending={sharing} onClose={() => setSharePost(null)} onSend={async (friendIds) => { if (!sharePost) return; setSharing(true); try { const preview = sharePost.content.length > 90 ? `${sharePost.content.slice(0, 90)}…` : sharePost.content; await Promise.all(friendIds.map((friendId) => getSocialRepository().sendMessage(friendId, `Đã chia sẻ một bài viết của ${sharePost.authorName}:\n${preview}\nfitmate://community/post/${sharePost.id}`))); Alert.alert('Đã chia sẻ', `Đã gửi bài viết cho ${friendIds.length} người bạn.`); setSharePost(null); } catch (cause) { Alert.alert('Không thể chia sẻ', cause instanceof Error ? cause.message : 'Vui lòng thử lại.'); } finally { setSharing(false); } }} />
