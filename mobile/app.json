@@ -3,7 +3,7 @@
     "name": "Fitmate",
     "slug": "fitmate-mobile",
     "version": "0.1.2",
-    "orientation": "portrait",
+    "orientation": "default",
     "scheme": "fitmate",
     "icon": "./assets/brand/app-icon.png",
     "userInterfaceStyle": "light",
@@ -33,6 +33,7 @@
     },
     "plugins": [
       "./plugins/withAndroidReleaseOptimization",
+      "./plugins/withAndroidAdaptiveWindow",
       "./plugins/withAndroidBrandIcon",
       "expo-router",
       "expo-secure-store",

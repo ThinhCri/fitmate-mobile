@@ -33,6 +33,11 @@ if ($gradleSource -notmatch ('(?m)^\s*versionCode\s+' + [regex]::Escape([string]
     $gradleSource -notmatch ('(?m)^\s*versionName\s+"' + [regex]::Escape($releaseVersion) + '"\s*$')) {
     throw 'app.json and android/app/build.gradle versions differ. Update the native versionCode/versionName explicitly; do not use prebuild --clean.'
 }
+$manifestPath = Join-Path $mobileDir 'android\app\src\main\AndroidManifest.xml'
+$manifestSource = Get-Content -LiteralPath $manifestPath -Raw
+if ($releaseConfig.orientation -ne 'default' -or $manifestSource -match 'android:screenOrientation="(portrait|landscape|sensorPortrait|sensorLandscape|locked|nosensor)"') {
+    throw 'Orientation restriction remains. Apply the adaptive-window configuration before building.'
+}
 Write-Host "Preparing Fitmate $releaseVersion (versionCode $releaseCode). Ensure this code exceeds every code already uploaded to Play."
 if ($gradleSource -notmatch 'getDefaultProguardFile\(["'']proguard-android-optimize\.txt["'']\)') {
     throw 'Release R8 optimization is missing from android/app/build.gradle. Apply the reviewed release optimization plugin/config before building; do not run prebuild --clean.'

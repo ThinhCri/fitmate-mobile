@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, StatusBar, StyleProp, ViewStyle } from 'react-native';
+import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { SafeAreaView, Edge } from 'react-native-safe-area-context';
 import { colors } from '@/theme/designTokens';
 
@@ -21,11 +21,6 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
       edges={edges}
       style={[styles.container, { backgroundColor }, style]}
     >
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={backgroundColor}
-        translucent={false}
-      />
       <View style={styles.content}>{children}</View>
     </SafeAreaView>
   );
