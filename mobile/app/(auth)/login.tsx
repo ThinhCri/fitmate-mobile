@@ -1,3 +1,4 @@
+import { getLoginEmails, rememberLoginEmail, removeLoginEmail } from '@/services/loginEmailHistory';
 /**
  * Stitch a02_ng_nh_p_default
  * Screen: Authentication Login
@@ -10,7 +11,7 @@
  * - Zero mock success / fallback on API errors
  * - Memory-only access token via SessionManager
  */
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -28,6 +29,7 @@ import {
   Lock,
   Eye,
   EyeOff,
+  X,
   AlertCircle,
 } from 'lucide-react-native';
 import { useAuth } from '@/services/AuthContext';
@@ -45,9 +47,10 @@ export default function LoginScreen() {
   const [email, setEmail] = useState(params.email || '');
   const passwordRef = useRef<TextInput>(null);
   const [emailFocused, setEmailFocused] = useState(false);
-  const emailParts = email.trim().split('@');
-  const emailSuggestions = emailFocused && emailParts.length <= 2 && emailParts[0] && !/\s/.test(email)
-    ? ['gmail.com', 'outlook.com', 'yahoo.com'].filter(domain => domain.startsWith(emailParts[1] || '') && domain !== emailParts[1]).map(domain => `${emailParts[0]}@${domain}`) : [];
+  const [previousEmails, setPreviousEmails] = useState<string[]>([]);
+  useEffect(() => { let active=true; void getLoginEmails().then(values=>{if(active)setPreviousEmails(values);}); return()=>{active=false;}; }, []);
+  const emailSuggestions = emailFocused ? previousEmails.filter(value=>value.toLowerCase().includes(email.trim().toLowerCase())) : [];
+  const forgetEmail = (value:string) => { setPreviousEmails(values=>values.filter(item=>item!==value)); void removeLoginEmail(value).catch(()=>{}); };
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -74,6 +77,7 @@ export default function LoginScreen() {
     setSubmitting(true);
     try {
       const authenticatedUser = await login(trimmedEmail, password);
+      void rememberLoginEmail(trimmedEmail).catch(() => {});
       if (authenticatedUser.role === 'pt' && authenticatedUser.ptVerificationStatus !== 'approved') {
         router.replace('/pt/certificates');
       } else {
@@ -175,9 +179,9 @@ export default function LoginScreen() {
           </View>
 
           {emailSuggestions.length > 0 && <View style={{ gap: 6 }}>
-            <Text style={typography.caption}>Gợi ý địa chỉ email</Text>
+            <Text style={typography.caption}>Email đã đăng nhập trên thiết bị</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {emailSuggestions.map(value => <TouchableOpacity key={value} accessibilityRole="button" accessibilityLabel={'Điền email ' + value} disabled={submitting} onPress={() => { setEmail(value); setLocalError(null); clearError(); passwordRef.current?.focus(); }} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border }}><Text style={{ color: colors.primary }}>{'@' + value.split('@')[1]}</Text></TouchableOpacity>)}
+              {emailSuggestions.map(value => <View key={value} style={{flexDirection:'row',alignItems:'center'}}><TouchableOpacity key={value} accessibilityRole="button" accessibilityLabel={'Điền email ' + value} disabled={submitting} onPress={() => { setEmail(value); setLocalError(null); clearError(); passwordRef.current?.focus(); }} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border }}><Text style={{ color: colors.primary }}>{value}</Text></TouchableOpacity><TouchableOpacity accessibilityRole="button" accessibilityLabel={'Quên email ' + value} onPress={()=>forgetEmail(value)} style={{minWidth:44,minHeight:44,alignItems:'center',justifyContent:'center'}}><X size={16} color={colors.textMuted}/></TouchableOpacity></View>)}
             </View>
           </View>}
           {/* Password Field */}
