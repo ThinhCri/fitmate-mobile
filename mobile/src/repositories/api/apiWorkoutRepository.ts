@@ -10,6 +10,7 @@ import type { IWorkoutRepository, MonthlyWorkoutStats, WorkoutGoals } from '../w
 import { apiClient, resolveApiResourceUrl } from '@/services/api/client';
 import { createUuid } from '@/utils/uuid';
 import { exerciseInputErrors } from '@/features/workout/workoutLimits';
+import { stableWorkoutMediaReference } from '@/services/api/resourceUrl';
 
 export class ApiWorkoutRepository implements IWorkoutRepository {
   async listExerciseCatalog(query?: string): Promise<ExerciseCatalogItemViewModel[]> {
@@ -51,7 +52,7 @@ export class ApiWorkoutRepository implements IWorkoutRepository {
         rest_sec: item.restSeconds,
         calories: item.caloriesEstimate,
         notes: item.instructions,
-        media_url: item.imageStartUrl,
+        media_url: stableWorkoutMediaReference(item.imageStartUrl),
         media_type: item.imageStartUrl ? 'image' : undefined,
         media_source: item.mediaSource,
         tags: [item.targetMuscle, item.difficulty, item.equipment].filter(Boolean),
