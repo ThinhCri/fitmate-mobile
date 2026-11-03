@@ -10,7 +10,7 @@
  * - Zero mock success / fallback on API errors
  * - Memory-only access token via SessionManager
  */
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -43,6 +43,11 @@ export default function LoginScreen() {
   const { login, error, clearError } = useAuth();
   const params = useLocalSearchParams<{ email?: string }>();
   const [email, setEmail] = useState(params.email || '');
+  const passwordRef = useRef<TextInput>(null);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const emailParts = email.trim().split('@');
+  const emailSuggestions = emailFocused && emailParts.length <= 2 && emailParts[0] && !/\s/.test(email)
+    ? ['gmail.com', 'outlook.com', 'yahoo.com'].filter(domain => domain.startsWith(emailParts[1] || '') && domain !== emailParts[1]).map(domain => `${emailParts[0]}@${domain}`) : [];
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -156,12 +161,25 @@ export default function LoginScreen() {
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="none"
                 keyboardType="email-address"
+                autoComplete="username"
+                importantForAutofill="yes"
+                accessibilityLabel="Email tài khoản"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
                 autoCorrect={false}
                 editable={!submitting}
               />
             </View>
           </View>
 
+          {emailSuggestions.length > 0 && <View style={{ gap: 6 }}>
+            <Text style={typography.caption}>Gợi ý địa chỉ email</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {emailSuggestions.map(value => <TouchableOpacity key={value} accessibilityRole="button" accessibilityLabel={'Điền email ' + value} disabled={submitting} onPress={() => { setEmail(value); setLocalError(null); clearError(); passwordRef.current?.focus(); }} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border }}><Text style={{ color: colors.primary }}>{'@' + value.split('@')[1]}</Text></TouchableOpacity>)}
+            </View>
+          </View>}
           {/* Password Field */}
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>
@@ -179,7 +197,13 @@ export default function LoginScreen() {
                 }}
                 placeholder="Nhập mật khẩu của bạn"
                 placeholderTextColor={colors.textMuted}
+                ref={passwordRef}
                 secureTextEntry={!showPassword}
+                autoComplete="current-password"
+                importantForAutofill="yes"
+                accessibilityLabel="Mật khẩu"
+                returnKeyType="go"
+                onSubmitEditing={() => { if (!submitting) void handleLogin(); }}
                 autoCapitalize="none"
                 autoCorrect={false}
                 editable={!submitting}
