@@ -1255,3 +1255,6 @@ Owner screenshot after docking Gboard shows excessive gap above keyboard. Commen
 
 ## 2026-11-04 — Collapse comment replies
 Comments now show roots only by default with an exact loaded reply count. Each expand reveals up to five more replies, with an explicit collapse control; expansion resets per post/open state. Sending a reply opens its root thread so the new reply remains discoverable. Reply-to-reply submissions attach to the root thread rather than creating a third hidden nesting level. Existing API comment payload/pagination is unchanged; count reflects replies supplied by the server in the post view model. Added initial collapsed rendering regression test.
+
+## 2026-11-04 — Release version and Git synchronization
+Set app.json version 0.1.2 / Android versionCode 3, matching the ignored local native build.gradle. Replaced the untracked legacy release script with a secure wrapper that delegates to build-release-secure.ps1 rather than accepting passwords in command arguments. Include existing Play feature graphics as release assets. Native android directory remains ignored; app.json is the tracked version source and secure build validates native parity. No AAB build/upload performed.
