@@ -1,3 +1,5 @@
+import { checkAiAccess } from '@/services/aiAccess';
+import { systemService } from '@/services/api/systemService';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
@@ -39,8 +41,9 @@ export default function CameraScanRoute() {
     }
     started.current = true;
 
-    const selectAndScan = async (source: 'camera' | 'library') => {
-      const image = source === 'camera'
+    let lastImage: {uri:string;mimeType?:string|null} | null = null;
+    const selectAndScan = async (source: 'camera' | 'library' | 'retry') => {
+      const image = source === 'retry' ? lastImage : source === 'camera'
         ? await ImagePickerService.pickFromCamera({ quality: 0.8 })
         : await ImagePickerService.pickFromLibrary({ quality: 0.8 });
       if (!image) {
@@ -48,6 +51,7 @@ export default function CameraScanRoute() {
         return;
       }
 
+      lastImage = image;
       const reviewImageUri = await createStableReviewImage(image.uri, image.mimeType);
       setCurrentScanImageUri(reviewImageUri);
 
@@ -58,6 +62,7 @@ export default function CameraScanRoute() {
 
       let scanResult: NutritionScanResultViewModel;
       try {
+        const access=await checkAiAccess('scan'); if (!access.allowed) throw new Error(access.message);
         scanResult = await getNutritionRepository().scanMealImage(reviewImageUri, image.mimeType);
       } catch (error) {
         if (!mounted.current) return;
@@ -66,6 +71,7 @@ export default function CameraScanRoute() {
           'Không thể nhận diện món ăn',
           error instanceof Error ? error.message : 'Vui lòng thử lại hoặc nhập thủ công.',
           [
+            { text: 'Thử lại ảnh này', onPress: () => void selectAndScan('retry') },
             { text: 'Nhập thủ công', onPress: () => router.replace('/nutrition/manual-entry' as never) },
             { text: 'Quay lại', style: 'cancel', onPress: () => router.back() },
           ]
@@ -84,6 +90,11 @@ export default function CameraScanRoute() {
       });
     };
 
+    const begin = async () => {
+      try {
+        systemService.clearCache(); const access=await checkAiAccess('scan');
+        if (!mounted.current) return;
+        if (!access.allowed) { Alert.alert('Nhận diện món ăn chưa sẵn sàng', access.message, [{text:'Nhập thủ công',onPress:()=>router.replace('/nutrition/manual-entry' as never)},{text:'Quay lại',style:'cancel',onPress:()=>router.back()}]); return; }
     Alert.alert(
       'Chọn ảnh món ăn',
       'Bạn có thể chụp ảnh mới hoặc chọn ảnh có sẵn từ thư viện và Google Photos.',
@@ -95,9 +106,10 @@ export default function CameraScanRoute() {
       { cancelable: false }
     );
 
-    return () => {
-      mounted.current = false;
+      } catch { if(mounted.current) Alert.alert('Không thể kiểm tra dịch vụ AI','Bạn có thể thử lại hoặc ghi bữa ăn thủ công.',[{text:'Thử lại',onPress:()=>void begin()},{text:'Nhập thủ công',onPress:()=>router.replace('/nutrition/manual-entry' as never)},{text:'Quay lại',onPress:()=>router.back()}]); }
     };
+    void begin();
+    return () => { mounted.current = false; };
   }, []);
 
   return (
