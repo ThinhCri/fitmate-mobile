@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import {
   Modal,
+  Keyboard,
   View,
   Text,
   TouchableOpacity,
@@ -33,6 +35,8 @@ export const ModalShell: React.FC<ModalShellProps> = ({
   containerStyle,
   position = 'bottom',
 }) => {
+  const [keyboardVisible,setKeyboardVisible]=useState(()=>Keyboard.isVisible());
+  useEffect(()=>{const show=Keyboard.addListener(Platform.OS==='ios'?'keyboardWillShow':'keyboardDidShow',()=>setKeyboardVisible(true));const hide=Keyboard.addListener(Platform.OS==='ios'?'keyboardWillHide':'keyboardDidHide',()=>setKeyboardVisible(false));return()=>{show.remove();hide.remove();};},[]);
   return (
     <Modal
       visible={visible}
@@ -40,6 +44,7 @@ export const ModalShell: React.FC<ModalShellProps> = ({
       animationType={position === 'bottom' ? 'slide' : 'fade'}
       onRequestClose={onClose}
     >
+      <SafeAreaProvider><KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{flex:1}}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View
           style={[
@@ -48,8 +53,8 @@ export const ModalShell: React.FC<ModalShellProps> = ({
           ]}
         >
           <TouchableWithoutFeedback>
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            <SafeAreaView
+              edges={keyboardVisible ? ['left', 'right'] : ['bottom', 'left', 'right']}
               style={[
                 styles.modalBox,
                 position === 'bottom' ? styles.bottomSheet : styles.centerDialog,
@@ -76,10 +81,11 @@ export const ModalShell: React.FC<ModalShellProps> = ({
               <View style={styles.body}>{children}</View>
 
               {footer ? <View style={styles.footer}>{footer}</View> : null}
-            </KeyboardAvoidingView>
+            </SafeAreaView>
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
+      </KeyboardAvoidingView></SafeAreaProvider>
     </Modal>
   );
 };
@@ -105,7 +111,7 @@ const styles = StyleSheet.create({
   bottomSheet: {
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    paddingBottom: spacing.xxxl,
+    paddingBottom: spacing.sm,
   },
   centerDialog: {
     borderRadius: radius.lg,
