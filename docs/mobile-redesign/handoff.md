@@ -1239,3 +1239,10 @@ Trang thai: **IN_PROGRESS / NOT_PRODUCTION_API_READY**
 
 ## 2026-10-28 — Authorized automated verification
 Owner authorized tests: TypeScript passed; 242/242 mobile tests (45 files) passed including media references and contract baseline. BE unit 1072 passed; integration project compiles. No app/emulator launch, native build, or VPS deployment. Manual local run and local/VPS differences: backend docs/backend-release/runbooks/r2-mobile-parity.md. Real R2/provider device flows remain owner acceptance work.
+
+## 2026-11-03 — AI entry checks and editable suggestion plans
+
+- Committed prior R2 media and tab refresh fixes separately (ab0e4c1, 40ebda6); unrelated feature graphics and build-release.ps1 remain untracked.
+- Scan checks live capability and scan quota before offering camera/library, provides manual-entry route while unavailable, and keeps the selected image for retry on recognition failure. No Kaggle provider configuration was invented.
+- Workout suggestion screen checks capability/chat quota, preserves form on failure, guards duplicate sends, and uses keyboard avoidance. Generated exercises are staged in owner-scoped memory and passed to the existing plan editor for name/day/exercise review and real createPlan API save. Draft is cleared only after a successful save; missing/cross-account drafts cannot be viewed/saved. Duration defaults to an editable 45 minutes; calorie estimate starts unknown (0 per existing editor convention).
+- Verification: TypeScript passed; full mobile suite 248/248 passed across 47 files (including six new access/draft cases). No emulator/app launch or AAB build. Camera/keyboard, authenticated AI generation/save, and real push delivery still need Android UAT.
