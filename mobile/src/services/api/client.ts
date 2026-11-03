@@ -1,3 +1,4 @@
+import { withRequestDeadline, RequestTimeoutError } from '@/services/requestDeadline';
 import { sessionManager } from '@/services/session/sessionManager';
 import { getUserFacingApiErrorMessage } from './errorMessages';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -10,6 +11,7 @@ const API_BASE_URL = getApiBaseUrl();
 let rateLimitedUntil = 0;
 
 async function waitForRateLimitWindow(signal: AbortSignal): Promise<void> {
+  if (signal.aborted) { const error = new Error('Yêu cầu đã bị hủy'); error.name = 'AbortError'; throw error; }
   const delayMs = rateLimitedUntil - Date.now();
   if (delayMs <= 0) return;
   await new Promise<void>((resolve, reject) => {
@@ -173,7 +175,12 @@ interface RequestOptions extends RequestInit {
   _isRetry?: boolean;
 }
 
-export async function apiClient<T>(
+export async function apiClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+ try { return await withRequestDeadline([options.signal, sessionManager.getAbortSignal()], signal => apiClientAttempt<T>(endpoint, {...options, signal}), endpoint.startsWith('/me/workout/suggestions') || endpoint.startsWith('/ai/') ? 90000 : 30000); }
+ catch(error) { if(error instanceof RequestTimeoutError) throw new ApiError('Máy chủ phản hồi quá lâu. Vui lòng thử lại.',408); throw error; }
+}
+
+async function apiClientAttempt<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
@@ -249,7 +256,7 @@ export async function apiClient<T>(
         const retrySeconds = retryAfter && /^\d+$/.test(retryAfter)
           ? Number(retryAfter)
           : 5;
-        rateLimitedUntil = Math.max(rateLimitedUntil, Date.now() + Math.max(1, retrySeconds) * 1000);
+        rateLimitedUntil = Math.max(rateLimitedUntil, Date.now() + Math.min(15, Math.max(1, retrySeconds)) * 1000);
       }
       let errorData: unknown;
       try {

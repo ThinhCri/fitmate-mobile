@@ -209,6 +209,8 @@ describe('SessionManager (MOB-800)', () => {
     );
 
     const refreshPromise = sessionManager.refreshSession();
+    const rejected = expect(refreshPromise).rejects.toThrow();
+    await vi.waitFor(() => expect(global.fetch).toHaveBeenCalled());
 
     // While refresh is pending, clearSession is called
     await sessionManager.clearSession();
@@ -224,7 +226,7 @@ describe('SessionManager (MOB-800)', () => {
     });
 
     // The refresh promise must reject because generation changed / signal aborted
-    await expect(refreshPromise).rejects.toThrow();
+    await rejected;
 
     // Access token must remain null and storage clean
     expect(sessionManager.getAccessToken()).toBeNull();
@@ -243,6 +245,8 @@ describe('SessionManager (MOB-800)', () => {
     );
 
     const refreshPromise = sessionManager.refreshSession();
+    const rejected = expect(refreshPromise).rejects.toThrow();
+    await vi.waitFor(() => expect(global.fetch).toHaveBeenCalled());
 
     // Account B logs in before Account A's refresh finishes
     await sessionManager.setSession('user-b-access', 'user-b-refresh', {
@@ -263,7 +267,7 @@ describe('SessionManager (MOB-800)', () => {
     });
 
     // The old refresh promise must reject
-    await expect(refreshPromise).rejects.toThrow();
+    await rejected;
 
     // Crucially: Account B's session was NOT overwritten by stale Account A response!
     expect(sessionManager.getAccessToken()).toBe('user-b-access');
@@ -283,6 +287,8 @@ describe('SessionManager (MOB-800)', () => {
     );
 
     const oldRefresh = sessionManager.refreshSession();
+    const oldRejected = expect(oldRefresh).rejects.toThrow();
+    await vi.waitFor(() => expect(global.fetch).toHaveBeenCalled());
 
     // User switches session
     await sessionManager.setSession('new-user-access', 'new-user-refresh', {
@@ -302,7 +308,7 @@ describe('SessionManager (MOB-800)', () => {
       }),
     });
 
-    await expect(oldRefresh).rejects.toThrow();
+    await oldRejected;
     expect(sessionManager.getAccessToken()).toBe('new-user-access');
   });
 });

@@ -1,3 +1,4 @@
+import { Text, TouchableOpacity, View } from 'react-native';
 import React, { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
@@ -10,6 +11,8 @@ import { useAuth } from '@/services/AuthContext';
 
 export default function AccountHubScreen() {
   const { logout, user } = useAuth();
+  const [loadError, setLoadError] = useState('');
+  const [retry, setRetry] = useState(0);
   const ptIsApproved = user?.ptVerificationStatus === 'approved';
   const [account, setAccount] = useState<AccountHubViewModel>({
     id: 'user-current',
@@ -20,21 +23,21 @@ export default function AccountHubScreen() {
 
   useFocusEffect(useCallback(() => {
     let active = true;
+    setLoadError('');
     getAccountRepository()
       .getAccountHub()
       .then((data) => {
-        if (active) setAccount(data);
+        if (active) { setAccount(data); setLoadError(''); }
       })
-      .catch(() => {
-        console.warn('Could not load account hub');
-      });
+      .catch(() => { if(active) setLoadError('Không tải được hồ sơ. Vui lòng thử lại.'); });
     return () => {
       active = false;
     };
-  }, []));
+  }, [retry, user?.id]));
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      {loadError ? <View style={{padding:16}}><Text accessibilityRole="alert">{loadError}</Text><TouchableOpacity accessibilityRole="button" style={{minHeight:44,justifyContent:'center'}} onPress={()=>setRetry(value=>value+1)}><Text>Thử tải lại hồ sơ</Text></TouchableOpacity></View> : null}
       <AccountHubPresentation
         account={account}
         onBack={() => {

@@ -1,3 +1,4 @@
+import { withRequestDeadline } from '@/services/requestDeadline';
 import {
   clearAuth,
   getRefreshToken,
@@ -160,6 +161,7 @@ class SessionManager {
       }
 
       try {
+        const data = await withRequestDeadline([requestSignal], async signal => {
         const response = await fetch(API_BASE_URL + '/auth/refresh', {
           method: 'POST',
           headers: {
@@ -167,14 +169,15 @@ class SessionManager {
             Accept: 'application/json',
           },
           body: JSON.stringify({ refresh_token: storedRefreshToken }),
-          signal: requestSignal,
+          signal,
         });
 
         if (!response.ok) {
           throw new Error('Refresh token rejected: ' + response.status);
         }
 
-        const data = (await response.json()) as AuthResponse;
+        return (await response.json()) as AuthResponse;
+        }, 20000);
 
         // Generation guard: discard stale response if session was cleared or switched
         if (this.generation !== requestGeneration || requestSignal.aborted) {
