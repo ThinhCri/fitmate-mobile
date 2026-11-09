@@ -23,6 +23,9 @@ if (-not (Test-Path -LiteralPath $firebaseConfig -PathType Leaf)) {
 }
 
 $gradleSource = Get-Content -LiteralPath $gradleFile -Raw
+if ($gradleSource -notmatch "strictly\('1\.14\.0'\)") {
+    throw 'Material Android 15 compatibility configuration is missing. Apply withAndroidMaterialCompatibility before building.'
+}
 $releaseConfig = (Get-Content -LiteralPath (Join-Path $mobileDir 'app.json') -Raw | ConvertFrom-Json).expo
 $releaseVersion = [string]$releaseConfig.version
 $releaseCode = $releaseConfig.android.versionCode
