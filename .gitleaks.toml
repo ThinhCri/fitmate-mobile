@@ -1,0 +1,9 @@
+title = "Fitmate source secret scanning"
+[extend]
+useDefault = true
+# A source-contract SHA-256 checksum is public metadata, not an API key.
+[[allowlists]]
+condition = "AND"
+paths = ['''^docs/production/contract-baseline\.json$''']
+regexTarget = "match"
+regexes = ['''openapiSha256": "[A-Fa-f0-9]{64}"''']

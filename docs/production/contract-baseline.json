@@ -4,7 +4,7 @@
   "backendRepository": "FitmateAI_BE",
   "backendFrozenRevision": "9b0d7aa+worktree",
   "openapiSource": "FitmateAI_BE/docs/backend-release/openapi/fitmate-v1.yaml",
-  "openapiSha256": "98FB2A628B4BD88E723D5ACE919B31ACAE36BC579E9842D8833E6EA82F7615A0",
+  "openapiSha256": "E43E19C64B0EB449E1C330DC2E38165658D9AF43731BEEF90AF6E0315FDCCFFB",
   "accountDeletionDelta": "2026-10-25: authenticated deletion now requires a six-digit email OTP from POST /users/me/deletion-otp; request body includes otp. Both POST delete-request and legacy DELETE /users/me enforce verification. Deploy backend before using this mobile flow; old clients cannot submit deletion without upgrading. Public email-link deletion remains available. This is local contract evidence, not production rollout approval.",
   "contractStatus": "FROZEN-V1",
   "hashEncoding": "raw file bytes (no normalization)",
@@ -20,5 +20,7 @@
     "vip_purchase",
     "reward_cashout",
     "pt_automatic_payout"
-  ]
+  ],
+  "aiPlusScopeDelta": "2026-11-08: chat-only AI Plus; optional native build compatibility header gates new sales below code5; no response DTO or authorization change. Food scan not included. Commercial UAT pending.",
+  "aiSalesReportingDelta": "2026-11-08: admin/finance/ai-sales read-only, Google-verified real orders only; payout not inferred."
 }
