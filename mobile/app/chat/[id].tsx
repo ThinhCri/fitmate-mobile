@@ -22,7 +22,7 @@ export default function ConversationScreen() {
   const [selectedImages, setSelectedImages] = useState<ChatImageInput[]>([]);
   const imageUrlCache = useRef(new Map<string, { urls: string[]; cachedAt: number }>());
   const lastMarkedReadId = useRef<string | null>(null);
-  const refreshInFlight = useRef(false);
+
 
   useFocusEffect(useCallback(() => {
     if (!id) {
@@ -30,9 +30,10 @@ export default function ConversationScreen() {
       return undefined;
     }
     let active = true;
+    let refreshInFlight = false;
     const refresh = async (initial = false) => {
-      if (refreshInFlight.current || AppState.currentState !== 'active') return;
-      refreshInFlight.current = true;
+      if (refreshInFlight || (!initial && AppState.currentState !== 'active')) return;
+      refreshInFlight = true;
       try {
         const data = await getSocialRepository().getConversation(id);
         if (!active) return;
@@ -65,8 +66,8 @@ export default function ConversationScreen() {
       } catch (err) {
         if (active && initial) setError(err instanceof Error ? err.message : 'Không thể tải cuộc trò chuyện');
       } finally {
-        refreshInFlight.current = false;
-        if (active && initial) setLoading(false);
+        refreshInFlight = false;
+        if (active) setLoading(false);
       }
     };
     void refresh(true);
@@ -117,7 +118,8 @@ export default function ConversationScreen() {
             }
           : prev
       );
-    } catch {
+    } catch (cause) {
+      Alert.alert('Không gửi được tin nhắn', cause instanceof Error ? cause.message : 'Vui lòng thử lại.');
       setConversation((prev) =>
         prev
           ? {

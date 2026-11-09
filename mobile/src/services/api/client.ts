@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { withRequestDeadline, RequestTimeoutError } from '@/services/requestDeadline';
 import { sessionManager } from '@/services/session/sessionManager';
 import { getUserFacingApiErrorMessage } from './errorMessages';
@@ -8,27 +9,7 @@ import { getApiBaseUrl } from './baseUrl';
 import { normalizeApiResourceUrl } from './resourceUrl';
 
 const API_BASE_URL = getApiBaseUrl();
-let rateLimitedUntil = 0;
-
-async function waitForRateLimitWindow(signal: AbortSignal): Promise<void> {
-  if (signal.aborted) { const error = new Error('Yêu cầu đã bị hủy'); error.name = 'AbortError'; throw error; }
-  const delayMs = rateLimitedUntil - Date.now();
-  if (delayMs <= 0) return;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      signal.removeEventListener('abort', onAbort);
-      resolve();
-    }, delayMs);
-    const onAbort = () => {
-      clearTimeout(timer);
-      const error = new Error('Yêu cầu đã bị hủy');
-      error.name = 'AbortError';
-      reject(error);
-    };
-    signal.addEventListener('abort', onAbort, { once: true });
-  });
-}
-
+const rateLimits = new Map<string, number>();
 /**
  * Rewrites loopback URLs returned by a local Docker API to the same origin the
  * device already uses for API calls. A physical phone cannot resolve the
@@ -60,46 +41,7 @@ export async function apiUploadFile<T>(
   mimeType: string,
   parameters: Record<string, string>
 ): Promise<T> {
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
-  const token = sessionManager.getAccessToken();
-
-  try {
-    const response = await FileSystem.uploadAsync(API_BASE_URL + cleanEndpoint, fileUri, {
-      httpMethod: 'POST',
-      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-      fieldName: 'file',
-      mimeType,
-      parameters,
-      headers: {
-        Accept: 'application/json',
-        ...(token ? { Authorization: 'Bearer ' + token } : {}),
-      },
-    });
-
-    let data: unknown;
-    try {
-      data = response.body ? JSON.parse(response.body) : {};
-    } catch {
-      data = response.body;
-    }
-
-    if (response.status < 200 || response.status >= 300) {
-      throw new ApiError(
-        getUserFacingApiErrorMessage(response.status, data),
-        response.status,
-        data
-      );
-    }
-
-    return data as T;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(
-      'Không thể đọc hoặc tải ảnh lên. Vui lòng tải ảnh về thiết bị rồi thử lại.',
-      0,
-      error instanceof Error ? error.message : undefined
-    );
-  }
+  return uploadMultipart<T>(endpoint, [{ uri: fileUri, mimeType }], parameters, 'file');
 }
 
 export async function apiUploadFiles<T>(
@@ -107,16 +49,11 @@ export async function apiUploadFiles<T>(
   files: Array<{ uri: string; mimeType?: string | null; fileName?: string | null }>,
   parameters: Record<string, string>
 ): Promise<T> {
-  if (files.length === 1) {
-    const file = files[0];
-    const mimeType = file.mimeType === 'image/png' || file.mimeType === 'image/webp'
-      ? file.mimeType
-      : 'image/jpeg';
-    return apiUploadFile<T>(endpoint, file.uri, mimeType, parameters);
-  }
+  return uploadMultipart<T>(endpoint, files, parameters, files.length === 1 ? 'file' : 'files');
+}
 
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
-  const token = sessionManager.getAccessToken();
+async function uploadMultipart<T>(endpoint: string, files: Array<{ uri: string; mimeType?: string | null }>, parameters: Record<string, string>, field: string): Promise<T> {
+  if (!files.length || files.length > 5) throw new ApiError('Vui lòng chọn từ 1 đến 5 ảnh.', 400);
   const temporaryUris: string[] = [];
 
   try {
@@ -129,38 +66,19 @@ export async function apiUploadFiles<T>(
         : 'image/jpeg';
       const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
       if (!FileSystem.cacheDirectory) throw new Error('Không tìm thấy thư mục tạm của ứng dụng.');
-      const uploadUri = `${FileSystem.cacheDirectory}fitmate-upload-${Date.now()}-${index}.${extension}`;
+      const uploadUri = `${FileSystem.cacheDirectory}fitmate-upload-${Date.now()}-${Math.random().toString(36).slice(2)}-${index}.${extension}`;
       await FileSystem.copyAsync({ from: file.uri, to: uploadUri });
       temporaryUris.push(uploadUri);
 
       // Expo File is a real native Blob. A plain React Native { uri, name, type }
       // object is not a Blob and fails intermittently when several Android files
       // are appended to the same multipart request.
-      form.append('files', new ExpoFile(uploadUri));
+      form.append(field, new ExpoFile(uploadUri));
     }
 
-    const response = await expoFetch(API_BASE_URL + cleanEndpoint, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        ...(token ? { Authorization: 'Bearer ' + token } : {}),
-      },
-      body: form,
-      signal: sessionManager.getAbortSignal(),
-    });
-    const rawBody = await response.text();
-    let data: unknown = rawBody;
-    if (rawBody) {
-      try { data = JSON.parse(rawBody); } catch { /* Keep the server's plain-text error. */ }
-    } else {
-      data = {};
-    }
-    if (!response.ok) {
-      throw new ApiError(getUserFacingApiErrorMessage(response.status, data), response.status, data);
-    }
-    return data as T;
+    return await apiClient<T>(endpoint, { method: 'POST', body: form, _transport: expoFetch as typeof fetch, _timeoutMs: 90000 });
   } catch (error) {
-    if (error instanceof ApiError) throw error;
+    if (error instanceof ApiError || isAbortError(error)) throw error;
     throw new ApiError(
       'Không thể đọc hoặc tải ảnh lên. Vui lòng tải ảnh về thiết bị rồi thử lại.',
       0,
@@ -173,10 +91,12 @@ export async function apiUploadFiles<T>(
 
 interface RequestOptions extends RequestInit {
   _isRetry?: boolean;
+  _transport?: typeof fetch;
+  _timeoutMs?: number;
 }
 
 export async function apiClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
- try { return await withRequestDeadline([options.signal, sessionManager.getAbortSignal()], signal => apiClientAttempt<T>(endpoint, {...options, signal}), endpoint.startsWith('/me/workout/suggestions') || endpoint.startsWith('/ai/') ? 90000 : 30000); }
+ try { return await withRequestDeadline([options.signal, sessionManager.getAbortSignal()], signal => apiClientAttempt<T>(endpoint, {...options, signal}), options._timeoutMs ?? (endpoint.startsWith('/me/workout/suggestions') || endpoint.startsWith('/ai/') || endpoint.startsWith('/chat/ai/messages') ? 90000 : 30000)); }
  catch(error) { if(error instanceof RequestTimeoutError) throw new ApiError('Máy chủ phản hồi quá lâu. Vui lòng thử lại.',408); throw error; }
 }
 
@@ -192,6 +112,8 @@ async function apiClientAttempt<T>(
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
+    // Expo SDK 57 no longer exports nativeBuildVersion; use this build's embedded config.
+    ...(Constants.expoConfig?.android?.versionCode ? { 'X-Fitmate-Android-Version-Code': String(Constants.expoConfig.android.versionCode) } : {}),
     ...(options.headers as Record<string, string>),
   };
 
@@ -206,8 +128,11 @@ async function apiClientAttempt<T>(
   const signal = options.signal || sessionManager.getAbortSignal();
 
   try {
-    await waitForRateLimitWindow(signal);
-    const response = await fetch(url, {
+    const rateKey = requestGen + ':' + cleanEndpoint.split('?')[0];
+    if ((rateLimits.get(rateKey) || 0) > Date.now()) throw new ApiError('Bạn thao tác quá nhanh. Vui lòng đợi một lát rồi thử lại.', 429);
+    rateLimits.delete(rateKey);
+    const { _transport, _timeoutMs, _isRetry, ...fetchOptions } = options;
+    const response = await (_transport || fetch)(url, {
       ...options,
       headers,
       signal,
@@ -231,8 +156,9 @@ async function apiClientAttempt<T>(
 
       if (!isAuthEndpoint) {
         try {
-          const newToken = await sessionManager.refreshSession();
-          return await apiClient<T>(cleanEndpoint, {
+          const currentToken = sessionManager.getAccessToken();
+          const newToken = currentToken && currentToken !== token ? currentToken : await sessionManager.refreshSession();
+          return await apiClientAttempt<T>(cleanEndpoint, {
             ...options,
             _isRetry: true,
             headers: {
@@ -256,7 +182,7 @@ async function apiClientAttempt<T>(
         const retrySeconds = retryAfter && /^\d+$/.test(retryAfter)
           ? Number(retryAfter)
           : 5;
-        rateLimitedUntil = Math.max(rateLimitedUntil, Date.now() + Math.min(15, Math.max(1, retrySeconds)) * 1000);
+        rateLimits.set(rateKey, Date.now() + Math.min(300, Math.max(1, retrySeconds)) * 1000);
       }
       let errorData: unknown;
       try {

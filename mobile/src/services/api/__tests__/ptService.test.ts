@@ -22,6 +22,7 @@ import { ptService } from '../ptService';
 import { ApiError } from '../client';
 import { sessionManager } from '@/services/session/sessionManager';
 import * as FileSystem from 'expo-file-system/legacy';
+import { fetch as uploadFetch } from 'expo/fetch';
 import type { ServiceInput } from '../types';
 
 const validServiceDetails: Omit<ServiceInput, 'name' | 'price_vnd' | 'duration_minutes'> = {
@@ -47,7 +48,10 @@ vi.mock('expo-secure-store', () => ({
   }),
 }));
 
+vi.mock('expo/fetch', () => ({ fetch: vi.fn() }));
+vi.mock('expo-file-system', () => ({ File: class extends Blob { constructor(uri: string) { super(['image']); } } }));
 vi.mock('expo-file-system/legacy', () => ({
+  cacheDirectory: 'file:///cache/', copyAsync: vi.fn(async () => {}), deleteAsync: vi.fn(async () => {}),
   FileSystemUploadType: { MULTIPART: 1 },
   uploadAsync: vi.fn(),
 }));
@@ -404,10 +408,7 @@ describe('ptService (MOB-801)', () => {
         status: 'pending',
       };
 
-      vi.mocked(FileSystem.uploadAsync).mockResolvedValue({
-        status: 201,
-        body: JSON.stringify(uploadResponse),
-      } as never);
+      vi.mocked(uploadFetch).mockResolvedValue(Response.json(uploadResponse) as never);
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 201,
@@ -432,16 +433,8 @@ describe('ptService (MOB-801)', () => {
       expect(global.fetch).toHaveBeenCalledTimes(1);
 
       // Verify Step 1 endpoint was /uploads
-      expect(FileSystem.uploadAsync).toHaveBeenCalledWith(
-        expect.stringContaining('/uploads'),
-        'file://cert.jpg',
-        expect.objectContaining({
-          httpMethod: 'POST',
-          uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-          parameters: { category: 'certificates' },
-          headers: expect.objectContaining({ Authorization: 'Bearer valid-pt-access-token' }),
-        })
-      );
+      expect(uploadFetch).toHaveBeenCalledWith(expect.stringContaining('/uploads'), expect.objectContaining({ method: 'POST', body: expect.any(FormData) }));
+      expect(FileSystem.copyAsync).toHaveBeenCalledWith(expect.objectContaining({ from: 'file://cert.jpg' }));
 
       // Verify Step 2 endpoint was /me/certificates
       expect(global.fetch).toHaveBeenCalledWith(

@@ -11,13 +11,14 @@ export default function ChatInboxScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const hasLoadedRef = useRef(false);
-  const refreshInFlight = useRef(false);
+
 
   useFocusEffect(useCallback(() => {
     let active = true;
+    let refreshInFlight = false;
     const refresh = async (initial = false) => {
-      if (refreshInFlight.current || AppState.currentState !== 'active') return;
-      refreshInFlight.current = true;
+      if (refreshInFlight || (!initial && AppState.currentState !== 'active')) return;
+      refreshInFlight = true;
       try {
         const conversations = await getSocialRepository().listConversations();
         if (!active) return;
@@ -29,8 +30,8 @@ export default function ChatInboxScreen() {
           setError(e instanceof Error ? e.message : 'Không thể tải hộp thư.');
         }
       } finally {
-        refreshInFlight.current = false;
-        if (active && initial) setLoading(false);
+        refreshInFlight = false;
+        if (active) setLoading(false);
       }
     };
     void refresh(true);
