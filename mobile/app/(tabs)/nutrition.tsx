@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator, Pressable } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
@@ -32,6 +32,7 @@ export default function NutritionScreen() {
   const fetchSummary = useCallback(async (date = selectedDate) => {
     const request = ++latestLoad.current;
     setLoading(loadedDate.current !== date);
+    setError(null);
     try {
       const data = await getNutritionRepository().getDaySummary(date);
       if (request !== latestLoad.current) return;
@@ -40,7 +41,7 @@ export default function NutritionScreen() {
       setError(null);
     } catch (err: any) {
       if (request !== latestLoad.current) return;
-      setError(err?.message || 'Không thể tải nhật ký dinh dưỡng');
+      if (err?.name !== 'AbortError') setError(err?.message || 'Không thể tải nhật ký dinh dưỡng');
     } finally {
       if (request === latestLoad.current) { setLoading(false); setRefreshing(false); }
     }
@@ -48,6 +49,7 @@ export default function NutritionScreen() {
 
   useFocusEffect(useCallback(() => {
     void fetchSummary();
+    return () => { latestLoad.current += 1; };
   }, [fetchSummary]));
 
   const moveDay = (offset: number) => {
@@ -92,6 +94,7 @@ export default function NutritionScreen() {
         <AppTopBar title="Nhật ký dinh dưỡng" />
         <View style={styles.center}>
           <Text style={styles.errorText}>{error || 'Không có dữ liệu dinh dưỡng'}</Text>
+          <Pressable onPress={handleRefresh} accessibilityRole="button" style={styles.retryButton}><Text style={styles.retryText}>Thử lại</Text></Pressable>
         </View>
       </ScreenContainer>
     );
@@ -101,7 +104,10 @@ export default function NutritionScreen() {
     <ScreenContainer edges={['top']}>
       <AppTopBar title="Nhật ký dinh dưỡng" />
 
-      {error && <Text style={styles.errorText}>Chưa cập nhật được dữ liệu mới. Đang hiển thị dữ liệu đã tải.</Text>}
+      {error && <View style={styles.refreshNotice}>
+        <Text style={styles.refreshNoticeText}>Chưa làm mới được. Bạn đang xem dữ liệu lần trước.</Text>
+        <Pressable onPress={handleRefresh} accessibilityRole="button" style={styles.retryButton}><Text style={styles.retryText}>Thử lại</Text></Pressable>
+      </View>}
       <NutritionDiaryPresentation
         summary={summary}
         activeSegment={segment}
@@ -139,6 +145,10 @@ export default function NutritionScreen() {
 }
 
 const styles = StyleSheet.create({
+  refreshNotice: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, backgroundColor: '#F1F5F9', gap: 8 },
+  refreshNoticeText: { flex: 1, fontSize: 12, color: '#475569' },
+  retryButton: { minHeight: 44, justifyContent: 'center' },
+  retryText: { fontSize: 13, color: '#0F766E', fontWeight: '600' },
   center: {
     flex: 1,
     justifyContent: 'center',

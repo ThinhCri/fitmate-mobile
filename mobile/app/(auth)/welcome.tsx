@@ -34,7 +34,7 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <ScreenContainer backgroundColor={colors.background}>
+    <ScreenContainer edges={['top', 'bottom', 'left', 'right']} backgroundColor={colors.background}>
       <ScrollView contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <Animated.View style={{ opacity: logo, transform: [{ translateY: logo.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }] }}>
@@ -61,9 +61,9 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, paddingHorizontal: spacing.xxl, paddingTop: spacing.xxl, paddingBottom: spacing.xxl, justifyContent: 'space-between' },
-  hero: { flex: 1, justifyContent: 'center', minHeight: 310 },
-  message: { marginTop: 44 },
+  page: { flexGrow: 1, paddingHorizontal: spacing.xxl, paddingTop: spacing.xxl, paddingBottom: spacing.lg, justifyContent: 'center', gap: spacing.xxxl },
+  hero: { justifyContent: 'center', paddingVertical: spacing.xxl },
+  message: { marginTop: spacing.xxl },
   title: { ...typography.display, fontSize: 34, lineHeight: 42, color: colors.textPrimary },
   description: { ...typography.body, fontSize: 16, lineHeight: 24, color: colors.textSecondary, marginTop: spacing.md, maxWidth: 330 },
   actions: { gap: spacing.md },
