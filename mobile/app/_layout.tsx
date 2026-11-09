@@ -12,6 +12,7 @@ import { AuthProvider } from '@/services/AuthContext';
 import { PtVerificationGate } from '@/services/PtVerificationGate';
 import { AnalyticsTracker } from '@/services/AnalyticsTracker';
 import { PushLifecycle } from '@/services/PushLifecycle';
+import { PlayPurchaseLifecycle } from '@/services/PlayPurchaseLifecycle';
 import { ToastHost } from '@/components/ui';
 
 export default function RootLayout() {
@@ -23,6 +24,7 @@ export default function RootLayout() {
             <PtVerificationGate />
             <AnalyticsTracker />
             <PushLifecycle />
+            <PlayPurchaseLifecycle />
             <StatusBar style="dark" />
             <KeyboardAvoidingView
               style={{ flex: 1 }}

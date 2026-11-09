@@ -1317,3 +1317,7 @@ Gói AI: guard async callback/load by session generation; remount billing per Fi
 ## 2026-11-09 — Prepare release0.1.6/code7
 Raised tracked Expo config and local native Gradle version together from0.1.5/code6 to0.1.6/code7 for purchase ownership/recovery and latest transport fixes. Validated existing production API URL, Firebase file and upload-keystore presence without exposing credentials. No signed build/app launch/upload performed. Apply guarded combined backend/admin rollout first, then owner runs secure build and tests purchase/restore/account switching on Play internal track before production.
 
+
+## 2026-11-09 — Recover purchases after interrupted callbacks
+Added Android app-level PlayPurchaseLifecycle after sign-in and on foreground: real Play available-purchase query, existing server verification/ownership guard, bounded network retries and stale-session cancellation. No checkout, local entitlement grant or foreign-account transfer; does not disconnect another screen's native billing connection. TypeScript and278/278tests pass; refreshed OpenAPI checksum for reviewed admin-search documentation delta. Native/device lifecycle acceptance still needed in next0.1.6/code7 build; no app/emulator/build launched.
+
