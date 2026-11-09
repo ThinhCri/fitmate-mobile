@@ -1,7 +1,13 @@
 import type { Purchase } from 'expo-iap';
 import type { AiSubscriptionStatus } from '@/services/api/aiUsageService';
 
-export const ACCOUNT_PURCHASE_CONFLICT = 'Gói trên tài khoản Google Play này đã gắn với tài khoản Fitmate khác. Hãy đăng nhập lại tài khoản Fitmate đã mua, hoặc dùng tài khoản Google Play khác trước khi mua. Không cần thanh toán lại.';
+export const ACCOUNT_PURCHASE_CONFLICT = 'Google Play vẫn trả về gói thuộc tài khoản Fitmate khác. Chưa mở thanh toán mới để tránh mua nhầm. Xem cách đổi tài khoản thanh toán bên dưới; không cần xóa tài khoản Google khỏi điện thoại.';
+
+export function checkoutBillingAccountId(value: unknown): string {
+  if (typeof value !== 'string' || !/^[a-f0-9]{64}$/.test(value))
+    throw new Error('Chưa xác định được tài khoản nhận gói. Vui lòng tải lại trang trước khi mua.');
+  return value;
+}
 export function isPurchaseAccountConflict(cause: unknown): boolean {
   if (!cause || typeof cause !== 'object') return false;
   const error = cause as { status?: number; data?: { code?: string }; message?: string };

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Constants from 'expo-constants';
 import { deepLinkToSubscriptions, ErrorCode, getAvailablePurchases, useIAP, type Purchase } from 'expo-iap';
 import { router, useFocusEffect } from 'expo-router';
@@ -9,7 +9,7 @@ import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { aiSubscriptionService, aiUsageService, type AiSubscriptionStatus, type AiUsageStatus } from '@/services/api/aiUsageService';
 import { sessionManager } from '@/services/session/sessionManager';
 import { useAuth } from '@/services/AuthContext';
-import { ACCOUNT_PURCHASE_CONFLICT, isPurchaseAccountConflict, recoverPlayPurchases } from '@/services/playPurchaseRecovery';
+import { ACCOUNT_PURCHASE_CONFLICT, checkoutBillingAccountId, isPurchaseAccountConflict, recoverPlayPurchases } from '@/services/playPurchaseRecovery';
 
 export default function AiPlanScreen() {
   const { user } = useAuth();
@@ -91,6 +91,7 @@ export default function AiPlanScreen() {
 }
 
 function BillingActions({ subscription, onVerified }: { subscription: AiSubscriptionStatus; onVerified: () => Promise<void> }) {
+  const { user } = useAuth();
   const generation = React.useRef(sessionManager.getGeneration());
   const sessionIsCurrent = () => generation.current === sessionManager.getGeneration();
   const [busy, setBusy] = useState(false);
@@ -148,6 +149,13 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
     setBusy(true);
     setMessage(null);
     try {
+      // Refresh the server's intended recipient immediately before checkout. This
+      // binding identifies the Fitmate user; it cannot select a Google payer Gmail.
+      const fresh = await aiSubscriptionService.getStatus();
+      if (!sessionIsCurrent()) return;
+      if (fresh.plan === 'plus') { await onVerified(); setBusy(false); return; }
+      if (!fresh.billing_available) throw new Error('Hiện chưa thể mua gói. Vui lòng thử lại sau.');
+      const accountId = checkoutBillingAccountId(fresh.billing_account_id);
       const recovery = await recoverPlayPurchases(await getAvailablePurchases(), subscription.product_id, aiSubscriptionService.verify, sessionIsCurrent);
       if (!sessionIsCurrent()) return;
       if (recovery.restored) {
@@ -162,7 +170,7 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
         return;
       }
       await requestPurchase({
-        request: { google: { skus: [subscription.product_id], obfuscatedAccountId: subscription.billing_account_id ?? undefined, subscriptionOffers: [{ sku: subscription.product_id, offerToken: offer.offerTokenAndroid }] } },
+        request: { google: { skus: [subscription.product_id], obfuscatedAccountId: accountId, subscriptionOffers: [{ sku: subscription.product_id, offerToken: offer.offerTokenAndroid }] } },
         type: 'subs',
       });
     } catch (cause) {
@@ -195,7 +203,14 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
     }
   };
 
+  const accountHelp = () => Alert.alert('Đổi tài khoản thanh toán Google Play',
+    '1. Hủy thanh toán nếu hộp Google Play hiện sai Gmail.\n2. Mở CH Play và chọn Gmail muốn thanh toán.\n3. Nếu hộp thanh toán vẫn dùng Gmail cũ, sau khi dữ liệu đã đồng bộ, gỡ Fitmate rồi cài lại từ CH Play bằng Gmail muốn dùng.\n\nKhông cần xóa tài khoản Google khỏi điện thoại. Đổi Gmail thanh toán không chuyển gói đã mua sang tài khoản Fitmate khác.',
+    [{ text: 'Đóng', style: 'cancel' }, { text: 'Mở CH Play', onPress: () => {
+      void Linking.openURL('market://details?id=vn.fitmate.app').catch(() => setMessage('Không mở được CH Play. Bạn hãy mở ứng dụng CH Play trên điện thoại.'));
+    } }]);
+
   return <View style={styles.billingActions}>
+    {subscription.billing_available && subscription.plan !== 'plus' && user?.email ? <Text style={styles.caption}>Tài khoản Fitmate nhận gói: {user.email}</Text> : null}
     {subscription.billing_available ? (offer?.displayPrice
       ? <Text style={styles.price}>{offer.displayPrice} / tháng</Text>
       : <Text style={styles.caption}>Chưa tải được giá từ Google Play; hiện không thể mua.</Text>)
@@ -212,6 +227,7 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
     </Pressable> : null}
     {busy ? <ActivityIndicator color={colors.primary} accessibilityLabel="Đang xác minh giao dịch" /> : null}
     {message ? <Text style={styles.caption}>{message}</Text> : null}
+    <Pressable accessibilityRole="button" onPress={accountHelp} style={styles.retry}><Text style={styles.retryText}>Tài khoản thanh toán không đúng?</Text></Pressable>
   </View>;
 }
 

@@ -1,10 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Purchase } from 'expo-iap';
 import type { AiSubscriptionStatus } from '@/services/api/aiUsageService';
-import { recoverPlayPurchases } from '../playPurchaseRecovery';
+import { checkoutBillingAccountId, recoverPlayPurchases } from '../playPurchaseRecovery';
 const purchase = (token: string, state = 'purchased') => ({ productId: 'fitmate_ai_plus', purchaseToken: token, purchaseState: state }) as Purchase;
 const plus = { plan: 'plus' } as AiSubscriptionStatus;
 describe('Play purchase recovery ownership', () => {
+  it('requires a server-issued opaque Fitmate binding before a new checkout', () => {
+    expect(checkoutBillingAccountId('a'.repeat(64))).toBe('a'.repeat(64));
+    for (const invalid of [undefined, null, '', 'buyer@example.test', 'previous-user', 'a'.repeat(63)])
+      expect(() => checkoutBillingAccountId(invalid)).toThrow('Chưa xác định được tài khoản nhận gói');
+  });
   it('finds the current account purchase even if a foreign purchase appears first', async () => {
     const verify = vi.fn(async (token: string) => { if (token === 'foreign') throw { status: 409, data: { code: 'AI_SUBSCRIPTION_BOUND_TO_ACCOUNT' } }; return plus; });
     expect(await recoverPlayPurchases([purchase('foreign'), purchase('mine')], 'fitmate_ai_plus', verify, () => true)).toEqual({ restored: true, conflict: true, pending: false });
