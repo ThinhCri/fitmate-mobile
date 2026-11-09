@@ -4,7 +4,8 @@ import { AppState, Platform } from 'react-native';
 import { useAuth } from './AuthContext';
 import { sessionManager } from './session/sessionManager';
 import { aiSubscriptionService } from './api/aiUsageService';
-import { recoverPlayPurchases } from './playPurchaseRecovery';
+import { recoverAiPlanPurchases } from './playPurchaseRecovery';
+import { notifyAiPlanChanged } from './aiPlanState';
 
 // Recover paid purchases after process death/network loss before the original callback.
 // No checkout is opened here and a purchase never moves between Fitmate accounts.
@@ -28,7 +29,8 @@ export function PlayPurchaseLifecycle() {
         await play.initConnection();
         if (!current()) return;
         const purchases = await play.getAvailablePurchases();
-        await recoverPlayPurchases(purchases, status.product_id, aiSubscriptionService.verify, current);
+        const result = await recoverAiPlanPurchases(purchases, status, aiSubscriptionService.verify, aiSubscriptionService.verifyPurchase, current);
+        if (current() && result.restored) notifyAiPlanChanged(user.id);
         attempts = 0;
       } catch {
         // A temporary network failure gets bounded background retries; explicit restore

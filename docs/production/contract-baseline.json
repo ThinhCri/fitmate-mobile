@@ -4,7 +4,7 @@
   "backendRepository": "FitmateAI_BE",
   "backendFrozenRevision": "9b0d7aa+worktree",
   "openapiSource": "FitmateAI_BE/docs/backend-release/openapi/fitmate-v1.yaml",
-  "openapiSha256": "639E3EF3E270FD65944014800AC1E96EA8904DEC41565A8414398F4BA02C3EAA",
+  "openapiSha256": "1F8258E8A4BA0C39439DF265381D240090A7D054473530650CC1B8F8F12E876C",
   "accountDeletionDelta": "2026-10-25: authenticated deletion now requires a six-digit email OTP from POST /users/me/deletion-otp; request body includes otp. Both POST delete-request and legacy DELETE /users/me enforce verification. Deploy backend before using this mobile flow; old clients cannot submit deletion without upgrading. Public email-link deletion remains available. This is local contract evidence, not production rollout approval.",
   "contractStatus": "FROZEN-V1",
   "hashEncoding": "raw file bytes (no normalization)",
@@ -23,5 +23,6 @@
   ],
   "aiPlusScopeDelta": "2026-11-08: chat-only AI Plus; optional native build compatibility header gates new sales below code5; no response DTO or authorization change. Food scan not included. Commercial UAT pending.",
   "aiSalesReportingDelta": "2026-11-08: admin/finance/ai-sales read-only, Google-verified real orders only; payout not inferred.",
-  "aiSalesSearchDelta": "2026-11-09: admin search accepts partial order ID/name/email; mobile purchase wire format unchanged."
+  "aiSalesSearchDelta": "2026-11-09: admin search accepts partial order ID/name/email; mobile purchase wire format unchanged.",
+  "aiOneTimeDelta": "2026-11-10: new verify-purchase endpoint; purchase_type/legacy_product_id fields; code8+ storefront uses fitmate_ai_plus_month consumable, server persists one calendar month per verified token/account before outbox consumption. Existing prepaid tokens remain restore-only. OneTimeSalesEnabled remains off until Play product/UAT. Not a deployment approval."
 }

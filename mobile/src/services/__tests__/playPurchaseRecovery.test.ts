@@ -1,10 +1,24 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Purchase } from 'expo-iap';
 import type { AiSubscriptionStatus } from '@/services/api/aiUsageService';
-import { checkoutBillingAccountId, recoverPlayPurchases } from '../playPurchaseRecovery';
+import { checkoutBillingAccountId, recoverPlayPurchases, recoverAiPlanPurchases } from '../playPurchaseRecovery';
 const purchase = (token: string, state = 'purchased') => ({ productId: 'fitmate_ai_plus', purchaseToken: token, purchaseState: state }) as Purchase;
 const plus = { plan: 'plus' } as AiSubscriptionStatus;
 describe('Play purchase recovery ownership', () => {
+  it('routes one-time and legacy purchases to their own real API adapters', async () => {
+    const legacy = vi.fn().mockResolvedValue(plus); const product = vi.fn().mockResolvedValue(plus);
+    const status = { product_id: 'fitmate_ai_plus_month', legacy_product_id: 'fitmate_ai_plus', purchase_type: 'in-app' } as AiSubscriptionStatus;
+    const current = { ...purchase('new'), productId: status.product_id } as Purchase;
+    const result = await recoverAiPlanPurchases([current, purchase('old')], status, legacy, product, () => true);
+    expect(result.restored).toBe(true); expect(product).toHaveBeenCalledWith('new');
+    expect(legacy).toHaveBeenCalledWith('old'); expect(legacy).not.toHaveBeenCalledWith('new');
+  });
+  it('does not require consumed Play inventory to keep an account entitlement', async () => {
+    const verify = vi.fn();
+    const result = await recoverAiPlanPurchases([], { product_id: 'fitmate_ai_plus_month', purchase_type: 'in-app' } as AiSubscriptionStatus, verify, verify, () => true);
+    expect(result.restored).toBe(false); expect(verify).not.toHaveBeenCalled();
+    // This helper never writes free/expiry; the plan page separately reads the server ledger.
+  });
   it('requires a server-issued opaque Fitmate binding before a new checkout', () => {
     expect(checkoutBillingAccountId('a'.repeat(64))).toBe('a'.repeat(64));
     for (const invalid of [undefined, null, '', 'buyer@example.test', 'previous-user', 'a'.repeat(63)])

@@ -6,10 +6,11 @@ import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, MessageCircle } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
-import { aiSubscriptionService, aiUsageService, type AiSubscriptionStatus, type AiUsageStatus } from '@/services/api/aiUsageService';
+import { aiSubscriptionService, type AiSubscriptionStatus, type AiUsageStatus } from '@/services/api/aiUsageService';
 import { sessionManager } from '@/services/session/sessionManager';
 import { useAuth } from '@/services/AuthContext';
-import { ACCOUNT_PURCHASE_CONFLICT, checkoutBillingAccountId, isPurchaseAccountConflict, recoverPlayPurchases } from '@/services/playPurchaseRecovery';
+import { ACCOUNT_PURCHASE_CONFLICT, checkoutBillingAccountId, isPurchaseAccountConflict, recoverPlayPurchases, recoverAiPlanPurchases } from '@/services/playPurchaseRecovery';
+import { loadAiPlanState, subscribeAiPlanChanged } from '@/services/aiPlanState';
 
 export default function AiPlanScreen() {
   const { user } = useAuth();
@@ -17,28 +18,32 @@ export default function AiPlanScreen() {
   const [subscription, setSubscription] = useState<AiSubscriptionStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const loadSequence = React.useRef(0);
 
   const load = useCallback(async () => {
+    const sequence = ++loadSequence.current;
     setLoading(true);
     setError(null);
     setStatus(null);
     setSubscription(null);
     const generation = sessionManager.getGeneration();
     try {
-      const billing = await aiSubscriptionService.getStatus();
-      const usage = await aiUsageService.getStatus();
-      if (generation !== sessionManager.getGeneration()) return;
+      const { subscription: billing, usage } = await loadAiPlanState();
+      if (generation !== sessionManager.getGeneration() || sequence !== loadSequence.current) return;
       setStatus(usage);
       setSubscription(billing);
     } catch (cause) {
-      if (generation !== sessionManager.getGeneration()) return;
+      if (generation !== sessionManager.getGeneration() || sequence !== loadSequence.current) return;
       setError(cause instanceof Error ? cause.message : 'Không thể tải hạn mức AI.');
     } finally {
-      if (generation === sessionManager.getGeneration()) setLoading(false);
+      if (generation === sessionManager.getGeneration() && sequence === loadSequence.current) setLoading(false);
     }
   }, [user?.id]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
+  React.useEffect(() => subscribeAiPlanChanged(userId => {
+    if (user?.id === userId) void load();
+  }), [user?.id, load]);
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -76,7 +81,7 @@ export default function AiPlanScreen() {
           <Text style={styles.cardTitle}>AI Plus</Text>
           <Text style={styles.body}>100 lượt chat và gợi ý tập luyện mỗi ngày.</Text>
           <Text style={styles.caption}>Trả trước 1 tháng · Không tự gia hạn</Text>
-          {subscription?.expires_at_utc && subscription.plan === 'plus' ? <Text style={styles.caption}>Có hiệu lực đến {new Date(subscription.expires_at_utc).toLocaleString('vi-VN')} theo Google Play.</Text> : null}
+          {subscription?.expires_at_utc && subscription.plan === 'plus' ? <Text style={styles.caption}>Có hiệu lực đến {new Date(subscription.expires_at_utc).toLocaleString('vi-VN')}.</Text> : null}
           {subscription && (subscription.billing_available || subscription.restore_available) && Platform.OS === 'android' && Constants.appOwnership !== 'expo' ? (
             <BillingActions key={user?.id} subscription={subscription} onVerified={load} />
           ) : (
@@ -96,7 +101,9 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
   const sessionIsCurrent = () => generation.current === sessionManager.getGeneration();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const { connected, subscriptions, fetchProducts, requestPurchase } = useIAP({
+  const oneTime = subscription.purchase_type === 'in-app';
+  const verifyToken = oneTime ? aiSubscriptionService.verifyPurchase : aiSubscriptionService.verify;
+  const { connected, subscriptions, products, fetchProducts, requestPurchase } = useIAP({
     onPurchaseSuccess: (purchase) => { void verifyPurchase(purchase); },
     onPurchaseError: (error) => {
       setBusy(false);
@@ -106,7 +113,7 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
 
   const verifyPurchase = async (purchase: Purchase) => {
     if (!sessionIsCurrent()) return;
-    if (purchase.productId !== subscription.product_id || !purchase.purchaseToken) return;
+    if (![subscription.product_id, subscription.legacy_product_id].includes(purchase.productId) || !purchase.purchaseToken) return;
     if (purchase.purchaseState !== 'purchased') {
       setMessage('Giao dịch đang chờ Google Play xác nhận; Fitmate chưa cấp quyền AI Plus.');
       setBusy(false);
@@ -114,7 +121,7 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
     }
     setBusy(true);
     try {
-      const verified = await aiSubscriptionService.verify(purchase.purchaseToken);
+      const verified = await (purchase.productId === subscription.legacy_product_id ? aiSubscriptionService.verify : verifyToken)(purchase.purchaseToken);
       if (!sessionIsCurrent()) return;
       if (verified.plan !== 'plus') {
         setMessage('Google Play chưa xác nhận gói đang có hiệu lực. Vui lòng kiểm tra lại sau.');
@@ -133,19 +140,24 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
 
   React.useEffect(() => {
     if (!connected) return;
-    void fetchProducts({ skus: [subscription.product_id], type: 'subs' }).catch(() => {
+    void fetchProducts({ skus: [subscription.product_id], type: oneTime ? 'in-app' : 'subs' }).catch(() => {
       setMessage('Chưa tải được thông tin gói từ Google Play.');
     });
-  }, [connected, fetchProducts, subscription.product_id]);
+  }, [connected, fetchProducts, subscription.product_id, oneTime]);
 
-  const product = subscriptions.find((item) => item.id === subscription.product_id && item.platform === 'android');
-  const offer = product?.platform === 'android'
-    ? product.subscriptionOffers.find((item) => item.basePlanIdAndroid === subscription.base_plan_id && !item.id)
-      ?? product.subscriptionOffers.find((item) => item.basePlanIdAndroid === subscription.base_plan_id)
+  const product = (oneTime ? products : subscriptions).find((item) => item.id === subscription.product_id && item.platform === 'android');
+  const offer = product?.platform === 'android' && !oneTime
+    ? product.subscriptionOffers?.find(item => item.basePlanIdAndroid === subscription.base_plan_id && !item.id)
+      ?? product.subscriptionOffers?.find(item => item.basePlanIdAndroid === subscription.base_plan_id)
     : undefined;
+  const purchaseOffer = product?.platform === 'android' && product.type === 'in-app'
+    ? product.discountOffers?.find(item => !item.id && !item.preorderDetailsAndroid && !item.rentalDetailsAndroid)
+    : undefined;
+  const price = oneTime ? purchaseOffer?.displayPrice ?? product?.displayPrice : offer?.displayPrice;
+  const canBuy = Boolean(product && (oneTime || offer?.offerTokenAndroid));
 
   const buy = async () => {
-    if (!subscription.billing_available || !connected || !offer?.offerTokenAndroid) return;
+    if (!subscription.billing_available || !connected || !canBuy) return;
     setBusy(true);
     setMessage(null);
     try {
@@ -154,9 +166,10 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
       const fresh = await aiSubscriptionService.getStatus();
       if (!sessionIsCurrent()) return;
       if (fresh.plan === 'plus') { await onVerified(); setBusy(false); return; }
+      if (fresh.product_id !== subscription.product_id || fresh.purchase_type !== subscription.purchase_type) { await onVerified(); setBusy(false); return; }
       if (!fresh.billing_available) throw new Error('Hiện chưa thể mua gói. Vui lòng thử lại sau.');
       const accountId = checkoutBillingAccountId(fresh.billing_account_id);
-      const recovery = await recoverPlayPurchases(await getAvailablePurchases(), subscription.product_id, aiSubscriptionService.verify, sessionIsCurrent);
+      const recovery = await recoverPlayPurchases(await getAvailablePurchases(), subscription.product_id, verifyToken, sessionIsCurrent);
       if (!sessionIsCurrent()) return;
       if (recovery.restored) {
         await onVerified();
@@ -165,12 +178,16 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
         return;
       }
       if (recovery.conflict || recovery.pending) {
-        setMessage(recovery.conflict ? ACCOUNT_PURCHASE_CONFLICT : 'Google Play còn giao dịch đang chờ xử lý. Hãy kiểm tra trước khi mua thêm.');
+        setMessage(recovery.conflict ? (oneTime ? 'Google Play đang giữ giao dịch trước chưa xử lý xong. Vui lòng đợi vài giây rồi thử lại; không cần xóa hoặc đổi tài khoản Google.' : ACCOUNT_PURCHASE_CONFLICT) : 'Google Play còn giao dịch đang chờ xử lý. Hãy kiểm tra trước khi mua thêm.');
         setBusy(false);
         return;
       }
-      await requestPurchase({
-        request: { google: { skus: [subscription.product_id], obfuscatedAccountId: accountId, subscriptionOffers: [{ sku: subscription.product_id, offerToken: offer.offerTokenAndroid }] } },
+      if (oneTime) {
+        await requestPurchase({ type: 'in-app', request: { google: {
+          skus: [fresh.product_id], obfuscatedAccountId: accountId, offerToken: purchaseOffer?.offerTokenAndroid,
+        } } });
+      } else await requestPurchase({
+        request: { google: { skus: [subscription.product_id], obfuscatedAccountId: accountId, subscriptionOffers: [{ sku: subscription.product_id, offerToken: offer!.offerTokenAndroid! }] } },
         type: 'subs',
       });
     } catch (cause) {
@@ -184,10 +201,12 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
     setMessage(null);
     try {
       const purchases = await getAvailablePurchases();
-      const result = await recoverPlayPurchases(purchases, subscription.product_id, aiSubscriptionService.verify, sessionIsCurrent);
+      const result = await recoverAiPlanPurchases(purchases, subscription, aiSubscriptionService.verify, aiSubscriptionService.verifyPurchase, sessionIsCurrent);
       if (!sessionIsCurrent()) return;
-      if (result.restored) { await onVerified(); setMessage('AI Plus đã được xác nhận trên tài khoản này.'); }
-      else setMessage(result.conflict ? ACCOUNT_PURCHASE_CONFLICT : result.pending ? 'Giao dịch đang chờ Google Play xác nhận.' : 'Chưa tìm thấy gói còn hiệu lực trên tài khoản Google Play hiện tại.');
+      await onVerified();
+      setMessage(result.restored ? 'AI Plus đã được xác nhận trên tài khoản này.'
+        : result.pending ? 'Giao dịch đang chờ Google Play xác nhận.'
+        : 'Đã kiểm tra quyền sử dụng trên tài khoản Fitmate này. Giao dịch của tài khoản khác không được chuyển sang đây.');
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : 'Không khôi phục được gói.');
     } finally {
@@ -211,18 +230,18 @@ function BillingActions({ subscription, onVerified }: { subscription: AiSubscrip
 
   return <View style={styles.billingActions}>
     {subscription.billing_available && subscription.plan !== 'plus' && user?.email ? <Text style={styles.caption}>Tài khoản Fitmate nhận gói: {user.email}</Text> : null}
-    {subscription.billing_available ? (offer?.displayPrice
-      ? <Text style={styles.price}>{offer.displayPrice} / tháng</Text>
+    {subscription.billing_available ? (price
+      ? <Text style={styles.price}>{price} / tháng</Text>
       : <Text style={styles.caption}>Chưa tải được giá từ Google Play; hiện không thể mua.</Text>)
       : <Text style={styles.caption}>Hiện chưa thể mua gói.</Text>}
-    {subscription.billing_available && subscription.plan !== 'plus' ? <Pressable accessibilityRole="button" disabled={busy || !connected || !offer?.offerTokenAndroid}
-      onPress={() => void buy()} style={[styles.primaryButton, (busy || !connected || !offer?.offerTokenAndroid) && styles.disabled]}>
+    {subscription.billing_available && subscription.plan !== 'plus' ? <Pressable accessibilityRole="button" disabled={busy || !connected || !canBuy}
+      onPress={() => void buy()} style={[styles.primaryButton, (busy || !connected || !canBuy) && styles.disabled]}>
       <Text style={styles.primaryButtonText}>Mua qua Google Play</Text>
     </Pressable> : null}
     <Pressable accessibilityRole="button" disabled={busy || !connected} onPress={() => void restore()} style={styles.retry}>
       <Text style={styles.retryText}>Khôi phục giao dịch</Text>
     </Pressable>
-    {subscription.plan === 'plus' ? <Pressable accessibilityRole="button" onPress={() => void manage()} style={styles.retry}>
+    {subscription.plan === 'plus' && !oneTime ? <Pressable accessibilityRole="button" onPress={() => void manage()} style={styles.retry}>
       <Text style={styles.retryText}>Quản lý trên Google Play</Text>
     </Pressable> : null}
     {busy ? <ActivityIndicator color={colors.primary} accessibilityLabel="Đang xác minh giao dịch" /> : null}

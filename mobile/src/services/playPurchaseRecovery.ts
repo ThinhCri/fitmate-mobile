@@ -37,3 +37,16 @@ export async function recoverPlayPurchases(
   }
   return { restored, conflict, pending };
 }
+
+export async function recoverAiPlanPurchases(
+  purchases: Purchase[], status: AiSubscriptionStatus,
+  legacyVerify: (token: string) => Promise<AiSubscriptionStatus>,
+  productVerify: (token: string) => Promise<AiSubscriptionStatus>, current: () => boolean,
+) {
+  const result = await recoverPlayPurchases(purchases, status.product_id,
+    status.purchase_type === 'in-app' ? productVerify : legacyVerify, current);
+  if (!status.legacy_product_id || status.legacy_product_id === status.product_id) return result;
+  const legacy = await recoverPlayPurchases(purchases, status.legacy_product_id, legacyVerify, current);
+  return { restored: result.restored || legacy.restored,
+    conflict: result.conflict || legacy.conflict, pending: result.pending || legacy.pending };
+}
