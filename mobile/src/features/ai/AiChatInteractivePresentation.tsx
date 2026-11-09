@@ -39,7 +39,7 @@ export interface AiChatInteractivePresentationProps {
   messages: AiChatMessageViewModel[];
   isProcessing?: boolean;
   onBack: () => void;
-  onSendMessage: (text: string) => void;
+  onSendMessage: (text: string) => void | Promise<boolean | void>;
   attachmentUris?: string[];
   onAttachmentPress: () => void;
   onRemoveAttachment: (index: number) => void;
@@ -65,10 +65,11 @@ export function AiChatInteractivePresentation({
     (message) => message.sender === 'assistant' && message.isProcessing
   );
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputText.trim() || isProcessing) return;
-    onSendMessage(inputText.trim());
-    setInputText('');
+    const text = inputText.trim();
+    const sent = await onSendMessage(text);
+    if (sent !== false) setInputText(current => current.trim() === text ? '' : current);
   };
 
   return (

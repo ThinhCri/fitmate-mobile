@@ -365,10 +365,10 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
           onPress={onScanPress}
           style={styles.secondaryActionBtn}
           accessibilityRole="button"
-          accessibilityLabel="Quét món ăn bằng camera AI"
+          accessibilityLabel="Quét món ăn AI, sắp ra mắt"
         >
           <Camera size={20} color={colors.primary} />
-          <Text style={[typography.bodyBold, styles.secondaryActionText]}>Quét món ăn AI</Text>
+          <Text style={[typography.bodyBold, styles.secondaryActionText]}>Quét AI · Sắp ra mắt</Text>
         </TouchableOpacity>
       </View>
 
@@ -376,7 +376,7 @@ export const NutritionDiaryPresentation: React.FC<NutritionDiaryPresentationProp
       {summary.meals.length === 0 ? (
         <EmptyState
           title="Chưa có món nào hôm nay"
-          description="Hãy bấm 'Thêm thủ công' hoặc 'Quét món ăn AI' để bắt đầu ghi nhận dinh dưỡng."
+          description="Hãy bấm 'Thêm thủ công' để bắt đầu ghi nhận dinh dưỡng."
           actionLabel="Ghi bữa ăn đầu tiên"
           onAction={() => onAddManualPress('breakfast')}
         />

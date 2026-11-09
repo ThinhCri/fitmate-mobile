@@ -1,7 +1,8 @@
+import { isFoodScanDemoEnabled, foodScanComingSoonMessage } from '@/services/foodScanAvailability';
 import { checkAiAccess } from '@/services/aiAccess';
 import { systemService } from '@/services/api/systemService';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { ImagePickerService } from '@/services/imagePicker';
 import { getNutritionRepository } from '@/repositories/nutritionRepository';
@@ -34,6 +35,7 @@ export default function CameraScanRoute() {
 
   useEffect(() => {
     mounted.current = true;
+    if (!isFoodScanDemoEnabled()) return;
     if (started.current) {
       return () => {
         mounted.current = false;
@@ -111,6 +113,17 @@ export default function CameraScanRoute() {
     void begin();
     return () => { mounted.current = false; };
   }, []);
+
+  if (!isFoodScanDemoEnabled()) return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Quét món ăn AI — Sắp ra mắt</Text>
+      <Text style={styles.description}>{foodScanComingSoonMessage}</Text>
+      <Pressable accessibilityRole="button" onPress={() => router.replace('/nutrition/manual-entry' as never)} style={{ minHeight: 48, justifyContent: 'center', paddingHorizontal: 20 }}>
+        <Text style={[styles.description, { color: colors.primary }]}>Ghi bữa ăn thủ công</Text>
+      </Pressable>
+      <Pressable accessibilityRole="button" onPress={() => router.canGoBack() ? router.back() : router.replace('/' as never)} style={{ minHeight: 48, justifyContent: 'center' }}><Text style={styles.description}>Quay lại</Text></Pressable>
+    </View>
+  );
 
   return (
     <View style={styles.container}>

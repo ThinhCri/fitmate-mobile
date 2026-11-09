@@ -26,6 +26,7 @@ export interface AiSubscriptionStatus {
   base_plan_id: string;
   state: string;
   expires_at_utc: string | null;
+  billing_account_id?: string | null;
 }
 
 export const aiSubscriptionService = {

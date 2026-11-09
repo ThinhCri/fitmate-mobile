@@ -41,7 +41,7 @@ export function QuickActionGrid({ onPressScan, onPressWorkout, onPressBooking, o
           style={({ pressed }) => [cell, { opacity: pressed ? theme.tokens.opacity.pressed : 1 }]}
         >
           <Scan color={resolveColor(theme, 'primary')} size={24} />
-          <Text style={labelStyle}>Quét món</Text>
+          <Text style={labelStyle}>Quét món · Sắp ra mắt</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"

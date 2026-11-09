@@ -267,7 +267,7 @@ export const MemberHomePresentation: React.FC<MemberHomePresentationProps> = ({
               <Camera size={22} color={colors.info} />
             </View>
             <Text style={[typography.bodyMedium, styles.actionTitle]}>Quét món ăn</Text>
-            <Text style={[typography.caption, styles.actionSubtitle]}>Nhận diện AI</Text>
+            <Text style={[typography.caption, styles.actionSubtitle]}>Sắp ra mắt</Text>
           </TouchableOpacity>
 
           {data.todayWorkout ? <TouchableOpacity
