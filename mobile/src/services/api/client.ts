@@ -176,13 +176,30 @@ async function apiClientAttempt<T>(
       }
     }
 
+    // 429 Handling: Transient burst silent retry (only if Retry-After <= 2s and not already retried)
+    if (response.status === 429 && !options._isRetry) {
+      const retryAfter = response.headers.get('Retry-After');
+      const retrySeconds = retryAfter && /^\d+$/.test(retryAfter)
+        ? Number(retryAfter)
+        : 1;
+
+      if (retrySeconds <= 2) {
+        const jitter = Math.floor(Math.random() * 200);
+        await new Promise((resolve) => setTimeout(resolve, retrySeconds * 1000 + jitter));
+        return await apiClientAttempt<T>(cleanEndpoint, {
+          ...options,
+          _isRetry: true,
+        });
+      }
+    }
+
     if (!response.ok) {
       if (response.status === 429) {
         const retryAfter = response.headers.get('Retry-After');
         const retrySeconds = retryAfter && /^\d+$/.test(retryAfter)
           ? Number(retryAfter)
-          : 5;
-        rateLimits.set(rateKey, Date.now() + Math.min(300, Math.max(1, retrySeconds)) * 1000);
+          : 2;
+        rateLimits.set(rateKey, Date.now() + Math.min(30, Math.max(1, retrySeconds)) * 1000);
       }
       let errorData: unknown;
       try {
