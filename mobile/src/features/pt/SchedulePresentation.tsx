@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,10 @@ import {
   Pressable,
   Switch,
   Modal,
-  TextInput,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   User as UserIcon,
@@ -27,9 +27,23 @@ import {
   CheckCircle,
   Repeat,
   Trash2,
+  Check,
+  Sliders,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import type { AvailabilitySlot, AvailabilitySlotInput } from '@/services/api/types';
+
+const MORNING_SLOTS = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00'];
+const AFTERNOON_SLOTS = ['13:00', '14:00', '15:00', '16:00', '17:00'];
+const EVENING_SLOTS = ['18:00', '19:00', '20:00', '21:00'];
+const DURATION_OPTIONS = [
+  { label: '45 phút', value: 45 },
+  { label: '60 phút (chuẩn)', value: 60 },
+  { label: '90 phút', value: 90 },
+  { label: '120 phút', value: 120 },
+];
+const CUSTOM_HOURS = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
+const CUSTOM_MINUTES = [0, 15, 30, 45];
 
 export interface ScheduleDay {
   dayLabel: string; // T2..CN
@@ -71,14 +85,17 @@ export function SchedulePresentation({
   onBack,
   onSaveSchedule,
 }: SchedulePresentationProps) {
+  const insets = useSafeAreaInsets();
   const selectedDay = daysOfWeek[selectedDayIndex] || daysOfWeek[0];
   const [isDayOff, setIsDayOff] = useState(false);
   const [addModalVisible, setAddModalVisible] = useState(false);
 
-  // Form states for adding slot
-  const [startHour, setStartHour] = useState('07');
-  const [startMinute, setStartMinute] = useState('00');
-  const [durationMinutes, setDurationMinutes] = useState('60');
+  // Touch-friendly slot adding state
+  const [selectedDuration, setSelectedDuration] = useState<number>(60);
+  const [selectedQuickSlots, setSelectedQuickSlots] = useState<string[]>([]);
+  const [showCustomTime, setShowCustomTime] = useState(false);
+  const [customHour, setCustomHour] = useState(7);
+  const [customMinute, setCustomMinute] = useState(0);
 
   // Weekly open slots synchronized with authoritative server slots
   const [weeklyOpenSlots, setWeeklyOpenSlots] = useState<AvailabilitySlotInput[]>([]);
@@ -116,57 +133,122 @@ export function SchedulePresentation({
 
   const openSlotsCount = dayOpenSlots.length;
 
-  const handleAddSlotConfirm = () => {
-    const h = parseInt(startHour, 10);
-    const m = parseInt(startMinute, 10);
-    const dur = parseInt(durationMinutes, 10);
+  const pad = (n: number) => (n < 10 ? '0' + n : n.toString());
+  const customTimeStr = `${pad(customHour)}:${pad(customMinute)}`;
 
-    if (isNaN(h) || h < 0 || h > 23 || isNaN(m) || m < 0 || m > 59) {
-      Alert.alert('Giờ không hợp lệ', 'Vui lòng nhập giờ từ 00 đến 23 và phút từ 00 đến 59');
+  const getSlotStatus = useCallback(
+    (timeStr: string, durMinutes: number) => {
+      if (!selectedDay) return { isBooked: false, isOpen: false, isAvailable: true };
+      const slotStartLocal = `${selectedDay.dateStr}T${timeStr}:00`;
+      const startMs = new Date(slotStartLocal).getTime();
+      const endMs = startMs + durMinutes * 60 * 1000;
+
+      // Check booked/held slots
+      const isBooked = dayBookedSlots.some((b) => {
+        const bStart = new Date(b.slot_start_local).getTime();
+        const bEnd = bStart + b.duration_minutes * 60 * 1000;
+        return startMs < bEnd && bStart < endMs;
+      });
+
+      // Check already open slots
+      const isOpen = dayOpenSlots.some((o) => {
+        const oStart = new Date(o.slot_start_local).getTime();
+        const oEnd = oStart + o.duration_minutes * 60 * 1000;
+        return startMs < oEnd && oStart < endMs;
+      });
+
+      return {
+        isBooked,
+        isOpen,
+        isAvailable: !isBooked && !isOpen,
+      };
+    },
+    [selectedDay, dayBookedSlots, dayOpenSlots]
+  );
+
+  const handleToggleQuickSlot = (timeStr: string) => {
+    setSelectedQuickSlots((prev) =>
+      prev.includes(timeStr) ? prev.filter((t) => t !== timeStr) : [...prev, timeStr]
+    );
+  };
+
+  const handleSelectAllMorning = () => {
+    const available = MORNING_SLOTS.filter(
+      (t) => getSlotStatus(t, selectedDuration).isAvailable
+    );
+    setSelectedQuickSlots((prev) => Array.from(new Set([...prev, ...available])));
+  };
+
+  const handleSelectAllEvening = () => {
+    const available = EVENING_SLOTS.filter(
+      (t) => getSlotStatus(t, selectedDuration).isAvailable
+    );
+    setSelectedQuickSlots((prev) => Array.from(new Set([...prev, ...available])));
+  };
+
+  const handleClearSelection = () => {
+    setSelectedQuickSlots([]);
+  };
+
+  const handleAddQuickSlotsConfirm = () => {
+    if (selectedQuickSlots.length === 0) {
+      Alert.alert('Chưa chọn ca', 'Vui lòng chọn ít nhất một khung giờ rảnh.');
       return;
     }
-    if (isNaN(dur) || dur < 15 || dur > 240) {
-      Alert.alert('Thời lượng không hợp lệ', 'Thời lượng buổi tập phải từ 15 đến 240 phút');
+
+    const sortedTimes = [...selectedQuickSlots].sort();
+    // Strict interval overlap check within chosen batch
+    for (let i = 0; i < sortedTimes.length - 1; i++) {
+      const currentStart = new Date(`${selectedDay.dateStr}T${sortedTimes[i]}:00`).getTime();
+      const currentEnd = currentStart + selectedDuration * 60 * 1000;
+      const nextStart = new Date(`${selectedDay.dateStr}T${sortedTimes[i + 1]}:00`).getTime();
+      if (currentEnd > nextStart) {
+        Alert.alert(
+          'Khung giờ giao thoa',
+          `Ca ${sortedTimes[i]} (${selectedDuration} phút) bị giao thoa với ca ${sortedTimes[i + 1]}. Vui lòng bỏ chọn bớt hoặc giảm thời lượng buổi tập.`
+        );
+        return;
+      }
+    }
+
+    // Check overlap against existing slots
+    for (const timeStr of sortedTimes) {
+      const status = getSlotStatus(timeStr, selectedDuration);
+      if (!status.isAvailable) {
+        Alert.alert('Khung giờ không khả dụng', `Ca ${timeStr} trùng lặp với lịch đã có.`);
+        return;
+      }
+    }
+
+    const newSlots: AvailabilitySlotInput[] = sortedTimes.map((timeStr) => ({
+      slot_start_local: `${selectedDay.dateStr}T${timeStr}:00`,
+      duration_minutes: selectedDuration,
+      trainer_timezone: timezone,
+    }));
+
+    setWeeklyOpenSlots((prev) => [...prev, ...newSlots]);
+    setSelectedQuickSlots([]);
+    setAddModalVisible(false);
+  };
+
+  const handleAddCustomSlot = () => {
+    const status = getSlotStatus(customTimeStr, selectedDuration);
+    if (status.isBooked) {
+      Alert.alert('Không khả dụng', `Khung giờ ${customTimeStr} trùng với ca đã có người đặt/giữ chỗ.`);
+      return;
+    }
+    if (status.isOpen) {
+      Alert.alert('Trùng lặp', `Khung giờ ${customTimeStr} đã có trên lịch rảnh của bạn.`);
       return;
     }
 
-    const pad = (n: number) => (n < 10 ? '0' + n : n.toString());
-    const timeStr = `${pad(h)}:${pad(m)}:00`;
-    const slotStartLocal = `${selectedDay.dateStr}T${timeStr}`;
+    const newSlot: AvailabilitySlotInput = {
+      slot_start_local: `${selectedDay.dateStr}T${customTimeStr}:00`,
+      duration_minutes: selectedDuration,
+      trainer_timezone: timezone,
+    };
 
-    const newStartMs = new Date(slotStartLocal).getTime();
-    const newEndMs = newStartMs + dur * 60 * 1000;
-
-    // Strict interval overlap check [start, end) across dayOpenSlots and dayBookedSlots
-    const allDaySlots = [
-      ...dayOpenSlots,
-      ...dayBookedSlots.map((b) => ({
-        slot_start_local: b.slot_start_local,
-        duration_minutes: b.duration_minutes,
-      })),
-    ];
-    const hasOverlap = allDaySlots.some((s) => {
-      const sStartMs = new Date(s.slot_start_local).getTime();
-      const sEndMs = sStartMs + s.duration_minutes * 60 * 1000;
-      return newStartMs < sEndMs && sStartMs < newEndMs;
-    });
-
-    if (hasOverlap) {
-      Alert.alert(
-        'Trùng lặp khung giờ',
-        'Khung giờ bạn chọn bị giao thoa (overlap) với một khung giờ đã tồn tại trên lịch.'
-      );
-      return;
-    }
-
-    setWeeklyOpenSlots((prev) => [
-      ...prev,
-      {
-        slot_start_local: slotStartLocal,
-        duration_minutes: dur,
-        trainer_timezone: timezone,
-      },
-    ]);
+    setWeeklyOpenSlots((prev) => [...prev, newSlot]);
     setAddModalVisible(false);
   };
 
@@ -218,6 +300,49 @@ export function SchedulePresentation({
     );
   };
 
+  const renderSlotChip = (timeStr: string) => {
+    const status = getSlotStatus(timeStr, selectedDuration);
+    const isSelected = selectedQuickSlots.includes(timeStr);
+
+    if (status.isBooked) {
+      return (
+        <View key={timeStr} style={[styles.slotChip, styles.slotChipBooked]}>
+          <Lock size={12} color={colors.textMuted} style={{ marginRight: 4 }} />
+          <Text style={styles.slotChipTextBooked}>{timeStr}</Text>
+          <Text style={styles.slotChipSubBooked}>Đã đặt</Text>
+        </View>
+      );
+    }
+
+    if (status.isOpen) {
+      return (
+        <View key={timeStr} style={[styles.slotChip, styles.slotChipOpen]}>
+          <Check size={12} color={colors.success} style={{ marginRight: 4 }} />
+          <Text style={styles.slotChipTextOpen}>{timeStr}</Text>
+          <Text style={styles.slotChipSubOpen}>Đã có</Text>
+        </View>
+      );
+    }
+
+    return (
+      <Pressable
+        key={timeStr}
+        style={[styles.slotChip, isSelected && styles.slotChipSelected]}
+        onPress={() => handleToggleQuickSlot(timeStr)}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: isSelected }}
+        accessibilityLabel={`Khung giờ ${timeStr}`}
+      >
+        {isSelected ? (
+          <CheckCircle size={14} color={colors.white} style={{ marginRight: 4 }} />
+        ) : null}
+        <Text style={[styles.slotChipText, isSelected && styles.slotChipTextSelected]}>
+          {timeStr}
+        </Text>
+      </Pressable>
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* Top Header */}
@@ -236,7 +361,16 @@ export function SchedulePresentation({
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(insets.bottom, 24) + 80 },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
+      >
         {/* Week Switcher Card */}
         <View style={styles.weekCard}>
           <View style={styles.weekHeaderRow}>
@@ -512,72 +646,221 @@ export function SchedulePresentation({
       <Modal
         visible={addModalVisible}
         transparent
-        animationType="fade"
+        animationType="slide"
         onRequestClose={() => setAddModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <Pressable
+            style={styles.modalBackdropDismiss}
+            onPress={() => setAddModalVisible(false)}
+            accessibilityLabel="Đóng popup"
+          />
+          <View
+            style={[
+              styles.modalContent,
+              { paddingBottom: Math.max(insets.bottom, 20) + 16 },
+            ]}
+          >
+            {/* Grab handle indicator */}
+            <View style={styles.modalHandle} />
+
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Thêm Khung Giờ Mới</Text>
-              <Pressable onPress={() => setAddModalVisible(false)}>
+              <View>
+                <Text style={styles.modalTitle}>Thêm Khung Giờ Rảnh</Text>
+                <Text style={styles.modalSubtitle}>
+                  {selectedDay?.dayLabel}, {selectedDay?.dateStr}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setAddModalVisible(false)}
+                style={styles.closeModalBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Đóng"
+              >
                 <X size={20} color={colors.textSecondary} />
               </Pressable>
             </View>
 
-            <View style={styles.timeInputsRow}>
-              <View style={styles.timeInputCol}>
-                <Text style={styles.inputLabel}>Giờ bắt đầu (0-23)</Text>
-                <TextInput
-                  style={styles.timeInput}
-                  value={startHour}
-                  onChangeText={setStartHour}
-                  keyboardType="numeric"
-                  maxLength={2}
-                />
+            <ScrollView
+              style={styles.modalScroll}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {/* Duration Selector */}
+              <View style={styles.sectionBlock}>
+                <Text style={styles.sectionHeading}>1. Thời lượng buổi tập</Text>
+                <View style={styles.chipRow}>
+                  {DURATION_OPTIONS.map((opt) => {
+                    const isSelected = selectedDuration === opt.value;
+                    return (
+                      <Pressable
+                        key={opt.value}
+                        style={[
+                          styles.durationChip,
+                          isSelected && styles.durationChipSelected,
+                        ]}
+                        onPress={() => setSelectedDuration(opt.value)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: isSelected }}
+                      >
+                        <Text
+                          style={[
+                            styles.durationChipText,
+                            isSelected && styles.durationChipTextSelected,
+                          ]}
+                        >
+                          {opt.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
 
-              <View style={styles.timeInputCol}>
-                <Text style={styles.inputLabel}>Phút (0-59)</Text>
-                <TextInput
-                  style={styles.timeInput}
-                  value={startMinute}
-                  onChangeText={setStartMinute}
-                  keyboardType="numeric"
-                  maxLength={2}
-                />
+              {/* Quick Select Actions */}
+              <View style={styles.sectionBlock}>
+                <View style={styles.sectionHeadingRow}>
+                  <Text style={styles.sectionHeading}>2. Chọn các ca rảnh (Chạm để chọn)</Text>
+                </View>
+                <View style={styles.quickActionRow}>
+                  <Pressable
+                    style={styles.quickActionBtn}
+                    onPress={handleSelectAllMorning}
+                  >
+                    <Sun size={14} color={colors.primary} style={{ marginRight: 4 }} />
+                    <Text style={styles.quickActionText}>Chọn cả sáng</Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.quickActionBtn}
+                    onPress={handleSelectAllEvening}
+                  >
+                    <Moon size={14} color={colors.primary} style={{ marginRight: 4 }} />
+                    <Text style={styles.quickActionText}>Chọn cả tối</Text>
+                  </Pressable>
+                  {selectedQuickSlots.length > 0 && (
+                    <Pressable
+                      style={styles.quickClearBtn}
+                      onPress={handleClearSelection}
+                    >
+                      <Text style={styles.quickClearText}>Bỏ chọn ({selectedQuickSlots.length})</Text>
+                    </Pressable>
+                  )}
+                </View>
+
+                {/* Morning Slots */}
+                <Text style={styles.timeGroupTitle}>🌅 Buổi sáng</Text>
+                <View style={styles.slotsGrid}>
+                  {MORNING_SLOTS.map((timeStr) => renderSlotChip(timeStr))}
+                </View>
+
+                {/* Afternoon Slots */}
+                <Text style={styles.timeGroupTitle}>☀️ Buổi chiều</Text>
+                <View style={styles.slotsGrid}>
+                  {AFTERNOON_SLOTS.map((timeStr) => renderSlotChip(timeStr))}
+                </View>
+
+                {/* Evening Slots */}
+                <Text style={styles.timeGroupTitle}>🌙 Buổi tối</Text>
+                <View style={styles.slotsGrid}>
+                  {EVENING_SLOTS.map((timeStr) => renderSlotChip(timeStr))}
+                </View>
               </View>
 
-              <View style={styles.timeInputCol}>
-                <Text style={styles.inputLabel}>Thời lượng (phút)</Text>
-                <TextInput
-                  style={styles.timeInput}
-                  value={durationMinutes}
-                  onChangeText={setDurationMinutes}
-                  keyboardType="numeric"
-                  placeholder="60"
-                />
+              {/* Custom Time Toggle */}
+              <View style={styles.customSectionBlock}>
+                <Pressable
+                  style={styles.customToggleRow}
+                  onPress={() => setShowCustomTime((v) => !v)}
+                >
+                  <View style={styles.customToggleLeft}>
+                    <Sliders size={16} color={colors.textSecondary} style={{ marginRight: 6 }} />
+                    <Text style={styles.customToggleTitle}>
+                      {showCustomTime ? 'Ẩn tùy chỉnh giờ lẻ' : '+ Tùy chỉnh giờ lẻ / giờ khác'}
+                    </Text>
+                  </View>
+                  <ChevronRight
+                    size={16}
+                    color={colors.textSecondary}
+                    style={{ transform: [{ rotate: showCustomTime ? '90deg' : '0deg' }] }}
+                  />
+                </Pressable>
+
+                {showCustomTime && (
+                  <View style={styles.customTimeCard}>
+                    <Text style={styles.customTimeLabel}>Giờ bắt đầu:</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.hoursScroll}>
+                      {CUSTOM_HOURS.map((h) => {
+                        const isSelected = customHour === h;
+                        return (
+                          <Pressable
+                            key={h}
+                            style={[styles.hourChip, isSelected && styles.hourChipSelected]}
+                            onPress={() => setCustomHour(h)}
+                          >
+                            <Text style={[styles.hourChipText, isSelected && styles.hourChipTextSelected]}>
+                              {pad(h)}h
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </ScrollView>
+
+                    <Text style={[styles.customTimeLabel, { marginTop: 8 }]}>Phút:</Text>
+                    <View style={styles.minutesRow}>
+                      {CUSTOM_MINUTES.map((m) => {
+                        const isSelected = customMinute === m;
+                        return (
+                          <Pressable
+                            key={m}
+                            style={[styles.minuteChip, isSelected && styles.minuteChipSelected]}
+                            onPress={() => setCustomMinute(m)}
+                          >
+                            <Text style={[styles.minuteChipText, isSelected && styles.minuteChipTextSelected]}>
+                              :{pad(m)}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+
+                    <View style={styles.customPreviewRow}>
+                      <Text style={styles.customPreviewText}>
+                        Khung giờ: <Text style={styles.customPreviewHighlight}>{customTimeStr}</Text> ({selectedDuration} phút)
+                      </Text>
+                      <Pressable
+                        style={styles.addCustomBtn}
+                        onPress={handleAddCustomSlot}
+                      >
+                        <Text style={styles.addCustomBtnText}>Thêm ca này</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                )}
               </View>
-            </View>
+            </ScrollView>
 
-            <View style={styles.overlapInfoBox}>
-              <CheckCircle size={16} color={colors.primary} style={{ marginRight: 6 }} />
-              <Text style={styles.overlapInfoText}>
-                Hệ thống tự động kiểm tra tính hợp lệ và tránh trùng lặp khung giờ.
-              </Text>
-            </View>
-
+            {/* Bottom Actions */}
             <View style={styles.modalActions}>
               <Pressable
                 style={styles.cancelModalBtn}
                 onPress={() => setAddModalVisible(false)}
               >
-                <Text style={styles.cancelModalText}>Hủy</Text>
+                <Text style={styles.cancelModalText}>Đóng</Text>
               </Pressable>
               <Pressable
-                style={styles.confirmModalBtn}
-                onPress={handleAddSlotConfirm}
+                style={[
+                  styles.confirmModalBtn,
+                  selectedQuickSlots.length === 0 && styles.confirmModalBtnDisabled,
+                ]}
+                onPress={handleAddQuickSlotsConfirm}
+                disabled={selectedQuickSlots.length === 0}
               >
-                <Text style={styles.confirmModalText}>Xác nhận thêm</Text>
+                <CheckCircle size={18} color={colors.white} style={{ marginRight: 6 }} />
+                <Text style={styles.confirmModalText}>
+                  {selectedQuickSlots.length === 0
+                    ? 'Chưa chọn ca'
+                    : `Thêm ${selectedQuickSlots.length} ca rảnh`}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -1017,62 +1300,299 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
+  modalBackdropDismiss: {
+    flex: 1,
+  },
   modalContent: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    maxHeight: '85%',
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: radius.full,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: spacing.sm,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   modalTitle: {
     ...typography.title2,
     color: colors.textPrimary,
   },
-  timeInputsRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
+  modalSubtitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  closeModalBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceSubtle,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalScroll: {
+    maxHeight: 460,
+  },
+  sectionBlock: {
     marginBottom: spacing.md,
   },
-  timeInputCol: {
-    flex: 1,
+  sectionHeadingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
   },
-  inputLabel: {
+  sectionHeading: {
+    ...typography.captionMedium,
+    color: colors.textPrimary,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  durationChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  durationChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  durationChipText: {
+    ...typography.captionMedium,
+    color: colors.textSecondary,
+  },
+  durationChipTextSelected: {
+    color: colors.white,
+    fontWeight: '700',
+  },
+  quickActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  quickActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+    backgroundColor: colors.primaryLight,
+  },
+  quickActionText: {
+    ...typography.captionMedium,
+    color: colors.primary,
+    fontSize: 11,
+  },
+  quickClearBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceSubtle,
+  },
+  quickClearText: {
+    ...typography.captionMedium,
+    color: colors.textSecondary,
+    fontSize: 11,
+  },
+  timeGroupTitle: {
+    ...typography.captionMedium,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  slotsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  slotChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 70,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  slotChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  slotChipText: {
+    ...typography.bodyBold,
+    color: colors.textPrimary,
+    fontSize: 13,
+  },
+  slotChipTextSelected: {
+    color: colors.white,
+  },
+  slotChipBooked: {
+    backgroundColor: colors.surfaceSubtle,
+    borderColor: colors.border,
+    opacity: 0.5,
+  },
+  slotChipTextBooked: {
+    ...typography.caption,
+    color: colors.textMuted,
+    fontSize: 12,
+  },
+  slotChipSubBooked: {
+    fontSize: 9,
+    color: colors.textMuted,
+    marginLeft: 3,
+  },
+  slotChipOpen: {
+    backgroundColor: colors.successLight,
+    borderColor: colors.success,
+  },
+  slotChipTextOpen: {
+    ...typography.captionMedium,
+    color: colors.success,
+    fontSize: 12,
+  },
+  slotChipSubOpen: {
+    fontSize: 9,
+    color: colors.success,
+    marginLeft: 3,
+  },
+  customSectionBlock: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  customToggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  customToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  customToggleTitle: {
+    ...typography.captionMedium,
+    color: colors.primary,
+  },
+  customTimeCard: {
+    backgroundColor: colors.surfaceSubtle,
+    borderRadius: radius.lg,
+    padding: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  customTimeLabel: {
     ...typography.caption,
     color: colors.textSecondary,
     marginBottom: 4,
   },
-  timeInput: {
-    height: 48,
-    borderRadius: radius.lg,
+  hoursScroll: {
+    marginBottom: spacing.xs,
+  },
+  hourChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: spacing.sm,
-    textAlign: 'center',
-    ...typography.body,
+    marginRight: 6,
+  },
+  hourChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  hourChipText: {
+    ...typography.captionMedium,
     color: colors.textPrimary,
-    backgroundColor: colors.surfaceSubtle,
   },
-  overlapInfoBox: {
+  hourChipTextSelected: {
+    color: colors.white,
+    fontWeight: '700',
+  },
+  minutesRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primaryLight,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    marginBottom: spacing.lg,
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
   },
-  overlapInfoText: {
-    ...typography.caption,
-    color: colors.primary,
+  minuteChip: {
     flex: 1,
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  minuteChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  minuteChipText: {
+    ...typography.captionMedium,
+    color: colors.textPrimary,
+  },
+  minuteChipTextSelected: {
+    color: colors.white,
+    fontWeight: '700',
+  },
+  customPreviewRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  customPreviewText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  customPreviewHighlight: {
+    ...typography.bodyBold,
+    color: colors.primary,
+  },
+  addCustomBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+  },
+  addCustomBtnText: {
+    ...typography.captionMedium,
+    color: colors.white,
+    fontWeight: '700',
   },
   modalActions: {
     flexDirection: 'row',
     gap: spacing.md,
+    paddingTop: spacing.xs,
   },
   cancelModalBtn: {
     flex: 1,
@@ -1087,12 +1607,16 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   confirmModalBtn: {
-    flex: 1,
+    flex: 1.5,
     height: 48,
     borderRadius: radius.xl,
     backgroundColor: colors.primary,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  confirmModalBtnDisabled: {
+    backgroundColor: colors.border,
   },
   confirmModalText: {
     ...typography.bodyBold,
