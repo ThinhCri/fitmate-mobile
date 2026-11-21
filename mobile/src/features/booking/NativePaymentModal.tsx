@@ -49,6 +49,7 @@ export function NativePaymentModal({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const isPaidRef = useRef(false);
 
   const bin = payment?.bin || '970422'; // Default MBBank
@@ -57,7 +58,16 @@ export function NativePaymentModal({
   const desc = payment?.description || 'FITMATE';
   const name = payment?.account_name || 'FITMATE';
 
-  const qrImageUrl = `https://img.vietqr.io/image/${bin}-${acc}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(desc)}&accountName=${encodeURIComponent(name)}`;
+  const qrImageUrl = payment?.qr_code?.startsWith('http')
+    ? payment.qr_code
+    : acc
+    ? `https://img.vietqr.io/image/${bin}-${acc}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(desc)}&accountName=${encodeURIComponent(name)}`
+    : '';
+
+  useEffect(() => {
+    setImageLoaded(false);
+    setImageError(false);
+  }, [payment?.id]);
 
   // Polling payment status every 3.5 seconds
   const checkStatus = useCallback(async (silent = true) => {
@@ -108,6 +118,14 @@ export function NativePaymentModal({
   };
 
   const handleSaveQR = async () => {
+    if (!qrImageUrl) {
+      if (payment?.redirect_url) {
+        void Linking.openURL(payment.redirect_url);
+      } else {
+        Alert.alert('Thông báo', 'Chưa có ảnh mã QR để lưu.');
+      }
+      return;
+    }
     try {
       const fileUri = `${FileSystem.cacheDirectory}fitmate_vietqr_${Date.now()}.png`;
       const downloadRes = await FileSystem.downloadAsync(qrImageUrl, fileUri);
@@ -173,39 +191,85 @@ export function NativePaymentModal({
         {/* QR Code Container */}
         <View style={styles.qrCard}>
           <View style={styles.qrWrapper}>
-            {!imageLoaded && (
-              <View style={styles.qrLoading}>
-                <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={styles.qrLoadingText}>Đang tạo mã VietQR...</Text>
+            {!acc ? (
+              <View style={styles.qrErrorBox}>
+                <AlertCircle size={32} color={colors.warning} />
+                <Text style={styles.qrErrorTitle}>Chưa có mã QR trực tiếp</Text>
+                <Text style={styles.qrErrorSubtitle}>
+                  Chưa nhận được thông tin số tài khoản từ server. Bạn có thể mở cổng thanh toán PayOS để thanh toán ngay.
+                </Text>
+                {payment?.redirect_url && (
+                  <TouchableOpacity
+                    style={styles.openWebBtn}
+                    onPress={() => void Linking.openURL(payment.redirect_url!)}
+                    activeOpacity={0.8}
+                  >
+                    <ExternalLink size={14} color="#FFFFFF" />
+                    <Text style={styles.openWebBtnText}>Mở trang PayOS</Text>
+                  </TouchableOpacity>
+                )}
               </View>
+            ) : imageError ? (
+              <View style={styles.qrErrorBox}>
+                <AlertCircle size={32} color={colors.danger} />
+                <Text style={styles.qrErrorTitle}>Không thể tải mã QR</Text>
+                <Text style={styles.qrErrorSubtitle}>
+                  Không tải được ảnh từ dịch vụ VietQR. Vui lòng mở cổng thanh toán PayOS để thanh toán.
+                </Text>
+                {payment?.redirect_url && (
+                  <TouchableOpacity
+                    style={styles.openWebBtn}
+                    onPress={() => void Linking.openURL(payment.redirect_url!)}
+                    activeOpacity={0.8}
+                  >
+                    <ExternalLink size={14} color="#FFFFFF" />
+                    <Text style={styles.openWebBtnText}>Mở trang PayOS</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              <>
+                {!imageLoaded && (
+                  <View style={styles.qrLoading}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={styles.qrLoadingText}>Đang tạo mã VietQR...</Text>
+                  </View>
+                )}
+                <Image
+                  source={{ uri: qrImageUrl }}
+                  style={styles.qrImage}
+                  resizeMode="contain"
+                  onLoad={() => setImageLoaded(true)}
+                  onError={() => {
+                    setImageLoaded(true);
+                    setImageError(true);
+                  }}
+                />
+              </>
             )}
-            <Image
-              source={{ uri: qrImageUrl }}
-              style={styles.qrImage}
-              resizeMode="contain"
-              onLoadEnd={() => setImageLoaded(true)}
-            />
           </View>
 
-          <View style={styles.qrActions}>
-            <TouchableOpacity
-              style={styles.actionChip}
-              onPress={handleSaveQR}
-              activeOpacity={0.7}
-            >
-              <Download size={14} color={colors.primary} />
-              <Text style={styles.actionChipText}>Lưu mã QR</Text>
-            </TouchableOpacity>
+          {!!acc && !imageError && (
+            <View style={styles.qrActions}>
+              <TouchableOpacity
+                style={styles.actionChip}
+                onPress={handleSaveQR}
+                activeOpacity={0.7}
+              >
+                <Download size={14} color={colors.primary} />
+                <Text style={styles.actionChipText}>Lưu mã QR</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.actionChip}
-              onPress={handleOpenBankApp}
-              activeOpacity={0.7}
-            >
-              <Building2 size={14} color={colors.primary} />
-              <Text style={styles.actionChipText}>Mở App Ngân hàng</Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={styles.actionChip}
+                onPress={handleOpenBankApp}
+                activeOpacity={0.7}
+              >
+                <Building2 size={14} color={colors.primary} />
+                <Text style={styles.actionChipText}>Mở App Ngân hàng</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Transfer Information */}
@@ -216,27 +280,29 @@ export function NativePaymentModal({
           <View style={styles.infoRow}>
             <View style={styles.infoCol}>
               <Text style={styles.infoLabel}>Số tài khoản</Text>
-              <Text style={styles.infoValueBold}>{acc || '—'}</Text>
+              <Text style={styles.infoValueBold}>{acc || '(Cần cập nhật server)'}</Text>
             </View>
-            <TouchableOpacity
-              style={styles.copyBtn}
-              onPress={() => copyToClipboard(acc, 'acc', 'Số tài khoản')}
-              activeOpacity={0.7}
-            >
-              {copiedKey === 'acc' ? (
-                <CheckCircle2 size={16} color={colors.success} />
-              ) : (
-                <Copy size={16} color={colors.primary} />
-              )}
-              <Text
-                style={[
-                  styles.copyBtnText,
-                  copiedKey === 'acc' && { color: colors.success },
-                ]}
+            {!!acc && (
+              <TouchableOpacity
+                style={styles.copyBtn}
+                onPress={() => copyToClipboard(acc, 'acc', 'Số tài khoản')}
+                activeOpacity={0.7}
               >
-                {copiedKey === 'acc' ? 'Đã chép' : 'Sao chép'}
-              </Text>
-            </TouchableOpacity>
+                {copiedKey === 'acc' ? (
+                  <CheckCircle2 size={16} color={colors.success} />
+                ) : (
+                  <Copy size={16} color={colors.primary} />
+                )}
+                <Text
+                  style={[
+                    styles.copyBtnText,
+                    copiedKey === 'acc' && { color: colors.success },
+                  ]}
+                >
+                  {copiedKey === 'acc' ? 'Đã chép' : 'Sao chép'}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.divider} />
@@ -420,6 +486,45 @@ const styles = StyleSheet.create({
   qrLoadingText: {
     ...typography.caption,
     color: colors.textSecondary,
+  },
+  qrErrorBox: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.sm,
+    gap: 4,
+  },
+  qrErrorTitle: {
+    ...typography.body,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginTop: spacing.xs,
+    textAlign: 'center',
+    fontSize: 13,
+  },
+  qrErrorSubtitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 15,
+    fontSize: 11,
+  },
+  openWebBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.md,
+    gap: spacing.xs,
+    marginTop: 4,
+  },
+  openWebBtnText: {
+    ...typography.caption,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 11,
   },
   qrActions: {
     flexDirection: 'row',
