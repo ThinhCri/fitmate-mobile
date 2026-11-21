@@ -495,7 +495,7 @@ export function ProfileServicesPresentation({
                           item.is_active ? styles.statusTextActive : styles.statusTextInactive,
                         ]}
                       >
-                        {item.delivery_mode === 'online' ? 'Bản nháp online' : item.is_active ? 'Đang nhận khách' : 'Tạm ngưng'}
+                        {item.is_active ? 'Đang nhận khách' : (item.delivery_mode === 'online' && !meetConnected ? 'Chưa kết nối Meet' : 'Tạm ngưng')}
                       </Text>
                     </View>
                   </View>
@@ -505,7 +505,7 @@ export function ProfileServicesPresentation({
                     </Text>
                   ) : null}
                   <Text style={styles.serviceDescription}>
-                    {item.service_kind === 'assessment_and_plan' ? 'Đánh giá & lập kế hoạch' : 'Buổi tập 1–1'} · {item.delivery_mode === 'online' ? 'Trực tuyến (chưa mở đặt lịch)' : 'Trực tiếp'}
+                    {item.service_kind === 'assessment_and_plan' ? 'Đánh giá & lập kế hoạch' : 'Buổi tập 1–1'} · {item.delivery_mode === 'online' ? 'Trực tuyến' : 'Trực tiếp'}
                   </Text>
                   {!!item.target_audience && <Text style={styles.serviceDescription}>Phù hợp: {item.target_audience}</Text>}
                   {!!item.required_equipment && <Text style={styles.serviceDescription}>Cần chuẩn bị: {item.required_equipment}</Text>}
@@ -514,7 +514,7 @@ export function ProfileServicesPresentation({
                 </View>
                 <Switch
                   value={item.is_active}
-                  disabled={item.delivery_mode === 'online'}
+                  disabled={item.delivery_mode === 'online' && !meetConnected}
                   onValueChange={() => handleToggleStatus(item)}
                   trackColor={{ false: colors.border, true: colors.primary }}
                   thumbColor={colors.white}
