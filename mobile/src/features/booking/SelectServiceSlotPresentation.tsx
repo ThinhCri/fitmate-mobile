@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Clock, MapPin, Star, CheckCircle2, ChevronRight } from 'lucide-react-native';
@@ -29,6 +30,7 @@ export function SelectServiceSlotPresentation({
   onBookPackage,
   onViewCoachProfile,
 }: SelectServiceSlotPresentationProps) {
+  const insets = useSafeAreaInsets();
   const [selectedServiceId, setSelectedServiceId] = useState<string>(services[0]?.id ?? '');
   const [selectedDate, setSelectedDate] = useState<string>(availableDates[0]?.dateString ?? '');
   const [selectedSlotId, setSelectedSlotId] = useState<string>(
@@ -59,7 +61,7 @@ export function SelectServiceSlotPresentation({
 
   return (
     <View style={styles.outer}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: 170 + Math.max(insets.bottom, spacing.sm) }]}>
         {/* Step Micro-Indicator */}
         <View style={styles.stepTrack}>
           <View style={styles.stepProgress} />
@@ -243,11 +245,11 @@ export function SelectServiceSlotPresentation({
         ((selectedService?.package4PriceVnd ?? 0) > 0 || (selectedService?.package8PriceVnd ?? 0) > 0) && (
           <TouchableOpacity onPress={() => onBookPackage(selectedServiceId)}
             accessibilityRole="button" accessibilityLabel="Đặt gói bốn hoặc tám buổi với dịch vụ đã chọn"
-            style={styles.packageBar}>
+            style={[styles.packageBar, { bottom: 68 + Math.max(insets.bottom, spacing.sm) }]}>
             <Text style={{ color: colors.primary, fontWeight: '700', textAlign: 'center' }}>Chọn gói 4 hoặc 8 buổi</Text>
           </TouchableOpacity>
         )}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.sm) + 6 }]}>
         <View style={styles.bottomPriceCol}>
           <Text style={styles.bottomLabel}>Tổng tạm tính:</Text>
           <Text style={styles.bottomPrice}>
@@ -303,7 +305,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -341,7 +343,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   proBadge: {
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: radius.full,
