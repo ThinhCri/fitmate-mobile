@@ -116,8 +116,15 @@ export default function ProfileServicesRoute() {
   };
 
   const handleUpdateService = async (id: string, input: ServiceUpdate) => {
-    const updated = await ptService.updateService(id, input);
-    setServices((prev) => prev.map((s) => (s.id === id ? updated : s)));
+    const previous = services;
+    setServices((prev) => prev.map((s) => (s.id === id ? { ...s, ...input } : s)));
+    try {
+      const updated = await ptService.updateService(id, input);
+      setServices((prev) => prev.map((s) => (s.id === id ? updated : s)));
+    } catch (err) {
+      setServices(previous);
+      throw err;
+    }
   };
 
   const handleDeleteService = async (id: string) => {

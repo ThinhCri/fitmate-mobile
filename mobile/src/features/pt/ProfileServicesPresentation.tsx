@@ -82,6 +82,7 @@ export function ProfileServicesPresentation({
   const [bioModalVisible, setBioModalVisible] = useState(false);
   const [bioInput, setBioInput] = useState('');
   const [bioSubmitting, setBioSubmitting] = useState(false);
+  const [togglingIds, setTogglingIds] = useState<Record<string, boolean>>({});
 
   const openBioModal = () => {
     setBioInput(bio || '');
@@ -273,12 +274,16 @@ export function ProfileServicesPresentation({
   };
 
   const handleToggleStatus = async (service: Service) => {
+    if (togglingIds[service.id]) return;
+    setTogglingIds((prev) => ({ ...prev, [service.id]: true }));
     try {
       await onUpdateService(service.id, {
         is_active: !service.is_active,
       });
     } catch (err) {
       Alert.alert('Không thể đổi trạng thái', err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
+    } finally {
+      setTogglingIds((prev) => ({ ...prev, [service.id]: false }));
     }
   };
 
@@ -530,7 +535,7 @@ export function ProfileServicesPresentation({
                 </View>
                 <Switch
                   value={item.is_active}
-                  disabled={item.delivery_mode === 'online' && !meetConnected}
+                  disabled={Boolean(togglingIds[item.id]) || (item.delivery_mode === 'online' && !meetConnected)}
                   onValueChange={() => handleToggleStatus(item)}
                   trackColor={{ false: colors.border, true: colors.primary }}
                   thumbColor={colors.white}
