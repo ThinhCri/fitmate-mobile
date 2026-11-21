@@ -79,6 +79,27 @@ export function ProfileServicesPresentation({
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [bioModalVisible, setBioModalVisible] = useState(false);
+  const [bioInput, setBioInput] = useState('');
+  const [bioSubmitting, setBioSubmitting] = useState(false);
+
+  const openBioModal = () => {
+    setBioInput(bio || '');
+    setBioModalVisible(true);
+  };
+
+  const handleBioSubmit = async () => {
+    if (!onUpdateBio) return;
+    setBioSubmitting(true);
+    try {
+      await onUpdateBio(bioInput.trim());
+      setBioModalVisible(false);
+    } catch (err) {
+      Alert.alert('Lỗi cập nhật', err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
+    } finally {
+      setBioSubmitting(false);
+    }
+  };
 
   // Form states
   const [serviceName, setServiceName] = useState('');
@@ -382,15 +403,10 @@ export function ProfileServicesPresentation({
             </View>
             <Pressable
               style={styles.editBioButton}
-              onPress={() => {
-                Alert.alert(
-                  'Tiểu sử HLV',
-                  'Chức năng chỉnh sửa tiểu sử huấn luyện viên đang chờ API backend hỗ trợ cập nhật hồ sơ chuyên môn [CONTRACT_GAP: /users/me hiện chỉ cập nhật mục tiêu của hội viên].'
-                );
-              }}
+              onPress={openBioModal}
             >
               <Info size={13} color={colors.primary} style={{ marginRight: 4 }} />
-              <Text style={styles.editBioText}>Tiểu sử</Text>
+              <Text style={styles.editBioText}>Sửa tiểu sử</Text>
             </Pressable>
           </View>
 
@@ -756,6 +772,68 @@ export function ProfileServicesPresentation({
                 </Pressable>
               </View>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Bio Modal */}
+      <Modal
+        visible={bioModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setBioModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Chỉnh sửa tiểu sử HLV</Text>
+              <Pressable
+                onPress={() => setBioModalVisible(false)}
+                disabled={bioSubmitting}
+                style={styles.closeModalButton}
+              >
+                <X size={20} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+
+            <View style={{ paddingVertical: spacing.sm }}>
+              <Text style={styles.formLabel}>Tiểu sử hiển thị cho học viên</Text>
+              <TextInput
+                style={[styles.textInput, { height: 110, textAlignVertical: 'top' }]}
+                value={bioInput}
+                onChangeText={setBioInput}
+                placeholder="Giới thiệu bản thân, phong cách huấn luyện, triết lý tập luyện..."
+                placeholderTextColor={colors.textMuted}
+                multiline
+                numberOfLines={5}
+                maxLength={500}
+              />
+              <Text style={[styles.serviceDescription, { textAlign: 'right', marginTop: 4 }]}>
+                {bioInput.length}/500 ký tự
+              </Text>
+
+              <View style={[styles.modalActions, { marginTop: spacing.md }]}>
+                <Pressable
+                  style={styles.cancelModalButton}
+                  onPress={() => setBioModalVisible(false)}
+                  disabled={bioSubmitting}
+                >
+                  <Text style={styles.cancelModalText}>Hủy</Text>
+                </Pressable>
+
+                <Pressable
+                  style={styles.submitModalButton}
+                  onPress={handleBioSubmit}
+                  disabled={bioSubmitting}
+                >
+                  {bioSubmitting ? (
+                    <ActivityIndicator size="small" color={colors.white} />
+                  ) : (
+                    <Text style={styles.submitModalText}>Lưu thay đổi</Text>
+                  )}
+                </Pressable>
+              </View>
+            </View>
           </View>
         </View>
       </Modal>

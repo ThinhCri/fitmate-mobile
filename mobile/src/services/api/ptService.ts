@@ -352,4 +352,38 @@ export const ptService = {
       body: JSON.stringify(data),
     });
   },
+
+  /**
+   * Get PT professional profile
+   * Endpoint: GET /me/pt-profile
+   */
+  async getMyPtProfile(): Promise<{
+    id: string;
+    user_id: string;
+    specialty: string | null;
+    experience_years: number | null;
+    price_per_session_vnd: number | null;
+    bio: string | null;
+    rating: number;
+    reviews_count: number;
+    verification_status: string;
+  }> {
+    return apiClient('/me/pt-profile');
+  },
+
+  /**
+   * Update PT professional profile (bio, specialty, experience)
+   * Endpoint: PATCH /me/pt-profile
+   */
+  async updatePtProfile(data: {
+    bio?: string;
+    specialty?: string;
+    experience_years?: number;
+    price_per_session_vnd?: number;
+  }): Promise<void> {
+    return apiClient('/me/pt-profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
 };

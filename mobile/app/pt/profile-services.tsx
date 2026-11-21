@@ -18,6 +18,11 @@ export default function ProfileServicesRoute() {
 
   const [services, setServices] = useState<Service[]>([]);
   const [trainerDetail, setTrainerDetail] = useState<PTPublicDetail | null>(null);
+  const [ptProfile, setPtProfile] = useState<{
+    bio?: string | null;
+    specialty?: string | null;
+    experience_years?: number | null;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [meetConnected, setMeetConnected] = useState(false);
@@ -49,6 +54,12 @@ export default function ProfileServicesRoute() {
   }, []);
 
   const fetchTrainerDetail = useCallback(async () => {
+    try {
+      const myPt = await ptService.getMyPtProfile();
+      setPtProfile(myPt);
+    } catch {
+      // ignore
+    }
     const userId = (user as { id?: string })?.id;
     if (!userId) return;
     try {
@@ -114,12 +125,17 @@ export default function ProfileServicesRoute() {
     setServices((prev) => prev.filter((s) => s.id !== id));
   };
 
+  const handleUpdateBio = async (newBio: string) => {
+    await ptService.updatePtProfile({ bio: newBio });
+    setPtProfile((prev) => (prev ? { ...prev, bio: newBio } : { bio: newBio }));
+  };
+
   const ptName = user?.profile?.name || 'Huấn luyện viên';
-  const experienceYears = trainerDetail?.experience_years ?? user?.profile?.exp ?? null;
+  const experienceYears = ptProfile?.experience_years ?? trainerDetail?.experience_years ?? user?.profile?.exp ?? null;
   const rating = trainerDetail?.rating;
   const reviewsCount = trainerDetail?.reviews_count;
-  const specialties = user?.profile?.spec || [];
-  const bio = trainerDetail?.bio || user?.profile?.bio || '';
+  const specialties = ptProfile?.specialty ? [ptProfile.specialty] : (user?.profile?.spec || []);
+  const bio = ptProfile?.bio ?? trainerDetail?.bio ?? user?.profile?.bio ?? '';
 
   return (
     <ProfileServicesPresentation
@@ -152,6 +168,7 @@ export default function ProfileServicesRoute() {
       onCreateService={handleCreateService}
       onUpdateService={handleUpdateService}
       onDeleteService={handleDeleteService}
+      onUpdateBio={handleUpdateBio}
     />
   );
 }
