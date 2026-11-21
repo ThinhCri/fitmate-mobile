@@ -89,9 +89,10 @@ export function SchedulePresentation({
       .map((s) => ({
         slot_start_local: s.slot_start_local,
         duration_minutes: s.duration_minutes,
+        trainer_timezone: timezone,
       }));
     setWeeklyOpenSlots(serverOpenSlots);
-  }, [slots]);
+  }, [slots, timezone]);
 
   // Open slots for selected day
   const dayOpenSlots = useMemo(() => {
@@ -163,6 +164,7 @@ export function SchedulePresentation({
       {
         slot_start_local: slotStartLocal,
         duration_minutes: dur,
+        trainer_timezone: timezone,
       },
     ]);
     setAddModalVisible(false);

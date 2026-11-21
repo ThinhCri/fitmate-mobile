@@ -58,14 +58,18 @@ export default function ScheduleRoute() {
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
 
+    const nextMonday = new Date(monday);
+    nextMonday.setDate(monday.getDate() + 7);
+    nextMonday.setHours(0, 0, 0, 0);
+
     const pad = (n: number) => (n < 10 ? '0' + n : n.toString());
     const label = `Tuần (${pad(monday.getDate())}/${pad(monday.getMonth() + 1)} - ${pad(sunday.getDate())}/${pad(sunday.getMonth() + 1)}/${sunday.getFullYear()})`;
 
     return {
       daysOfWeek: days,
       weekLabel: label,
-      fromDateStr: days[0].dateStr,
-      toDateStr: days[6].dateStr,
+      fromDateStr: monday.toISOString(),
+      toDateStr: nextMonday.toISOString(),
     };
   }, [currentWeekOffset]);
 

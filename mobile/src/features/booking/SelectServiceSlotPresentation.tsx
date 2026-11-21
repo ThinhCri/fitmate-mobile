@@ -1,7 +1,7 @@
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Clock, MapPin, Star, CheckCircle2, ChevronRight } from 'lucide-react-native';
+import { Clock, MapPin, Star, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
 import { PrimaryButton } from '@/components/design-system/Buttons';
@@ -32,14 +32,28 @@ export function SelectServiceSlotPresentation({
 }: SelectServiceSlotPresentationProps) {
   const insets = useSafeAreaInsets();
   const [selectedServiceId, setSelectedServiceId] = useState<string>(services[0]?.id ?? '');
-  const [selectedDate, setSelectedDate] = useState<string>(availableDates[0]?.dateString ?? '');
-  const [selectedSlotId, setSelectedSlotId] = useState<string>(
-    timeSlots.find((s) => s.isAvailable)?.id ?? ''
-  );
   const selectedService = services.find((s) => s.id === selectedServiceId) ?? services[0];
-  const visibleSlots = timeSlots.filter((slot) =>
-    (!slot.dateString || slot.dateString === selectedDate) &&
-    (!selectedService || slot.durationMinutes === undefined || slot.durationMinutes >= selectedService.durationMinutes));
+
+  // Find the first date that actually has available slots
+  const firstAvailableDate = availableDates.find((d) =>
+    timeSlots.some(
+      (s) =>
+        s.isAvailable &&
+        s.dateString === d.dateString &&
+        (!selectedService || s.durationMinutes === undefined || s.durationMinutes >= selectedService.durationMinutes)
+    )
+  )?.dateString ?? availableDates[0]?.dateString ?? '';
+
+  const [selectedDate, setSelectedDate] = useState<string>(firstAvailableDate);
+  const [selectedSlotId, setSelectedSlotId] = useState<string>(
+    timeSlots.find((s) => s.isAvailable && (!firstAvailableDate || s.dateString === firstAvailableDate))?.id ?? ''
+  );
+
+  const visibleSlots = timeSlots.filter(
+    (slot) =>
+      (!slot.dateString || slot.dateString === selectedDate) &&
+      (!selectedService || slot.durationMinutes === undefined || slot.durationMinutes >= selectedService.durationMinutes)
+  );
 
   useEffect(() => {
     if (!services.some((service) => service.id === selectedServiceId)) {
@@ -47,11 +61,25 @@ export function SelectServiceSlotPresentation({
     }
   }, [services, selectedServiceId]);
 
+  // When switching service or if current date has no slots, attempt to switch to first date with available slots
+  useEffect(() => {
+    const hasSlotsOnCurrentDate = timeSlots.some(
+      (s) =>
+        s.isAvailable &&
+        s.dateString === selectedDate &&
+        (!selectedService || s.durationMinutes === undefined || s.durationMinutes >= selectedService.durationMinutes)
+    );
+    if (!hasSlotsOnCurrentDate && firstAvailableDate && firstAvailableDate !== selectedDate) {
+      setSelectedDate(firstAvailableDate);
+    }
+  }, [firstAvailableDate, selectedService, selectedDate, timeSlots]);
+
   useEffect(() => {
     if (!visibleSlots.some((slot) => slot.id === selectedSlotId && slot.isAvailable)) {
-      setSelectedSlotId('');
+      const firstSlot = visibleSlots.find((s) => s.isAvailable);
+      setSelectedSlotId(firstSlot?.id ?? '');
     }
-  }, [selectedDate, selectedServiceId, selectedSlotId, timeSlots]);
+  }, [selectedDate, selectedServiceId, selectedSlotId, visibleSlots]);
 
   const handleContinue = () => {
     if (selectedServiceId && selectedDate && selectedSlotId) {
@@ -160,84 +188,159 @@ export function SelectServiceSlotPresentation({
           </View>
         </View>
 
-        {/* Section 2: Choose Date */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.stepCircle}>
-              <Text style={styles.stepNumber}>2</Text>
+        {/* If trainer has no available slots at all in the 7 days */}
+        {timeSlots.length === 0 ? (
+          <Card style={styles.noScheduleCard}>
+            <View style={styles.noScheduleHeader}>
+              <View style={styles.noScheduleIconWrap}>
+                <AlertCircle size={24} color="#F59E0B" />
+              </View>
+              <View style={styles.noScheduleTextCol}>
+                <Text style={styles.noScheduleTitle}>HLV chưa cập nhật lịch rảnh</Text>
+                <Text style={styles.noScheduleDesc}>
+                  Huấn luyện viên {coach.name} hiện chưa cài đặt khung giờ dạy trống trong 7 ngày tới. Bạn vui lòng quay lại sau hoặc liên hệ trao đổi với HLV để mở lịch trước khi đặt.
+                </Text>
+              </View>
             </View>
-            <Text style={styles.sectionTitle}>Chọn ngày tập</Text>
-          </View>
+            {onViewCoachProfile && (
+              <TouchableOpacity
+                style={styles.noScheduleBtn}
+                onPress={onViewCoachProfile}
+                accessibilityRole="button"
+                accessibilityLabel="Xem hồ sơ và liên hệ huấn luyện viên"
+              >
+                <Text style={styles.noScheduleBtnText}>Xem hồ sơ HLV</Text>
+              </TouchableOpacity>
+            )}
+          </Card>
+        ) : (
+          <>
+            {/* Section 2: Choose Date */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.stepCircle}>
+                  <Text style={styles.stepNumber}>2</Text>
+                </View>
+                <Text style={styles.sectionTitle}>Chọn ngày tập</Text>
+              </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.dateChipsRow}
-          >
-            {availableDates.map((d) => {
-              const isSelected = d.dateString === selectedDate;
-              return (
-                <TouchableOpacity
-                  key={d.dateString}
-                  style={[styles.dateChip, isSelected && styles.dateChipSelected]}
-                  onPress={() => setSelectedDate(d.dateString)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Ngày ${d.dayLabel} ${d.dateNum}`}
-                >
-                  <Text style={[styles.dayLabel, isSelected && styles.dateTextSelected]}>
-                    {d.dayLabel}
-                  </Text>
-                  <Text style={[styles.dateNum, isSelected && styles.dateTextSelected]}>
-                    {d.dateNum}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.dateChipsRow}
+              >
+                {availableDates.map((d) => {
+                  const isSelected = d.dateString === selectedDate;
+                  const daySlots = timeSlots.filter(
+                    (s) =>
+                      s.isAvailable &&
+                      s.dateString === d.dateString &&
+                      (!selectedService ||
+                        s.durationMinutes === undefined ||
+                        s.durationMinutes >= selectedService.durationMinutes)
+                  );
+                  const hasSlots = daySlots.length > 0;
 
-        {/* Section 3: Choose Time Slot */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.stepCircle}>
-              <Text style={styles.stepNumber}>3</Text>
+                  return (
+                    <TouchableOpacity
+                      key={d.dateString}
+                      style={[
+                        styles.dateChip,
+                        isSelected && styles.dateChipSelected,
+                        !hasSlots && styles.dateChipEmpty,
+                      ]}
+                      onPress={() => setSelectedDate(d.dateString)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Ngày ${d.dayLabel} ${d.dateNum}, ${
+                        hasSlots ? `${daySlots.length} ca trống` : 'Hết ca trống'
+                      }`}
+                    >
+                      <Text style={[styles.dayLabel, isSelected && styles.dateTextSelected, !hasSlots && styles.textMuted]}>
+                        {d.dayLabel}
+                      </Text>
+                      <Text style={[styles.dateNum, isSelected && styles.dateTextSelected, !hasSlots && styles.textMuted]}>
+                        {d.dateNum}
+                      </Text>
+                      <View
+                        style={[
+                          styles.slotBadge,
+                          hasSlots
+                            ? isSelected
+                              ? styles.slotBadgeSelected
+                              : styles.slotBadgeAvailable
+                            : styles.slotBadgeEmpty,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.slotBadgeText,
+                            isSelected && styles.dateTextSelected,
+                            !hasSlots && styles.slotBadgeTextEmpty,
+                          ]}
+                        >
+                          {hasSlots ? `${daySlots.length} ca` : 'Trống'}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
             </View>
-            <Text style={styles.sectionTitle}>Chọn khung giờ</Text>
-          </View>
 
-          <View style={styles.slotsGrid}>
-            {visibleSlots.length === 0 ? <Text style={styles.serviceDesc}>HLV chưa mở giờ trống cho ngày này. Hãy chọn ngày khác.</Text> : visibleSlots.map((slot) => {
-              const isSelected = slot.id === selectedSlotId;
-              return (
-                <TouchableOpacity
-                  key={slot.id}
-                  disabled={!slot.isAvailable}
-                  style={[
-                    styles.slotBtn,
-                    isSelected && styles.slotBtnSelected,
-                    !slot.isAvailable && styles.slotBtnDisabled,
-                  ]}
-                  onPress={() => setSelectedSlotId(slot.id)}
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: !slot.isAvailable, selected: isSelected }}
-                  accessibilityLabel={`Khung giờ ${slot.startTime} đến ${slot.endTime} ${
-                    slot.isAvailable ? 'khả dụng' : 'đã kín'
-                  }`}
-                >
-                  <Text
-                    style={[
-                      styles.slotText,
-                      isSelected && styles.slotTextSelected,
-                      !slot.isAvailable && styles.slotTextDisabled,
-                    ]}
-                  >
-                    {slot.startTime} - {slot.endTime}
+            {/* Section 3: Choose Time Slot */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.stepCircle}>
+                  <Text style={styles.stepNumber}>3</Text>
+                </View>
+                <Text style={styles.sectionTitle}>Chọn khung giờ</Text>
+              </View>
+
+              {visibleSlots.length === 0 ? (
+                <View style={styles.emptySlotsBox}>
+                  <Clock size={28} color={colors.textMuted} />
+                  <Text style={styles.emptySlotsTitle}>Không có ca trống trong ngày này</Text>
+                  <Text style={styles.emptySlotsDesc}>
+                    HLV chưa mở lịch dạy hoặc các ca trong ngày đã kín. Vui lòng bấm chọn các ngày khác có hiển thị số ca trống ở trên.
                   </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+                </View>
+              ) : (
+                <View style={styles.slotsGrid}>
+                  {visibleSlots.map((slot) => {
+                    const isSelected = slot.id === selectedSlotId;
+                    return (
+                      <TouchableOpacity
+                        key={slot.id}
+                        disabled={!slot.isAvailable}
+                        style={[
+                          styles.slotBtn,
+                          isSelected && styles.slotBtnSelected,
+                          !slot.isAvailable && styles.slotBtnDisabled,
+                        ]}
+                        onPress={() => setSelectedSlotId(slot.id)}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: !slot.isAvailable, selected: isSelected }}
+                        accessibilityLabel={`Khung giờ ${slot.startTime} đến ${slot.endTime} ${
+                          slot.isAvailable ? 'khả dụng' : 'đã kín'
+                        }`}
+                      >
+                        <Text
+                          style={[
+                            styles.slotText,
+                            isSelected && styles.slotTextSelected,
+                            !slot.isAvailable && styles.slotTextDisabled,
+                          ]}
+                        >
+                          {slot.startTime} - {slot.endTime}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          </>
+        )}
       </ScrollView>
 
       {/* Sticky Bottom Bar */}
@@ -259,8 +362,8 @@ export function SelectServiceSlotPresentation({
 
         <View style={styles.bottomBtnCol}>
           <PrimaryButton
-            label="Tiếp tục giữ lịch"
-            disabled={!selectedServiceId || !selectedDate || !selectedSlotId}
+            label={timeSlots.length === 0 ? 'Chưa có lịch để đặt' : 'Tiếp tục giữ lịch'}
+            disabled={timeSlots.length === 0 || !selectedServiceId || !selectedDate || !selectedSlotId}
             onPress={handleContinue}
           />
         </View>
@@ -408,7 +511,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   serviceCardSelected: {
-    backgroundColor: '#F0FDFA',
+    backgroundColor: colors.surfaceSubtle,
     borderColor: colors.primary,
   },
   serviceTopRow: {
@@ -468,7 +571,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   dateChip: {
-    width: 58,
+    width: 62,
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
     backgroundColor: colors.surface,
@@ -480,6 +583,108 @@ const styles = StyleSheet.create({
   dateChipSelected: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
+  },
+  dateChipEmpty: {
+    opacity: 0.55,
+    borderColor: colors.borderSubtle,
+  },
+  slotBadge: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: radius.xs,
+    marginTop: 2,
+  },
+  slotBadgeAvailable: {
+    backgroundColor: 'rgba(20, 184, 166, 0.15)',
+  },
+  slotBadgeSelected: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  slotBadgeEmpty: {
+    backgroundColor: 'transparent',
+  },
+  slotBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  slotBadgeTextEmpty: {
+    color: colors.textMuted,
+    fontWeight: '500',
+  },
+  textMuted: {
+    color: colors.textMuted,
+  },
+  noScheduleCard: {
+    padding: spacing.lg,
+    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.25)',
+    borderRadius: radius.lg,
+    gap: spacing.md,
+  },
+  noScheduleHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+  },
+  noScheduleIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noScheduleTextCol: {
+    flex: 1,
+    gap: 4,
+  },
+  noScheduleTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  noScheduleDesc: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  noScheduleBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surfaceSubtle,
+    paddingVertical: spacing.xs + 2,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  noScheduleBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  emptySlotsBox: {
+    backgroundColor: colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  emptySlotsTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginTop: 4,
+  },
+  emptySlotsDesc: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 17,
   },
   dayLabel: {
     fontSize: 11,

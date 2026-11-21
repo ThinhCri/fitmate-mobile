@@ -181,9 +181,19 @@ export const ptService = {
       });
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
+        const msg = err.message || '';
         throw new ApiError(
-          'Khung giờ rảnh xung đột với lịch đã có học viên đặt hoặc đang giữ chỗ.',
+          msg.includes('PT_PUBLICATION_SUSPENDED') || msg.includes('suspended or banned')
+            ? 'Tài khoản PT chưa được phê duyệt hoặc đang bị tạm ngưng.'
+            : 'Khung giờ rảnh xung đột với lịch đã có học viên đặt hoặc đang giữ chỗ.',
           409,
+          err.data
+        );
+      }
+      if (err instanceof ApiError && err.status === 403) {
+        throw new ApiError(
+          'Tài khoản không có quyền PT hoặc chưa được cấp quyền huấn luyện viên.',
+          403,
           err.data
         );
       }

@@ -182,6 +182,7 @@ export interface ServiceUpdate extends Partial<ServiceInput> {
 export interface AvailabilitySlotInput {
   slot_start_local: string; // date-time
   duration_minutes: number; // 15..240
+  trainer_timezone?: string;
 }
 
 export interface SetAvailabilityRequest {
