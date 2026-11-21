@@ -10,6 +10,8 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {
   ArrowLeft,
@@ -22,6 +24,7 @@ import {
   Stethoscope,
   Clock,
   Info,
+  Pencil,
   Sliders,
   PlusCircle,
   Shield,
@@ -409,9 +412,11 @@ export function ProfileServicesPresentation({
             <Pressable
               style={styles.editBioButton}
               onPress={openBioModal}
+              accessibilityRole="button"
+              accessibilityLabel="Chỉnh sửa tiểu sử"
             >
-              <Info size={13} color={colors.primary} style={{ marginRight: 4 }} />
-              <Text style={styles.editBioText}>Sửa tiểu sử</Text>
+              <Pencil size={13} color={colors.white} style={{ marginRight: 5 }} />
+              <Text style={styles.editBioText}>Chỉnh sửa</Text>
             </Pressable>
           </View>
 
@@ -432,16 +437,27 @@ export function ProfileServicesPresentation({
             )}
           </View>
 
-          {/* Bio Box */}
-          <View style={styles.bioContainer}>
+          {/* Bio Box - Clickable with Clear Edit Affordance */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.bioContainer,
+              pressed && { opacity: 0.85, borderColor: colors.primary },
+            ]}
+            onPress={openBioModal}
+            accessibilityRole="button"
+            accessibilityLabel="Chạm để chỉnh sửa tiểu sử huấn luyện viên"
+          >
             <View style={styles.bioHeader}>
-              <Text style={styles.bioLabel}>Tiểu sử hiển thị cho học viên</Text>
-              <Text style={styles.bioPublicStatus}>Công khai</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.bioLabel}>Tiểu sử hiển thị cho học viên</Text>
+                <Pencil size={12} color={colors.primary} />
+              </View>
+              <Text style={styles.bioPublicStatus}>Công khai • Chạm để sửa</Text>
             </View>
             <Text style={[styles.bioText, !bio && styles.bioTextEmpty]}>
-              {bio ? `“${bio}”` : 'Chưa cập nhật tiểu sử'}
+              {bio ? `“${bio}”` : 'Chưa cập nhật tiểu sử. Chạm vào đây để viết lời giới thiệu thu hút học viên... ✎'}
             </Text>
-          </View>
+          </Pressable>
         </View>
 
         <View style={styles.sectionCard}>
@@ -609,7 +625,7 @@ export function ProfileServicesPresentation({
         </View>
       </ScrollView>
 
-      {/* Create / Edit Service Modal */}
+      {/* Create / Edit Service Modal with Keyboard Avoiding */}
       <Modal
         visible={createModalVisible || editModalVisible}
         transparent
@@ -619,7 +635,10 @@ export function ProfileServicesPresentation({
           setEditModalVisible(false);
         }}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
@@ -778,17 +797,20 @@ export function ProfileServicesPresentation({
               </View>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
-      {/* Edit Bio Modal */}
+      {/* Edit Bio Modal with Keyboard Avoiding */}
       <Modal
         visible={bioModalVisible}
         transparent
         animationType="slide"
         onRequestClose={() => setBioModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Chỉnh sửa tiểu sử HLV</Text>
@@ -840,7 +862,7 @@ export function ProfileServicesPresentation({
               </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -1036,11 +1058,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radius.full,
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.primary,
   },
   editBioText: {
     ...typography.captionMedium,
-    color: colors.primary,
+    color: colors.white,
+    fontWeight: '700',
   },
   specialtiesBlock: {
     marginBottom: spacing.md,
@@ -1073,6 +1096,8 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.lg,
     backgroundColor: colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   bioHeader: {
     flexDirection: 'row',
@@ -1340,7 +1365,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
     padding: spacing.lg,
-    maxHeight: '80%',
+    maxHeight: '88%',
   },
   modalHeader: {
     flexDirection: 'row',
