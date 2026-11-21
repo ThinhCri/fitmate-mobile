@@ -158,9 +158,18 @@ export default function ConfirmBookingScreen() {
     if (Number.isFinite(timeUntilStart) && timeUntilStart < 48 * 60 * 60 * 1000) {
       Alert.alert(
         'Buổi tập trong vòng 48 giờ',
-        'Bạn sẽ không thể tự hủy hoặc đổi lịch để được hoàn tiền nếu bận hoặc vắng mặt. Chỉ thanh toán khi chắc chắn tham gia được.',
+        'Sau khi đã thanh toán, bạn sẽ không thể tự hủy hoặc đổi lịch để được hoàn tiền nếu bận hoặc vắng mặt. Chỉ thanh toán khi chắc chắn tham gia được.',
         [
-          { text: 'Chọn giờ khác', style: 'cancel' },
+          {
+            text: 'Chọn giờ khác',
+            style: 'cancel',
+            onPress: () => {
+              if (params.appointmentId) {
+                void bookingService.cancelMyBooking(params.appointmentId, 'Hủy để chọn giờ khác').catch(() => {});
+              }
+              router.back();
+            },
+          },
           { text: 'Tôi hiểu, tiếp tục', onPress: () => void createPayment() },
         ],
       );

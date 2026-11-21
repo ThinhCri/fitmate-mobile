@@ -105,8 +105,10 @@ export function mapAppointmentWireToViewModel(
     paidAmountVnd: wire.actual_paid_vnd,
     createdAt: wire.slot_start_utc,
     canCancel:
-      (wire.status === 'Confirmed' || wire.status === 'Pending') &&
-      slotDate.getTime() - Date.now() >= 48 * 60 * 60 * 1000,
+      wire.actual_paid_vnd === 0 ||
+      wire.status === 'Held' ||
+      ((wire.status === 'Confirmed' || wire.status === 'Pending') &&
+        slotDate.getTime() - Date.now() >= 48 * 60 * 60 * 1000),
     canReschedule:
       wire.status === 'Confirmed' &&
       wire.rescheduled_count < 1 &&

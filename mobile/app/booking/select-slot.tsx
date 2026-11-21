@@ -255,13 +255,13 @@ export default function SelectSlotScreen() {
                 activeHold.appointmentId,
                 'Hủy giữ chỗ để chọn khung giờ khác'
               );
+            } catch (e) {
+              console.warn('Server error on cancel unpaid hold:', e);
+            } finally {
               setActiveHold(null);
+              setHolding(false);
               Alert.alert('Thành công', 'Đã hủy giữ chỗ. Khung giờ đã được giải phóng để bạn chọn lại.');
               await fetchCoachData();
-            } catch (e) {
-              Alert.alert('Không thể hủy giữ chỗ', e instanceof Error ? e.message : 'Vui lòng thử lại sau.');
-            } finally {
-              setHolding(false);
             }
           },
         },
@@ -382,10 +382,12 @@ export default function SelectSlotScreen() {
                   activeHold.appointmentId,
                   'Hủy đơn cũ để chuyển sang khung giờ mới'
                 );
-                setActiveHold(null);
-                await proceedCreateHold(selectedService, slotStartUtc, date, selectedSlot);
               } catch (err) {
-                Alert.alert('Không thể đổi giờ', err instanceof Error ? err.message : 'Vui lòng thử lại sau.');
+                console.warn('Server error on cancel old hold:', err);
+              }
+              setActiveHold(null);
+              try {
+                await proceedCreateHold(selectedService, slotStartUtc, date, selectedSlot);
               } finally {
                 setHolding(false);
               }
