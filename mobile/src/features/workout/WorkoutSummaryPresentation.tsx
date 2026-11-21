@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   categoryBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: radius.full,

@@ -20,28 +20,28 @@
  */
 
 export const palette = {
-  // Surface tiers — DEC-023: cool white + mint teal tint (no warm cream).
-  surface: '#F5F8F8',            // page bg — cool off-white, slight teal tint
-  surfaceContainerLowest: '#FFFFFF', // cards / sheets body (pure white)
-  surfaceContainerLow: '#ECF1F0',    // subtle card — very light cool mint
-  surfaceContainer: '#E1E9E8',       // selected / segmented inner
-  surfaceContainerHigh: '#D5DEDF',    // hover / pressed
-  surfaceContainerHighest: '#C6D2D1', // divider tint
+  // Surface tiers — Dark Gym Obsidian
+  surface: '#090D16',            // page bg — deep obsidian
+  surfaceContainerLowest: '#111827', // cards / sheets body
+  surfaceContainerLow: '#161F30',    // subtle card
+  surfaceContainer: '#1E293B',       // selected / segmented inner
+  surfaceContainerHigh: '#283548',    // hover / pressed
+  surfaceContainerHighest: '#334155', // divider tint
 
   // Text on surface
-  onSurface: '#0F1A19',          // near-black with cool teal undertone
-  onSurfaceVariant: '#3F4948',   // secondary text
-  onSurfaceDisabled: '#8B9492',  // AA-large/UI only — placeholder + caption only
+  onSurface: '#F8FAFC',          // crisp white text
+  onSurfaceVariant: '#94A3B8',   // secondary text
+  onSurfaceDisabled: '#475569',  // placeholder + caption only
 
   // Outline
-  outline: '#46514F',            // hairline / focus ring (AAA UI)
-  outlineVariant: '#7C8784',     // card subtle border 1dp (AA-large/UI 3:1+)
+  outline: '#334155',            // hairline
+  outlineVariant: '#1F293D',     // card subtle border 1dp
 
   // Primary (Cyber Coral — sole CTA color, Apple Fitness+ style)
   primary: '#F43F5E',
   onPrimary: '#FFFFFF',
-  primaryContainer: '#FFE4E6',
-  onPrimaryContainer: '#881337',
+  primaryContainer: '#2D1520',
+  onPrimaryContainer: '#FECDD3',
 
   // Secondary (warm sienna — restrained, streak warm accent)
   secondary: '#7C2D12',
@@ -79,8 +79,8 @@ export const palette = {
 
   // Glass tint cho floating tab bar + hero card. Dung cung hex luc dac,
   // blur se lam mo nen.
-  glassSurface: '#FFFFFF',       // glass tint base (mac dinh)
-  glassSurfaceAlt: '#F5F8F8',    // glass tint khi nen co gradient
+  glassSurface: '#111827',       // glass tint base (mac dinh)
+  glassSurfaceAlt: '#090D16',    // glass tint khi nen co gradient
 
   // Watermark ink (low-opacity logo/text). Rat nhe, phai < 8% alpha.
   watermarkInk: '#F43F5E',       // same as primary — opacity controlled at usage

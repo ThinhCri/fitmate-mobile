@@ -5,11 +5,11 @@ describe('Design Tokens Foundation', () => {
   it('defines all required semantic colors', () => {
     expect(colors.primary).toBe('#F43F5E');
     expect(colors.primaryDark).toBe('#E11D48');
-    expect(colors.primaryLight).toBe('#FFE4E6');
+    expect(colors.primaryLight).toBe('#2D1520');
     expect(colors.success).toBe('#10B981');
-    expect(colors.background).toBe('#F8FAFC');
-    expect(colors.surface).toBe('#FFFFFF');
-    expect(colors.textPrimary).toBe('#0F172A');
+    expect(colors.background).toBe('#090D16');
+    expect(colors.surface).toBe('#111827');
+    expect(colors.textPrimary).toBe('#F8FAFC');
     expect(colors.danger).toBe('#EF4444');
     expect(colors.warning).toBe('#F59E0B');
   });

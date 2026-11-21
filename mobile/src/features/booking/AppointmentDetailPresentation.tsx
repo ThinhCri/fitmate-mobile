@@ -45,7 +45,7 @@ export function AppointmentDetailPresentation({
       case 'confirmed':
         return { label: 'Đã xác nhận', bg: '#DCFCE7', text: '#16A34A' };
       case 'in_progress':
-        return { label: 'Đang diễn ra', bg: '#E6F4F1', text: colors.primary };
+        return { label: 'Đang diễn ra', bg: colors.surfaceSubtle, text: colors.primary };
       case 'completed':
         return { label: 'Đã hoàn thành', bg: '#DCFCE7', text: '#16A34A' };
       case 'awaiting_member_confirmation':
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',

@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   statusBadge: {
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: radius.full,
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },

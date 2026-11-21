@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: radius.md,
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },

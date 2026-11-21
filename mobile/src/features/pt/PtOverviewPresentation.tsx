@@ -185,7 +185,7 @@ export function PtOverviewPresentation({
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.shortcutTile} onPress={onNavigateToSessions}>
-          <View style={[styles.shortcutIconBox, { backgroundColor: '#E6F4F1' }]}>
+          <View style={[styles.shortcutIconBox, { backgroundColor: colors.surfaceSubtle }]}>
             <Users size={22} color={colors.primary} />
           </View>
           <Text style={styles.shortcutLabel}>Buổi dạy</Text>
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   ptBadge: {
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
     paddingHorizontal: 8,
     paddingVertical: 1,
     borderRadius: radius.full,

@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   statusBadgeVerifying: {
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: radius.full,

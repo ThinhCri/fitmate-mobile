@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   reasonOptionSelected: {
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
     borderColor: colors.primary,
   },
   radioCircle: {

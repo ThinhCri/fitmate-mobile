@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#DCFCE7',
   },
   tagInProgress: {
-    backgroundColor: '#E6F4F1',
+    backgroundColor: colors.surfaceSubtle,
   },
   tagCompleted: {
     backgroundColor: '#EFF6FF',
