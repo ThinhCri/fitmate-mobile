@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -88,7 +89,7 @@ export default function PtSessionManagementScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   error: { color: '#DC2626', textAlign: 'center' },

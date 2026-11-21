@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   headerSpacer: { width: 48 },
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.xs,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,

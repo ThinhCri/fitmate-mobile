@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -492,7 +493,7 @@ export default function ActiveSessionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1, backgroundColor: colors.background },
   center: { justifyContent: 'center', alignItems: 'center', padding: 24 },
   error: { color: '#DC2626', textAlign: 'center' },
   recoveredBanner: {

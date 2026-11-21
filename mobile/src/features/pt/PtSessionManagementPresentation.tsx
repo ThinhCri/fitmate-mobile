@@ -146,7 +146,7 @@ export function PtSessionManagementPresentation({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   textArea: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,

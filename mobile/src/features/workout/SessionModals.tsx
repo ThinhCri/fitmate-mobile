@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   card: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     borderRadius: radius.lg,
     padding: spacing.md,
     borderWidth: 1,
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   summaryGrid: {
     flexDirection: 'row',
     gap: spacing.xs,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     borderRadius: radius.lg,
     padding: spacing.sm,
   },

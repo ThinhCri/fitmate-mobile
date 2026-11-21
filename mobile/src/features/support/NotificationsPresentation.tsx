@@ -219,8 +219,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   notificationCardUnread: {
-    backgroundColor: '#F0FDFA',
-    borderColor: colors.primaryLight,
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.border,
   },
   iconContainer: {
     width: 40,

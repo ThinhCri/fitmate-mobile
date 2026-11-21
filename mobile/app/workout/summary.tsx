@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -11,4 +12,4 @@ export default function WorkoutSummaryScreen() {
   if (!summary) return <View style={[styles.container, styles.center]}>{error ? <Text style={styles.error}>{error}</Text> : <ActivityIndicator />}</View>;
   return <View style={styles.container}><WorkoutSummaryPresentation summary={summary} onDone={() => router.dismissTo('/(tabs)/workout')} onViewDetails={() => router.push(`/workout/session/${summary.id}` as never)} /></View>;
 }
-const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#F8FAFC' }, center: { justifyContent: 'center', alignItems: 'center', padding: 24 }, error: { color: '#DC2626', textAlign: 'center' } });
+const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: colors.background }, center: { justifyContent: 'center', alignItems: 'center', padding: 24 }, error: { color: '#DC2626', textAlign: 'center' } });

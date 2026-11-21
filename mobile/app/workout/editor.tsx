@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import { useAuth } from '@/services/AuthContext';
 import { readAiPlan, clearAiPlan } from '@/features/workout/aiPlanDraft';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -118,5 +119,5 @@ export default function PlanEditorScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: colors.background, justifyContent: 'center' },
 });

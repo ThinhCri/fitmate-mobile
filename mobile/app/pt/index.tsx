@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -25,4 +26,4 @@ export default function PtOverviewScreen() {
   if (!data) return <View style={[styles.container, styles.center]}>{error ? <><Text style={styles.error}>{error}</Text><TouchableOpacity accessibilityRole="button" style={{ minHeight: 48, justifyContent: 'center' }} onPress={() => setAttempt((value) => value + 1)}><Text>Thử lại</Text></TouchableOpacity></> : <ActivityIndicator />}</View>;
   return <View style={styles.container}><PtOverviewPresentation {...data} onToggleStatus={() => router.push('/pt/profile-services' as never)} onSelectTask={(target) => router.push(target as never)} onNavigateToServices={() => router.push('/pt/profile-services' as never)} onNavigateToSchedule={() => router.push('/pt/schedule' as never)} onNavigateToCertificates={() => router.push('/pt/certificates' as never)} onNavigateToSessions={() => router.push('/pt/sessions' as never)} onNavigateToRevenue={() => router.push('/pt/revenue' as never)} onNavigateToPackages={() => router.push('/pt/packages' as never)} onSelectSession={(id) => router.push(`/pt/session/${id}` as never)} /></View>;
 }
-const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#F8FAFC' }, center: { justifyContent: 'center', alignItems: 'center', padding: 24 }, error: { color: '#DC2626', textAlign: 'center' } });
+const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: colors.background }, center: { justifyContent: 'center', alignItems: 'center', padding: 24 }, error: { color: '#DC2626', textAlign: 'center' } });

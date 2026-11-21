@@ -258,7 +258,7 @@ export function WeightTrackerPresentation({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   },
   insightCell: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.sm,
     borderRadius: radius.md,
     gap: 2,
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     height: 44,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,

@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   pageButton: { minHeight: 48, paddingHorizontal: spacing.sm, justifyContent: 'center' },
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: 8,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   },
   breakdownCell: {
     width: '48%',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.sm,
     borderRadius: radius.md,
     gap: 2,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     minHeight: 46,
     paddingHorizontal: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     flexDirection: 'row',

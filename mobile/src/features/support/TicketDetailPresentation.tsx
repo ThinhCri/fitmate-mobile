@@ -370,8 +370,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   messageBubbleSupport: {
-    backgroundColor: '#F0FDFA',
-    borderColor: colors.primaryLight,
+    backgroundColor: colors.surfaceSubtle,
+    borderColor: colors.border,
   },
   messageHeader: {
     flexDirection: 'row',

@@ -285,7 +285,7 @@ export function WorkoutHistoryPresentation({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   },
   bentoCell: {
     width: '48%',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.sm,
     borderRadius: radius.md,
     gap: 4,

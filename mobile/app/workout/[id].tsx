@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -68,7 +69,7 @@ export default function PlanDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   center: {
     justifyContent: 'center',

@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { WeightTrackerPresentation } from '../../src/features/workout/WeightTrackerPresentation';
@@ -91,7 +92,7 @@ export default function WeightTrackerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   center: {
     justifyContent: 'center',

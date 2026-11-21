@@ -261,7 +261,7 @@ export function PtOverviewPresentation({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.sm,
     borderRadius: radius.md,
   },
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   sessionMetaBox: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.sm,
     borderRadius: radius.md,
     gap: 2,

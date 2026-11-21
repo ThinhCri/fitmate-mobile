@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -37,7 +38,7 @@ export default function PtPayoutDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   center: { alignItems: 'center', justifyContent: 'center' },
 });

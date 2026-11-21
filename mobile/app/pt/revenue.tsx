@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -41,4 +42,4 @@ export default function PtRevenueScreen() {
     </Modal>
   </View>;
 }
-const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#F8FAFC' }, center: { justifyContent: 'center', alignItems: 'center', padding: 24 }, error: { color: '#DC2626', textAlign: 'center' }, overlay: { flex: 1, backgroundColor: '#00000066', justifyContent: 'center', padding: 24 }, dialog: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 24, gap: 12 }, title: { fontSize: 20, fontWeight: '700' }, option: { minHeight: 48, justifyContent: 'center' } });
+const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: colors.background }, center: { justifyContent: 'center', alignItems: 'center', padding: 24 }, error: { color: '#DC2626', textAlign: 'center' }, overlay: { flex: 1, backgroundColor: '#00000066', justifyContent: 'center', padding: 24 }, dialog: { backgroundColor: colors.surface, borderRadius: 20, padding: 24, gap: 12 }, title: { fontSize: 20, fontWeight: '700' }, option: { minHeight: 48, justifyContent: 'center' } });
