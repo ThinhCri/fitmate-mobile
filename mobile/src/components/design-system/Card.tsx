@@ -70,10 +70,10 @@ const styles = StyleSheet.create({
   surface: {
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.surface,
+    borderColor: colors.border,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.15,
     shadowRadius: 14,
     elevation: 3,
   },

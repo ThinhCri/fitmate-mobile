@@ -382,11 +382,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   blockSection: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: 'rgba(239, 68, 68, 0.25)',
     gap: spacing.xs,
     marginBottom: spacing.lg,
   },

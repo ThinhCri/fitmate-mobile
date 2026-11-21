@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   closeButton: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceSubtle },
   actionRow: { minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingVertical: spacing.sm },
   iconBox: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceSubtle },
-  dangerIconBox: { backgroundColor: '#FEF2F2' },
+  dangerIconBox: { backgroundColor: 'rgba(239, 68, 68, 0.15)' },
   actionCopy: { flex: 1 },
   actionTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '700' },
   dangerText: { color: colors.danger },

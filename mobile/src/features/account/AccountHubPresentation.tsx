@@ -317,8 +317,8 @@ const styles = StyleSheet.create({
   },
   ptSpaceCard: {
     padding: spacing.md,
-    backgroundColor: '#F0FDFA',
-    borderColor: colors.primaryLight,
+    backgroundColor: colors.surfaceSubtle,
+    borderColor: colors.border,
     borderWidth: 1,
   },
   ptSpaceHeader: {
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
   ptSpaceTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.primaryDark,
+    color: colors.textPrimary,
   },
   ptSpaceSub: {
     ...typography.caption,
@@ -404,7 +404,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.xs,
     paddingVertical: spacing.md,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
     borderRadius: radius.lg,
     marginTop: spacing.sm,
   },

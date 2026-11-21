@@ -18,15 +18,15 @@ export interface GradientBackgroundProps {
 
 const GRADIENT_PRESETS = {
   default: {
-    colors: ['#EFF8F4', '#F6FAF8', '#FAFCFB', '#FFFFFF'] as const,
+    colors: ['#090D16', '#0E1726', '#111827', '#090D16'] as const,
     locations: [0, 0.3, 0.65, 1] as const,
   },
   warm: {
-    colors: ['#FEF9E7', '#FDF5F0', '#F8FCFA', '#FFFFFF'] as const,
+    colors: ['#090D16', '#1A1218', '#140E14', '#090D16'] as const,
     locations: [0, 0.3, 0.65, 1] as const,
   },
   cool: {
-    colors: ['#E8F4FD', '#EDF8F5', '#F8FCFA', '#FFFFFF'] as const,
+    colors: ['#090D16', '#0B1524', '#0E1A2D', '#090D16'] as const,
     locations: [0, 0.3, 0.65, 1] as const,
   },
 } as const;
