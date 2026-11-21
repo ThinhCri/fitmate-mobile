@@ -4,9 +4,9 @@
  */
 
 export const colors = {
-  primary: '#0F766E',
-  primaryDark: '#0A5F59',
-  primaryLight: '#D5EFEB',
+  primary: '#F43F5E',
+  primaryDark: '#E11D48',
+  primaryLight: '#FFE4E6',
   secondary: '#3B82F6',
   secondaryLight: '#EFF6FF',
   background: '#F8FAFC',

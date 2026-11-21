@@ -37,11 +37,11 @@ export const palette = {
   outline: '#46514F',            // hairline / focus ring (AAA UI)
   outlineVariant: '#7C8784',     // card subtle border 1dp (AA-large/UI 3:1+)
 
-  // Primary (deep teal — sole CTA color)
-  primary: '#0F766E',
+  // Primary (Cyber Coral — sole CTA color, Apple Fitness+ style)
+  primary: '#F43F5E',
   onPrimary: '#FFFFFF',
-  primaryContainer: '#D5EFEB',
-  onPrimaryContainer: '#0A3D38',
+  primaryContainer: '#FFE4E6',
+  onPrimaryContainer: '#881337',
 
   // Secondary (warm sienna — restrained, streak warm accent)
   secondary: '#7C2D12',
@@ -72,11 +72,10 @@ export const palette = {
   inverseSurface: '#0F1A19',
   inverseOnSurface: '#F5F8F8',
 
-  // DEC-023: Homepage gradient stops (mint teal cool). Dung cho bg Homepage,
-  // KHONG thay the `surface` cho cac man khac.
-  gradientMintStart: '#DDEEEC',  // mint pastel
-  gradientMintEnd: '#F5F8F8',    // page bg
-  gradientTealHaze: '#CFE0DE',   // deeper mint for top-left accent
+  // Homepage gradient stops (subtle rose coral tint).
+  gradientMintStart: '#FFE4E6',
+  gradientMintEnd: '#F5F8F8',
+  gradientTealHaze: '#FECDD3',
 
   // Glass tint cho floating tab bar + hero card. Dung cung hex luc dac,
   // blur se lam mo nen.
@@ -84,7 +83,7 @@ export const palette = {
   glassSurfaceAlt: '#F5F8F8',    // glass tint khi nen co gradient
 
   // Watermark ink (low-opacity logo/text). Rat nhe, phai < 8% alpha.
-  watermarkInk: '#0F766E',       // same as primary — opacity controlled at usage
+  watermarkInk: '#F43F5E',       // same as primary — opacity controlled at usage
 } as const;
 
 export type PaletteKey = keyof typeof palette;

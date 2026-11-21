@@ -3,9 +3,9 @@ import { colors, spacing, radius, typography } from '../designTokens';
 
 describe('Design Tokens Foundation', () => {
   it('defines all required semantic colors', () => {
-    expect(colors.primary).toBe('#0F766E');
-    expect(colors.primaryDark).toBe('#0A5F59');
-    expect(colors.primaryLight).toBe('#D5EFEB');
+    expect(colors.primary).toBe('#F43F5E');
+    expect(colors.primaryDark).toBe('#E11D48');
+    expect(colors.primaryLight).toBe('#FFE4E6');
     expect(colors.success).toBe('#10B981');
     expect(colors.background).toBe('#F8FAFC');
     expect(colors.surface).toBe('#FFFFFF');
