@@ -12,6 +12,7 @@ import { ReportBlockModal, ReportRequest } from '@/features/community';
 import { getSocialRepository } from '@/repositories/socialRepository';
 import { ImagePickerService } from '@/services/imagePicker';
 import { realtimeService } from '@/services/realtime/realtimeService';
+import { colors } from '@/theme/designTokens';
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -231,7 +232,7 @@ export default function ConversationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   center: {
     flex: 1,

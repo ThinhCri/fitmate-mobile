@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useCallback, useRef, useState } from 'react';
 import { View, StyleSheet, Text, ActivityIndicator, Alert, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -105,7 +106,7 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   center: {
     flex: 1,

@@ -77,7 +77,7 @@ export default function SettingsScreen() {
     </ScrollView>
   </SafeAreaView>;
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <SettingsPresentation
         settings={settings}
         notificationPermission={notificationPermission}

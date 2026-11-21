@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,7 +39,7 @@ export default function SavedPostsScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <AppTopBar title="Bài viết đã lưu" onBack={() => router.back()} />
       {loading ? <LoadingSkeleton count={3} /> : error ? (
         <ErrorState title="Không thể tải bài viết đã lưu" description={error} onAction={() => void load()} />

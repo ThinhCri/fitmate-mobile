@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import { aiUsageService, type AiUsageStatus } from '@/services/api/aiUsageService';
 import { checkAiAccess } from '@/services/aiAccess';
 import React, { useEffect, useRef, useState } from 'react';
@@ -83,7 +84,7 @@ export default function AiChatScreen() {
     { text: 'Hủy', style: 'cancel' },
   ]);
   if (loading || error) return <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>{loading ? <ActivityIndicator /> : <Text>{error}</Text>}</SafeAreaView>;
-  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><Text accessibilityRole="button" onPress={() => router.push('/account/ai-plan' as never)} style={{ paddingHorizontal: 16, paddingVertical: 8, color: '#0F766E' }}>{usage?.enforcement_enabled ? `Còn ${usage.chat.remaining}/${usage.chat.limit} lượt hôm nay · Xem gói AI` : 'Xem gói và hạn mức AI'}</Text><AiChatInteractivePresentation conversationTitle="Tư vấn Fitmate AI" messages={messages} isProcessing={processing} attachmentUris={attachments.map((image) => image.uri)} onAttachmentPress={chooseAttachment} onRemoveAttachment={(index) => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))} onBack={() => router.back()} onSendMessage={send} onReviewSuggestion={() => router.push('/workout/ai-adjust' as never)} /></SafeAreaView>;
+  return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}><Text accessibilityRole="button" onPress={() => router.push('/account/ai-plan' as never)} style={{ paddingHorizontal: 16, paddingVertical: 8, color: '#0F766E' }}>{usage?.enforcement_enabled ? `Còn ${usage.chat.remaining}/${usage.chat.limit} lượt hôm nay · Xem gói AI` : 'Xem gói và hạn mức AI'}</Text><AiChatInteractivePresentation conversationTitle="Tư vấn Fitmate AI" messages={messages} isProcessing={processing} attachmentUris={attachments.map((image) => image.uri)} onAttachmentPress={chooseAttachment} onRemoveAttachment={(index) => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))} onBack={() => router.back()} onSendMessage={send} onReviewSuggestion={() => router.push('/workout/ai-adjust' as never)} /></SafeAreaView>;
 }
 
 async function revealReply(

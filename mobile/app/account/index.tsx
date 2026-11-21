@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import { Text, TouchableOpacity, View } from 'react-native';
 import React, { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,7 +37,7 @@ export default function AccountHubScreen() {
   }, [retry, user?.id]));
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {loadError ? <View style={{padding:16}}><Text accessibilityRole="alert">{loadError}</Text><TouchableOpacity accessibilityRole="button" style={{minHeight:44,justifyContent:'center'}} onPress={()=>setRetry(value=>value+1)}><Text>Thử tải lại hồ sơ</Text></TouchableOpacity></View> : null}
       <AccountHubPresentation
         account={account}

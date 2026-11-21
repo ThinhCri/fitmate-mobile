@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,5 +28,5 @@ export default function AiConversationsScreen() {
   const rename = async (id: string, title: string) => { try { await aiService.renameThread(id, title); setItems((current) => current.map((item) => item.id === id ? { ...item, title } : item)); } catch (e) { Alert.alert('Không thể đổi tên', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } };
   const remove = async (id: string) => { try { await aiService.deleteThread(id); setItems((current) => current.filter((item) => item.id !== id)); } catch (e) { Alert.alert('Không thể xóa cuộc trò chuyện', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } };
   if (loading) return <SafeAreaView style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator /></SafeAreaView>;
-  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><AiConversationListPresentation conversations={items} isAiAvailable={available} onBack={() => router.back()} onSelectConversation={(id) => router.push(`/ai/${id}` as never)} onNewConversation={(prompt, title) => void create(prompt, title)} onRenameConversation={(id, title) => void rename(id, title)} onDeleteConversation={(id) => void remove(id)} onManualWorkoutNavigation={() => router.push('/(tabs)/workout' as never)} onManualNutritionNavigation={() => router.push('/(tabs)/nutrition' as never)} /></SafeAreaView>;
+  return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}><AiConversationListPresentation conversations={items} isAiAvailable={available} onBack={() => router.back()} onSelectConversation={(id) => router.push(`/ai/${id}` as never)} onNewConversation={(prompt, title) => void create(prompt, title)} onRenameConversation={(id, title) => void rename(id, title)} onDeleteConversation={(id) => void remove(id)} onManualWorkoutNavigation={() => router.push('/(tabs)/workout' as never)} onManualNutritionNavigation={() => router.push('/(tabs)/nutrition' as never)} /></SafeAreaView>;
 }

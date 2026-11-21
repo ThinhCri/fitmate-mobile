@@ -11,6 +11,7 @@ import {
   MealTimeSlot,
 } from '@/features/nutrition/nutritionTypes';
 import { getNutritionRepository } from '@/repositories/nutritionRepository';
+import { colors } from '@/theme/designTokens';
 
 export default function NutritionScreen() {
   const toDateString = (value: Date) => {
@@ -145,10 +146,10 @@ export default function NutritionScreen() {
 }
 
 const styles = StyleSheet.create({
-  refreshNotice: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, backgroundColor: '#F1F5F9', gap: 8 },
-  refreshNoticeText: { flex: 1, fontSize: 12, color: '#475569' },
+  refreshNotice: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, backgroundColor: colors.surfaceSubtle, gap: 8 },
+  refreshNoticeText: { flex: 1, fontSize: 12, color: colors.textSecondary },
   retryButton: { minHeight: 44, justifyContent: 'center' },
-  retryText: { fontSize: 13, color: '#0F766E', fontWeight: '600' },
+  retryText: { fontSize: 13, color: colors.primary, fontWeight: '600' },
   center: {
     flex: 1,
     justifyContent: 'center',

@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -45,5 +46,5 @@ export default function ChatInboxScreen() {
   }, []));
 
   if (loading || error) return <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>{loading ? <ActivityIndicator /> : <Text>{error}</Text>}</SafeAreaView>;
-  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><ChatInboxPresentation conversations={items} onBack={() => router.back()} onSelectConversation={(id) => router.push(`/chat/${id}` as never)} onFindFriendsPress={() => router.push('/community/friends' as never)} /></SafeAreaView>;
+  return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}><ChatInboxPresentation conversations={items} onBack={() => router.back()} onSelectConversation={(id) => router.push(`/chat/${id}` as never)} onFindFriendsPress={() => router.push('/community/friends' as never)} /></SafeAreaView>;
 }

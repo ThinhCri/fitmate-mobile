@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -63,7 +64,7 @@ export default function EditProfileScreen() {
     { text: 'Thư viện', onPress: () => void uploadAvatar('library') },
     { text: 'Hủy', style: 'cancel' },
   ]);
-  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+  return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
     <EditProfilePresentation initialValues={profile} avatarPreviewUrl={pendingAvatar?.previewUrl} hasPendingAvatar={Boolean(pendingAvatar)} isSaving={isSaving} onBack={() => router.back()} onSubmit={submit} onAvatarPress={chooseAvatar} onPreviewPublicProfile={() => userId && router.push(`/community/user/${userId}` as never)} onHealthProfilePress={() => router.push('/account/health-profile' as never)} onWeightHistoryPress={() => router.push('/workout/weight' as never)} onDirtyChange={setIsDirty} />
     <ConfirmationModal visible={guard.visible} title="Bỏ thay đổi?" message="Bạn có thay đổi chưa lưu. Bạn có muốn thoát mà không lưu không?" confirmLabel="Thoát không lưu" onConfirm={guard.discard} onCancel={guard.cancel} />
   </SafeAreaView>;

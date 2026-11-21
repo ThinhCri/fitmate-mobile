@@ -1,3 +1,4 @@
+import { colors } from '@/theme/designTokens';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -30,7 +31,7 @@ export default function CreatePostScreen() {
   const submit = async (values: CreatePostFormValues) => { setSubmitting(true); try { if (params.id) { await getSocialRepository().updatePost(params.id, values); } else { await getSocialRepository().createPost(values); } setIsDirty(false); requestAnimationFrame(() => router.back()); } catch (e) { Alert.alert(params.id ? 'Không thể sửa bài viết' : 'Không thể đăng bài', e instanceof Error ? e.message : 'Vui lòng thử lại.'); } finally { setSubmitting(false); } };
 
   if (loading || (params.id && !editingPost)) {
-    return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}><View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator /></View></SafeAreaView>;
+    return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator /></View></SafeAreaView>;
   }
 
   const initialValues = editingPost ? {
@@ -45,7 +46,7 @@ export default function CreatePostScreen() {
     mealTags: editingPost.mealTags || [],
   } : undefined;
 
-  return <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+  return <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
     <CreatePostPresentation isEditing={Boolean(params.id)} initialValues={initialValues} onSubmit={submit} onCancel={() => router.back()} isSubmitting={submitting} onPickImages={pickImages} onDirtyChange={setIsDirty} />
     <ConfirmationModal
       visible={guard.visible}
