@@ -7,6 +7,8 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {
   ChevronLeft,
@@ -91,7 +93,11 @@ export function EditProfilePresentation({
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarWrapper}>
@@ -234,6 +240,7 @@ export function EditProfilePresentation({
           </Card>
         </TouchableOpacity>
       </ScrollView>
+      </KeyboardAvoidingView>
 
     </View>
   );

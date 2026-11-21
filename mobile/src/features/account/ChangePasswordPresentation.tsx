@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {
   ChevronLeft,
@@ -76,7 +78,11 @@ export function ChangePasswordPresentation({
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Notice Card */}
         <Card style={styles.noticeCard}>
           <ShieldAlert size={18} color={colors.warning} />
@@ -166,6 +172,7 @@ export function ChangePasswordPresentation({
           />
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -204,14 +211,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.sm,
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FEF3C7',
+    backgroundColor: 'rgba(217, 119, 6, 0.12)',
+    borderColor: 'rgba(217, 119, 6, 0.3)',
     borderWidth: 1,
     padding: spacing.md,
   },
   noticeText: {
     ...typography.caption,
-    color: '#92400E',
+    color: '#FBBF24',
     flex: 1,
     lineHeight: 18,
   },

@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   },
   segmentedTrack: {
     flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.surfaceSubtle,
     padding: 3,
     borderRadius: radius.full,
     gap: 2,
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   inputPlaceholderBox: {
     flex: 1,
     height: 38,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     borderRadius: radius.full,
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   reactionBtnActive: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.surfaceSubtle,
   },
   reactionCount: {
     fontSize: 12,

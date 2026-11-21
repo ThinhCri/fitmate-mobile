@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { Star, ShieldCheck } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
@@ -39,8 +39,18 @@ export function ReviewPtPresentation({
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
-      <Card style={styles.card}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.keyboardAvoid}
+    >
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
+      >
+        <Card style={styles.card}>
         {/* Header context */}
         <View style={styles.contextHeader}>
           <Text style={styles.coachName}>HLV {initialData.coachName}</Text>
@@ -102,13 +112,17 @@ export function ReviewPtPresentation({
         />
       </Card>
     </ScrollView>
+  </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoid: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -150,7 +164,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   starBtn: {
-    padding: 4,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ratingDesc: {
     fontSize: 13,
@@ -166,7 +183,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   textArea: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
@@ -185,7 +202,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.xs,
-    backgroundColor: '#F0FDFA',
+    backgroundColor: colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: spacing.sm,
     borderRadius: radius.md,
   },
