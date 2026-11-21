@@ -1,38 +1,82 @@
 /**
  * ThemeProvider — supplies tokens + semantic colors via React Context.
- *
- * Phase 1 ships only light theme. When (if) dark theme is added later, change
- * `defaultTheme` to a switch reading `useColorScheme()` or a user toggle.
+ * Supports switching between Classic Light (default) and Dark Gym Obsidian.
  */
-import { createContext, useContext, type ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tokens, type Tokens, type PaletteKey } from './tokens';
 import { semanticColors } from './semantic';
 import type { SemanticColors } from './types';
+import { setAppTheme, currentThemeMode, ThemeMode } from './designTokens';
+
+export const THEME_STORAGE_KEY = '@fitmate_theme_mode';
 
 export interface Theme {
   tokens: Tokens;
   colors: SemanticColors;
-  isDark: false; // reserved for future dark theme; phase UI is light-only
+  isDark: boolean;
+  themeMode: ThemeMode;
+  themeKey: string;
+  setThemeMode: (mode: ThemeMode) => Promise<void>;
 }
 
 const defaultTheme: Theme = {
   tokens,
   colors: semanticColors,
   isDark: false,
+  themeMode: 'light',
+  themeKey: 'theme-light-0',
+  setThemeMode: async () => {},
 };
 
 const ThemeContext = createContext<Theme>(defaultTheme);
 
 export interface ThemeProviderProps {
   children: ReactNode;
-  /** Reserved for future theme switching. Ignored in phase UI. */
   value?: Theme;
 }
 
 export function ThemeProvider({ children, value }: ThemeProviderProps) {
-  return (
-    <ThemeContext.Provider value={value ?? defaultTheme}>{children}</ThemeContext.Provider>
-  );
+  const [themeMode, setModeState] = useState<ThemeMode>(currentThemeMode);
+  const [themeKey, setThemeKey] = useState<string>(`theme-${currentThemeMode}`);
+
+  useEffect(() => {
+    let active = true;
+    AsyncStorage.getItem(THEME_STORAGE_KEY)
+      .then((saved) => {
+        if (!active) return;
+        const mode: ThemeMode = saved === 'dark' ? 'dark' : 'light';
+        if (mode !== currentThemeMode) {
+          setAppTheme(mode);
+          setModeState(mode);
+          setThemeKey(`theme-${mode}-${Date.now()}`);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleSetThemeMode = async (mode: ThemeMode) => {
+    setAppTheme(mode);
+    setModeState(mode);
+    setThemeKey(`theme-${mode}-${Date.now()}`);
+    try {
+      await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
+    } catch {}
+  };
+
+  const contextValue: Theme = value ?? {
+    tokens,
+    colors: semanticColors,
+    isDark: themeMode === 'dark',
+    themeMode,
+    themeKey,
+    setThemeMode: handleSetThemeMode,
+  };
+
+  return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme(): Theme {
@@ -41,16 +85,14 @@ export function useTheme(): Theme {
 
 /**
  * Helper: resolve a color key to its raw palette hex value.
- * Accepts either a semantic role (e.g. 'primary') or a palette key (e.g. 'onSurface').
- * Example: `resolveColor(theme, 'primary')` → '#0F766E'.
  */
-export function resolveColor(theme: Theme, key: keyof SemanticColors | PaletteKey): string {
+export function resolveColor(theme: { tokens: Tokens; colors: SemanticColors }, key: keyof SemanticColors | PaletteKey): string {
   const palette = theme.tokens.palette as Record<string, string>;
   // First try: the key itself is a palette key
   if (key in palette) {
     return palette[key as string] ?? '#000000';
   }
-  // Second try: the key is a semantic role → lookup its palette binding
+  // Second try: the key is a semantic role -> lookup its palette binding
   const colors = theme.colors as unknown as Record<string, unknown>;
   const maybePaletteKey = colors[key as string];
   if (typeof maybePaletteKey === 'string' && maybePaletteKey in palette) {

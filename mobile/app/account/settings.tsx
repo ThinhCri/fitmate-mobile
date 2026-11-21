@@ -9,10 +9,12 @@ import { useAuth } from '@/services/AuthContext';
 import { getAnalyticsConsent, isAnalyticsAvailable, updateAnalyticsConsent } from '@/services/analytics';
 import { AnalyticsPreference } from '@/features/account/AnalyticsPreference';
 import { colors, spacing, typography } from '@/theme/designTokens';
+import { useTheme } from '@/theme/ThemeProvider';
 import { PermissionStatus, readSettingsPermissions } from '@/services/settingsPermissions';
 
 export default function SettingsScreen() {
   const { user } = useAuth();
+  const { themeMode, setThemeMode } = useTheme();
   const repository = getAccountRepository();
   const [settings, setSettings] = useState<SettingsViewModel | null>(null);
   const [deletionPending, setDeletionPending] = useState(false);
@@ -98,6 +100,10 @@ export default function SettingsScreen() {
         analyticsAvailable={isAnalyticsAvailable()}
         analyticsBusy={analyticsBusy}
         onAnalyticsConsentChange={(value) => { void changeAnalyticsConsent(value); }}
+        themeMode={themeMode}
+        onThemeModeChange={(mode) => {
+          void setThemeMode(mode);
+        }}
         isDeletionPending={deletionPending}
         onDeleteAccountPress={() => { if (checkDeletionStatus()) router.push('/account/deletion-otp' as any); }}
         onCancelDeletionPress={() => { if (checkDeletionStatus()) void repository.cancelAccountDeletion().then(() => setDeletionPending(false)).catch((e) => Alert.alert('Không thể hủy yêu cầu', e.message)); }}

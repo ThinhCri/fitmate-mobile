@@ -7,7 +7,8 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView, Platform } from 'react-native';
-import { ThemeProvider } from '@/theme';
+import '@/theme/patchStyleSheet';
+import { ThemeProvider, useTheme } from '@/theme';
 import { AuthProvider } from '@/services/AuthContext';
 import { PtVerificationGate } from '@/services/PtVerificationGate';
 import { AnalyticsTracker } from '@/services/AnalyticsTracker';
@@ -15,32 +16,45 @@ import { PushLifecycle } from '@/services/PushLifecycle';
 import { PlayPurchaseLifecycle } from '@/services/PlayPurchaseLifecycle';
 import { ToastHost } from '@/components/ui';
 
-export default function RootLayout() {
+function InnerApp() {
+  const { isDark, themeKey } = useTheme();
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView key={themeKey} style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <ThemeProvider>
-          <AuthProvider>
-            <PtVerificationGate />
-            <AnalyticsTracker />
-            <PushLifecycle />
-            <PlayPurchaseLifecycle />
-            <StatusBar style="dark" />
-            <KeyboardAvoidingView
-              style={{ flex: 1 }}
-              behavior={Platform.OS === 'android' ? 'height' : undefined}
+        <AuthProvider>
+          <PtVerificationGate />
+          <AnalyticsTracker />
+          <PushLifecycle />
+          <PlayPurchaseLifecycle />
+          <StatusBar style={isDark ? 'light' : 'dark'} />
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'android' ? 'height' : undefined}
+          >
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: isDark ? '#090D16' : '#F8FAFC' },
+              }}
             >
-              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#FAFAF7' } }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
-              </Stack>
-            </KeyboardAvoidingView>
-            <ToastHost />
-          </AuthProvider>
-        </ThemeProvider>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
+            </Stack>
+          </KeyboardAvoidingView>
+          <ToastHost />
+        </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <InnerApp />
+    </ThemeProvider>
   );
 }

@@ -1,17 +1,32 @@
 import { describe, it, expect } from 'vitest';
-import { colors, spacing, radius, typography } from '../designTokens';
+import { colors, spacing, radius, typography, setAppTheme } from '../designTokens';
 
 describe('Design Tokens Foundation', () => {
-  it('defines all required semantic colors', () => {
+  it('defines all required semantic colors with Light mode as default', () => {
+    setAppTheme('light');
     expect(colors.primary).toBe('#F43F5E');
     expect(colors.primaryDark).toBe('#E11D48');
-    expect(colors.primaryLight).toBe('#2D1520');
+    expect(colors.primaryLight).toBe('#FFE4E6');
     expect(colors.success).toBe('#10B981');
+    expect(colors.background).toBe('#F8FAFC');
+    expect(colors.surface).toBe('#FFFFFF');
+    expect(colors.textPrimary).toBe('#0F172A');
+    expect(colors.danger).toBe('#EF4444');
+    expect(colors.warning).toBe('#F59E0B');
+  });
+
+  it('switches between light and dark gym obsidian themes dynamically', () => {
+    setAppTheme('dark');
     expect(colors.background).toBe('#090D16');
     expect(colors.surface).toBe('#111827');
     expect(colors.textPrimary).toBe('#F8FAFC');
-    expect(colors.danger).toBe('#EF4444');
-    expect(colors.warning).toBe('#F59E0B');
+    expect(colors.primaryLight).toBe('#2D1520');
+
+    setAppTheme('light');
+    expect(colors.background).toBe('#F8FAFC');
+    expect(colors.surface).toBe('#FFFFFF');
+    expect(colors.textPrimary).toBe('#0F172A');
+    expect(colors.primaryLight).toBe('#FFE4E6');
   });
 
   it('defines spacing scale complying with 4dp/8dp grid', () => {

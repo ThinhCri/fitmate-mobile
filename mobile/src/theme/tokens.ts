@@ -1,25 +1,81 @@
 /**
- * Design tokens — Soft Energy (light theme only).
+ * Design tokens — Soft Energy (Light & Dark theme palettes).
  *
  * Source of truth:
  * - docs/mobile-redesign/decisions.md  (DEC-019, DEC-020, DEC-023)
  * - docs/mobile-redesign/design-system.md  (Section 2)
  *
- * Token values are verified per-pair by WCAG 2.1 relative luminance in
- * design-system.md. Re-verify with WebAIM / Material Theme Builder when
- * shipping.
- *
- * DEC-023 (2026-09-18):
- *   Bo sac kem/nga vang. Page bg chuyen sang cool white (xanh lanh) va
- *   container tiers pha teal rat nhe. Homepage dung gradient mint teal.
- *
- * DO NOT:
- *  - Import any CSS variable from web src/index.css (DEC-004).
- *  - Hardcode hex inline in components — extend this file instead.
- *  - Add a dark theme variant — phase UI is light-only.
+ * Light mode (mặc định): Soft Energy cool off-white & pure white cards.
+ * Dark mode: Dark Gym Obsidian deep obsidian & slate cards.
  */
 
-export const palette = {
+export const lightPalette = {
+  // Surface tiers — Light (DEC-023)
+  surface: '#F5F8F8',            // page bg — cool off-white, slight teal tint
+  surfaceContainerLowest: '#FFFFFF', // cards / sheets body (pure white)
+  surfaceContainerLow: '#ECF1F0',    // subtle card — very light cool mint
+  surfaceContainer: '#E1E9E8',       // selected / segmented inner
+  surfaceContainerHigh: '#D5DEDF',    // hover / pressed
+  surfaceContainerHighest: '#C6D2D1', // divider tint
+
+  // Text on surface
+  onSurface: '#0F1A19',          // near-black with cool teal undertone
+  onSurfaceVariant: '#3F4948',   // secondary text
+  onSurfaceDisabled: '#8B9492',  // placeholder + caption only
+
+  // Outline
+  outline: '#46514F',            // hairline / focus ring
+  outlineVariant: '#7C8784',     // card subtle border 1dp
+
+  // Primary (Cyber Coral — sole CTA color, Apple Fitness+ style)
+  primary: '#F43F5E',
+  onPrimary: '#FFFFFF',
+  primaryContainer: '#FFE4E6',
+  onPrimaryContainer: '#881337',
+
+  // Secondary (warm sienna — restrained, streak warm accent)
+  secondary: '#7C2D12',
+  onSecondary: '#FFFFFF',
+  secondaryContainer: '#FFE7D6',
+  onSecondaryContainer: '#3A1606',
+
+  // Tertiary (violet — only for achievements / PT verified)
+  tertiary: '#9333EA',
+  onTertiary: '#FFFFFF',
+  tertiaryContainer: '#F3E8FF',
+  onTertiaryContainer: '#4A1A75',
+
+  // Error / Success / Warning / Info
+  error: '#B91C1C',
+  onError: '#FFFFFF',
+  errorContainer: '#FEE2E2',
+  onErrorContainer: '#5A0F0F',
+
+  success: '#15803D',
+  warning: '#B45309',
+  info: '#1D4ED8',
+
+  // Backdrop
+  scrim: '#000000', // used at 35% opacity for modal/sheet backdrop
+
+  // Inverse (reserved — not used in phase UI)
+  inverseSurface: '#0F1A19',
+  inverseOnSurface: '#F5F8F8',
+
+  // Homepage gradient stops (subtle rose coral tint).
+  gradientMintStart: '#FFE4E6',
+  gradientMintEnd: '#F5F8F8',
+  gradientTealHaze: '#FECDD3',
+
+  // Glass tint cho floating tab bar + hero card.
+  glassSurface: '#FFFFFF',       // glass tint base (mặc định)
+  glassSurfaceAlt: '#F5F8F8',    // glass tint khi nền có gradient
+
+  // Watermark ink (low-opacity logo/text). Rất nhẹ, phải < 8% alpha.
+  watermarkInk: '#F43F5E',       // same as primary — opacity controlled at usage
+} as const;
+
+export const darkPalette = {
   // Surface tiers — Dark Gym Obsidian
   surface: '#090D16',            // page bg — deep obsidian
   surfaceContainerLowest: '#111827', // cards / sheets body
@@ -77,16 +133,18 @@ export const palette = {
   gradientMintEnd: '#F5F8F8',
   gradientTealHaze: '#FECDD3',
 
-  // Glass tint cho floating tab bar + hero card. Dung cung hex luc dac,
-  // blur se lam mo nen.
-  glassSurface: '#111827',       // glass tint base (mac dinh)
+  // Glass tint cho floating tab bar + hero card.
+  glassSurface: '#111827',       // glass tint base
   glassSurfaceAlt: '#090D16',    // glass tint khi nen co gradient
 
-  // Watermark ink (low-opacity logo/text). Rat nhe, phai < 8% alpha.
+  // Watermark ink (low-opacity logo/text).
   watermarkInk: '#F43F5E',       // same as primary — opacity controlled at usage
 } as const;
 
-export type PaletteKey = keyof typeof palette;
+export type PaletteKey = keyof typeof lightPalette;
+
+// Default to lightPalette
+export const palette: Record<PaletteKey, string> = { ...lightPalette };
 
 /**
  * Spacing scale (xxs..6xl).
