@@ -164,7 +164,7 @@ export function MyAppointmentsPresentation({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   packagesLink: { minHeight: 56, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radius.lg, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   tabTrack: {
     flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.surfaceSubtle,
     padding: 3,
     borderRadius: radius.lg,
     gap: 2,
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   },
   cardDetails: {
     gap: 4,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.sm,
     borderRadius: radius.md,
   },

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Alert, ActivityIndicator, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { CancelRefundTrackingPresentation } from '../../src/features/booking/CancelRefundTrackingPresentation';
 import { BookingAppointmentViewModel, RefundTrackingViewModel } from '../../src/features/booking/bookingTypes';
@@ -62,15 +63,15 @@ export default function CancelRefundScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[typography.body, styles.loadingText]}>Đang tải...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <CancelRefundTrackingPresentation
         refundData={refundData}
         bookingCode={appointment?.bookingCode || `BK-${(id || '1').slice(0, 8).toUpperCase()}`}
@@ -79,14 +80,14 @@ export default function CancelRefundScreen() {
         onConfirmCancel={handleConfirmCancel}
         onContactSupport={() => router.push(`/support/create?bookingId=${id || ''}` as any)}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   center: {
     justifyContent: 'center',

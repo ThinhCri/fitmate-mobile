@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Timer, Calendar, MapPin, QrCode, ShieldCheck, AlertCircle } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
@@ -19,6 +20,7 @@ export function ConfirmHoldPresentation({
   onPayPayOS,
   onCancelHold,
 }: ConfirmHoldPresentationProps) {
+  const insets = useSafeAreaInsets();
   const formatCountdown = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -26,7 +28,7 @@ export function ConfirmHoldPresentation({
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom }]}>
       {/* Hold Timer Alert Banner */}
       <View style={styles.holdBanner}>
         <View style={styles.holdIconCircle}>
@@ -156,7 +158,7 @@ export function ConfirmHoldPresentation({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -239,7 +241,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.sm,
     borderRadius: radius.md,
   },
@@ -326,17 +328,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: '#F0FDFA',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#CCFBF1',
+    borderColor: colors.border,
   },
   payIconBox: {
     width: 40,
     height: 40,
     borderRadius: radius.md,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },

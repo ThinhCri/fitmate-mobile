@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity, Alert, Linking } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AppointmentDetailPresentation } from '../../src/features/booking/AppointmentDetailPresentation';
 import { BookingAppointmentViewModel } from '../../src/features/booking/bookingTypes';
@@ -46,18 +47,18 @@ export default function AppointmentDetailScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[typography.body, styles.loadingText]}>
           Đang tải thông tin lịch hẹn...
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error || !appointment) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, styles.center]}>
         <Text style={[typography.body, styles.errorText]}>
           {error || 'Không tìm thấy lịch hẹn.'}
         </Text>
@@ -68,12 +69,12 @@ export default function AppointmentDetailScreen() {
         >
           <Text style={[typography.bodyBold, styles.retryText]}>Thử lại</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <AppointmentDetailPresentation
         appointment={appointment}
         meetingUrl={meetingUrl}
@@ -124,14 +125,14 @@ export default function AppointmentDetailScreen() {
           ]);
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   center: {
     justifyContent: 'center',

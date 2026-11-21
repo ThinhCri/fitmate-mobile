@@ -175,7 +175,7 @@ export function CancelRefundTrackingPresentation({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   infoBox: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.md,
     borderRadius: radius.md,
     gap: spacing.xs,
@@ -324,12 +324,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.sm,
     borderRadius: radius.md,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     borderWidth: 1,
     borderColor: colors.border,
   },
   reasonOptionSelected: {
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.surface,
     borderColor: colors.primary,
   },
   radioCircle: {
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     height: 44,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MyAppointmentsPresentation } from '../../src/features/booking/MyAppointmentsPresentation';
 import { BookingAppointmentViewModel } from '../../src/features/booking/bookingTypes';
@@ -34,18 +35,18 @@ export default function MyAppointmentsScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[typography.body, styles.loadingText]}>
           Đang tải lịch hẹn...
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, styles.center]}>
         <Text style={[typography.body, styles.errorText]}>{error}</Text>
         <TouchableOpacity
           style={styles.retryButton}
@@ -54,26 +55,26 @@ export default function MyAppointmentsScreen() {
         >
           <Text style={[typography.bodyBold, styles.retryText]}>Thử lại</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <MyAppointmentsPresentation
         appointments={appointments}
         onSelectAppointment={(id) => router.push(`/booking/${id}` as any)}
         onExploreTrainers={() => router.push('/(tabs)/marketplace' as any)}
         onOpenPackages={() => router.push('/booking/packages' as never)}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   center: {
     justifyContent: 'center',

@@ -272,7 +272,7 @@ export function SelectServiceSlotPresentation({
 const styles = StyleSheet.create({
   outer: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -513,9 +513,9 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   slotBtnDisabled: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#E2E8F0',
-    opacity: 0.6,
+    backgroundColor: colors.surfaceSubtle,
+    borderColor: colors.borderSubtle,
+    opacity: 0.4,
   },
   slotText: {
     fontSize: 13,

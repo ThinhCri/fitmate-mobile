@@ -203,7 +203,7 @@ export function PaymentReturnMatrixPresentation({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
@@ -214,11 +214,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: '#F0FDFA',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#CCFBF1',
+    borderColor: colors.border,
   },
   topNoticeTextCol: {
     flex: 1,
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.md,
     borderRadius: radius.md,
   },
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     width: '100%',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.surfaceSubtle,
     padding: spacing.md,
     borderRadius: radius.md,
     gap: spacing.xs,

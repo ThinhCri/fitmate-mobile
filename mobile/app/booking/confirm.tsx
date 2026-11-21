@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Alert, Linking, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ConfirmHoldPresentation } from '../../src/features/booking/ConfirmHoldPresentation';
 import { BookingHoldQuoteViewModel } from '../../src/features/booking/bookingTypes';
@@ -136,21 +137,21 @@ export default function ConfirmBookingScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       {loading ? <ActivityIndicator style={styles.center} color={colors.primary} /> : error || !quote ? <View style={styles.center}><Text style={styles.message}>{error || 'Không thể tải thông tin giữ chỗ.'}</Text><TouchableOpacity onPress={() => router.back()}><Text style={styles.back}>Chọn lại giờ</Text></TouchableOpacity></View> : <ConfirmHoldPresentation
         quote={quote}
         isProcessing={isProcessing || remainingSeconds <= 0}
         onPayPayOS={handlePay}
         onCancelHold={() => router.back()}
       />}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
   message: { color: colors.textPrimary, textAlign: 'center' },
