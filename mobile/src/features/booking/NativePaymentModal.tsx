@@ -24,7 +24,7 @@ import {
   Building2,
 } from 'lucide-react-native';
 import { ModalShell } from '@/components/design-system/ModalShell';
-import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
+import { PrimaryButton } from '@/components/design-system/Buttons';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { bookingService } from '@/services/api/bookingService';
 import type { PaymentWire } from '@/services/api/types';
@@ -85,7 +85,7 @@ export function NativePaymentModal({
     } finally {
       if (!silent) setChecking(false);
     }
-  }, [payment?.id, onPaymentSuccess]);
+  }, [payment, onPaymentSuccess]);
 
   useEffect(() => {
     if (!visible || !payment?.id) return;

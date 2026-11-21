@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Alert, Linking, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Alert, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ConfirmHoldPresentation } from '../../src/features/booking/ConfirmHoldPresentation';
