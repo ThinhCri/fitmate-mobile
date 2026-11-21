@@ -41,7 +41,7 @@ export default function ConfirmBookingScreen() {
     Promise.all([bookingService.getBookingHold(params.holdId), bookingService.getMyBookingDetail(params.appointmentId)])
       .then(([hold, detail]) => {
         if (!active) return;
-        if (!hold.is_active || hold.hold_id !== params.holdId || detail.id !== params.appointmentId) throw new Error('Giờ giữ chỗ đã hết hạn. Vui lòng chọn lại.');
+        if (!hold.is_active || detail.id !== params.appointmentId) throw new Error('Giờ giữ chỗ đã hết hạn. Vui lòng chọn lại.');
         setAppointment(detail);
         setExpiresAt(hold.expires_at);
         setError('');
@@ -142,7 +142,27 @@ export default function ConfirmBookingScreen() {
         quote={quote}
         isProcessing={isProcessing || remainingSeconds <= 0}
         onPayPayOS={handlePay}
-        onCancelHold={() => router.back()}
+        onCancelHold={() => {
+          Alert.alert(
+            'Hủy giữ chỗ',
+            'Bạn có chắc chắn muốn hủy giữ chỗ và giải phóng khung giờ này không?',
+            [
+              { text: 'Không', style: 'cancel' },
+              {
+                text: 'Hủy giữ chỗ',
+                style: 'destructive',
+                onPress: async () => {
+                  if (params.appointmentId) {
+                    try {
+                      await bookingService.cancelMyBooking(params.appointmentId, 'Hủy giữ chỗ để chọn khung giờ khác');
+                    } catch {}
+                  }
+                  router.back();
+                },
+              },
+            ]
+          );
+        }}
       />}
     </SafeAreaView>
   );

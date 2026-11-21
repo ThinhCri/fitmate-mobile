@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react-native';
+import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, RefreshCw, Clock } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
 import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
 
-export type PaymentReturnStatus = 'verifying' | 'success' | 'failed' | 'canceled' | 'uncertain';
+export type PaymentReturnStatus = 'verifying' | 'success' | 'failed' | 'canceled' | 'uncertain' | 'pending';
 
 export interface PaymentReturnMatrixPresentationProps {
   status: PaymentReturnStatus;
@@ -15,10 +15,13 @@ export interface PaymentReturnMatrixPresentationProps {
   serviceName?: string;
   scheduledTime?: string;
   errorMessage?: string;
+  redirectUrl?: string | null;
   onViewAppointment: () => void;
   onRetryOrChooseAgain: () => void;
   onContactSupport?: () => void;
   onRecheckStatus?: () => void;
+  onContinuePayment?: () => void;
+  onCancelHold?: () => void;
 }
 
 export function PaymentReturnMatrixPresentation({
@@ -29,10 +32,13 @@ export function PaymentReturnMatrixPresentation({
   serviceName,
   scheduledTime,
   errorMessage,
+  redirectUrl,
   onViewAppointment,
   onRetryOrChooseAgain,
   onContactSupport,
   onRecheckStatus,
+  onContinuePayment,
+  onCancelHold,
 }: PaymentReturnMatrixPresentationProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -127,6 +133,49 @@ export function PaymentReturnMatrixPresentation({
 
           <View style={styles.actionGroup}>
             <PrimaryButton label="Xem chi tiết lịch hẹn" onPress={onViewAppointment} />
+          </View>
+        </Card>
+      )}
+
+      {/* PENDING STATE (Awaiting payment on PayOS) */}
+      {status === 'pending' && (
+        <Card style={styles.stateCard}>
+          <View style={[styles.errorIconCircle, { backgroundColor: '#FEF3C7' }]}>
+            <Clock size={48} color="#D97706" />
+          </View>
+
+          <View style={[styles.statusBadgeFailed, { backgroundColor: '#FEF3C7' }]}>
+            <Text style={[styles.statusBadgeTextFailed, { color: '#B45309' }]}>
+              Chờ thanh toán
+            </Text>
+          </View>
+
+          <Text style={styles.stateTitle}>Đơn giữ chỗ đang chờ bạn thanh toán</Text>
+          <Text style={styles.stateDesc}>
+            Khung giờ tập của bạn đang được giữ chỗ trong 10 phút. Bạn có thể mở lại trang thanh toán payOS để chuyển khoản, kiểm tra lại sau khi đã chuyển tiền, hoặc hủy giữ chỗ để chọn khung giờ khác.
+          </Text>
+
+          <View style={styles.infoStrip}>
+            <View>
+              <Text style={styles.infoStripLabel}>Mã đơn đặt lịch</Text>
+              <Text style={styles.infoStripValue}>#{bookingCode}</Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={styles.infoStripLabel}>Số tiền</Text>
+              <Text style={styles.infoStripPrice}>{amountVnd.toLocaleString('vi-VN')} ₫</Text>
+            </View>
+          </View>
+
+          <View style={styles.actionGroup}>
+            {onContinuePayment && (
+              <PrimaryButton label="Mở trang thanh toán payOS" onPress={onContinuePayment} />
+            )}
+            {onRecheckStatus && (
+              <SecondaryButton label="Tôi đã chuyển khoản - Kiểm tra lại" onPress={onRecheckStatus} />
+            )}
+            {onCancelHold && (
+              <SecondaryButton label="Hủy giữ chỗ & Chọn lại" onPress={onCancelHold} />
+            )}
           </View>
         </Card>
       )}

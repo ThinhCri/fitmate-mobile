@@ -11,12 +11,25 @@ import {
   BookingSlotViewModel,
 } from './bookingTypes';
 
+export interface ActiveHoldViewModel {
+  appointmentId: string;
+  holdId?: string;
+  serviceId: string;
+  slotStartUtc: string;
+  expiresAtUtc: string;
+  priceVnd: number;
+}
+
 export interface SelectServiceSlotPresentationProps {
   coach: CoachSummaryViewModel;
   services: BookingServiceViewModel[];
   availableDates: { dateString: string; dayLabel: string; dateNum: string }[];
   timeSlots: BookingSlotViewModel[];
+  activeHold?: ActiveHoldViewModel | null;
   onContinue: (serviceId: string, date: string, slotId: string) => void;
+  onContinueHold?: () => void;
+  onCancelHold?: () => void;
+  onHoldExpired?: () => void;
   onBookPackage?: (serviceId: string) => void;
   onViewCoachProfile?: () => void;
 }
@@ -26,7 +39,11 @@ export function SelectServiceSlotPresentation({
   services,
   availableDates,
   timeSlots,
+  activeHold,
   onContinue,
+  onContinueHold,
+  onCancelHold,
+  onHoldExpired,
   onBookPackage,
   onViewCoachProfile,
 }: SelectServiceSlotPresentationProps) {
@@ -34,19 +51,65 @@ export function SelectServiceSlotPresentation({
   const [selectedServiceId, setSelectedServiceId] = useState<string>(services[0]?.id ?? '');
   const selectedService = services.find((s) => s.id === selectedServiceId) ?? services[0];
 
-  // Find the first date that actually has available slots
+  const [remainingSeconds, setRemainingSeconds] = useState<number>(() => {
+    if (!activeHold?.expiresAtUtc) return 0;
+    return Math.max(0, Math.floor((new Date(activeHold.expiresAtUtc).getTime() - Date.now()) / 1000));
+  });
+
+  useEffect(() => {
+    if (!activeHold?.expiresAtUtc) {
+      setRemainingSeconds(0);
+      return;
+    }
+    const tick = () => {
+      const diff = Math.max(0, Math.floor((new Date(activeHold.expiresAtUtc).getTime() - Date.now()) / 1000));
+      setRemainingSeconds(diff);
+      if (diff <= 0) {
+        onHoldExpired?.();
+      }
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [activeHold?.expiresAtUtc, onHoldExpired]);
+
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+  const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+  const heldService = activeHold ? services.find((s) => s.id === activeHold.serviceId) : null;
+  const heldDate = activeHold ? new Date(activeHold.slotStartUtc) : null;
+  const isHeldDateValid = heldDate ? !isNaN(heldDate.getTime()) : false;
+  const heldDateStr = isHeldDateValid
+    ? heldDate!.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' })
+    : '';
+  const heldTimeStr = isHeldDateValid
+    ? heldDate!.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })
+    : '';
+  const heldDateTimeFormatted = isHeldDateValid ? `${heldTimeStr}, ${heldDateStr}` : 'Khung giờ đã chọn';
+  const activeHoldDateString = activeHold && isHeldDateValid
+    ? `${heldDate!.getFullYear()}-${String(heldDate!.getMonth() + 1).padStart(2, '0')}-${String(heldDate!.getDate()).padStart(2, '0')}`
+    : '';
+
+  // Find the first date that actually has available slots or active hold
   const firstAvailableDate = availableDates.find((d) =>
     timeSlots.some(
       (s) =>
-        s.isAvailable &&
+        (s.isAvailable || s.slotStartUtc === activeHold?.slotStartUtc) &&
         s.dateString === d.dateString &&
         (!selectedService || s.durationMinutes === undefined || s.durationMinutes >= selectedService.durationMinutes)
     )
   )?.dateString ?? availableDates[0]?.dateString ?? '';
 
-  const [selectedDate, setSelectedDate] = useState<string>(firstAvailableDate);
+  const [selectedDate, setSelectedDate] = useState<string>(
+    activeHoldDateString || firstAvailableDate
+  );
   const [selectedSlotId, setSelectedSlotId] = useState<string>(
-    timeSlots.find((s) => s.isAvailable && (!firstAvailableDate || s.dateString === firstAvailableDate))?.id ?? ''
+    timeSlots.find(
+      (s) =>
+        (activeHold ? s.slotStartUtc === activeHold.slotStartUtc : s.isAvailable) &&
+        (!firstAvailableDate || s.dateString === (activeHoldDateString || firstAvailableDate))
+    )?.id ?? ''
   );
 
   const visibleSlots = timeSlots.filter(
@@ -54,6 +117,19 @@ export function SelectServiceSlotPresentation({
       (!slot.dateString || slot.dateString === selectedDate) &&
       (!selectedService || slot.durationMinutes === undefined || slot.durationMinutes >= selectedService.durationMinutes)
   );
+
+  useEffect(() => {
+    if (activeHold && activeHoldDateString) {
+      setSelectedDate(activeHoldDateString);
+      const matchingSlot = timeSlots.find((s) => s.slotStartUtc === activeHold.slotStartUtc);
+      if (matchingSlot) {
+        setSelectedSlotId(matchingSlot.id);
+      }
+      if (activeHold.serviceId && services.some((s) => s.id === activeHold.serviceId)) {
+        setSelectedServiceId(activeHold.serviceId);
+      }
+    }
+  }, [activeHold, activeHoldDateString, services, timeSlots]);
 
   useEffect(() => {
     if (!services.some((service) => service.id === selectedServiceId)) {
@@ -65,21 +141,21 @@ export function SelectServiceSlotPresentation({
   useEffect(() => {
     const hasSlotsOnCurrentDate = timeSlots.some(
       (s) =>
-        s.isAvailable &&
+        (s.isAvailable || s.slotStartUtc === activeHold?.slotStartUtc) &&
         s.dateString === selectedDate &&
         (!selectedService || s.durationMinutes === undefined || s.durationMinutes >= selectedService.durationMinutes)
     );
-    if (!hasSlotsOnCurrentDate && firstAvailableDate && firstAvailableDate !== selectedDate) {
+    if (!hasSlotsOnCurrentDate && firstAvailableDate && firstAvailableDate !== selectedDate && !activeHoldDateString) {
       setSelectedDate(firstAvailableDate);
     }
-  }, [firstAvailableDate, selectedService, selectedDate, timeSlots]);
+  }, [activeHold?.slotStartUtc, activeHoldDateString, firstAvailableDate, selectedService, selectedDate, timeSlots]);
 
   useEffect(() => {
-    if (!visibleSlots.some((slot) => slot.id === selectedSlotId && slot.isAvailable)) {
-      const firstSlot = visibleSlots.find((s) => s.isAvailable);
+    if (!visibleSlots.some((slot) => slot.id === selectedSlotId && (slot.isAvailable || slot.slotStartUtc === activeHold?.slotStartUtc))) {
+      const firstSlot = visibleSlots.find((s) => s.isAvailable || s.slotStartUtc === activeHold?.slotStartUtc);
       setSelectedSlotId(firstSlot?.id ?? '');
     }
-  }, [selectedDate, selectedServiceId, selectedSlotId, visibleSlots]);
+  }, [activeHold?.slotStartUtc, selectedDate, selectedServiceId, selectedSlotId, visibleSlots]);
 
   const handleContinue = () => {
     if (selectedServiceId && selectedDate && selectedSlotId) {
@@ -131,6 +207,56 @@ export function SelectServiceSlotPresentation({
             <ChevronRight size={20} color={colors.textMuted} />
           </TouchableOpacity>
         </Card>
+
+        {/* Active Hold Banner (Chờ thanh toán) */}
+        {activeHold && remainingSeconds > 0 && (
+          <Card style={styles.holdBannerCard}>
+            <View style={styles.holdBannerHeader}>
+              <View style={styles.holdBannerIconWrap}>
+                <Clock size={18} color="#D97706" />
+              </View>
+              <View style={styles.holdBannerHeaderText}>
+                <View style={styles.holdBadgeRow}>
+                  <View style={styles.holdBadge}>
+                    <Text style={styles.holdBadgeText}>Chờ thanh toán</Text>
+                  </View>
+                  <Text style={styles.holdTimerText}>
+                    Hết hạn sau: <Text style={styles.holdTimerValue}>{timeFormatted}</Text>
+                  </Text>
+                </View>
+                <Text style={styles.holdBannerTitle}>Bạn có 1 lịch hẹn đang chờ thanh toán</Text>
+                <Text style={styles.holdBannerSubtitle}>
+                  {heldService?.name ?? 'Buổi tập cá nhân'} • {heldDateTimeFormatted}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.holdBannerActions}>
+              {onContinueHold && (
+                <TouchableOpacity
+                  style={styles.holdActionPayBtn}
+                  onPress={onContinueHold}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Tiếp tục thanh toán cho khung giờ đang giữ"
+                >
+                  <Text style={styles.holdActionPayText}>Tiếp tục thanh toán</Text>
+                </TouchableOpacity>
+              )}
+              {onCancelHold && (
+                <TouchableOpacity
+                  style={styles.holdActionCancelBtn}
+                  onPress={onCancelHold}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Hủy giữ chỗ khung giờ này"
+                >
+                  <Text style={styles.holdActionCancelText}>Hủy giữ chỗ</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </Card>
+        )}
 
         {/* Section 1: Choose Service Package */}
         <View style={styles.section}>
@@ -308,31 +434,44 @@ export function SelectServiceSlotPresentation({
                 <View style={styles.slotsGrid}>
                   {visibleSlots.map((slot) => {
                     const isSelected = slot.id === selectedSlotId;
+                    const isHeld = Boolean(
+                      slot.isHeldByMe || (activeHold && slot.slotStartUtc === activeHold.slotStartUtc)
+                    );
                     return (
                       <TouchableOpacity
                         key={slot.id}
-                        disabled={!slot.isAvailable}
+                        disabled={!slot.isAvailable && !isHeld}
                         style={[
                           styles.slotBtn,
                           isSelected && styles.slotBtnSelected,
-                          !slot.isAvailable && styles.slotBtnDisabled,
+                          isHeld && !isSelected && styles.slotBtnHeld,
+                          !slot.isAvailable && !isHeld && styles.slotBtnDisabled,
                         ]}
                         onPress={() => setSelectedSlotId(slot.id)}
                         accessibilityRole="button"
-                        accessibilityState={{ disabled: !slot.isAvailable, selected: isSelected }}
+                        accessibilityState={{ disabled: !slot.isAvailable && !isHeld, selected: isSelected }}
                         accessibilityLabel={`Khung giờ ${slot.startTime} đến ${slot.endTime} ${
-                          slot.isAvailable ? 'khả dụng' : 'đã kín'
+                          isHeld ? 'đang chờ thanh toán' : slot.isAvailable ? 'khả dụng' : 'đã kín'
                         }`}
                       >
                         <Text
                           style={[
                             styles.slotText,
                             isSelected && styles.slotTextSelected,
-                            !slot.isAvailable && styles.slotTextDisabled,
+                            isHeld && !isSelected && styles.slotTextHeld,
+                            !slot.isAvailable && !isHeld && styles.slotTextDisabled,
                           ]}
                         >
                           {slot.startTime} - {slot.endTime}
                         </Text>
+                        {isHeld && (
+                          <View style={styles.slotHeldTag}>
+                            <Clock size={10} color={isSelected ? '#FFFFFF' : '#B45309'} />
+                            <Text style={[styles.slotHeldTagText, isSelected && { color: '#FFFFFF' }]}>
+                              Chờ thanh toán
+                            </Text>
+                          </View>
+                        )}
                       </TouchableOpacity>
                     );
                   })}
@@ -352,22 +491,54 @@ export function SelectServiceSlotPresentation({
             <Text style={{ color: colors.primary, fontWeight: '700', textAlign: 'center' }}>Chọn gói 4 hoặc 8 buổi</Text>
           </TouchableOpacity>
         )}
-      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.sm) + 6 }]}>
-        <View style={styles.bottomPriceCol}>
-          <Text style={styles.bottomLabel}>Tổng tạm tính:</Text>
-          <Text style={styles.bottomPrice}>
-            {selectedService ? selectedService.priceVnd.toLocaleString('vi-VN') : '0'} ₫
-          </Text>
-        </View>
+      {(() => {
+        const selectedSlot = visibleSlots.find((s) => s.id === selectedSlotId);
+        const isSelectedSlotHeld = Boolean(
+          selectedSlot && (selectedSlot.isHeldByMe || (activeHold && selectedSlot.slotStartUtc === activeHold.slotStartUtc))
+        );
+        const handleBottomPress = () => {
+          if (isSelectedSlotHeld && onContinueHold) {
+            onContinueHold();
+          } else {
+            handleContinue();
+          }
+        };
 
-        <View style={styles.bottomBtnCol}>
-          <PrimaryButton
-            label={timeSlots.length === 0 ? 'Chưa có lịch để đặt' : 'Tiếp tục giữ lịch'}
-            disabled={timeSlots.length === 0 || !selectedServiceId || !selectedDate || !selectedSlotId}
-            onPress={handleContinue}
-          />
-        </View>
-      </View>
+        return (
+          <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.sm) + 6 }]}>
+            <View style={styles.bottomPriceCol}>
+              <Text style={styles.bottomLabel}>Tổng tạm tính:</Text>
+              <Text style={styles.bottomPrice}>
+                {isSelectedSlotHeld && activeHold?.priceVnd
+                  ? activeHold.priceVnd.toLocaleString('vi-VN')
+                  : selectedService
+                  ? selectedService.priceVnd.toLocaleString('vi-VN')
+                  : '0'}{' '}
+                ₫
+              </Text>
+            </View>
+
+            <View style={styles.bottomBtnCol}>
+              <PrimaryButton
+                label={
+                  isSelectedSlotHeld && remainingSeconds > 0
+                    ? `Tiếp tục thanh toán (${timeFormatted})`
+                    : timeSlots.length === 0
+                    ? 'Chưa có lịch để đặt'
+                    : 'Tiếp tục giữ lịch'
+                }
+                disabled={
+                  (!isSelectedSlotHeld && timeSlots.length === 0) ||
+                  !selectedServiceId ||
+                  !selectedDate ||
+                  !selectedSlotId
+                }
+                onPress={handleBottomPress}
+              />
+            </View>
+          </View>
+        );
+      })()}
     </View>
   );
 }
@@ -767,5 +938,121 @@ const styles = StyleSheet.create({
   },
   bottomBtnCol: {
     flex: 1.5,
+  },
+  holdBannerCard: {
+    padding: spacing.md,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
+    borderRadius: radius.md,
+    gap: spacing.sm,
+  },
+  holdBannerHeader: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'flex-start',
+  },
+  holdBannerIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FDE68A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  holdBannerHeaderText: {
+    flex: 1,
+    gap: 2,
+  },
+  holdBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  holdBadge: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    alignSelf: 'flex-start',
+  },
+  holdBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  holdTimerText: {
+    fontSize: 12,
+    color: '#92400E',
+    fontWeight: '500',
+  },
+  holdTimerValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#B45309',
+  },
+  holdBannerTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#78350F',
+  },
+  holdBannerSubtitle: {
+    fontSize: 13,
+    color: '#92400E',
+  },
+  holdBannerActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: 4,
+  },
+  holdActionPayBtn: {
+    flex: 1.5,
+    backgroundColor: '#D97706',
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  holdActionPayText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  holdActionCancelBtn: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D97706',
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  holdActionCancelText: {
+    color: '#B45309',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  slotBtnHeld: {
+    borderColor: '#F59E0B',
+    borderWidth: 1.5,
+    backgroundColor: '#FFFBEB',
+  },
+  slotTextHeld: {
+    color: '#B45309',
+    fontWeight: '700',
+  },
+  slotHeldTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 2,
+  },
+  slotHeldTagText: {
+    fontSize: 10,
+    color: '#B45309',
+    fontWeight: '600',
   },
 });

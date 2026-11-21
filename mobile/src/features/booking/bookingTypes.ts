@@ -23,10 +23,12 @@ export interface BookingSlotViewModel {
   id: string;
   durationMinutes?: number;
   dateString?: string;
+  slotStartUtc?: string;
   startTime: string; // e.g. "08:00"
   endTime: string;   // e.g. "09:00"
   period: 'morning' | 'afternoon' | 'evening';
   isAvailable: boolean;
+  isHeldByMe?: boolean;
 }
 
 export interface CoachSummaryViewModel {
