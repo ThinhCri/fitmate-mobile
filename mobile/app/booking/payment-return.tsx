@@ -6,6 +6,7 @@ import {
   PaymentReturnMatrixPresentation,
   PaymentReturnStatus,
 } from '@/features/booking/PaymentReturnMatrixPresentation';
+import { NativePaymentModal } from '@/features/booking/NativePaymentModal';
 import { bookingService } from '@/services/api/bookingService';
 import type { PaymentWire } from '@/services/api/types';
 import { colors } from '@/theme/designTokens';
@@ -19,6 +20,7 @@ export default function PaymentReturnScreen() {
   }>();
 
   const [payment, setPayment] = useState<PaymentWire | null>(null);
+  const [showNativeModal, setShowNativeModal] = useState(false);
   const [status, setStatus] = useState<PaymentReturnStatus>(
     params.cancel === 'true' ? 'canceled' : 'verifying'
   );
@@ -62,9 +64,9 @@ export default function PaymentReturnScreen() {
 
   const appointmentId = payment?.appointment_id;
 
-  const handleContinuePayment = async () => {
-    if (payment?.redirect_url) {
-      await Linking.openURL(payment.redirect_url);
+  const handleContinuePayment = () => {
+    if (payment) {
+      setShowNativeModal(true);
     } else {
       Alert.alert('Không thể mở liên kết', 'Liên kết thanh toán không còn khả dụng hoặc đã hết hạn.');
     }
@@ -121,6 +123,19 @@ export default function PaymentReturnScreen() {
         onRecheckStatus={() => void check()}
         onContinuePayment={handleContinuePayment}
         onCancelHold={handleCancelHold}
+      />
+      <NativePaymentModal
+        visible={showNativeModal}
+        payment={payment}
+        onClose={() => setShowNativeModal(false)}
+        onPaymentSuccess={() => {
+          setShowNativeModal(false);
+          void check();
+        }}
+        onCancelHold={() => {
+          setShowNativeModal(false);
+          handleCancelHold();
+        }}
       />
     </SafeAreaView>
   );

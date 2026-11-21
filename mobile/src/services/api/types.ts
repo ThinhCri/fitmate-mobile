@@ -559,6 +559,12 @@ export interface PaymentWire {
   provider_txn_ref?: string | null;
   created_at: string;
   completed_at?: string | null;
+  qr_code?: string | null;
+  account_number?: string | null;
+  account_name?: string | null;
+  bin?: string | null;
+  description?: string | null;
+  order_code?: number | null;
 }
 
 export interface CreateRescheduleRequestBodyWire {

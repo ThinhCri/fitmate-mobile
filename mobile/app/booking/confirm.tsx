@@ -3,9 +3,10 @@ import { View, StyleSheet, Alert, Linking, ActivityIndicator, Text, TouchableOpa
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ConfirmHoldPresentation } from '../../src/features/booking/ConfirmHoldPresentation';
+import { NativePaymentModal } from '../../src/features/booking/NativePaymentModal';
 import { BookingHoldQuoteViewModel } from '../../src/features/booking/bookingTypes';
 import { bookingService } from '@/services/api/bookingService';
-import type { AppointmentWire } from '@/services/api/types';
+import type { AppointmentWire, PaymentWire } from '@/services/api/types';
 import { colors, spacing } from '@/theme/designTokens';
 
 export default function ConfirmBookingScreen() {
@@ -29,6 +30,8 @@ export default function ConfirmBookingScreen() {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [payment, setPayment] = useState<PaymentWire | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const expiryShown = useRef(false);
 
   useEffect(() => {
@@ -97,15 +100,12 @@ export default function ConfirmBookingScreen() {
       if (params.holdId) {
         const hold = await bookingService.getBookingHold(params.holdId);
         if (!hold.is_active) throw new Error('Giờ giữ chỗ đã hết hạn. Vui lòng chọn lại.');
-        const payment = await bookingService.createPayment({
+        const res = await bookingService.createPayment({
           hold_id: params.holdId,
           method: 'payos',
         });
-        router.replace({
-          pathname: '/booking/payment-return' as any,
-          params: { paymentId: payment.id, bookingCode: `BK-${payment.appointment_id.slice(0, 8).toUpperCase()}` },
-        });
-        if (payment.redirect_url) await Linking.openURL(payment.redirect_url);
+        setPayment(res);
+        setShowPaymentModal(true);
         return;
       }
       throw new Error('Thiếu mã giữ chỗ để tạo thanh toán.');
@@ -117,6 +117,39 @@ export default function ConfirmBookingScreen() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    if (payment) {
+      router.replace({
+        pathname: '/booking/payment-return' as any,
+        params: { paymentId: payment.id, bookingCode: `BK-${payment.appointment_id.slice(0, 8).toUpperCase()}` },
+      });
+    }
+  };
+
+  const handleCancelHoldAndClose = () => {
+    Alert.alert(
+      'Hủy giữ chỗ',
+      'Bạn có chắc chắn muốn hủy giữ chỗ và giải phóng khung giờ này không?',
+      [
+        { text: 'Không', style: 'cancel' },
+        {
+          text: 'Hủy giữ chỗ',
+          style: 'destructive',
+          onPress: async () => {
+            setShowPaymentModal(false);
+            if (params.appointmentId) {
+              try {
+                await bookingService.cancelMyBooking(params.appointmentId, 'Hủy giữ chỗ để chọn khung giờ khác');
+              } catch {}
+            }
+            router.back();
+          },
+        },
+      ]
+    );
   };
 
   const handlePay = () => {
@@ -164,6 +197,14 @@ export default function ConfirmBookingScreen() {
           );
         }}
       />}
+      <NativePaymentModal
+        visible={showPaymentModal}
+        payment={payment}
+        remainingSeconds={remainingSeconds}
+        onClose={() => setShowPaymentModal(false)}
+        onPaymentSuccess={handlePaymentSuccess}
+        onCancelHold={handleCancelHoldAndClose}
+      />
     </SafeAreaView>
   );
 }
