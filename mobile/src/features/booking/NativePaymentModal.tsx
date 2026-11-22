@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,49 @@ import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { bookingService } from '@/services/api/bookingService';
 import type { PaymentWire } from '@/services/api/types';
 
+function parseVietQrEmvco(qr?: string | null): { bin?: string; acc?: string } {
+  if (!qr) return {};
+  try {
+    let idx = 0;
+    const tags: Record<string, string> = {};
+    while (idx < qr.length - 4) {
+      const id = qr.slice(idx, idx + 2);
+      const len = parseInt(qr.slice(idx + 2, idx + 4), 10);
+      if (isNaN(len) || len <= 0 || idx + 4 + len > qr.length) break;
+      tags[id] = qr.slice(idx + 4, idx + 4 + len);
+      idx += 4 + len;
+    }
+    let acc: string | undefined;
+    let bin: string | undefined;
+    if (tags['38']) {
+      const t38 = tags['38'];
+      let i = 0;
+      while (i < t38.length - 4) {
+        const subId = t38.slice(i, i + 2);
+        const subLen = parseInt(t38.slice(i + 2, i + 4), 10);
+        if (isNaN(subLen) || subLen <= 0 || i + 4 + subLen > t38.length) break;
+        const subVal = t38.slice(i + 4, i + 4 + subLen);
+        if (subId === '01') {
+          let j = 0;
+          while (j < subVal.length - 4) {
+            const sId = subVal.slice(j, j + 2);
+            const sLen = parseInt(subVal.slice(j + 2, j + 4), 10);
+            if (isNaN(sLen) || sLen <= 0 || j + 4 + sLen > subVal.length) break;
+            const sVal = subVal.slice(j + 4, j + 4 + sLen);
+            if (sId === '00') bin = sVal;
+            if (sId === '01') acc = sVal;
+            j += 4 + sLen;
+          }
+        }
+        i += 4 + subLen;
+      }
+    }
+    return { bin, acc };
+  } catch {
+    return {};
+  }
+}
+
 export interface NativePaymentModalProps {
   visible: boolean;
   payment: PaymentWire | null;
@@ -52,8 +95,9 @@ export function NativePaymentModal({
   const [imageError, setImageError] = useState(false);
   const isPaidRef = useRef(false);
 
-  const bin = payment?.bin || '970422'; // Default MBBank
-  const acc = payment?.account_number || '';
+  const parsed = useMemo(() => parseVietQrEmvco(payment?.qr_code), [payment?.qr_code]);
+  const bin = payment?.bin || parsed.bin || '970422'; // Default MBBank
+  const acc = payment?.account_number || parsed.acc || '';
   const amount = payment?.amount_vnd || 0;
   const desc = payment?.description || 'FITMATE';
   const name = payment?.account_name || 'FITMATE';
@@ -181,12 +225,12 @@ export function NativePaymentModal({
         {/* QR Code Container */}
         <View style={styles.qrCard}>
           <View style={styles.qrWrapper}>
-            {!acc ? (
+            {!qrImageUrl ? (
               <View style={styles.qrErrorBox}>
                 <AlertCircle size={32} color={colors.warning} />
                 <Text style={styles.qrErrorTitle}>Chưa có mã QR trực tiếp</Text>
                 <Text style={styles.qrErrorSubtitle}>
-                  Chưa nhận được thông tin số tài khoản từ server. Bạn có thể mở cổng thanh toán PayOS để thanh toán ngay.
+                  Chưa nhận được thông tin mã QR từ server. Bạn có thể mở cổng thanh toán PayOS để thanh toán ngay.
                 </Text>
                 {payment?.redirect_url && (
                   <TouchableOpacity
@@ -239,7 +283,7 @@ export function NativePaymentModal({
             )}
           </View>
 
-          {!!acc && !imageError && (
+          {!!qrImageUrl && !imageError && (
             <>
               <View style={styles.qrActions}>
                 <TouchableOpacity
@@ -248,8 +292,19 @@ export function NativePaymentModal({
                   activeOpacity={0.7}
                 >
                   <Download size={14} color={colors.primary} />
-                  <Text style={styles.actionChipText}>Hướng dẫn lưu QR</Text>
+                  <Text style={styles.actionChipText}>Hướng dẫn quét QR</Text>
                 </TouchableOpacity>
+
+                {payment?.redirect_url && (
+                  <TouchableOpacity
+                    style={styles.actionChip}
+                    onPress={() => void Linking.openURL(payment.redirect_url!)}
+                    activeOpacity={0.7}
+                  >
+                    <ExternalLink size={14} color={colors.primary} />
+                    <Text style={styles.actionChipText}>Mở PayOS Web</Text>
+                  </TouchableOpacity>
+                )}
 
                 <TouchableOpacity
                   style={styles.actionChip}
@@ -276,7 +331,7 @@ export function NativePaymentModal({
           <View style={styles.infoRow}>
             <View style={styles.infoCol}>
               <Text style={styles.infoLabel}>Số tài khoản</Text>
-              <Text style={styles.infoValueBold}>{acc || '(Cần cập nhật server)'}</Text>
+              <Text style={styles.infoValueBold}>{acc || '(Xem trên mã QR / PayOS)'}</Text>
             </View>
             {!!acc && (
               <TouchableOpacity
