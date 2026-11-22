@@ -140,10 +140,13 @@ export default function ConfirmBookingScreen() {
           style: 'destructive',
           onPress: async () => {
             setShowPaymentModal(false);
-            if (params.appointmentId) {
+            const idToCancel = params.appointmentId || params.holdId;
+            if (idToCancel) {
               try {
-                await bookingService.cancelMyBooking(params.appointmentId, 'Hủy giữ chỗ để chọn khung giờ khác');
-              } catch {}
+                await bookingService.cancelMyBooking(idToCancel, 'Hủy giữ chỗ để chọn khung giờ khác');
+              } catch (e) {
+                console.warn('Failed to cancel booking hold:', e);
+              }
             }
             router.back();
           },
@@ -194,10 +197,13 @@ export default function ConfirmBookingScreen() {
                 text: 'Hủy giữ chỗ',
                 style: 'destructive',
                 onPress: async () => {
-                  if (params.appointmentId) {
+                  const idToCancel = params.appointmentId || params.holdId;
+                  if (idToCancel) {
                     try {
-                      await bookingService.cancelMyBooking(params.appointmentId, 'Hủy giữ chỗ để chọn khung giờ khác');
-                    } catch {}
+                      await bookingService.cancelMyBooking(idToCancel, 'Hủy giữ chỗ để chọn khung giờ khác');
+                    } catch (e) {
+                      console.warn('Failed to cancel booking hold:', e);
+                    }
                   }
                   router.back();
                 },

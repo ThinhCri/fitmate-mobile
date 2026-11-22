@@ -255,13 +255,14 @@ export default function SelectSlotScreen() {
                 activeHold.appointmentId,
                 'Hủy giữ chỗ để chọn khung giờ khác'
               );
-            } catch (e) {
-              console.warn('Server error on cancel unpaid hold:', e);
-            } finally {
               setActiveHold(null);
-              setHolding(false);
               Alert.alert('Thành công', 'Đã hủy giữ chỗ. Khung giờ đã được giải phóng để bạn chọn lại.');
               await fetchCoachData();
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : 'Không thể hủy giữ chỗ lúc này.';
+              Alert.alert('Lỗi hủy giữ chỗ', msg);
+            } finally {
+              setHolding(false);
             }
           },
         },
