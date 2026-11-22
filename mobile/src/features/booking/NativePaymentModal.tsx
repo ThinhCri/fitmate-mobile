@@ -60,8 +60,10 @@ export function NativePaymentModal({
 
   const qrImageUrl = payment?.qr_code?.startsWith('http')
     ? payment.qr_code
+    : payment?.qr_code
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(payment.qr_code)}`
     : acc
-    ? `https://img.vietqr.io/image/${bin}-${acc}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(desc)}&accountName=${encodeURIComponent(name)}`
+    ? `https://qr.sepay.vn/img?bank=MBBank&acc=${acc}&amount=${amount}&des=${encodeURIComponent(desc)}`
     : '';
 
   useEffect(() => {
