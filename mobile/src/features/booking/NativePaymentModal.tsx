@@ -119,32 +119,20 @@ export function NativePaymentModal({
     }
   };
 
-  const handleSaveQR = async () => {
-    if (!qrImageUrl) {
-      if (payment?.redirect_url) {
-        void Linking.openURL(payment.redirect_url);
-      } else {
-        Alert.alert('Thông báo', 'Chưa có ảnh mã QR để lưu.');
-      }
-      return;
-    }
-    try {
-      const fileUri = `${FileSystem.cacheDirectory}fitmate_vietqr_${Date.now()}.png`;
-      const downloadRes = await FileSystem.downloadAsync(qrImageUrl, fileUri);
-      if (downloadRes.status === 200) {
-        await Share.share({
-          url: downloadRes.uri,
-          message: `Mã thanh toán Fitmate: ${amount.toLocaleString('vi-VN')} đ cho buổi tập.`,
-        });
-      } else {
-        await Share.share({
-          url: qrImageUrl,
-          message: `Mã thanh toán Fitmate: ${amount.toLocaleString('vi-VN')} đ.`,
-        });
-      }
-    } catch {
-      Alert.alert('Chia sẻ mã QR', 'Bạn có thể chụp màn hình mã QR này để quét trên app ngân hàng.');
-    }
+  const handleSaveQR = () => {
+    Alert.alert(
+      'Lưu mã VietQR để quét',
+      'Cách tiện lợi nhất: Bạn hãy chụp ảnh màn hình mã QR này, sau đó mở ứng dụng ngân hàng của bạn và chọn "Quét QR từ ảnh trong thư viện" để chuyển khoản ngay tức thì!',
+      [
+        { text: 'Đã hiểu' },
+        {
+          text: 'Mở trang PayOS',
+          onPress: () => {
+            if (payment?.redirect_url) void Linking.openURL(payment.redirect_url);
+          },
+        },
+      ]
+    );
   };
 
   const handleOpenBankApp = () => {
@@ -252,25 +240,31 @@ export function NativePaymentModal({
           </View>
 
           {!!acc && !imageError && (
-            <View style={styles.qrActions}>
-              <TouchableOpacity
-                style={styles.actionChip}
-                onPress={handleSaveQR}
-                activeOpacity={0.7}
-              >
-                <Download size={14} color={colors.primary} />
-                <Text style={styles.actionChipText}>Lưu mã QR</Text>
-              </TouchableOpacity>
+            <>
+              <View style={styles.qrActions}>
+                <TouchableOpacity
+                  style={styles.actionChip}
+                  onPress={handleSaveQR}
+                  activeOpacity={0.7}
+                >
+                  <Download size={14} color={colors.primary} />
+                  <Text style={styles.actionChipText}>Hướng dẫn lưu QR</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.actionChip}
-                onPress={handleOpenBankApp}
-                activeOpacity={0.7}
-              >
-                <Building2 size={14} color={colors.primary} />
-                <Text style={styles.actionChipText}>Mở App Ngân hàng</Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity
+                  style={styles.actionChip}
+                  onPress={handleOpenBankApp}
+                  activeOpacity={0.7}
+                >
+                  <Building2 size={14} color={colors.primary} />
+                  <Text style={styles.actionChipText}>Mở App Ngân hàng</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.qrTipText}>
+                💡 Mẹo: Chụp màn hình mã QR này để quét từ Thư viện ảnh trên App ngân hàng.
+              </Text>
+            </>
           )}
         </View>
 
@@ -546,6 +540,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.primary,
+  },
+  qrTipText: {
+    ...typography.caption,
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: spacing.sm,
+    lineHeight: 15,
   },
   infoCard: {
     backgroundColor: colors.surface,
