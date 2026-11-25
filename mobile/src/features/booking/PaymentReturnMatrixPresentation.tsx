@@ -17,6 +17,7 @@ export interface PaymentReturnMatrixPresentationProps {
   errorMessage?: string;
   redirectUrl?: string | null;
   onViewAppointment: () => void;
+  onBackToPt?: () => void;
   onRetryOrChooseAgain: () => void;
   onContactSupport?: () => void;
   onRecheckStatus?: () => void;
@@ -34,6 +35,7 @@ export function PaymentReturnMatrixPresentation({
   errorMessage,
   redirectUrl,
   onViewAppointment,
+  onBackToPt,
   onRetryOrChooseAgain,
   onContactSupport,
   onRecheckStatus,
@@ -133,6 +135,9 @@ export function PaymentReturnMatrixPresentation({
 
           <View style={styles.actionGroup}>
             <PrimaryButton label="Xem chi tiết lịch hẹn" onPress={onViewAppointment} />
+            {onBackToPt && (
+              <SecondaryButton label="Quay lại hồ sơ HLV" onPress={onBackToPt} />
+            )}
           </View>
         </Card>
       )}

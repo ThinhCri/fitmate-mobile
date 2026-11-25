@@ -216,7 +216,17 @@ export default function ConfirmBookingScreen() {
         visible={showPaymentModal}
         payment={payment}
         remainingSeconds={remainingSeconds}
-        onClose={() => setShowPaymentModal(false)}
+        onClose={async () => {
+          setShowPaymentModal(false);
+          if (payment?.id) {
+            try {
+              const res = await bookingService.getMyPayment(payment.id);
+              if (res.status === 'Paid') {
+                handlePaymentSuccess();
+              }
+            } catch {}
+          }
+        }}
         onPaymentSuccess={handlePaymentSuccess}
         onCancelHold={handleCancelHoldAndClose}
       />

@@ -12,7 +12,7 @@ import {
   Briefcase,
   Clock,
   MessageSquare,
-  Lock,
+  CalendarCheck,
 } from 'lucide-react-native';
 import { colors, radius, shadow, spacing, typography } from '@/theme/designTokens';
 import { TrainerDetailViewModel } from '@/services/api/types';
@@ -38,6 +38,12 @@ export interface TrainerDetailPresentationProps {
   chatEnabled?: boolean;
   onBookPress?: () => void;
   onChatPress?: () => void;
+  activeBooking?: {
+    appointmentId: string;
+    slotStartUtc: string;
+    status: string;
+  } | null;
+  onViewBooking?: (appointmentId: string) => void;
 }
 
 export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps> = ({
@@ -52,6 +58,8 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
   chatEnabled = false,
   onBookPress,
   onChatPress,
+  activeBooking,
+  onViewBooking,
 }) => {
   if (isNotFound) {
     return (
@@ -232,12 +240,7 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
           </View>
         ) : null}
 
-        <View style={styles.capabilityNotice}>
-          <Lock size={16} color={colors.textMuted} />
-          <Text style={[typography.caption, styles.capabilityNoticeText]}>
-            Tính năng Đặt lịch và Nhắn tin trực tiếp với PT sẽ được kích hoạt ở giai đoạn tích hợp MOB-801.
-          </Text>
-        </View>
+        
       </ScrollView>
 
       <View style={[styles.bottomBar, shadow.floating]}>
@@ -442,17 +445,43 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     lineHeight: 20,
   },
-  capabilityNotice: {
+  activeBookingCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.md,
+    backgroundColor: '#E6F7F0',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    gap: spacing.md,
   },
-  capabilityNoticeText: {
-    color: colors.textMuted,
-    textAlign: 'center',
+  activeBookingIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeBookingContent: {
+    flex: 1,
+  },
+  activeBookingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  activeBookingTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#065F46',
+  },
+  activeBookingTime: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0F172A',
+    marginTop: 2,
   },
   bottomBar: {
     position: 'absolute',

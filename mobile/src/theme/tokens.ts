@@ -27,11 +27,11 @@ export const lightPalette = {
   outline: '#46514F',            // hairline / focus ring
   outlineVariant: '#7C8784',     // card subtle border 1dp
 
-  // Primary (Cyber Coral — sole CTA color, Apple Fitness+ style)
-  primary: '#F43F5E',
+  // Primary (Forest Teal — sole CTA color in Light mode)
+  primary: '#0F766E',
   onPrimary: '#FFFFFF',
-  primaryContainer: '#FFE4E6',
-  onPrimaryContainer: '#881337',
+  primaryContainer: '#D5EFEB',
+  onPrimaryContainer: '#042F2E',
 
   // Secondary (warm sienna — restrained, streak warm accent)
   secondary: '#7C2D12',
@@ -62,17 +62,17 @@ export const lightPalette = {
   inverseSurface: '#0F1A19',
   inverseOnSurface: '#F5F8F8',
 
-  // Homepage gradient stops (subtle rose coral tint).
-  gradientMintStart: '#FFE4E6',
+  // Homepage gradient stops (subtle mint teal tint).
+  gradientMintStart: '#D5EFEB',
   gradientMintEnd: '#F5F8F8',
-  gradientTealHaze: '#FECDD3',
+  gradientTealHaze: '#CCFBF1',
 
   // Glass tint cho floating tab bar + hero card.
   glassSurface: '#FFFFFF',       // glass tint base (mặc định)
   glassSurfaceAlt: '#F5F8F8',    // glass tint khi nền có gradient
 
   // Watermark ink (low-opacity logo/text). Rất nhẹ, phải < 8% alpha.
-  watermarkInk: '#F43F5E',       // same as primary — opacity controlled at usage
+  watermarkInk: '#0F766E',       // same as primary — opacity controlled at usage
 } as const;
 
 export const darkPalette = {

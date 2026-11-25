@@ -8,9 +8,9 @@ import { palette, lightPalette, darkPalette, tokens } from './tokens';
 export type ThemeMode = 'light' | 'dark';
 
 export const lightColors = {
-  primary: '#F43F5E',
-  primaryDark: '#E11D48',
-  primaryLight: '#FFE4E6',
+  primary: '#0F766E',
+  primaryDark: '#0A5F59',
+  primaryLight: '#D5EFEB',
   secondary: '#3B82F6',
   secondaryLight: '#EFF6FF',
   background: '#F8FAFC',
@@ -215,7 +215,7 @@ export function applyThemeToStyleSheets(targetMode: ThemeMode) {
               if (lower === '#090d16') rule[prop] = '#F8FAFC';
               else if (lower === '#111827') rule[prop] = '#FFFFFF';
               else if (lower === '#1e293b') rule[prop] = '#F1F5F9';
-              else if (lower === '#2d1520') rule[prop] = '#FFE4E6';
+              else if (lower === '#2d1520' || lower === '#ffe4e6') rule[prop] = '#D5EFEB';
               else if (lower === '#3b1818') rule[prop] = '#FEE2E2';
               else if (lower === '#332308') rule[prop] = '#FEF3C7';
               else if (lower === '#0b2b20') rule[prop] = '#E6F7F0';
@@ -224,9 +224,13 @@ export function applyThemeToStyleSheets(targetMode: ThemeMode) {
               if (lower === '#f8fafc') rule[prop] = '#0F172A';
               else if (lower === '#94a3b8') rule[prop] = '#475569';
               else if (lower === '#64748b') rule[prop] = '#94A3B8';
+              else if (lower === '#f43f5e') rule[prop] = '#0F766E';
+              else if (lower === '#e11d48') rule[prop] = '#0A5F59';
             } else if (prop.toLowerCase().includes('border') || prop.toLowerCase().includes('color')) {
               if (lower === '#1f293d') rule[prop] = '#E2E8F0';
               else if (lower === '#182234') rule[prop] = '#F1F5F9';
+              else if (lower === '#f43f5e') rule[prop] = '#0F766E';
+              else if (lower === '#e11d48') rule[prop] = '#0A5F59';
             }
           }
         }

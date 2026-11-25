@@ -206,6 +206,11 @@ export default function SelectSlotScreen() {
 
   useEffect(() => {
     fetchCoachData();
+    // Tự động làm mới danh sách ca rảnh mỗi 10 giây để phản ánh realtime các ca vừa có người giữ/đặt
+    const timer = setInterval(() => {
+      fetchCoachData();
+    }, 10000);
+    return () => clearInterval(timer);
   }, [fetchCoachData]);
 
   const handleContinueHold = () => {
@@ -310,12 +315,17 @@ export default function SelectSlotScreen() {
         },
       });
     } catch (err) {
-      Alert.alert(
-        'Không thể giữ chỗ',
-        err instanceof Error
-          ? err.message
-          : 'Khung giờ này vừa có người giữ hoặc đặt. Vui lòng chọn khung giờ khác.'
-      );
+      const rawMsg = err instanceof Error ? err.message : '';
+      const friendlyMsg =
+        rawMsg.includes('no longer available') ||
+        rawMsg.includes('SlotTaken') ||
+        rawMsg.includes('giữ chỗ') ||
+        rawMsg.includes('người đặt') ||
+        rawMsg.includes('overlap')
+          ? 'Khung giờ này vừa có người đặt hoặc đang được giữ chỗ. Vui lòng chọn khung giờ khác.'
+          : rawMsg || 'Khung giờ này vừa có người đặt hoặc đang được giữ chỗ. Vui lòng chọn khung giờ khác.';
+      Alert.alert('Không thể giữ chỗ', friendlyMsg);
+      await fetchCoachData();
     } finally {
       setHolding(false);
     }

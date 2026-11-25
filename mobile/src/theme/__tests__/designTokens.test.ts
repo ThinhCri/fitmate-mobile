@@ -4,9 +4,9 @@ import { colors, spacing, radius, typography, setAppTheme } from '../designToken
 describe('Design Tokens Foundation', () => {
   it('defines all required semantic colors with Light mode as default', () => {
     setAppTheme('light');
-    expect(colors.primary).toBe('#F43F5E');
-    expect(colors.primaryDark).toBe('#E11D48');
-    expect(colors.primaryLight).toBe('#FFE4E6');
+    expect(colors.primary).toBe('#0F766E');
+    expect(colors.primaryDark).toBe('#0A5F59');
+    expect(colors.primaryLight).toBe('#D5EFEB');
     expect(colors.success).toBe('#10B981');
     expect(colors.background).toBe('#F8FAFC');
     expect(colors.surface).toBe('#FFFFFF');
@@ -26,7 +26,7 @@ describe('Design Tokens Foundation', () => {
     expect(colors.background).toBe('#F8FAFC');
     expect(colors.surface).toBe('#FFFFFF');
     expect(colors.textPrimary).toBe('#0F172A');
-    expect(colors.primaryLight).toBe('#FFE4E6');
+    expect(colors.primaryLight).toBe('#D5EFEB');
   });
 
   it('defines spacing scale complying with 4dp/8dp grid', () => {

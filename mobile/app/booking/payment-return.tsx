@@ -20,6 +20,7 @@ export default function PaymentReturnScreen() {
   }>();
 
   const [payment, setPayment] = useState<PaymentWire | null>(null);
+  const [appointmentDetail, setAppointmentDetail] = useState<any | null>(null);
   const [showNativeModal, setShowNativeModal] = useState(false);
   const [status, setStatus] = useState<PaymentReturnStatus>(
     params.cancel === 'true' ? 'canceled' : 'verifying'
@@ -43,6 +44,9 @@ export default function PaymentReturnScreen() {
       setPayment(result);
       if (result.status === 'Paid') {
         setStatus('success');
+        if (result.appointment_id) {
+          bookingService.getMyBookingDetail(result.appointment_id).then(setAppointmentDetail).catch(() => {});
+        }
       } else if (result.status === 'Failed') {
         setStatus('failed');
       } else if (result.status === 'Refunded' || result.status === 'PartialRefunded') {
@@ -106,6 +110,13 @@ export default function PaymentReturnScreen() {
         status={status}
         bookingCode={params.bookingCode || appointmentId || '—'}
         amountVnd={payment?.amount_vnd ?? 0}
+        scheduledTime={
+          appointmentDetail?.slot_start_utc
+            ? `${new Date(appointmentDetail.slot_start_utc).toLocaleDateString('vi-VN')} lúc ${new Date(
+                appointmentDetail.slot_start_utc
+              ).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`
+            : undefined
+        }
         errorMessage={error}
         redirectUrl={payment?.redirect_url}
         onViewAppointment={() =>
@@ -113,6 +124,13 @@ export default function PaymentReturnScreen() {
             ? router.replace(`/booking/${appointmentId}` as never)
             : router.replace('/booking' as never)
         }
+        onBackToPt={() => {
+          if (appointmentDetail?.pt_user_id) {
+            router.replace(`/trainer/${appointmentDetail.pt_user_id}?justBooked=true` as never);
+          } else {
+            router.replace('/(tabs)/marketplace' as never);
+          }
+        }}
         onRetryOrChooseAgain={() => router.replace('/(tabs)/marketplace' as never)}
         onContactSupport={() =>
           router.push({
