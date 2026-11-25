@@ -20,7 +20,7 @@ const background = `<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-  <path android:fillColor="#0F766E" android:pathData="M0,0 H108 V108 H0 Z" />
+  <path android:fillColor="#000000" android:pathData="M0,0 H108 V108 H0 Z" />
 </vector>
 `;
 const adaptive = `<?xml version="1.0" encoding="utf-8"?>
@@ -31,8 +31,8 @@ const adaptive = `<?xml version="1.0" encoding="utf-8"?>
 </adaptive-icon>
 `;
 const resources = {
-  'drawable/fitmate_adaptive_foreground.xml': foreground,
   'drawable/fitmate_adaptive_background.xml': background,
+  'drawable/fitmate_adaptive_foreground.xml': foreground,
   'mipmap-anydpi-v26/ic_launcher.xml': adaptive,
   'mipmap-anydpi-v26/ic_launcher_round.xml': adaptive,
 };
