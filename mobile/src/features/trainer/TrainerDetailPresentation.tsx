@@ -10,8 +10,8 @@ import {
 import {
   Star,
   ShieldCheck,
-  Briefcase,
-  Clock,
+  Award,
+  Quote,
   MessageSquare,
   CalendarCheck,
 } from 'lucide-react-native';
@@ -19,6 +19,7 @@ import { colors, radius, shadow, spacing, typography } from '@/theme/designToken
 import { TrainerDetailViewModel } from '@/services/api/types';
 import { Badge } from '@/components/design-system/BadgesAndChips';
 import { SectionHeader } from '@/components/design-system/SectionHeader';
+import { PtServicePackageCard } from './PtServicePackageCard';
 import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
 import {
   ErrorState,
@@ -147,23 +148,61 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
             </View>
           </View>
 
-          <View style={styles.specialtiesWrapper}>
-            {trainer.specialties.map((spec, idx) => (
-              <Badge
-                key={spec + '-' + idx}
-                label={spec}
-                tone="neutral"
-                style={styles.specialtyBadge}
-              />
-            ))}
+          <View style={styles.quickStatsRow}>
+            <View style={[styles.quickStatBox, styles.statRating]}>
+              <Text style={styles.statLabelRating}>Đánh giá</Text>
+              <Text style={styles.statValueRating}>★ {trainer.rating.toFixed(1)}</Text>
+              <Text style={styles.statSubRating}>{trainer.reviewCount} lượt</Text>
+            </View>
+            <View style={[styles.quickStatBox, styles.statExp]}>
+              <Text style={styles.statLabelExp}>Kinh nghiệm</Text>
+              <Text style={styles.statValueExp}>
+                {trainer.experienceYears === null ? '—' : `${trainer.experienceYears} năm`}
+              </Text>
+              <Text style={styles.statSubExp}>{trainer.isVerified ? 'Đã xác minh' : 'Huấn luyện viên'}</Text>
+            </View>
+            <View style={[styles.quickStatBox, styles.statPrice]}>
+              <Text style={styles.statLabelPrice}>Từ mỗi buổi</Text>
+              <Text style={styles.statValuePrice} numberOfLines={1}>
+                {trainer.sessionPriceVnd === null
+                  ? 'Liên hệ'
+                  : `${trainer.sessionPriceVnd.toLocaleString('vi-VN')}₫`}
+              </Text>
+              <Text style={styles.statSubPrice}>{trainer.services?.length || 0} gói tập</Text>
+            </View>
           </View>
+
+          {trainer.specialties.length > 0 && (
+            <View style={styles.specialtiesWrapper}>
+              {trainer.specialties.map((spec, idx) => (
+                <Badge
+                  key={spec + '-' + idx}
+                  label={spec}
+                  tone="info"
+                  style={styles.specialtyBadge}
+                />
+              ))}
+            </View>
+          )}
         </View>
 
         {trainer.bio ? (
           <View style={styles.sectionMargin}>
-            <SectionHeader title="Giới thiệu bản thân" />
-            <View style={[styles.card, shadow.card]}>
-              <Text style={[typography.body, styles.bioText]}>{trainer.bio}</Text>
+            <SectionHeader title="Giới thiệu huấn luyện viên" />
+            <View style={[styles.bioCard, shadow.card]}>
+              <View style={styles.bioHeaderRow}>
+                <View style={styles.bioBadge}>
+                  <Quote size={13} color="#0F766E" />
+                  <Text style={styles.bioBadgeText}>Phong cách & Kinh nghiệm</Text>
+                </View>
+                {trainer.isVerified && (
+                  <View style={styles.bioVerifiedPill}>
+                    <Award size={12} color="#1D4ED8" />
+                    <Text style={styles.bioVerifiedText}>HLV Fitmate</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.bioText}>{trainer.bio}</Text>
             </View>
           </View>
         ) : null}
@@ -172,41 +211,7 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
           <View style={styles.sectionMargin}>
             <SectionHeader title="Các gói & Dịch vụ huấn luyện" />
             {trainer.services.map((srv) => (
-              <View key={srv.id} style={[styles.serviceCard, shadow.card]}>
-                <View style={styles.serviceHeader}>
-                  <View style={styles.serviceTitleRow}>
-                    <Briefcase size={18} color={colors.primary} />
-                    <Text style={[typography.bodyBold, styles.serviceTitle]}>
-                      {srv.name}
-                    </Text>
-                  </View>
-                  <Text style={[typography.bodyBold, styles.servicePrice]}>
-                    {new Intl.NumberFormat('vi-VN', {
-                      style: 'currency',
-                      currency: 'VND',
-                      maximumFractionDigits: 0,
-                    }).format(srv.priceVnd)}
-                  </Text>
-                </View>
-                {srv.description ? (
-                  <Text style={[typography.body, styles.serviceDesc]}>
-                    {srv.description}
-                  </Text>
-                ) : null}
-                <Text style={[typography.caption, styles.serviceMetaText]}>
-                  {srv.serviceKind === 'assessment_and_plan' ? 'Buổi đánh giá & bàn giao kế hoạch' : 'Buổi tập 1–1'} · {srv.deliveryMode === 'online' ? 'Online' : 'Trực tiếp'}
-                </Text>
-                {!!srv.targetAudience && <Text style={[typography.caption, styles.serviceMetaText]}>Phù hợp: {srv.targetAudience}</Text>}
-                {!!srv.requiredEquipment && <Text style={[typography.caption, styles.serviceMetaText]}>Chuẩn bị: {srv.requiredEquipment}</Text>}
-                {!!srv.deliverable && <Text style={[typography.caption, styles.serviceMetaText]}>Bạn nhận được: {srv.deliverable}</Text>}
-                {!!srv.locationName && <Text style={[typography.caption, styles.serviceMetaText]}>Địa điểm: {srv.locationName}, {srv.locationAddress}</Text>}
-                <View style={styles.serviceMetaRow}>
-                  <Clock size={14} color={colors.textSecondary} />
-                  <Text style={[typography.caption, styles.serviceMetaText]}>
-                    Thời lượng: {srv.durationMinutes} phút/buổi
-                  </Text>
-                </View>
-              </View>
+              <PtServicePackageCard key={srv.id} service={srv} />
             ))}
           </View>
         ) : null}
@@ -424,9 +429,83 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  quickStatsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+  },
+  quickStatBox: {
+    flex: 1,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    gap: 2,
+  },
+  statRating: { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' },
+  statLabelRating: { fontSize: 11, fontWeight: '700', color: '#B45309' },
+  statValueRating: { fontSize: 15, fontWeight: '800', color: '#92400E' },
+  statSubRating: { fontSize: 11, color: '#D97706', fontWeight: '500' },
+
+  statExp: { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' },
+  statLabelExp: { fontSize: 11, fontWeight: '700', color: '#047857' },
+  statValueExp: { fontSize: 15, fontWeight: '800', color: '#065F46' },
+  statSubExp: { fontSize: 11, color: '#059669', fontWeight: '500' },
+
+  statPrice: { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' },
+  statLabelPrice: { fontSize: 11, fontWeight: '700', color: '#1D4ED8' },
+  statValuePrice: { fontSize: 15, fontWeight: '800', color: '#1E40AF' },
+  statSubPrice: { fontSize: 11, color: '#2563EB', fontWeight: '500' },
+
+  bioCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+    gap: spacing.sm,
+  },
+  bioHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  bioBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#CCFBF1',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+  },
+  bioBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0F766E',
+  },
+  bioVerifiedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+  },
+  bioVerifiedText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1D4ED8',
+  },
   bioText: {
-    color: colors.textSecondary,
-    lineHeight: 22,
+    fontSize: 14.5,
+    color: '#1E293B',
+    lineHeight: 23,
+    fontWeight: '400',
   },
   serviceCard: {
     backgroundColor: colors.surface,

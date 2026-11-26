@@ -1,10 +1,11 @@
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Clock, MapPin, Star, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react-native';
+import { Clock, Star, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
 import { PrimaryButton } from '@/components/design-system/Buttons';
+import { PtServicePackageCard } from '../trainer/PtServicePackageCard';
 import {
   CoachSummaryViewModel,
   BookingServiceViewModel,
@@ -268,49 +269,15 @@ export function SelectServiceSlotPresentation({
           </View>
 
           <View style={styles.servicesList}>
-            {services.map((srv) => {
-              const isSelected = srv.id === selectedServiceId;
-              return (
-                <TouchableOpacity
-                  key={srv.id}
-                  onPress={() => setSelectedServiceId(srv.id)}
-                  activeOpacity={0.8}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: isSelected }}
-                  accessibilityLabel={`Chọn gói ${srv.name}, giá ${srv.priceVnd.toLocaleString('vi-VN')} đồng`}
-                >
-                  <Card style={[styles.serviceCard, isSelected && styles.serviceCardSelected]}>
-                    <View style={styles.serviceTopRow}>
-                      <View style={styles.serviceTitleCol}>
-                        <Text style={styles.serviceName}>{srv.name}</Text>
-                        <View style={styles.serviceDurationRow}>
-                          <Clock size={13} color={colors.textSecondary} />
-                          <Text style={styles.serviceDuration}>{srv.durationMinutes} phút / buổi</Text>
-                        </View>
-                      </View>
-                      <View style={styles.servicePriceCol}>
-                        <Text style={styles.servicePrice}>
-                          {srv.priceVnd.toLocaleString('vi-VN')} ₫
-                        </Text>
-                        <Text style={styles.perSessionText}>/ buổi</Text>
-                      </View>
-                    </View>
-
-                    <Text style={styles.serviceDesc}>{srv.description}</Text>
-                    {!!srv.targetAudience && <Text style={styles.serviceDesc}>Phù hợp: {srv.targetAudience}</Text>}
-                    {!!srv.requiredEquipment && <Text style={styles.serviceDesc}>Chuẩn bị: {srv.requiredEquipment}</Text>}
-                    {!!srv.deliverable && <Text style={styles.serviceDesc}>Bạn nhận được: {srv.deliverable}</Text>}
-
-                    <View style={styles.serviceLocRow}>
-                      <MapPin size={14} color={colors.primary} />
-                      <Text style={styles.serviceLocText} numberOfLines={1}>
-                        {srv.deliveryMode === 'online' ? 'Online qua Google Meet' : srv.locationName}
-                      </Text>
-                    </View>
-                  </Card>
-                </TouchableOpacity>
-              );
-            })}
+            {services.map((srv) => (
+              <PtServicePackageCard
+                key={srv.id}
+                service={srv}
+                selectable
+                selected={srv.id === selectedServiceId}
+                onPress={() => setSelectedServiceId(srv.id)}
+              />
+            ))}
           </View>
         </View>
 
