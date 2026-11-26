@@ -8,6 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import {
   ArrowLeft,
@@ -45,6 +46,7 @@ export interface CertificatesPresentationProps {
   phoneVerified?: boolean;
   contactPhone?: string | null;
   onVerifyPhone?: () => void;
+  avatarUrl?: string | null;
 }
 
 export function CertificatesPresentation({
@@ -59,6 +61,7 @@ export function CertificatesPresentation({
   phoneVerified,
   contactPhone,
   onVerifyPhone,
+  avatarUrl,
 }: CertificatesPresentationProps) {
   // Form state for adding new certificate
   const [title, setTitle] = useState('');
@@ -194,7 +197,7 @@ export function CertificatesPresentation({
         </Pressable>
         <Text style={styles.headerTitle}>Chứng Chỉ Của Tôi</Text>
         <View style={styles.headerAvatar}>
-          <UserIcon size={18} color={colors.white} />
+          {avatarUrl ? <Image source={{ uri: avatarUrl }} style={styles.headerAvatarImage} /> : <UserIcon size={18} color={colors.white} />}
         </View>
       </View>
 
@@ -464,6 +467,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerAvatarImage: { width: 32, height: 32, borderRadius: radius.full },
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: 48,

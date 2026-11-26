@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Calendar, Clock, MapPin, ChevronRight, Inbox } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { Card } from '@/components/design-system/Card';
@@ -130,7 +130,11 @@ export function MyAppointmentsPresentation({
               <Card style={styles.card}>
                 <View style={styles.cardTopRow}>
                   <View style={styles.coachAvatar}>
-                    <Text style={styles.coachInitial}>{item.coach.name.charAt(0)}</Text>
+                    {item.coach.avatarUrl ? (
+                      <Image source={{ uri: item.coach.avatarUrl }} style={styles.coachAvatarImage} />
+                    ) : (
+                      <Text style={styles.coachInitial}>{item.coach.name.charAt(0)}</Text>
+                    )}
                   </View>
                   <View style={styles.cardHeaderInfo}>
                     <Text style={styles.coachName}>{item.coach.name}</Text>
@@ -257,6 +261,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  coachAvatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   coachInitial: {
     fontSize: 16,

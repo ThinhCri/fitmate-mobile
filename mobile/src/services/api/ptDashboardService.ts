@@ -3,6 +3,7 @@ import { authService } from './authService';
 import { bookingService } from './bookingService';
 import { getTrainerRepository } from '@/repositories/trainerRepository';
 import { ptService } from './ptService';
+import { resolveOptionalApiResourceUrl } from './resourceUrl';
 import { ApiError } from './client';
 import type { PtRevenueBookingItemViewModel } from '@/features/pt/PtRevenuePresentation';
 import { mapSettlementStatus } from './settlementStatus';
@@ -30,7 +31,7 @@ export const ptDashboardService = {
     if (pending.total > 0) pendingTasks.push({ id: 'pending-bookings', title: `${pending.total} lịch hẹn chờ phản hồi`, type: 'warning', linkTarget: '/pt/sessions?status=Pending' });
     if (!services.some((service) => service.is_active)) pendingTasks.push({ id: 'services', title: 'Chưa có dịch vụ đang mở — quản lý dịch vụ', type: 'info', linkTarget: '/pt/profile-services' });
     const certificate = certificates.items.find((item) => item.status === 'approved');
-    return { ptName: me.full_name, isVerified: publicProfile?.isVerified === true, certificateName: certificate?.title || (publicProfile?.isVerified ? 'Hồ sơ PT đã được xác minh' : 'Chưa xác nhận được trạng thái kiểm định'), rating: publicProfile?.rating ?? null, reviewCount: publicProfile?.reviewCount ?? null, isAcceptingClients: services.some((service) => service.is_active), pendingTasks, upcomingSessions: upcoming };
+    return { ptName: me.full_name, avatarUrl: resolveOptionalApiResourceUrl(publicProfile?.avatarUrl ?? me.avatar_url), isVerified: publicProfile?.isVerified === true, certificateName: certificate?.title || (publicProfile?.isVerified ? 'Hồ sơ PT đã được xác minh' : 'Chưa xác nhận được trạng thái kiểm định'), rating: publicProfile?.rating ?? null, reviewCount: publicProfile?.reviewCount ?? null, isAcceptingClients: services.some((service) => service.is_active), pendingTasks, upcomingSessions: upcoming };
   },
   async getRevenue(range = '30d', page = 1) {
     const [overview, history] = await Promise.all([

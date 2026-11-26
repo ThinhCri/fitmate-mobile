@@ -125,11 +125,13 @@ export function mapAppointmentWireToViewModel(
 }
 
 export class ApiBookingRepository implements IBookingRepository {
-  private coachCache = new Map<string, CoachSummaryViewModel>();
+  private static readonly COACH_CACHE_TTL_MS = 15_000;
+  private coachCache = new Map<string, { summary: CoachSummaryViewModel; expiresAt: number }>();
 
   private async getCoachSummary(ptId: string): Promise<CoachSummaryViewModel> {
-    if (this.coachCache.has(ptId)) {
-      return this.coachCache.get(ptId)!;
+    const cached = this.coachCache.get(ptId);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.summary;
     }
     try {
       const raw = await trainersService.getTrainer(ptId);
@@ -144,7 +146,7 @@ export class ApiBookingRepository implements IBookingRepository {
         avatarUrl: detail.avatarUrl ?? undefined,
         isVerified: detail.isVerified,
       };
-      this.coachCache.set(ptId, summary);
+      this.coachCache.set(ptId, { summary, expiresAt: Date.now() + ApiBookingRepository.COACH_CACHE_TTL_MS });
       return summary;
     } catch {
       const fallback: CoachSummaryViewModel = {

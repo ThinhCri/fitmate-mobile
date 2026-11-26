@@ -6,7 +6,7 @@ import { PtOverviewPresentation, PtOverviewPresentationProps } from '@/features/
 import { ptDashboardService } from '@/services/api/ptDashboardService';
 import { useAuth } from '@/services/AuthContext';
 
-type Overview = Pick<PtOverviewPresentationProps, 'ptName' | 'isVerified' | 'certificateName' | 'rating' | 'reviewCount' | 'isAcceptingClients' | 'pendingTasks' | 'upcomingSessions'>;
+type Overview = Pick<PtOverviewPresentationProps, 'ptName' | 'avatarUrl' | 'isVerified' | 'certificateName' | 'rating' | 'reviewCount' | 'isAcceptingClients' | 'pendingTasks' | 'upcomingSessions'>;
 export default function PtOverviewScreen() {
   const router = useRouter(); const [data, setData] = useState<Overview | null>(null); const [error, setError] = useState('');
   const { user, loading } = useAuth();
@@ -24,6 +24,6 @@ export default function PtOverviewScreen() {
     return () => { active = false; };
   }, [loading, router, user, attempt]));
   if (!data) return <View style={[styles.container, styles.center]}>{error ? <><Text style={styles.error}>{error}</Text><TouchableOpacity accessibilityRole="button" style={{ minHeight: 48, justifyContent: 'center' }} onPress={() => setAttempt((value) => value + 1)}><Text>Thử lại</Text></TouchableOpacity></> : <ActivityIndicator />}</View>;
-  return <View style={styles.container}><PtOverviewPresentation {...data} onToggleStatus={() => router.push('/pt/profile-services' as never)} onSelectTask={(target) => router.push(target as never)} onNavigateToServices={() => router.push('/pt/profile-services' as never)} onNavigateToSchedule={() => router.push('/pt/schedule' as never)} onNavigateToCertificates={() => router.push('/pt/certificates' as never)} onNavigateToSessions={() => router.push('/pt/sessions' as never)} onNavigateToRevenue={() => router.push('/pt/revenue' as never)} onNavigateToPackages={() => router.push('/pt/packages' as never)} onSelectSession={(id) => router.push(`/pt/session/${id}` as never)} /></View>;
+  return <View style={styles.container}><PtOverviewPresentation {...data} avatarUrl={data.avatarUrl ?? user?.profile?.avatar ?? null} onToggleStatus={() => router.push('/pt/profile-services' as never)} onSelectTask={(target) => router.push(target as never)} onNavigateToServices={() => router.push('/pt/profile-services' as never)} onNavigateToSchedule={() => router.push('/pt/schedule' as never)} onNavigateToCertificates={() => router.push('/pt/certificates' as never)} onNavigateToSessions={() => router.push('/pt/sessions' as never)} onNavigateToRevenue={() => router.push('/pt/revenue' as never)} onNavigateToPackages={() => router.push('/pt/packages' as never)} onSelectSession={(id) => router.push(`/pt/session/${id}` as never)} /></View>;
 }
 const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: colors.background }, center: { justifyContent: 'center', alignItems: 'center', padding: 24 }, error: { color: '#DC2626', textAlign: 'center' } });

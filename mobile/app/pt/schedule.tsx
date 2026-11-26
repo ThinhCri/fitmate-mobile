@@ -145,6 +145,7 @@ export default function ScheduleRoute() {
         }
       }}
       onSaveSchedule={handleSaveSchedule}
+      avatarUrl={user?.profile?.avatar || null}
     />
   );
 }

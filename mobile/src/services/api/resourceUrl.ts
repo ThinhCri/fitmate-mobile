@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from './baseUrl';
+
 export function normalizeApiResourceUrl(value: string, apiBaseUrl: string): string {
   try {
     const apiOrigin = new URL(apiBaseUrl).origin;
@@ -8,6 +10,15 @@ export function normalizeApiResourceUrl(value: string, apiBaseUrl: string): stri
     }
     return value;
   } catch { return value; }
+}
+
+export function resolveOptionalApiResourceUrl(value?: string | null): string | null {
+  if (!value) return null;
+  try {
+    return normalizeApiResourceUrl(value, getApiBaseUrl());
+  } catch {
+    return value;
+  }
 }
 
 /** Persist shared catalog identity, never a temporary R2 signature. */

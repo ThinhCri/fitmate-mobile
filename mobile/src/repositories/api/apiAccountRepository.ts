@@ -16,7 +16,7 @@ export class ApiAccountRepository implements IAccountRepository {
     const me = await authService.getMe();
     return {
       name: me.full_name,
-      avatarUrl: me.avatar_url || undefined,
+      avatarUrl: me.avatar_url ? resolveApiResourceUrl(me.avatar_url) : undefined,
       bio: me.bio || '',
       phone: me.phone || '',
       gender: me.gender || 'other',
@@ -40,7 +40,7 @@ export class ApiAccountRepository implements IAccountRepository {
       name: me.full_name || 'Người dùng',
       email: me.email,
       role: me.role === 'pt' ? 'pt' : 'member',
-      avatarUrl: me.avatar_url ?? undefined,
+      avatarUrl: me.avatar_url ? resolveApiResourceUrl(me.avatar_url) : undefined,
       upcomingBookingCount: pages && complete ? pages.reduce((total, page) => total + page.total, 0) : undefined,
       summaryUnavailable: !complete,
     };

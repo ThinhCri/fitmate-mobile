@@ -24,4 +24,17 @@ describe('trainer API data integrity', () => {
   it.each([-1, 2.5, undefined])('rejects malformed prices %s instead of advertising free sessions', (price) => {
     expect(() => mapPTPublicProfileToSummary({ ...profile, price_per_session_vnd: price } as PTPublicProfile)).toThrow();
   });
+  it('resolves relative trainer avatar URLs and preserves presigned remote URLs', () => {
+    const prevEnv = process.env.EXPO_PUBLIC_API_BASE_URL;
+    process.env.EXPO_PUBLIC_API_BASE_URL = 'https://api.fitmate.site/api/v1';
+    try {
+      expect(mapPTPublicProfileToSummary({ ...profile, avatar_url: '/uploads/avatars/pt.jpg?sig=1' }).avatarUrl)
+        .toBe('https://api.fitmate.site/uploads/avatars/pt.jpg?sig=1');
+      expect(mapPTPublicProfileToSummary({ ...profile, avatar_url: 'https://media.r2.test/avatars/pt.jpg?X-Amz-Signature=abc' }).avatarUrl)
+        .toBe('https://media.r2.test/avatars/pt.jpg?X-Amz-Signature=abc');
+    } finally {
+      if (prevEnv === undefined) delete process.env.EXPO_PUBLIC_API_BASE_URL;
+      else process.env.EXPO_PUBLIC_API_BASE_URL = prevEnv;
+    }
+  });
 });

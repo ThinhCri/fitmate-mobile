@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import {
   ShieldCheck,
   Star,
@@ -17,6 +17,7 @@ import { Card } from '@/components/design-system/Card';
 
 export interface PtOverviewPresentationProps {
   ptName: string;
+  avatarUrl?: string | null;
   isVerified: boolean;
   certificateName: string;
   rating: number | null;
@@ -43,6 +44,7 @@ export interface PtOverviewPresentationProps {
 
 export function PtOverviewPresentation({
   ptName,
+  avatarUrl,
   isVerified,
   certificateName,
   rating,
@@ -66,7 +68,11 @@ export function PtOverviewPresentation({
       <Card style={styles.identityCard}>
         <View style={styles.identityHeader}>
           <View style={styles.avatarBox}>
-            <Text style={styles.avatarInitial}>{ptName.charAt(0)}</Text>
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarInitial}>{ptName.charAt(0)}</Text>
+            )}
             {isVerified && (
               <View style={styles.verifiedDot}>
                 <ShieldCheck size={12} color="#FFFFFF" />
@@ -285,6 +291,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+  },
+  avatarImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
   },
   avatarInitial: {
     fontSize: 24,

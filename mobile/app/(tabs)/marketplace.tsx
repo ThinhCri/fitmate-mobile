@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { router } from 'expo-router';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { ScreenContainer } from '@/components/design-system/ScreenContainer';
 import { AppTopBar } from '@/components/design-system/AppTopBar';
 import { TrainerListPresentation } from '@/features/trainer/TrainerListPresentation';
@@ -29,14 +29,15 @@ export default function MarketplaceScreen() {
   const [isError, setIsError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const hasFocusedOnce = useRef(false);
 
   const fetchTrainers = useCallback(
-    async (cursor?: string, isRefresh = false) => {
+    async (cursor?: string, isRefresh = false, silent = false) => {
       if (isRefresh) {
         setRefreshing(true);
       } else if (cursor) {
         setLoadingMore(true);
-      } else {
+      } else if (!silent) {
         setLoading(true);
       }
 
@@ -70,6 +71,16 @@ export default function MarketplaceScreen() {
   useEffect(() => {
     fetchTrainers();
   }, [fetchTrainers]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (hasFocusedOnce.current) {
+        void fetchTrainers(undefined, false, true);
+      } else {
+        hasFocusedOnce.current = true;
+      }
+    }, [fetchTrainers])
+  );
 
   const handleEndReached = () => {
     if (!loading && !loadingMore && nextCursor) {

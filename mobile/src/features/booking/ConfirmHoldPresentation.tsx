@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Timer, Calendar, MapPin, QrCode, ShieldCheck, AlertCircle } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
@@ -60,7 +60,11 @@ export function ConfirmHoldPresentation({
 
         <View style={styles.coachSummaryBox}>
           <View style={styles.coachAvatar}>
-            <Text style={styles.avatarInitial}>{quote.coach.name.charAt(0)}</Text>
+            {quote.coach.avatarUrl ? (
+              <Image source={{ uri: quote.coach.avatarUrl }} style={styles.coachAvatarImage} />
+            ) : (
+              <Text style={styles.avatarInitial}>{quote.coach.name.charAt(0)}</Text>
+            )}
           </View>
           <View style={styles.coachDetails}>
             <Text style={styles.coachName}>{quote.coach.name}</Text>
@@ -252,6 +256,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  coachAvatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   avatarInitial: {
     fontSize: 16,

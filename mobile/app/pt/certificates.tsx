@@ -83,6 +83,7 @@ export default function CertificatesRoute() {
       phoneVerified={phoneVerified}
       contactPhone={contactPhone}
       onVerifyPhone={() => router.push('/pt/verify-phone' as never)}
+      avatarUrl={user?.profile?.avatar || null}
     />
   );
 }

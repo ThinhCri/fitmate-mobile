@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { AppState, Alert, Linking } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/services/AuthContext';
 import { ptService } from '@/services/api/ptService';
 import { trainersService } from '@/services/api/trainersService';
+import { getAccountRepository } from '@/repositories/accountRepository';
+import { ImagePickerService } from '@/services/imagePicker';
+import { resolveOptionalApiResourceUrl } from '@/services/api/resourceUrl';
 import type {
   PTPublicDetail,
   Service,
@@ -14,7 +17,7 @@ import { ProfileServicesPresentation } from '@/features/pt/ProfileServicesPresen
 
 export default function ProfileServicesRoute() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
 
   const [services, setServices] = useState<Service[]>([]);
   const [trainerDetail, setTrainerDetail] = useState<PTPublicDetail | null>(null);
@@ -27,6 +30,8 @@ export default function ProfileServicesRoute() {
   const [error, setError] = useState<string | null>(null);
   const [meetConnected, setMeetConnected] = useState(false);
   const [meetBusy, setMeetBusy] = useState(false);
+  const [avatarOverride, setAvatarOverride] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   const fetchMeetConnection = useCallback(async () => {
     try {
@@ -80,6 +85,13 @@ export default function ProfileServicesRoute() {
     });
     return () => subscription.remove();
   }, [fetchServices, fetchTrainerDetail, fetchMeetConnection]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refresh();
+      void fetchTrainerDetail();
+    }, [refresh, fetchTrainerDetail])
+  );
 
   const handleConnectMeet = async () => {
     setMeetBusy(true);
@@ -137,6 +149,36 @@ export default function ProfileServicesRoute() {
     setPtProfile((prev) => (prev ? { ...prev, bio: newBio } : { bio: newBio }));
   };
 
+  const handleAvatarUpload = async (source: 'camera' | 'library') => {
+    if (avatarUploading) return;
+    const image = source === 'camera'
+      ? await ImagePickerService.pickFromCamera({ allowsEditing: true, aspect: [1, 1], quality: 0.7 })
+      : await ImagePickerService.pickFromLibrary({ allowsEditing: true, aspect: [1, 1], quality: 0.7 });
+    if (!image) return;
+
+    setAvatarUploading(true);
+    try {
+      const repo = getAccountRepository();
+      const uploaded = await repo.updateAvatar(image);
+      const attachedUrl = await repo.attachAvatar(uploaded.storageKey);
+      setAvatarOverride(attachedUrl);
+      await Promise.all([refresh(), fetchTrainerDetail()]);
+      Alert.alert('Thành công', 'Ảnh đại diện PT đã được cập nhật.');
+    } catch (err) {
+      Alert.alert('Không thể cập nhật ảnh đại diện', err instanceof Error ? err.message : 'Vui lòng thử lại.');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleAvatarPress = () => {
+    Alert.alert('Cập nhật ảnh đại diện PT', 'Chọn nguồn ảnh', [
+      { text: 'Chụp ảnh', onPress: () => { void handleAvatarUpload('camera'); } },
+      { text: 'Chọn từ thư viện', onPress: () => { void handleAvatarUpload('library'); } },
+      { text: 'Hủy', style: 'cancel' },
+    ]);
+  };
+
   const ptName = user?.profile?.name || 'Huấn luyện viên';
   const experienceYears = ptProfile?.experience_years ?? trainerDetail?.experience_years ?? user?.profile?.exp ?? null;
   const rating = trainerDetail?.rating;
@@ -147,7 +189,9 @@ export default function ProfileServicesRoute() {
   return (
     <ProfileServicesPresentation
       ptName={ptName}
-      avatarUrl={user?.profile?.avatar || null}
+      avatarUrl={avatarOverride ?? resolveOptionalApiResourceUrl(trainerDetail?.avatar_url) ?? user?.profile?.avatar ?? null}
+      onAvatarPress={handleAvatarPress}
+      avatarUploading={avatarUploading}
       experienceYears={experienceYears}
       rating={rating}
       reviewsCount={reviewsCount}

@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  Image,
   Pressable,
   Switch,
   Modal,
@@ -16,6 +17,7 @@ import {
 import {
   ArrowLeft,
   User as UserIcon,
+  Camera,
   Check,
   Star,
   ShieldCheck,
@@ -55,10 +57,13 @@ export interface ProfileServicesPresentationProps {
   onUpdateService: (id: string, input: ServiceUpdate) => Promise<void>;
   onDeleteService: (id: string) => Promise<void>;
   onUpdateBio?: (bio: string) => Promise<void>;
+  onAvatarPress?: () => void;
+  avatarUploading?: boolean;
 }
 
 export function ProfileServicesPresentation({
   ptName,
+  avatarUrl,
   experienceYears,
   rating,
   reviewsCount,
@@ -77,6 +82,8 @@ export function ProfileServicesPresentation({
   onUpdateService,
   onDeleteService,
   onUpdateBio,
+  onAvatarPress,
+  avatarUploading = false,
 }: ProfileServicesPresentationProps) {
   // Modal states
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -329,7 +336,7 @@ export function ProfileServicesPresentation({
         </Pressable>
         <Text style={styles.headerTitle}>Gói Tập & Dịch Vụ</Text>
         <View style={styles.headerAvatar}>
-          <UserIcon size={18} color={colors.white} />
+          {avatarUrl ? <Image source={{ uri: avatarUrl }} style={styles.headerAvatarImage} /> : <UserIcon size={18} color={colors.white} />}
         </View>
       </View>
 
@@ -345,10 +352,11 @@ export function ProfileServicesPresentation({
           <View style={styles.profileRow}>
             <View style={styles.avatarContainer}>
               <View style={styles.avatarPlaceholder}>
-                <UserIcon size={32} color={colors.primary} />
+                {avatarUploading ? <ActivityIndicator size="small" color={colors.primary} /> : avatarUrl ? <Image source={{ uri: avatarUrl }} style={styles.avatarImage} /> : <UserIcon size={32} color={colors.primary} />}
               </View>
+              {onAvatarPress ? <Pressable onPress={onAvatarPress} disabled={avatarUploading} style={styles.avatarTapOverlay} accessibilityRole="button" accessibilityLabel="Cập nhật ảnh đại diện" /> : null}
               <View style={styles.onlineBadge}>
-                <Check size={10} color={colors.white} />
+                {onAvatarPress ? <Camera size={10} color={colors.white} /> : <Check size={10} color={colors.white} />}
               </View>
             </View>
 
@@ -901,6 +909,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  headerAvatarImage: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
   },
   scrollContent: {
     padding: spacing.lg,
@@ -932,6 +946,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.full,
+  },
+  avatarTapOverlay: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: radius.full,
+    zIndex: 1,
   },
   onlineBadge: {
     position: 'absolute',

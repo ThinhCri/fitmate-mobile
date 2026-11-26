@@ -1,6 +1,7 @@
 /**
  * Wire DTOs and View Models matching backend OpenAPI (fitmate-v1.yaml)
  */
+import { resolveOptionalApiResourceUrl } from './resourceUrl';
 
 // ==========================================
 // 1. Wire DTOs (Exact OpenAPI snake_case)
@@ -361,7 +362,7 @@ export function mapPTPublicProfileToSummary(
   return {
     id: dto.id,
     name: dto.full_name,
-    avatarUrl: dto.avatar_url,
+    avatarUrl: resolveOptionalApiResourceUrl(dto.avatar_url),
     specialties: specialties.length > 0 ? specialties : ['Chưa cập nhật chuyên môn'],
     rating: dto.rating,
     reviewCount: dto.reviews_count,

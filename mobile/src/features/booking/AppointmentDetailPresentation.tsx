@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import {
   Calendar,
   Clock,
@@ -103,7 +103,11 @@ export function AppointmentDetailPresentation({
         <Text style={styles.cardSectionTitle}>Huấn luyện viên phụ trách</Text>
         <View style={styles.coachRow}>
           <View style={styles.coachAvatar}>
-            <Text style={styles.coachInitial}>{appointment.coach.name.charAt(0)}</Text>
+            {appointment.coach.avatarUrl ? (
+              <Image source={{ uri: appointment.coach.avatarUrl }} style={styles.coachAvatarImage} />
+            ) : (
+              <Text style={styles.coachInitial}>{appointment.coach.name.charAt(0)}</Text>
+            )}
             {appointment.coach.isVerified && (
               <View style={styles.verifiedDot}>
                 <CheckCircle2 size={10} color="#FFFFFF" />
@@ -275,6 +279,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+  },
+  coachAvatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   coachInitial: {
     fontSize: 18,

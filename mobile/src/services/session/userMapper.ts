@@ -1,5 +1,6 @@
 import type { User, Gender, CertificateStatus } from '@/types';
 import type { UserSummary, UserProfile } from '../api/types';
+import { resolveOptionalApiResourceUrl } from '../api/resourceUrl';
 
 export function mapToDomainUser(
   summary: UserSummary,
@@ -36,7 +37,7 @@ export function mapToDomainUser(
     email: summary.email,
     ...(summary.pt_verification_status ? { ptVerificationStatus: summary.pt_verification_status } : {}),
     profile: {
-      avatar: profile?.avatar_url ?? summary.avatar_url ?? null,
+      avatar: resolveOptionalApiResourceUrl(profile?.avatar_url ?? summary.avatar_url),
       name: profile?.full_name ?? summary.full_name,
       bio: '',
       goal: profile?.fitness_goal ?? '',

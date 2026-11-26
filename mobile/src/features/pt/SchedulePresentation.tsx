@@ -9,6 +9,7 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -67,6 +68,7 @@ export interface SchedulePresentationProps {
   onRefresh?: () => void;
   onBack: () => void;
   onSaveSchedule: (newSlots: AvailabilitySlotInput[]) => Promise<void>;
+  avatarUrl?: string | null;
 }
 
 export function SchedulePresentation({
@@ -84,6 +86,7 @@ export function SchedulePresentation({
   onRefresh,
   onBack,
   onSaveSchedule,
+  avatarUrl,
 }: SchedulePresentationProps) {
   const insets = useSafeAreaInsets();
   const selectedDay = daysOfWeek[selectedDayIndex] || daysOfWeek[0];
@@ -357,7 +360,7 @@ export function SchedulePresentation({
         </Pressable>
         <Text style={styles.headerTitle}>Lịch Dạy PT</Text>
         <View style={styles.headerAvatar}>
-          <UserIcon size={18} color={colors.white} />
+          {avatarUrl ? <Image source={{ uri: avatarUrl }} style={styles.headerAvatarImage} /> : <UserIcon size={18} color={colors.white} />}
         </View>
       </View>
 
@@ -904,6 +907,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerAvatarImage: { width: 32, height: 32, borderRadius: radius.full },
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: 48,
