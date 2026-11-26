@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
+  AppState,
   View,
   Text,
   StyleSheet,
@@ -9,10 +10,13 @@ import {
   ScrollView,
   Image,
   Linking,
+  Platform,
   Share,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as FileSystem from 'expo-file-system/legacy';
+import Svg, { Path, Rect } from 'react-native-svg';
+import { buildQrPngBase64, buildQrSvgData, buildVietQrFallback } from './qrPngGenerator';
 import {
   Copy,
   CheckCircle2,
@@ -93,34 +97,41 @@ export function NativePaymentModal({
   const [checking, setChecking] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [savingQr, setSavingQr] = useState(false);
   const isPaidRef = useRef(false);
+  const inFlightRef = useRef(false);
 
   const parsed = useMemo(() => parseVietQrEmvco(payment?.qr_code), [payment?.qr_code]);
-  const bin = payment?.bin || parsed.bin || '970422'; // Default MBBank
+  const bin = payment?.bin || parsed.bin || '';
   const acc = payment?.account_number || parsed.acc || '';
   const amount = payment?.amount_vnd || 0;
   const desc = payment?.description || 'FITMATE';
   const name = payment?.account_name || 'FITMATE';
 
-  const qrImageUrl = payment?.qr_code?.startsWith('http')
-    ? payment.qr_code
-    : payment?.qr_code
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(payment.qr_code)}`
-    : acc
-    ? `https://qr.sepay.vn/img?bank=MBBank&acc=${acc}&amount=${amount}&des=${encodeURIComponent(desc)}`
-    : '';
+  const qrHttpUrl = payment?.qr_code?.startsWith('http') ? payment.qr_code : null;
+  const rawQrPayload = useMemo(() => {
+    if (payment?.qr_code && !payment.qr_code.startsWith('http')) {
+      return payment.qr_code;
+    }
+    return buildVietQrFallback(bin, acc, amount, desc);
+  }, [payment?.qr_code, bin, acc, amount, desc]);
+  const svgQr = useMemo(() => (rawQrPayload ? buildQrSvgData(rawQrPayload) : null), [rawQrPayload]);
+  const hasQrVisual = Boolean(svgQr || (qrHttpUrl && !imageError));
 
   useEffect(() => {
     setImageLoaded(false);
     setImageError(false);
   }, [payment?.id]);
 
-  // Polling payment status every 3.5 seconds
+  const paymentId = payment?.id;
+
+  // Polling payment status every 3.5 seconds + immediate recheck on foreground return
   const checkStatus = useCallback(async (silent = true) => {
-    if (!payment?.id || isPaidRef.current) return;
+    if (!paymentId || isPaidRef.current || inFlightRef.current) return;
+    inFlightRef.current = true;
     if (!silent) setChecking(true);
     try {
-      const updated = await bookingService.getMyPayment(payment.id);
+      const updated = await bookingService.getMyPayment(paymentId);
       if (updated.status === 'Paid') {
         isPaidRef.current = true;
         Alert.alert('Thành công', 'Thanh toán đã được ghi nhận thành công!', [
@@ -139,18 +150,28 @@ export function NativePaymentModal({
         Alert.alert('Thông báo', 'Chưa thể kiểm tra trạng thái lúc này. Vui lòng thử lại.');
       }
     } finally {
+      inFlightRef.current = false;
       if (!silent) setChecking(false);
     }
-  }, [payment, onPaymentSuccess]);
+  }, [paymentId, onPaymentSuccess]);
 
   useEffect(() => {
     if (!visible || !payment?.id) return;
     isPaidRef.current = false;
+    void checkStatus(true);
     const interval = setInterval(() => {
       void checkStatus(true);
     }, 3500);
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        void checkStatus(true);
+      }
+    });
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      sub.remove();
+    };
   }, [visible, payment?.id, checkStatus]);
 
   const copyToClipboard = async (text: string, key: string, label: string) => {
@@ -163,20 +184,76 @@ export function NativePaymentModal({
     }
   };
 
-  const handleSaveQR = () => {
-    Alert.alert(
-      'Lưu mã VietQR để quét',
-      'Cách tiện lợi nhất: Bạn hãy chụp ảnh màn hình mã QR này, sau đó mở ứng dụng ngân hàng của bạn và chọn "Quét QR từ ảnh trong thư viện" để chuyển khoản ngay tức thì!',
-      [
-        { text: 'Đã hiểu' },
-        {
-          text: 'Mở trang PayOS',
-          onPress: () => {
-            if (payment?.redirect_url) void Linking.openURL(payment.redirect_url);
-          },
-        },
-      ]
-    );
+  const handleSaveQR = async () => {
+    if (savingQr) return;
+    setSavingQr(true);
+    try {
+      const suffix = payment?.order_code || payment?.id?.slice(0, 8) || 'payos';
+      const baseName = `Fitmate-QR-${suffix}`;
+      const fileName = `${baseName}.png`;
+      const cacheDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+      if (!cacheDir) {
+        Alert.alert('Lỗi', 'Không truy cập được bộ nhớ tạm để tạo ảnh QR.');
+        return;
+      }
+      const cachePath = `${cacheDir}${fileName}`;
+      let base64Png: string | null = null;
+
+      if (rawQrPayload) {
+        base64Png = buildQrPngBase64(rawQrPayload, 420);
+        await FileSystem.writeAsStringAsync(cachePath, base64Png, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      } else if (qrHttpUrl) {
+        const dl = await FileSystem.downloadAsync(qrHttpUrl, cachePath);
+        base64Png = await FileSystem.readAsStringAsync(dl.uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      } else {
+        if (payment?.redirect_url) {
+          await Linking.openURL(payment.redirect_url);
+        } else {
+          Alert.alert('Chưa có mã QR', 'Không tìm thấy dữ liệu QR để lưu.');
+        }
+        return;
+      }
+
+      if (Platform.OS === 'android' && FileSystem.StorageAccessFramework) {
+        try {
+          const perm = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+          if (perm.granted && base64Png) {
+            const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
+              perm.directoryUri,
+              baseName,
+              'image/png'
+            );
+            await FileSystem.writeAsStringAsync(destUri, base64Png, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            Alert.alert(
+              'Đã lưu ảnh QR',
+              'Ảnh mã QR đã được lưu thành công! Hãy mở ứng dụng ngân hàng và chọn "Quét QR từ ảnh trong thư viện" để thanh toán.'
+            );
+            return;
+          }
+        } catch {
+          // Fall through to Share sheet if user cancels or SAF rejects
+        }
+      }
+
+      await Share.share({
+        title: fileName,
+        url: cachePath,
+        message: `Mã QR thanh toán Fitmate (${amount.toLocaleString('vi-VN')}đ · ND: ${desc})`,
+      });
+    } catch {
+      Alert.alert(
+        'Không thể lưu ảnh QR',
+        'Bạn có thể chụp màn hình mã QR này hoặc mở trang PayOS để thanh toán.'
+      );
+    } finally {
+      setSavingQr(false);
+    }
   };
 
   const handleOpenBankApp = () => {
@@ -225,7 +302,22 @@ export function NativePaymentModal({
         {/* QR Code Container */}
         <View style={styles.qrCard}>
           <View style={styles.qrWrapper}>
-            {!qrImageUrl ? (
+            {svgQr ? (
+              <Svg
+                width={214}
+                height={214}
+                viewBox={`0 0 ${svgQr.moduleCount} ${svgQr.moduleCount}`}
+              >
+                <Rect
+                  x={0}
+                  y={0}
+                  width={svgQr.moduleCount}
+                  height={svgQr.moduleCount}
+                  fill="#FFFFFF"
+                />
+                <Path d={svgQr.path} fill="#0F172A" />
+              </Svg>
+            ) : !qrHttpUrl ? (
               <View style={styles.qrErrorBox}>
                 <AlertCircle size={32} color={colors.warning} />
                 <Text style={styles.qrErrorTitle}>Chưa có mã QR trực tiếp</Text>
@@ -270,7 +362,7 @@ export function NativePaymentModal({
                   </View>
                 )}
                 <Image
-                  source={{ uri: qrImageUrl }}
+                  source={{ uri: qrHttpUrl }}
                   style={styles.qrImage}
                   resizeMode="contain"
                   onLoad={() => setImageLoaded(true)}
@@ -283,16 +375,19 @@ export function NativePaymentModal({
             )}
           </View>
 
-          {!!qrImageUrl && !imageError && (
+          {hasQrVisual && (
             <>
               <View style={styles.qrActions}>
                 <TouchableOpacity
                   style={styles.actionChip}
-                  onPress={handleSaveQR}
+                  onPress={() => void handleSaveQR()}
+                  disabled={savingQr}
                   activeOpacity={0.7}
                 >
                   <Download size={14} color={colors.primary} />
-                  <Text style={styles.actionChipText}>Hướng dẫn quét QR</Text>
+                  <Text style={styles.actionChipText}>
+                    {savingQr ? 'Đang lưu...' : 'Tải ảnh QR'}
+                  </Text>
                 </TouchableOpacity>
 
                 {payment?.redirect_url && (
@@ -317,7 +412,7 @@ export function NativePaymentModal({
               </View>
 
               <Text style={styles.qrTipText}>
-                💡 Mẹo: Chụp màn hình mã QR này để quét từ Thư viện ảnh trên App ngân hàng.
+                {'💡 Nhấn Tải ảnh QR để lưu ảnh về máy, rồi mở app ngân hàng chọn quét từ Thư viện ảnh.'}
               </Text>
             </>
           )}

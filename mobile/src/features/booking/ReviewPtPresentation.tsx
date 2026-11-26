@@ -82,7 +82,7 @@ export function ReviewPtPresentation({
 
         {/* Feedback Input */}
         <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>Nhận xét chi tiết (tùy chọn):</Text>
+          <Text style={styles.inputLabel}>Nhận xét chi tiết * (tối thiểu 3 ký tự):</Text>
           <TextInput
             style={styles.textArea}
             multiline

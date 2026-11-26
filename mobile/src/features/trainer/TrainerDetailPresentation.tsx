@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 import {
   Star,
@@ -42,8 +43,10 @@ export interface TrainerDetailPresentationProps {
     appointmentId: string;
     slotStartUtc: string;
     status: string;
+    mode?: 'confirm' | 'review' | 'upcoming';
   } | null;
   onViewBooking?: (appointmentId: string) => void;
+  onReviewBooking?: (appointmentId: string) => void;
 }
 
 export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps> = ({
@@ -60,6 +63,7 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
   onChatPress,
   activeBooking,
   onViewBooking,
+  onReviewBooking,
 }) => {
   if (isNotFound) {
     return (
@@ -240,7 +244,59 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
           </View>
         ) : null}
 
-        
+        {activeBooking && (
+          <TouchableOpacity
+            style={styles.activeBookingCard}
+            activeOpacity={0.85}
+            onPress={() => {
+              if (activeBooking.mode === 'review' && onReviewBooking) {
+                onReviewBooking(activeBooking.appointmentId);
+              } else if (onViewBooking) {
+                onViewBooking(activeBooking.appointmentId);
+              }
+            }}
+            accessibilityRole="button"
+          >
+            <View style={styles.activeBookingIconBox}>
+              {activeBooking.mode === 'review' ? (
+                <Star size={20} color="#F59E0B" fill="#F59E0B" />
+              ) : (
+                <CalendarCheck size={20} color={colors.primary} />
+              )}
+            </View>
+            <View style={styles.activeBookingContent}>
+              <View style={styles.activeBookingHeader}>
+                <Text style={styles.activeBookingTitle}>
+                  {activeBooking.mode === 'confirm'
+                    ? 'Buổi tập đã qua · Cần xác nhận hoàn thành'
+                    : activeBooking.mode === 'review'
+                    ? 'Buổi tập đã hoàn thành · Đánh giá PT ngay'
+                    : 'Lịch tập của bạn với HLV này'}
+                </Text>
+              </View>
+              <Text style={styles.activeBookingTime}>
+                {new Date(activeBooking.slotStartUtc).toLocaleString('vi-VN', {
+                  timeZone: 'Asia/Ho_Chi_Minh',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                })}
+              </Text>
+            </View>
+            <Badge
+              label={
+                activeBooking.mode === 'confirm'
+                  ? 'Xác nhận'
+                  : activeBooking.mode === 'review'
+                  ? 'Đánh giá'
+                  : 'Chi tiết'
+              }
+              tone={activeBooking.mode === 'confirm' ? 'warning' : 'success'}
+            />
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       <View style={[styles.bottomBar, shadow.floating]}>

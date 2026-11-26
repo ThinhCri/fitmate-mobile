@@ -1,11 +1,13 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
 import { ApiError } from '@/services/api/client';
 import { sessionPackageService, type SessionPackageStopPreviewWire, type SessionPackageWire } from '@/services/api/sessionPackageService';
+import type { PaymentWire } from '@/services/api/types';
+import { NativePaymentModal } from './NativePaymentModal';
 
 const money = (value: number) => `${value.toLocaleString('vi-VN')} ₫`;
 const dateTime = (value: string) => new Date(value).toLocaleString('vi-VN', {
@@ -31,6 +33,8 @@ export function SessionPackageDetailScreen({ id, asPt }: { id: string; asPt: boo
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [paymentModalData, setPaymentModalData] = useState<PaymentWire | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const pendingKey = useRef<{ signature: string; key: string } | null>(null);
 
   const load = useCallback(async () => {
@@ -106,12 +110,26 @@ export function SessionPackageDetailScreen({ id, asPt }: { id: string; asPt: boo
         try {
           const result = await sessionPackageService.createPayment(item.id, shortNotice,
             keyFor(`pay:${item.id}:${shortNotice}`));
-          if (!result.redirect_url) throw new Error('Chưa có liên kết thanh toán. Hãy tải lại trạng thái gói.');
-          const url = new URL(result.redirect_url);
-          if (url.protocol !== 'https:' || !/(^|\.)payos\.vn$/.test(url.hostname))
-            throw new Error('Liên kết thanh toán không hợp lệ.');
-          await Linking.openURL(result.redirect_url);
-          await load();
+          if (result.qr_code || result.account_number || result.redirect_url) {
+            setPaymentModalData({
+              id: result.payment_id,
+              appointment_id: item.id,
+              method: 'payos',
+              status: 'Pending',
+              amount_vnd: result.amount_vnd,
+              redirect_url: result.redirect_url,
+              created_at: new Date().toISOString(),
+              qr_code: result.qr_code,
+              account_number: result.account_number,
+              account_name: result.account_name,
+              bin: result.bin,
+              description: result.description,
+              order_code: result.order_code,
+            });
+            setShowPaymentModal(true);
+            return;
+          }
+          throw new Error('Chưa có liên kết thanh toán. Hãy tải lại trạng thái gói.');
         } catch (cause) { onMutationError(cause); }
         finally { setBusy(false); }
       } }]);
@@ -230,6 +248,23 @@ export function SessionPackageDetailScreen({ id, asPt }: { id: string; asPt: boo
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </ScrollView>
       </KeyboardAvoidingView>}
+      <NativePaymentModal
+        visible={showPaymentModal}
+        payment={paymentModalData}
+        remainingSeconds={
+          item
+            ? Math.max(0, Math.floor((Date.parse(item.hold_expires_at_utc) - Date.now()) / 1000))
+            : 300
+        }
+        onClose={() => {
+          setShowPaymentModal(false);
+          void load();
+        }}
+        onPaymentSuccess={() => {
+          setShowPaymentModal(false);
+          void load();
+        }}
+      />
   </SafeAreaView>;
 }
 

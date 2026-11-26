@@ -96,6 +96,20 @@ export default function AppointmentDetailScreen() {
                 try {
                   const updated = await getBookingRepository().confirmCompletion(appointment.id);
                   setAppointment(updated);
+                  Alert.alert(
+                    'Đã xác nhận hoàn thành!',
+                    'Cảm ơn bạn đã xác nhận buổi tập. Bạn có muốn đánh giá sao và nhận xét cho HLV ngay bây giờ không?',
+                    [
+                      { text: 'Để sau', style: 'cancel' },
+                      {
+                        text: 'Đánh giá ngay',
+                        onPress: () =>
+                          router.push(
+                            `/booking/review?bookingId=${updated.id}&ptId=${updated.coach.id}&coachName=${encodeURIComponent(updated.coach.name)}` as any
+                          ),
+                      },
+                    ]
+                  );
                 } catch (err) {
                   Alert.alert('Không thể xác nhận', err instanceof Error ? err.message : 'Vui lòng thử lại.');
                 }

@@ -114,7 +114,11 @@ export function mapAppointmentWireToViewModel(
       wire.rescheduled_count < 1 &&
       slotDate.getTime() - Date.now() >= 48 * 60 * 60 * 1000,
     canReview: wire.status === 'Completed',
-    canConfirmCompletion: wire.status === 'AwaitingMemberConfirmation',
+    canConfirmCompletion:
+      wire.status === 'AwaitingMemberConfirmation' ||
+      ((wire.status === 'Confirmed' || wire.status === 'InProgress') &&
+        Number.isFinite(slotDate.getTime()) &&
+        Date.now() >= slotDate.getTime() + durationMin * 60_000),
     canDispute: wire.status === 'AwaitingMemberConfirmation',
     memberConfirmationDeadlineUtc: wire.member_confirmation_deadline_utc ?? undefined,
   };

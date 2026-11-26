@@ -22,29 +22,41 @@ export function MyAppointmentsPresentation({
   const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
 
   const upcomingList = appointments.filter(
-    (a) => a.bookingStatus === 'confirmed' || a.bookingStatus === 'in_progress'
+    (a) =>
+      a.bookingStatus === 'hold_pending_payment' ||
+      a.bookingStatus === 'confirmed' ||
+      a.bookingStatus === 'in_progress' ||
+      a.bookingStatus === 'awaiting_member_confirmation'
   );
   const historyList = appointments.filter(
     (a) =>
       a.bookingStatus === 'completed' ||
       a.bookingStatus === 'cancelled' ||
+      a.bookingStatus === 'disputed' ||
       a.bookingStatus === 'no_show'
   );
 
   const displayedList = activeTab === 'upcoming' ? upcomingList : historyList;
 
-  const getStatusBadge = (status: BookingAppointmentViewModel['bookingStatus']) => {
-    switch (status) {
+  const getStatusBadge = (item: BookingAppointmentViewModel) => {
+    if (item.canConfirmCompletion) {
+      return { label: 'Chờ xác nhận buổi', bg: '#FEF3C7', text: '#B45309' };
+    }
+    switch (item.bookingStatus) {
       case 'confirmed':
         return { label: 'Đã xác nhận', bg: '#DCFCE7', text: '#16A34A' };
       case 'in_progress':
         return { label: 'Đang diễn ra', bg: colors.surfaceSubtle, text: colors.primary };
+      case 'awaiting_member_confirmation':
+        return { label: 'Chờ xác nhận buổi', bg: '#FEF3C7', text: '#B45309' };
       case 'completed':
         return { label: 'Hoàn thành', bg: '#DCFCE7', text: '#16A34A' };
+      case 'disputed':
+        return { label: 'Đang đối soát', bg: '#FFEDD5', text: '#C2410C' };
       case 'cancelled':
         return { label: 'Đã hủy', bg: '#FEE2E2', text: '#DC2626' };
       default:
-        return { label: 'Chờ duyệt', bg: '#FEF3C7', text: '#D97706' };
+        return { label: 'Chờ thanh toán', bg: '#FEF3C7', text: '#D97706' };
     }
   };
 
@@ -101,7 +113,12 @@ export function MyAppointmentsPresentation({
         </View>
       ) : (
         displayedList.map((item) => {
-          const badge = getStatusBadge(item.bookingStatus);
+          const badge = getStatusBadge(item);
+          const detailCta = item.canConfirmCompletion
+            ? 'Xác nhận buổi'
+            : item.canReview
+            ? 'Đánh giá PT'
+            : 'Chi tiết';
           return (
             <TouchableOpacity
               key={item.id}
@@ -148,7 +165,7 @@ export function MyAppointmentsPresentation({
                     {item.paidAmountVnd.toLocaleString('vi-VN')} ₫
                   </Text>
                   <View style={styles.viewDetailRow}>
-                    <Text style={styles.viewDetailText}>Chi tiết</Text>
+                    <Text style={styles.viewDetailText}>{detailCta}</Text>
                     <ChevronRight size={16} color={colors.primary} />
                   </View>
                 </View>

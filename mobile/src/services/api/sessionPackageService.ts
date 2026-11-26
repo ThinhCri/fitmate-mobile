@@ -65,6 +65,12 @@ export interface SessionPackageCheckoutWire {
   amount_vnd: number;
   status: string;
   redirect_url: string | null;
+  qr_code?: string | null;
+  account_number?: string | null;
+  account_name?: string | null;
+  bin?: string | null;
+  description?: string | null;
+  order_code?: number | null;
 }
 
 const path = (id: string) => `/me/session-packages/${encodeURIComponent(id)}`;

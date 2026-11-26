@@ -359,5 +359,30 @@ describe('bookingService & apiBookingRepository (MOB-802)', () => {
       expect(vm.canReview).toBe(true);
       expect(vm.canCancel).toBe(false);
     });
+
+    it('allows member completion confirmation on Confirmed bookings after slot end', () => {
+      const wire: AppointmentWire = {
+        id: 'apt-past-confirmed',
+        member_id: 'mem-101',
+        pt_user_id: 'pt-101',
+        service_id: 'srv-101',
+        slot_start_utc: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+        duration_minutes: 60,
+        status: 'Confirmed',
+        rescheduled_count: 0,
+        price_listed_vnd: 300000,
+        discount_vnd: 0,
+        actual_paid_vnd: 300000,
+        platform_fee_rate_bps: 1000,
+        platform_fee_vnd: 30000,
+        trainer_share_vnd: 270000,
+        policy_version: '2026-09-22-v1',
+      };
+
+      const vm = mapAppointmentWireToViewModel(wire);
+      expect(vm.bookingStatus).toBe('confirmed');
+      expect(vm.canConfirmCompletion).toBe(true);
+      expect(vm.canCancel).toBe(false);
+    });
   });
 });

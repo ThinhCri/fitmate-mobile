@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { MyAppointmentsPresentation } from '../../src/features/booking/MyAppointmentsPresentation';
 import { BookingAppointmentViewModel } from '../../src/features/booking/bookingTypes';
 import { getBookingRepository } from '@/repositories/bookingRepository';
@@ -29,9 +29,11 @@ export default function MyAppointmentsScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
+  useFocusEffect(
+    useCallback(() => {
+      void fetchAppointments();
+    }, [fetchAppointments])
+  );
 
   if (loading) {
     return (
