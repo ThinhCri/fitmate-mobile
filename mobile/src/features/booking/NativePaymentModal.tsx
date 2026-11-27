@@ -385,7 +385,7 @@ export function NativePaymentModal({
                   activeOpacity={0.7}
                 >
                   <Download size={14} color={colors.primary} />
-                  <Text style={styles.actionChipText}>
+                  <Text style={styles.actionChipText} numberOfLines={1}>
                     {savingQr ? 'Đang lưu...' : 'Tải ảnh QR'}
                   </Text>
                 </TouchableOpacity>
@@ -397,7 +397,7 @@ export function NativePaymentModal({
                     activeOpacity={0.7}
                   >
                     <ExternalLink size={14} color={colors.primary} />
-                    <Text style={styles.actionChipText}>Mở PayOS Web</Text>
+                    <Text style={styles.actionChipText} numberOfLines={1}>Mở PayOS Web</Text>
                   </TouchableOpacity>
                 )}
 
@@ -407,7 +407,7 @@ export function NativePaymentModal({
                   activeOpacity={0.7}
                 >
                   <Building2 size={14} color={colors.primary} />
-                  <Text style={styles.actionChipText}>Mở App Ngân hàng</Text>
+                  <Text style={styles.actionChipText} numberOfLines={1}>Mở App Ngân hàng</Text>
                 </TouchableOpacity>
               </View>
 
@@ -673,23 +673,31 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   qrActions: {
+    width: '100%',
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs + 2,
   },
   actionChip: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.primaryLight,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.full,
     gap: spacing.xs,
+    minHeight: 40,
+    maxWidth: '100%',
+    flexShrink: 1,
   },
   actionChipText: {
     fontSize: 12,
     fontWeight: '600',
     color: colors.primary,
+    flexShrink: 1,
   },
   qrTipText: {
     ...typography.caption,
@@ -717,6 +725,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: spacing.sm,
     paddingVertical: spacing.xs + 2,
   },
   infoCol: {
