@@ -21,8 +21,11 @@ export class ApiTrainerRepository implements ITrainerRepository {
   }
 
   async getTrainer(id: string): Promise<TrainerDetailViewModel> {
-    const raw = await trainersService.getTrainer(id);
-    return mapPTPublicDetailToDetail(raw);
+    const [raw, reviewsSummary] = await Promise.all([
+      trainersService.getTrainer(id),
+      trainersService.getTrainerReviews(id, 50).catch(() => null),
+    ]);
+    return mapPTPublicDetailToDetail(raw, reviewsSummary);
   }
 }
 

@@ -246,6 +246,7 @@ export class ApiBookingRepository implements IBookingRepository {
       rating,
       text: feedbackText,
     });
+    this.coachCache.delete(ptId);
   }
 
   async getRefundTracking(bookingId: string): Promise<RefundTrackingViewModel> {

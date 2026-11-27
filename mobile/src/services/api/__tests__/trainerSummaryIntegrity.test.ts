@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapPTPublicProfileToSummary, type PTPublicProfile } from '../types';
+import { mapPTPublicDetailToDetail, mapPTPublicProfileToSummary, type PTPublicProfile } from '../types';
 
 const profile: PTPublicProfile = {
   id: '11111111-1111-1111-1111-111111111111', full_name: 'PT kiểm thử',
@@ -36,5 +36,39 @@ describe('trainer API data integrity', () => {
       if (prevEnv === undefined) delete process.env.EXPO_PUBLIC_API_BASE_URL;
       else process.env.EXPO_PUBLIC_API_BASE_URL = prevEnv;
     }
+  });
+  it('merges public reviews summary into trainer detail with reviewer names', () => {
+    const detail = mapPTPublicDetailToDetail(
+      { ...profile, bio: 'PT test', services: [] },
+      {
+        average_rating: 4.8,
+        total_reviews: 2,
+        reviews: [
+          {
+            id: 'rev-1',
+            from_user_id: 'u-1',
+            reviewer_name: 'Nguyễn Văn A',
+            pt_user_id: profile.id,
+            rating: 5,
+            text: 'Dạy rất có tâm!',
+            created_at: '2026-11-26T10:00:00Z',
+          },
+          {
+            id: 'rev-2',
+            from_user_id: 'u-2',
+            reviewer_name: '   ',
+            pt_user_id: profile.id,
+            rating: 4,
+            text: 'Ổn áp',
+            created_at: '2026-11-25T10:00:00Z',
+          },
+        ],
+      }
+    );
+    expect(detail.rating).toBe(4.8);
+    expect(detail.reviewCount).toBe(2);
+    expect(detail.reviews).toHaveLength(2);
+    expect(detail.reviews[0]).toMatchObject({ reviewerName: 'Nguyễn Văn A', rating: 5, comment: 'Dạy rất có tâm!' });
+    expect(detail.reviews[1].reviewerName).toBe('Học viên Fitmate');
   });
 });

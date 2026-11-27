@@ -7,11 +7,13 @@ import { trainersService } from '@/services/api/trainersService';
 import { getAccountRepository } from '@/repositories/accountRepository';
 import { ImagePickerService } from '@/services/imagePicker';
 import { resolveOptionalApiResourceUrl } from '@/services/api/resourceUrl';
-import type {
-  PTPublicDetail,
-  Service,
-  ServiceInput,
-  ServiceUpdate,
+import {
+  mapReviewToViewModel,
+  type PTPublicDetail,
+  type Service,
+  type ServiceInput,
+  type ServiceUpdate,
+  type TrainerReviewViewModel,
 } from '@/services/api/types';
 import { ProfileServicesPresentation } from '@/features/pt/ProfileServicesPresentation';
 
@@ -32,6 +34,8 @@ export default function ProfileServicesRoute() {
   const [meetBusy, setMeetBusy] = useState(false);
   const [avatarOverride, setAvatarOverride] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [reviews, setReviews] = useState<TrainerReviewViewModel[]>([]);
+  const [reviewStats, setReviewStats] = useState<{ rating: number; total: number } | null>(null);
 
   const fetchMeetConnection = useCallback(async () => {
     try {
@@ -67,12 +71,17 @@ export default function ProfileServicesRoute() {
     }
     const userId = (user as { id?: string })?.id;
     if (!userId) return;
-    try {
-      const detail = await trainersService.getTrainer(userId);
-      setTrainerDetail(detail);
-    } catch {
-      // PT may be unverified (approved certificate required for public marketplace detail)
-      setTrainerDetail(null);
+    const [detailRes, reviewsRes] = await Promise.allSettled([
+      trainersService.getTrainer(userId),
+      trainersService.getTrainerReviews(userId, 20),
+    ]);
+    setTrainerDetail(detailRes.status === 'fulfilled' ? detailRes.value : null);
+    if (reviewsRes.status === 'fulfilled') {
+      setReviews((reviewsRes.value.reviews || []).map(mapReviewToViewModel));
+      setReviewStats({ rating: reviewsRes.value.average_rating, total: reviewsRes.value.total_reviews });
+    } else if (detailRes.status === 'fulfilled' && detailRes.value.reviews) {
+      setReviews(detailRes.value.reviews.map(mapReviewToViewModel));
+      setReviewStats({ rating: detailRes.value.rating, total: detailRes.value.reviews_count });
     }
   }, [user]);
 
@@ -181,8 +190,8 @@ export default function ProfileServicesRoute() {
 
   const ptName = user?.profile?.name || 'Huấn luyện viên';
   const experienceYears = ptProfile?.experience_years ?? trainerDetail?.experience_years ?? user?.profile?.exp ?? null;
-  const rating = trainerDetail?.rating;
-  const reviewsCount = trainerDetail?.reviews_count;
+  const rating = reviewStats?.rating ?? trainerDetail?.rating;
+  const reviewsCount = reviewStats?.total ?? trainerDetail?.reviews_count;
   const specialties = ptProfile?.specialty ? [ptProfile.specialty] : (user?.profile?.spec || []);
   const bio = ptProfile?.bio ?? trainerDetail?.bio ?? user?.profile?.bio ?? '';
 
@@ -195,6 +204,7 @@ export default function ProfileServicesRoute() {
       experienceYears={experienceYears}
       rating={rating}
       reviewsCount={reviewsCount}
+      reviews={reviews}
       specialties={specialties}
       bio={bio}
       services={services}

@@ -34,7 +34,8 @@ import {
   X,
 } from 'lucide-react-native';
 import { colors, radius, spacing, typography } from '@/theme/designTokens';
-import type { Service, ServiceInput, ServiceUpdate } from '@/services/api/types';
+import type { Service, ServiceInput, ServiceUpdate, TrainerReviewViewModel } from '@/services/api/types';
+import { PtReviewList } from '@/features/trainer/PtReviewList';
 
 export interface ProfileServicesPresentationProps {
   ptName: string;
@@ -59,6 +60,7 @@ export interface ProfileServicesPresentationProps {
   onUpdateBio?: (bio: string) => Promise<void>;
   onAvatarPress?: () => void;
   avatarUploading?: boolean;
+  reviews?: TrainerReviewViewModel[];
 }
 
 export function ProfileServicesPresentation({
@@ -84,6 +86,7 @@ export function ProfileServicesPresentation({
   onUpdateBio,
   onAvatarPress,
   avatarUploading = false,
+  reviews = [],
 }: ProfileServicesPresentationProps) {
   // Modal states
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -620,6 +623,16 @@ export function ProfileServicesPresentation({
           <PlusCircle size={20} color={colors.primary} style={{ marginRight: 8 }} />
           <Text style={styles.addServiceButtonText}>+ Thêm gói dịch vụ mới</Text>
         </Pressable>
+
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={styles.sectionTitleWithIcon}>
+              <Star size={20} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Đánh giá từ học viên ({reviews.length})</Text>
+            </View>
+          </View>
+          <PtReviewList reviews={reviews} />
+        </View>
 
         {/* System Safety Notice */}
         <View style={styles.safetyNoticeBox}>

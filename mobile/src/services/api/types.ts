@@ -244,10 +244,18 @@ export interface UserProfileUpdate {
 export interface Review {
   id: string; // uuid
   from_user_id: string; // uuid
-  pt_id: string; // uuid
+  reviewer_name?: string | null;
+  pt_id?: string; // uuid
+  pt_user_id?: string; // uuid
   rating: number;
   text: string;
   created_at: string; // date-time
+}
+
+export interface TrainerReviewsSummaryResponse {
+  average_rating: number;
+  total_reviews: number;
+  reviews: Review[];
 }
 
 export interface PTPublicDetail extends PTPublicProfile {
@@ -320,6 +328,7 @@ export interface TrainerServiceViewModel {
 export interface TrainerReviewViewModel {
   id: string;
   reviewerId: string;
+  reviewerName: string;
   rating: number;
   comment: string;
   createdAt: string;
@@ -372,10 +381,23 @@ export function mapPTPublicProfileToSummary(
   };
 }
 
+export function mapReviewToViewModel(r: Review): TrainerReviewViewModel {
+  return {
+    id: r.id,
+    reviewerId: r.from_user_id,
+    reviewerName: r.reviewer_name?.trim() || 'Học viên Fitmate',
+    rating: r.rating,
+    comment: r.text || '',
+    createdAt: r.created_at,
+  };
+}
+
 export function mapPTPublicDetailToDetail(
-  dto: PTPublicDetail
+  dto: PTPublicDetail,
+  reviewsSummary?: TrainerReviewsSummaryResponse | null
 ): TrainerDetailViewModel {
   const summary = mapPTPublicProfileToSummary(dto);
+  const rawReviews = reviewsSummary?.reviews?.length ? reviewsSummary.reviews : dto.reviews || [];
 
   const services: TrainerServiceViewModel[] = (dto.services || []).map((s) => ({
     id: s.id,
@@ -395,16 +417,12 @@ export function mapPTPublicDetailToDetail(
     locationAddress: s.location_address ?? '',
   }));
 
-  const reviews: TrainerReviewViewModel[] = (dto.reviews || []).map((r) => ({
-    id: r.id,
-    reviewerId: r.from_user_id,
-    rating: r.rating,
-    comment: r.text || '',
-    createdAt: r.created_at,
-  }));
+  const reviews: TrainerReviewViewModel[] = rawReviews.map(mapReviewToViewModel);
 
   return {
     ...summary,
+    rating: reviewsSummary ? reviewsSummary.average_rating : summary.rating,
+    reviewCount: reviewsSummary ? reviewsSummary.total_reviews : summary.reviewCount,
     bio: dto.bio,
     services,
     reviews,

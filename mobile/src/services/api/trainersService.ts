@@ -5,6 +5,7 @@ import {
   ListTrainersResponse,
   PTPublicDetail,
   TrainerFilterParams,
+  TrainerReviewsSummaryResponse,
 } from './types';
 
 export const trainersService = {
@@ -39,6 +40,12 @@ export const trainersService = {
    */
   async getTrainer(id: string): Promise<PTPublicDetail> {
     return apiClient<PTPublicDetail>('/trainers/' + encodeURIComponent(id));
+  },
+
+  async getTrainerReviews(id: string, limit = 50): Promise<TrainerReviewsSummaryResponse> {
+    return apiClient<TrainerReviewsSummaryResponse>(
+      `/trainers/${encodeURIComponent(id)}/reviews?limit=${encodeURIComponent(String(limit))}`
+    );
   },
 
   /**

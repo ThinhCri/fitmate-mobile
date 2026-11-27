@@ -20,6 +20,7 @@ import { TrainerDetailViewModel } from '@/services/api/types';
 import { Badge } from '@/components/design-system/BadgesAndChips';
 import { SectionHeader } from '@/components/design-system/SectionHeader';
 import { PtServicePackageCard } from './PtServicePackageCard';
+import { PtReviewList } from './PtReviewList';
 import { PrimaryButton, SecondaryButton } from '@/components/design-system/Buttons';
 import {
   ErrorState,
@@ -216,38 +217,12 @@ export const TrainerDetailPresentation: React.FC<TrainerDetailPresentationProps>
           </View>
         ) : null}
 
-        {trainer.reviews && trainer.reviews.length > 0 ? (
-          <View style={styles.sectionMargin}>
-            <SectionHeader
-              title={'Đánh giá từ học viên (' + trainer.reviews.length + ')'}
-            />
-            {trainer.reviews.map((rev) => (
-              <View key={rev.id} style={[styles.reviewCard, shadow.card]}>
-                <View style={styles.reviewHeader}>
-                  <View style={styles.reviewRating}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        size={14}
-                        color="#F59E0B"
-                        fill={i < rev.rating ? '#F59E0B' : 'transparent'}
-                      />
-                    ))}
-                    <Text style={[typography.captionMedium, styles.ratingNumber]}>
-                      {rev.rating}.0
-                    </Text>
-                  </View>
-                  <Text style={[typography.caption, styles.reviewDate]}>
-                    {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('vi-VN') : ''}
-                  </Text>
-                </View>
-                <Text style={[typography.body, styles.reviewComment]}>
-                  {`"${rev.comment}"`}
-                </Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
+        <View style={styles.sectionMargin}>
+          <SectionHeader
+            title={'Đánh giá từ học viên (' + (trainer.reviews?.length ?? 0) + ')'}
+          />
+          <PtReviewList reviews={trainer.reviews || []} />
+        </View>
 
         {activeBooking && (
           <TouchableOpacity
